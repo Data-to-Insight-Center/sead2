@@ -1,6 +1,7 @@
 package org.sead.workflow.activity;
 
-import java.util.HashMap;
+import org.sead.workflow.config.SeadWorkflowConfig;
+import org.sead.workflow.context.SeadWorkflowContext;
 
 /**
  * Workflow Activity interface
@@ -10,7 +11,7 @@ public interface SeadWorkflowActivity {
     /**
      * Executes the activity logic
      */
-    public void execute();
+    public void execute(SeadWorkflowContext context, SeadWorkflowConfig config);
 
     public void addParam(String key, String value);
 

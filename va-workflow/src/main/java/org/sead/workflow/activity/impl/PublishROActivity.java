@@ -1,6 +1,8 @@
 package org.sead.workflow.activity.impl;
 
 import org.sead.workflow.activity.AbstractWorkflowActivity;
+import org.sead.workflow.config.SeadWorkflowConfig;
+import org.sead.workflow.context.SeadWorkflowContext;
 
 /**
  * Responsible for publishing the RO by calling Matchmaker
@@ -8,7 +10,7 @@ import org.sead.workflow.activity.AbstractWorkflowActivity;
 public class PublishROActivity extends AbstractWorkflowActivity {
 
     @Override
-    public void execute() {
+    public void execute(SeadWorkflowContext context, SeadWorkflowConfig config) {
         System.out.println("Executing activity : " + activityName);
     }
 }
