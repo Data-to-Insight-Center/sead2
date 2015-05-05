@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+
+<head>
+    <title>sead 2.0 PDT</title>
+    <h2 align="center">Research Object Network Visualization</h2>
+
+<style>
+
+.link {
+  stroke: #aaa;
+}
+
+.node text {
+stroke:#333;
+cursos:pointer;
+}
+
+.node circle{
+//stroke:#fff;
+//stroke-width:5px;
+fill:#555;
+}
+
+.node {
+  cursor: pointer;
+}
+
+.node.type0 {
+  fill:#333333;
+}
+
+.node.type1 {
+  fill:#994E9B;
+}
+.node.type2 {
+  fill:#5E8AB5;
+}
+.node.type3 {
+  fill:#5E8A33;
+}
+
+.node.type4 {
+  fill:#aaaaaa;
+  stroke:red; 
+  stroke-width: 3px;
+}
+
+.node.type5 {
+	fill:#1BC988;
+}
+
+.node.type6 {
+	fill:#E01B98;
+}
+
+image.circle {
+	cursor:pointer;
+}
+    
+d3-tip {
+    line-height: 1;
+    color: black;
+}    
+
+</style>
+
+</head>
+
+<body>
+<script src="http://d3js.org/d3.v2.min.js?2.9.3"></script>
+<script type='text/javascript' src="http://labratrevenge.com/d3-tip/javascripts/d3.tip.v0.6.3.js"> </script>    
+ <div align="center" id="container" style="position: relative; width: 1000px; height: 600px;">
+
+<script>
+
+var width = 800,
+    height = 400
+
+var svg = d3.select("div").append("svg")
+    .attr("width", width)
+    .attr("height", height);
+
+var force = d3.layout.force()
+//    .gravity(.05)
+  .distance(100)
+    .charge(-1500)
+    .size([width, height]);
+
+d3.json("graphFile.json", function(json) {
+  force
+      .nodes(json.nodes)
+      .links(json.links)
+      .start();
+
+  var link = svg.selectAll(".link")
+      .data(json.links)
+    .enter().append("line")
+      .attr("class", "link")
+    .style("stroke-width", function(d) { return Math.sqrt(d.weight); });
+
+  var node = svg.selectAll(".node")
+      .data(json.nodes)
+      .enter().append("g")
+      .attr("class", "node")
+      .on("mouseover", mouseover)
+      .on("mouseout", mouseout)
+    .on('mouseover', tip.show) //Added
+    .on('mouseout', tip.hide) //Added 
+      .call(force.drag);
+
+    
+  node.append("circle")
+    .attr("class", function(d){ return "node type"+d.type})
+    .attr("r",function(d){if(d.entity == "person"){ return 5 } else { return 8 }})
+    .attr("fill","transparent");
+       
+  node.append("text")
+      .attr("dx", 12)
+      .attr("dy", ".20em")
+      .text(function(d) {if(d.entity == "ro"){return d.name } else { return "" }});
+//      .text(function(d) { return d.name });
+
+  force.on("tick", function() {
+    link.attr("x1", function(d) { return d.source.x; })
+        .attr("y1", function(d) { return d.source.y; })
+        .attr("x2", function(d) { return d.target.x; })
+        .attr("y2", function(d) { return d.target.y; })
+    ;
+
+    node.attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; });
+      
+  });
+});
+
+//Set up tooltip
+var tip = d3.tip()
+    .attr('class', 'd3-tip')
+    .offset([-10, 0])
+    .html(function (d) {
+ //   return  d.name + "";
+        if(d.entity == "person"){return d.name } else { return "" };
+})
+svg.call(tip);    
+    
+function mouseover() {
+  d3.select(this).select("circle").transition()
+      .duration(750)
+      .attr("r",function(d){if(d.entity == "person"){ return 8 } else { return 12 }})
+}
+
+function mouseout() {
+  d3.select(this).select("circle").transition()
+      .duration(750)
+      .attr("r",function(d){if(d.entity == "person"){ return 5 } else { return 8 }})
+}    
+</script>
+</div>   
+        
+<div  align="center" id="demo" style="position: relative; width: 800px; height: 60px;">
+    <canvas id="myCanvas" width="10" height="10"></canvas>
+    <script>
+      var canvas = document.getElementById('myCanvas');
+      var context = canvas.getContext('2d');
+      var centerX = canvas.width / 2;
+      var centerY = canvas.height / 2;
+      var radius = 5;
+
+      context.beginPath();
+      context.arc(centerX, centerY, radius, 0, 2 * Math.PI, false);
+      context.fillStyle = '#994E9B';
+      context.fill();
+    </script>
+    <label>Research Object</label>
+
+</div> 
+</body>

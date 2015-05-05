@@ -1,0 +1,87 @@
+
+{
+  "@context": "http://schema.org/",
+  "@type": "DataDownload",
+  "name": "Debris Flow Flume",
+  "description": "A 4-meter diameter, 80-cm wide rotating debris flow flume was constructed at the University of California Richmond Field Station for studying large-scale granular flow phenomena. This dataset covers the experiments conducted in 2007 and 2008, where the primary goal was to study rates and mechanisms of bedrock erosion by debris flows.",
+  "sourceOrganization": "Columbia University",  
+  "author": {
+    "@type": "Person",
+    "name": "Hsu, Leslie",
+    "@id": "http://orcid.org/0000-0002-5353-807X",
+    "email": "lhsu@ldeo.columbia.edu"
+  }
+  "fileSize": "00000MB",
+  "contentUrl": "http://sead-vivo.d2i.indiana.edu:8080/sead-vivo/individual/n15603",
+  "genre": "Geophysics"
+}
+
+
+{
+  "@context": "http://schema.org/",
+  "@type": "DataDownload",
+  "name": "Data from: Mississippi River Flood 2011 project",
+  "description": "This collection includes data developed and used for the analysis of the Birds Point-New Madrid (BPNM) Floodway activation in 2011. The data collection includes 10 items, all of which present the processed and derived data. The processed differential LiDAR is the 2005 (pre-flood) LiDAR subtracted from the 2011 (post-flood) LiDAR and corrected for flight line errors. The original LiDAR data were obtained from US Army Corps of Engineers. There are 5 simulated maximum velocity data items from HydroSed2D at two locations (O’Bryan Ridge and Ten Mile Pond) and 2 simulation cases (vegetation and no vegetation). The maximum velocity data for the entire Floodway is for the vegetated case. The NASA AVIRIS dataset is classified into classes representing woody vegetation and bare soil. The soil dataset (K/T) is an erodibility index derived from USDA SSURGO data. Additional data for this study was provided by the USGS, and is available along with the report at the following site: http://pubs.usgs.gov/pp/1798e/. This data includes ADCP (Acoustic Doppler Current Profiler) flow measurements from the inflows an outflows of the Floodway, and HOBO depth sensor measurements from various points within the Floodway. This data were used to validate the HydroSed2D simulations.",  
+  "author": {
+    "@type": "Person",
+    "name": "Goodwell, Allison",
+    "@id": "http://orcid.org/0000-0001-9351-557X",
+    "email": "goodwel2@illinois.edu"
+  }
+  "fileSize": "00000MB",
+  "contentUrl": "http://sead-vivo.d2i.indiana.edu:8080/sead-vivo/individual/n3559",
+  "genre": "Hydrology"
+}
+
+{
+  "@context": "http://schema.org/",
+  "@type": "Person",
+  "name": "Hsu, Leslie",
+  "@id": "http://orcid.org/0000-0002-5353-807X",
+  "affiliation": "Columbia University",
+  "jobTitle": "Associate Research Scientist",
+  "email": "lhsu@ldeo.columbia.edu",
+  "URL": "https://sites.google.com/site/lhsu000001/",
+  "codeRepository": "IDEALS"
+}
+
+{
+  "@context": "http://schema.org/",
+  "@type": "Person",
+  "name": "Goodwell, Allison",
+  "@id": "http://orcid.org/0000-0001-9351-557X",
+  "affiliation": "University of Illinois",
+  "jobTitle": "Graduate Student",
+  "email": "goodwel2@illinois.edu",
+  "codeRepository": "IDEALS"
+}
+
+{
+  "@context": "http://re3data.org/",
+  "@type": "repository",
+  "orgidentifier": "http://doi.org/xxxxxxx",
+  "repositoryName": "IDEALS",
+  "repositoryURL": "https://www.ideals.illinois.edu/",
+  "institution": "University of Illinois",
+  "subject": "any",
+  "versioning": "no",
+  "dataAccessType": ["open","restricted"],
+  "dataLicenseName": ["other"],
+  "contentType": ["csv", "txt", "xml", "html", "tif", "jp2", "aif", "fla", "ogg", "wav", "avi", "mj2"],
+  "/maxFileSize": "2048MB"
+}
+
+{
+  "@context": "http://re3data.org/",
+  "@type": "repository",
+  "orgidentifier": "http://doi.org/xxxxxxx",
+  "repositoryName": "ICPSR",
+  "repositoryURL": "https://www.icpsr.umich.edu/icpsrweb/landing.jsp",
+  "institution": "University of Michigan",
+  "subject": "Social and Behavioral Sciences",
+  "versioning": "yes",
+  "dataAccessType": ["open","restricted"],
+  "dataLicenseName": ["other"],
+  "contentType": "any",
+  "/maxFileSize": "no limit"
+}
