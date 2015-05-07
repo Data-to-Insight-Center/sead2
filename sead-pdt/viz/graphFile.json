@@ -1,18 +1,18 @@
 {
   "nodes":[
       
-		{"name":"Mississippi River Flood 2011 project","entity":"ro", "type":1},
-		{"name":"Allison E. Goodwell","entity":"person", "type":2},
-		{"name":"Zhenduo Zhu","entity":"person", "type":2},
-		{"name":"Debsunder Dutta","entity":"person", "type":2},
-		{"name":"Jonathan A. Greenberg","entity":"person", "type":2},
-		{"name":"Praveen Kumar","entity":"person", "type":2},
-		{"name":"Bruce L. Rhoads","entity":"person", "type":2},
-		{"name":"Robert R. Holmes","entity":"person", "type":2},
-        {"name":"University of Illinois at Urbana−Champaign","entity":"institution", "type":3},
-        {"name":"U.S. Geological Survey","entity":"institution", "type":3},
-        {"name":"IDEALS","entity":"repository", "type":4},
-        {"name":"DOI: 10.1021/es404760t","entity":"publication", "type":5}
+		{"name":"Mississippi River Flood 2011 project", "id":"xxxx","entity":"ro", "type":1},
+		{"name":"Allison E. Goodwell", "id":"0000-0001-9351-557X","entity":"person", "type":2},
+		{"name":"Zhenduo Zhu","id":"xxxx","entity":"person", "type":2},
+		{"name":"Debsunder Dutta","id":"xxxx","entity":"person", "type":2},
+		{"name":"Jonathan A. Greenberg","id":"xxxx","entity":"person", "type":2},
+		{"name":"Praveen Kumar","id":"xxxx","entity":"person", "type":2},
+		{"name":"Bruce L. Rhoads","id":"xxxx","entity":"person", "type":2},
+		{"name":"Robert R. Holmes","id":"xxxx","entity":"person", "type":2},
+        {"name":"University of Illinois at Urbana−Champaign","id":"xxxx","entity":"institution", "type":3},
+        {"name":"U.S. Geological Survey", "id":"xxxx","entity":"institution", "type":3},
+        {"name":"IDEALS", "id":"xxxx","entity":"repository", "type":4},
+        {"name":"DOI: 10.1021/es404760t", "id":"xxxx","entity":"publication", "type":5}
 
 	],
 	"links":[
