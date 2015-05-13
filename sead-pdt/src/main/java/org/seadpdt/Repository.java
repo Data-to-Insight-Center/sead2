@@ -41,7 +41,7 @@ public class Repository {
  
 	@Override
 	public String toString() {
-		return "Repository [context=" + context + ", type=" + type + 
+		return "Repository [@context=" + context + ", @type=" + type + 
 				", orgidentifier" + orgidentifier + ", repositoryName" +
 				repositoryName + "]";
 	}
