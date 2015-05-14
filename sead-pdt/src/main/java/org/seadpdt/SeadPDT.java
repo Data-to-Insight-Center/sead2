@@ -32,10 +32,15 @@ public class SeadPDT {
 	 @GET
 	 @Path("/list")
 	 @Produces(MediaType.APPLICATION_JSON)
-	 public byte[] listRepos() throws IOException {	
+	 public byte[] listRepos()  {	
 		 
 		 java.nio.file.Path path = Paths.get("../../sead-json/list.json");
-		 byte[] data = Files.readAllBytes(path);
+		 byte[] data = new byte[] {'*'};
+		try {
+			data = Files.readAllBytes(path);
+		} catch (IOException e) {
+
+		}
 		 
 		 return data;
 	 }
@@ -54,18 +59,21 @@ public class SeadPDT {
 	 
 	@GET
 	@Path("/byid")
-	public Response getRepoID(
-		@QueryParam("from") int from,
-		@QueryParam("to") int to,
-		@QueryParam("orderBy") List<String> orderBy) {
-		return Response
-		   .status(200)
-		   .entity("getUsers is called, from : " + from + ", to : " + to
-			+ ", orderBy" + orderBy.toString()).build();
+	public byte[] getRepoID(
+		@QueryParam("id") String repID)  {
+		 String repPath = "../../sead-json/" + repID + ".json";
+		 java.nio.file.Path path = Paths.get(repPath);
+		 byte[] data = new byte[] {'*'};
+		try {
+			data = Files.readAllBytes(path);
+		} catch (IOException e) {
+
+		}	 
+		 return data;
 	}
 	
 	@GET
-	@Path("/byvalue")
+	@Path("/params")
 	public Response getRepoValue(
 		@QueryParam("from") int from,
 		@QueryParam("to") int to,
