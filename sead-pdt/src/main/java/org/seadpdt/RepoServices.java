@@ -24,17 +24,17 @@ import org.codehaus.jackson.JsonParseException;
 import org.codehaus.jackson.JsonParser;
 import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
-import org.seadpdt.Repository;
+import org.seadpdt.RepoJSON;
 
 @Path("/repo")
-public class SeadPDT {
+public class RepoServices {
  
 	 @GET
 	 @Path("/list")
 	 @Produces(MediaType.APPLICATION_JSON)
 	 public byte[] listRepos()  {	
 		 
-		 java.nio.file.Path path = Paths.get("../../sead-json/list.json");
+		 java.nio.file.Path path = Paths.get("../../sead-json/repo.json");
 		 byte[] data = new byte[] {'*'};
 		try {
 			data = Files.readAllBytes(path);
@@ -48,8 +48,8 @@ public class SeadPDT {
 	 @GET
 	 @Path("/test")
 	 @Produces(MediaType.APPLICATION_JSON)
-	 public Repository testRepos()  {	
-		 Repository repository = new Repository();
+	 public RepoJSON testRepos()  {	
+		 RepoJSON repository = new RepoJSON();
 		 repository.setContext("http://re3data.org/");
 		 repository.setType("repository"); 
 		 repository.setOrgIdentifier("https://www.ideals.illinois.edu");

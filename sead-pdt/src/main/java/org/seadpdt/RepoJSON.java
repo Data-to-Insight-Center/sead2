@@ -1,6 +1,6 @@
 package org.seadpdt;
 
-public class Repository {
+public class RepoJSON {
 	 
 	String context;
 	String type;
