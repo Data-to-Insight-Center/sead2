@@ -1,6 +1,7 @@
 package org.seadva.metadatagen.service;
 
 import org.seadva.metadatagen.OREMetadataGen;
+import org.seadva.metadatagen.SIPMetadataGen;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -26,11 +27,30 @@ public class MetadataGenerator {
     @Path("/getMetadata")
     @Produces(MediaType.APPLICATION_XML)
     public Response getIt(@QueryParam("entityId") String entityId,
-                        @QueryParam("type") String metadataType) throws URISyntaxException {
+                          @QueryParam("type") String metadataType) throws URISyntaxException {
 
-        OREMetadataGen oreMetadataGen = new OREMetadataGen();
+        String errorMsg ="<error>\n" +
+                "<description>EntityId and type(ORE/SIP/FGDC) are required query parameters. Please specify.</description>\n" +
+                "<traceInformation>\n" +
+                "method: metadata-gen.getMetadata \n" +
+                "</traceInformation>\n" +
+                "</error>";
+
+        if(entityId == null || metadataType == null){
+            return Response.status(Response.Status.BAD_REQUEST).entity(errorMsg).type(MediaType.APPLICATION_XML).build();
+        }
+
         String response = "";
-        response = oreMetadataGen.generateMetadata(entityId);
+
+        if(metadataType.equalsIgnoreCase("ORE")) {
+            OREMetadataGen oreMetadataGen = new OREMetadataGen();
+            response = oreMetadataGen.generateMetadata(entityId);
+        } else if(metadataType.equalsIgnoreCase("SIP")){
+            OREMetadataGen oreMetadataGen = new OREMetadataGen();
+            oreMetadataGen.generateMetadata(entityId);
+            SIPMetadataGen sipMetadataGen = new SIPMetadataGen();
+            response = sipMetadataGen.generateMetadata(entityId);
+        }
 
         return Response.ok(response
         ).build();
