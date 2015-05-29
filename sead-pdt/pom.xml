@@ -34,7 +34,11 @@
 <artifactId>jersey-multipart</artifactId>
 <version>1.10</version>
 </dependency>
-
+    <dependency>
+        <groupId>org.mongodb</groupId>
+        <artifactId>mongodb-driver</artifactId>
+        <version>3.0.1</version>
+    </dependency>
   </dependencies>
   <build>
     <finalName>sead-pdt</finalName>
