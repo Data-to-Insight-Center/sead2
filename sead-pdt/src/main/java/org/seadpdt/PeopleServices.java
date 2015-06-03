@@ -15,6 +15,13 @@ import javax.ws.rs.core.MediaType;
 public class PeopleServices {
 
 	 @GET
+	 @Path("/orcid")
+	 @Produces(MediaType.APPLICATION_JSON)
+	 public String listORCID()  {	
+		 return ORCIDcalls.getORCID();
+	 }			
+	
+	 @GET
 	 @Path("/list")
 	 @Produces(MediaType.APPLICATION_JSON)
 	 public byte[] listRepos()  {	
