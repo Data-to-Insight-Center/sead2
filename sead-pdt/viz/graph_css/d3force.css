@@ -1,0 +1,53 @@
+.link {
+  stroke: #aaa;
+}
+
+.node text {
+stroke:#333;
+cursos:pointer;
+}
+
+.node circle{
+//stroke:#fff;
+//stroke-width:5px;
+fill:#555;
+}
+
+.node {
+  cursor: pointer;
+}
+
+.node.type0 {
+  fill:#333333;
+}
+
+.node.type1 {
+  fill:#994E9B;
+}
+.node.type2 {
+  fill:#4E8AC5;
+}
+.node.type3 {
+  fill:#5E9A13;
+}
+
+.node.type4 {
+  fill:#FF3465;
+}
+
+.node.type5 {
+	fill:#EB6938;
+}
+
+.node.type6 {
+	fill:#E01B98;
+}
+
+image.circle {
+	cursor:pointer;
+}
+    
+d3-tip {
+    line-height: 1;
+    color: black;
+}  

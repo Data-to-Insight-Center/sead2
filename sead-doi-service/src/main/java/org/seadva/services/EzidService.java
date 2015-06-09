@@ -5,8 +5,7 @@ import org.seadva.services.util.IdMetadata;
 
 import org.json.*;
 
-import java.io.Console;
-import java.io.IOException;
+import java.io.*;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -152,6 +151,32 @@ public class EzidService {
         }
         String doi_url = "http://dx.doi.org/" + result.split(":")[result.split(":").length - 1];
         return doi_url;
+    }
+
+    public boolean setDOIUnavailable(String doi) throws IOException {
+
+        String serviceURL = Constants.ezid_url + "id/" + doi;
+        String command = "curl -u "+ Constants.doi_username +":"+ Constants.doi_password +" -X POST -H \"Content-Type:text/plain\" " +
+                "--data-binary " + "'_status:unavailable'" + " "+ serviceURL;
+
+        ByteArrayOutputStream stdout = dataciteIdService.executeCommand(command);
+        BufferedReader br = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(stdout.toByteArray())));
+
+        String output_line = null;
+        String doiUrl = null;
+        while((output_line = br.readLine()) != null)
+        {
+            if(output_line.contains("doi"))
+                doiUrl = output_line;
+        }
+
+        System.out.println(doiUrl);
+        if(doiUrl.split(":")[0].equals("success")){
+            return true;
+        } else {
+            return false;
+        }
+
     }
 
 

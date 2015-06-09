@@ -1,0 +1,229 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+    
+    <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Research Network | SEAD </title>
+    
+    <link rel="shortcut icon" href="images/favicon.ico" type="image/x-icon" />
+    <!-- local copy of UM css that references local fonts  -->
+    <link rel="stylesheet" id="spacious_style-css" href="login_css/um-style.css?ver=3.9.1" type="text/css" media="all">     
+ 
+    <link href='//fonts.googleapis.com/css?family=Lato&subset=latin,latin-ext' rel='stylesheet' type='text/css'>
+    
+    <link href='//fonts.googleapis.com/css?family=Raleway:400,100,200,300,500,600,700,800,900' rel='stylesheet' type='text/css'>
+    
+   <script src="//code.jquery.com/jquery-latest.js"></script>
+    <script type="text/javascript" src="login_scripts/cnss.js"></script>
+
+    <link rel="stylesheet" id="spacious_style-css" href="login_css/seadmenu.css" type="text/css" media="all">
+    
+        <link rel="stylesheet" id="d3force-css" href="graph_css/d3force.css" type="text/css" media="all">
+ 
+</head>
+
+
+<body class="home page wide-1218">	
+<script src="http://d3js.org/d3.v2.min.js?2.9.3"></script>
+<script type='text/javascript' src="http://labratrevenge.com/d3-tip/javascripts/d3.tip.v0.6.3.js"> </script>       
+	<div id="page" class="hfeed site">
+		<header id="masthead" class="site-header clearfix">
+			<div id="header-text-nav-wrap" class="clearfix">
+	
+	<!-- #header-logo-image -->
+	<div id="header-left-section">
+		<div id="header-logo-image">
+			<a href="http://sead-data.net/" title="SEAD" rel="home"><img src="http://sead-data.net/wp-content/uploads/2014/06/logo.png" alt="SEAD"></a>
+		</div>
+	<!-- #header-logo-image -->
+
+	<!-- #header-right-section social icons--> 
+	<div id="header-right-section">
+		<div id="header-right-sidebar" class="clearfix">
+			<aside id="cnss_widget-3" class="widget widget_cnss_widget">
+				<table class="cnss-social-icon" style="width:138px" border="0" cellspacing="0" cellpadding="0">
+					<tbody>
+						<tr>
+							<td >
+								<a target="_blank" title="facebook" href="https://www.facebook.com/SEADDataNet">
+									<img src="http://sead-data.net/wp-content/uploads/1403285144_facebook.png" border="0" width="32" height="32" alt="facebook">
+								</a>
+							</td>
+							<td >
+								<a target="_blank" title="twitter" href="https://twitter.com/SEADdatanet">
+									<img src="http://sead-data.net/wp-content/uploads/1403285215_twitter.png" border="0" width="32" height="32" alt="twitter">
+								</a>
+							</td>
+							<td >
+								<a target="_blank" title="Slideshare" href="http://www.slideshare.net/SEADdatanet">
+									<img src="http://sead-data.net/wp-content/uploads/1403285311_slidershare.png" border="0" width="32" height="32" alt="Slideshare">
+								</a>
+							</td>
+							<td ><a target="_blank" title="Rss Feed" href="http://www.sead-data.net/?cat=11,12,13,29,30,31&amp;feed=rss2"><img src="http://sead-data.net/wp-content/uploads/1415982481_rss.png" border="0" width="32" height="32" alt="Rss Feed" style="opacity: 1;"></a></td>
+						</tr>
+					</tbody>
+				</table>
+			</aside>
+		</div>
+		</div>
+		<!-- #header-right-section --> 
+
+                       
+  
+
+	</div><!-- #header-left-section -->
+	</div>
+
+</header>
+<div style="margin:auto;}">
+   
+<div style="width: 1200px;height: 400px;">
+ <div align="center" id="leftdiv" style="float: left; width: 300px;">
+     Key & Instructions
+ </div>
+ <div align="center" id="centerdiv" style="float: left; width: 600px;">
+     
+<script type=text/javascript>
+
+var width = 600,
+    height = 400
+
+var svg = d3.select("#centerdiv").append("svg")
+    .attr("width", width)
+    .attr("height", height);
+
+var force = d3.layout.force()
+//    .gravity(.05)
+  .distance(75)
+    .charge(-500)
+    .size([width, height]);
+
+d3.json("graphFile.json", function(json) {
+  force
+      .nodes(json.nodes)
+      .links(json.links)
+      .start();
+
+  var link = svg.selectAll(".link")
+      .data(json.links)
+    .enter().append("line")
+      .attr("class", "link")
+    .style("stroke-width", function(d) { return Math.sqrt(d.weight); });
+
+  var node = svg.selectAll(".node")
+      .data(json.nodes)
+      .enter().append("g")
+      .attr("class", "node")
+      .attr("label", function(d) { return d.id; })
+      .on("mouseover", mouseover)
+      .on("mouseout", mouseout)
+    .on('mouseover', tip.show) //Added (combine w/ mouseover)
+    .on('mouseout', tip.hide) //Added 
+    .on('click', releaseNodes) //Added code 
+    .on('dblclick', bioORCID) //Added code 
+    .call(force.drag);
+
+
+    
+  node.append("circle")
+    .attr("class", function(d){ return "node type"+d.type})
+    .attr("r",function(d){if(d.entity == "person"){ return 12 } else { return 12 }})
+    .attr("fill","transparent");
+       
+  node.append("text")
+      .attr("dx", 12)
+      .attr("dy", ".20em")
+      .text(function(d) {if(d.entity == "ro"){return d.name } else { return "" }});
+//      .text(function(d) { return d.name });
+
+  force.on("tick", function() {
+    link.attr("x1", function(d) { return d.source.x; })
+        .attr("y1", function(d) { return d.source.y; })
+        .attr("x2", function(d) { return d.target.x; })
+        .attr("y2", function(d) { return d.target.y; })
+    ;
+
+    node.attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; });
+      
+  });
+});
+
+//Set up tooltip
+var tip = d3.tip()
+    .attr('class', 'd3-tip')
+    .offset([-10, 0])
+    .html(function (d) {
+ //   return  d.name + "";
+        if(d.entity != "ro"){return d.name } else { return "" };
+})
+svg.call(tip);    
+   
+function connectedNodes() {
+  d3.select(this).select("circle").transition()
+      .duration(750)
+      .attr("r",function(d){if(d.entity == "person"){ return 15 } else { return 15 }})
+}    
+    
+function releaseNodes() {
+  d3.select(this).select("circle").transition()
+      .duration(750)
+      .attr("r",function(d){if(d.entity == "person"){ return 12 } else { return 12 }})
+}      
+    
+function mouseover() {
+  d3.select(this).select("circle").transition()
+      .duration(750)
+      .attr("r",function(d){if(d.entity == "person"){ return 15 } else { return 15 }})
+}
+
+function mouseout() {
+  d3.select(this).select("circle").transition()
+      .duration(750)
+      .attr("r",function(d){if(d.entity == "person"){ return 12 } else { return 12 }})
+}   
+        
+function bioORCID() {
+    var xID = d3.select(this)
+    var reqText = 'http://pub.orcid.org/v1.1/' + xID.attr("label") + '/orcid-bio';
+    var xhr = new XMLHttpRequest();
+    document.getElementById('myTextarea').value = "<no results>";
+    xhr.open("GET", reqText, false);
+    xhr.send();
+    document.getElementById('myTextarea').value = xhr.responseText;
+}
+    
+    
+</script>
+    
+    
+ </div>
+ <div align="center" id="rightdiv" style="float: left; width: 300px;">
+     <textarea id="myTextarea" name="textarea" rows="15" cols="50"></textarea>   
+ </div>
+ <br style="clear: left;" />
+</div>    
+          
+</div>
+
+<footer id="colophon" class="clearfix">	
+			<div class="footer-socket-wrapper clearfix">
+				<div class="inner-wrap">
+					<div class="footer-socket-area">
+						<div class="copyright"><img id="nsf" src="http://sead-data.net/wp-content/uploads/2014/06/nsf2.png" alt="NSF " width="30px" height="30px">SEAD is funded by the National Science Foundation under cooperative agreement #OCI0940824.</div>						
+						<nav class="small-menu">
+							<div class="menu-footer-menu-container">
+								<ul id="menu-footer-menu" class="menu">	
+									<a href="http://sead-data.net/contactus/">Contact Us</a>
+								</li>
+								</ul>
+							</div>	
+					</nav>	
+					</div>
+				</div>
+			</div>
+		</footer>
+		
+</body>
+</html>

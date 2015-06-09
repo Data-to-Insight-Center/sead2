@@ -58,6 +58,33 @@
           <artifactId>foresite</artifactId>
           <version>0.9</version>
       </dependency>
+
+      <!-- Model jars imported from DSC and SEAD -->
+      <dependency>
+          <artifactId>dcs-model</artifactId>
+          <groupId>org.dataconservancy.model</groupId>
+          <version>1.1.0-SNAPSHOT</version>
+          <type>jar</type>
+      </dependency>
+      <dependency>
+          <artifactId>dcs-model-builder-xstream</artifactId>
+          <groupId>org.dataconservancy.model</groupId>
+          <version>1.1.0-SNAPSHOT</version>
+          <type>jar</type>
+      </dependency>
+      <dependency>
+          <artifactId>sead-model</artifactId>
+          <groupId>org.seadva.model</groupId>
+          <version>1.0.1-SNAPSHOT</version>
+          <type>jar</type>
+      </dependency>
+      <dependency>
+          <artifactId>sead-model-builder-xstream</artifactId>
+          <groupId>org.seadva.model</groupId>
+          <version>1.0.1-SNAPSHOT</version>
+          <type>jar</type>
+      </dependency>
+
   </dependencies>
   <dependencyManagement>
     <dependencies>

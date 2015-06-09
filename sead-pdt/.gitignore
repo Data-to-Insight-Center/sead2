@@ -1,0 +1,14 @@
+*.class
+*.jar
+*.war
+
+# Package Files #
+
+*.ear
+/bin
+
+/.build
+*.bak
+
+/target/
+

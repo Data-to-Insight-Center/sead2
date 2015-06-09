@@ -3,8 +3,11 @@ package org.sead.workflow;
 import org.apache.axiom.om.OMElement;
 import org.apache.axiom.om.OMXMLBuilderFactory;
 import org.apache.axiom.om.OMXMLParserWrapper;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.sead.workflow.activity.SeadWorkflowActivity;
 import org.sead.workflow.config.SeadWorkflowConfig;
+import org.sead.workflow.context.SeadWorkflowContext;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
@@ -16,6 +19,10 @@ import java.util.Iterator;
 @Path("service")
 public class SeadWorkflowService {
 
+    // log init
+    private static final Log log = LogFactory.getLog(SeadWorkflowService.class);
+
+    // workflow config which is shared among all invocations
     private static SeadWorkflowConfig config = new SeadWorkflowConfig();
 
     static {
@@ -53,13 +60,9 @@ public class SeadWorkflowService {
                 }
                 config.addActivity(wfActivity);
             }
-            System.out.println("Done loading SEAD Configuration");      // TODO: use logs
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();     // TODO: handle Exception
-        } catch (InstantiationException e) {
-            e.printStackTrace();
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
+            log.info("Done loading SEAD Configuration");
+        } catch (Exception e) {
+            log.error("Error while loading SEAD Configuration.", e);
         }
     }
 
@@ -86,8 +89,9 @@ public class SeadWorkflowService {
     @Consumes("application/json")
     public String publishRO(String ro) {
         System.out.println("Input JSON: " + ro);
+        SeadWorkflowContext context = new SeadWorkflowContext();
         for (SeadWorkflowActivity activity : config.getActivities()) {
-            activity.execute();
+            activity.execute(context, config);
         }
 //        return Response.ok().build();
         return "SEAD Publish Workflow triggered!";
