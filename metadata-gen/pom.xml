@@ -84,6 +84,16 @@
           <version>1.0.1-SNAPSHOT</version>
           <type>jar</type>
       </dependency>
+      <dependency>
+          <groupId>d2i</groupId>
+          <artifactId>d2i-fgdc-schema</artifactId>
+          <version>1.0.0</version>
+      </dependency>
+      <dependency>
+          <groupId>org.apache.xmlbeans</groupId>
+          <artifactId>xmlbeans-xpath</artifactId>
+          <version>2.3.0</version>
+      </dependency>
 
   </dependencies>
   <dependencyManagement>

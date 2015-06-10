@@ -25,7 +25,7 @@ import java.util.*;
 
 public class ROQueryUtil {
 
-    public static final String ACR_REST_CONTEXT = "@context";
+    public static final String REST_CONTEXT = "@context";
 
     public MetadataObject readMetadata(String tagId) {
 
@@ -57,13 +57,13 @@ public class ROQueryUtil {
 
         try {
             JSONObject response = new JSONObject(json);
-            JSONObject context = response.getJSONObject(ACR_REST_CONTEXT);
+            JSONObject context = response.getJSONObject(REST_CONTEXT);
             // iterate through all children
             Iterator itr = response.keys();
             while (itr.hasNext()) {
                 String child = (String) itr.next();
                 // ignore context object
-                if (child.equals(ACR_REST_CONTEXT)) {
+                if (child.equals(REST_CONTEXT)) {
                     continue;
                 }
                 // add predicate and value to the map
@@ -107,8 +107,8 @@ public class ROQueryUtil {
         while (itr.hasNext()) {
             String child = (String) itr.next();
 
-            if(child.equalsIgnoreCase("identifier"))
-                continue;
+            //if(child.equalsIgnoreCase("identifier"))
+                //continue;
 
             String predicate = context.get(child).toString();
 

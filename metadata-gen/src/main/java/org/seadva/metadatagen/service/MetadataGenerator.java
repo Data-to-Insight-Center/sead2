@@ -1,5 +1,6 @@
 package org.seadva.metadatagen.service;
 
+import org.seadva.metadatagen.FGDCMetadataGen;
 import org.seadva.metadatagen.OREMetadataGen;
 import org.seadva.metadatagen.SIPMetadataGen;
 
@@ -45,11 +46,9 @@ public class MetadataGenerator {
         if(metadataType.equalsIgnoreCase("ORE")) {
             OREMetadataGen oreMetadataGen = new OREMetadataGen();
             response = oreMetadataGen.generateMetadata(entityId);
-        } else if(metadataType.equalsIgnoreCase("SIP")){
-            OREMetadataGen oreMetadataGen = new OREMetadataGen();
-            oreMetadataGen.generateMetadata(entityId);
-            SIPMetadataGen sipMetadataGen = new SIPMetadataGen();
-            response = sipMetadataGen.generateMetadata(entityId);
+        } else if(metadataType.equalsIgnoreCase("FGDC")){
+            FGDCMetadataGen fgdcMetadataGen = new FGDCMetadataGen();
+            response = fgdcMetadataGen.generateMetadata(entityId);
         }
 
         return Response.ok(response
