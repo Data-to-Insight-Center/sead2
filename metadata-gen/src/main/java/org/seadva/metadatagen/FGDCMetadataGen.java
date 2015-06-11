@@ -21,7 +21,7 @@ public class FGDCMetadataGen extends BaseMetadataGen {
 
     private static String CREATOR = "http://purl.org/dc/elements/1.1/creator";
     //private static String CREATOR = "http://purl.org/dc/terms/creator";
-    private static String TITLE = "http://purl.org/dc/terms/title";
+    private static String TITLE = "http://www.w3.org/2000/01/rdf-schema#label";
     private static String ABSTRACT = "http://purl.org/dc/terms/abstract";
     private static String CONTACT = "";
     private static String PUB_DATE = "";
