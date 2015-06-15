@@ -1,7 +1,5 @@
 package org.seadpdt;
 
-import java.util.List;
-
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;

@@ -1,6 +1,7 @@
 *.class
 *.jar
 *.war
+*.properties
 
 # Package Files #
 
