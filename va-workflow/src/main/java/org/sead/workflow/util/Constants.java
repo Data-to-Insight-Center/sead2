@@ -36,16 +36,31 @@ import org.xmlpull.v1.XmlPullParserFactory;
  * */
 public class Constants {
 
-
     public static Map<String, String> metadataPredicateMap;
     public static List<PSInstance> psInstances;
 
     public static final String TRUE = "true";
     public static final String FALSE = "false";
 
+    // constants in context
     public static final String JSON_RO = "jsonRO";
     public static final String PS_ID = "psID";
     public static final String SIGNAL_PS = "signalPs";
+    public static final String VALIDATED = "validated";
+    public static final String RESPONSE = "response";
+    public static final String RO_ID = "roId";
+
+    // constants in JSONLD of RO
+    public static final String HAS_FILES = "Has Files";
+    public static final String HAS_SUBCOLLECTIONS = "Has Subcollection";
+    public static final String REST_CONTEXT = "@context";
+    public static final String REST_ID = "@id";
+    public static final String IDENTIFIER = "Identifier";
+    public static final String GEN_AT = "Source";
+    public static final String GEN_AT_URL = "http://sead-data.net/terms/generatedAt";
+    public static final String FLOCAT = "FLocat";
+    public static final String FLOCAT_URL = "http://www.loc.gov/METS/FLocat";
+    public static final String SIZE = "Size";
 
     static{
         try {

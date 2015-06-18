@@ -111,7 +111,14 @@ public class SeadWorkflowService {
         System.out.println("Main: resume");
 
         // send response back to client when signalled by WorkflowThread
-        return Response.ok(context.getProperty(Constants.JSON_RO)).build();
+        if(context.getProperty(Constants.VALIDATED).equals(Constants.TRUE)){
+            return Response.ok(context.getProperty(Constants.RESPONSE)).build();
+        } else {
+            return Response
+                    .status(Response.Status.CONFLICT)
+                    .type(MediaType.APPLICATION_JSON_TYPE)
+                    .entity(context.getProperty(Constants.RESPONSE)).build();
+        }
     }
 
 }

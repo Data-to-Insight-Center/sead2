@@ -1,5 +1,7 @@
 package org.sead.workflow.activity.impl;
 
+import com.hp.hpl.jena.graph.query.SimpleQueryEngine;
+import com.hp.hpl.jena.sparql.util.Convert;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
@@ -30,13 +32,6 @@ import java.util.Iterator;
  */
 public class ConvertROActivity extends AbstractWorkflowActivity {
 
-    public static final String REST_CONTEXT = "@context";
-    public static final String REST_ID = "@id";
-    public static final String IDENTIFIER = "Identifier";
-    public static final String GEN_AT = "Source";
-    public static final String GEN_AT_URL = "http://sead-data.net/terms/generatedAt";
-    public static final String FLOCAT = "FLocat";
-    public static final String FLOCAT_URL = "http://www.loc.gov/METS/FLocat";
 
     @Override
     public void execute(SeadWorkflowContext context, SeadWorkflowConfig config) {
@@ -56,6 +51,9 @@ public class ConvertROActivity extends AbstractWorkflowActivity {
         // generate JSONLD for the collection identified by roId
         String roJsonString = getRO(roId, activityParams, context);
         context.addProperty(Constants.JSON_RO, roJsonString);
+
+        System.out.println(ConvertROActivity.class.getName() + " : Successfully converted RO");
+
 
     }
 
@@ -93,13 +91,13 @@ public class ConvertROActivity extends AbstractWorkflowActivity {
 
             // add pointers to sub-collections
             JSONArray subCollectionArray = addSubCollectionMetadata(roId, context, tempPath);
-            ((JSONObject)jsonObject.get(REST_CONTEXT)).put("Has Subcollection", "http://purl.org/dc/terms/hasPart");
-            jsonObject.put("Has Subcollection", subCollectionArray);
+            ((JSONObject)jsonObject.get(Constants.REST_CONTEXT)).put(Constants.HAS_SUBCOLLECTIONS, "http://purl.org/dc/terms/hasPart");
+            jsonObject.put(Constants.HAS_SUBCOLLECTIONS, subCollectionArray);
 
             for (int i = 0; i < subCollectionArray.length(); i++) {
                 JSONObject arrayItem = (JSONObject)subCollectionArray.get(i);
                 // generate JSONLD for each sub-collection. This is a recursive call
-                getRO((String)arrayItem.get(IDENTIFIER), activityParams, context);
+                getRO((String)arrayItem.get(Constants.IDENTIFIER), activityParams, context);
             }
 
             // Write JSONLD to a file
@@ -124,7 +122,7 @@ public class ConvertROActivity extends AbstractWorkflowActivity {
             Iterator rootIterator = jsonObject.keys();
             while (rootIterator.hasNext()) {
                 String rootKey = (String)rootIterator.next();
-                if (rootKey.equals(REST_CONTEXT)) {
+                if (rootKey.equals(Constants.REST_CONTEXT)) {
                     JSONObject object = (JSONObject)jsonObject.get(rootKey);
                     Iterator iterator = object.keys();
                     while(iterator.hasNext()){
@@ -133,17 +131,17 @@ public class ConvertROActivity extends AbstractWorkflowActivity {
                         if(value instanceof String && Constants.metadataPredicateMap.get(value) != null){
                             object.put(key, Constants.metadataPredicateMap.get(value));
                         } else if(value instanceof JSONObject &&
-                                Constants.metadataPredicateMap.get((String)((JSONObject)value).get(REST_ID)) != null){
+                                Constants.metadataPredicateMap.get((String)((JSONObject)value).get(Constants.REST_ID)) != null){
                             object.put(key, Constants.metadataPredicateMap.get(
-                                    Constants.metadataPredicateMap.get((String)((JSONObject)value).get(REST_ID))));
+                                    Constants.metadataPredicateMap.get((String)((JSONObject)value).get(Constants.REST_ID))));
 
                         } else {
                             //object.put(key, "test");
                         }
                     }
 
-                    if(!object.has(FLOCAT)) {
-                        object.put(FLOCAT, FLOCAT_URL);
+                    if(!object.has(Constants.FLOCAT)) {
+                        object.put(Constants.FLOCAT, Constants.FLOCAT_URL);
                     }
                 } else {
                     //TODO flatten the objects
@@ -163,8 +161,8 @@ public class ConvertROActivity extends AbstractWorkflowActivity {
         String ps_pw = context.getPSInstance().getPassword();
 
         JSONArray hasFilesArray = new JSONArray();
-        ((JSONObject)jsonObject.get(REST_CONTEXT)).put("Has Files", "http://purl.org/dc/terms/hasPart");
-        jsonObject.put("Has Files", hasFilesArray);
+        ((JSONObject)jsonObject.get(Constants.REST_CONTEXT)).put(Constants.HAS_FILES, "http://purl.org/dc/terms/hasPart");
+        jsonObject.put(Constants.HAS_FILES, hasFilesArray);
 
         Client client = Client.create();
         client.addFilter(new HTTPBasicAuthFilter(ps_un, ps_pw));
@@ -187,7 +185,7 @@ public class ConvertROActivity extends AbstractWorkflowActivity {
         }
         String fileArray = writer.toString();
         JSONObject fileArrayObject = new JSONObject(fileArray);
-        fileArrayObject.remove(REST_CONTEXT);
+        fileArrayObject.remove(Constants.REST_CONTEXT);
         Iterator iterator = fileArrayObject.keys();
 
         while (iterator.hasNext()){
@@ -213,7 +211,7 @@ public class ConvertROActivity extends AbstractWorkflowActivity {
                 e.printStackTrace();
             }
             JSONObject fileObject = new JSONObject(fileWriter.toString());
-            fileObject.remove(REST_CONTEXT);
+            fileObject.remove(Constants.REST_CONTEXT);
             hasFilesArray.put(fileObject);
         }
     }
@@ -247,13 +245,13 @@ public class ConvertROActivity extends AbstractWorkflowActivity {
         }
         String subCollectionArray = writer.toString();
         JSONObject subCollectionArrayObject = new JSONObject(subCollectionArray);
-        subCollectionArrayObject.remove(REST_CONTEXT);
+        subCollectionArrayObject.remove(Constants.REST_CONTEXT);
         Iterator iterator = subCollectionArrayObject.keys();
 
         while (iterator.hasNext()){
             String key = (String)iterator.next();
-            String subCollection = "{\""+IDENTIFIER+"\" : \""+key+"\" ," +
-                                    "\""+FLOCAT+"\" : \""+tempPath + "ro_"+ getROFileName(key) + ".json\" }";
+            String subCollection = "{\""+Constants.IDENTIFIER+"\" : \""+key+"\" ," +
+                                    "\""+Constants.FLOCAT+"\" : \""+tempPath + "ro_"+ getROFileName(key) + ".json\" }";
             JSONObject fileObject = new JSONObject(subCollection);
             hasFilesArray.put(fileObject);
         }

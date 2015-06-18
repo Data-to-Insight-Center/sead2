@@ -334,6 +334,12 @@ public class ResearchObjectService {
     }
 
 
+    @GET
+    @Path("/updatetoPO/{entityId}")
+    public Response UpdateStatusToPO(@PathParam("entityId") String roIdentifier){
+
+        return Response.ok().build();
+    }
 
     /**
      * POST Methods
@@ -452,6 +458,14 @@ public class ResearchObjectService {
             }
         }
         return Response.ok().build();
+    }
+
+    @POST
+    @Path("/putjsonldro")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    public Response putJsonldResearchObject(@FormDataParam("ro") String roString) {
+
+        return Response.ok("ID_1234").build();
     }
 
     @POST
