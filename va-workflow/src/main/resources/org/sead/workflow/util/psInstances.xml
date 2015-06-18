@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<instances>
+    <instance>
+        <id>id</id>
+        <url>url</url>
+        <remoteAPI>remort_api</remoteAPI>
+        <title>title</title>
+        <type>medici</type>
+        <user>username</user>
+        <password>password</password>
+    </instance>
+</instances>
+
+

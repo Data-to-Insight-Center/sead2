@@ -21,26 +21,52 @@
 
     <!--list of activities to be executed in SEAD workflow-->
     <activities>
+        <!--activity to convert/traslate RO -->
+        <activity name="convert_ro" class="org.sead.workflow.activity.impl.ConvertROActivity">
+            <parameter name="tempPath">path_to_temp_folder</parameter>
+        </activity>
         <!--activity to persist RO in RO subsystem -->
         <activity name="persist_ro" class="org.sead.workflow.activity.impl.PersistROActivity">
             <parameter name="roSystemUrl">http://localhost:8080/ro</parameter>
         </activity>
-        <!--activity to generate ORE/SIP etc. by calling the metadata service-->
-        <activity name="generate_metadata" class="org.sead.workflow.activity.impl.GenerateMetadataActivity">
-            <parameter name="metadataServiceUrl">http://localhost:8080/meta</parameter>
+        <!--activity to validate the RO-->
+        <activity name="validate_ro" class="org.sead.workflow.activity.impl.ValidateROActivity">
         </activity>
-        <!--activity to call Matchmaker to publish the RO-->
+        <!--activity to update RO status in registry-->
+        <activity name="update_ro_status" class="org.sead.workflow.activity.impl.UpdateROStatusActivity">
+            <parameter name="roSystemUrl">http://localhost:8080/ro</parameter>
+        </activity>
+        <!--activity to signal PS-->
+        <activity name="signal_ps" class="org.sead.workflow.activity.impl.SignalPSActivity">
+        </activity>
+        <!--activity to call Matchmaker to publish the PO-->
         <activity name="publish_ro" class="org.sead.workflow.activity.impl.PublishROActivity">
-            <parameter name="matchmakerUrl">http://localhost:8080/mm</parameter>
-        </activity>
-        <!--activity to update Project Spaces with the DOI-->
-        <activity name="update_ps" class="org.sead.workflow.activity.impl.UpdatePsActivity">
-            <parameter name="psUrl">http://localhost:8080/ps</parameter>
-        </activity>
-        <!--activity to update PDT with the details of the published RO-->
-        <activity name="update_pdt" class="org.sead.workflow.activity.impl.UpdatePdtActivity">
-            <parameter name="pdtUrl">http://localhost:8080/pdt</parameter>
+            <parameter name="metadataServiceUrl">http://localhost:8080/mm</parameter>
         </activity>
     </activities>
+
+    <!--<activities>-->
+        <!--&lt;!&ndash;activity to persist RO in RO subsystem &ndash;&gt;-->
+        <!--<activity name="persist_ro" class="org.sead.workflow.activity.impl.PersistROActivity">-->
+            <!--<parameter name="roSystemUrl">http://localhost:8080/ro</parameter>-->
+        <!--</activity>-->
+        <!--&lt;!&ndash;activity to generate ORE/SIP etc. by calling the metadata service&ndash;&gt;-->
+        <!--<activity name="generate_metadata" class="org.sead.workflow.activity.impl.GenerateMetadataActivity">-->
+            <!--<parameter name="metadataServiceUrl">http://localhost:8080/meta</parameter>-->
+        <!--</activity>-->
+        <!--&lt;!&ndash;activity to call Matchmaker to publish the RO&ndash;&gt;-->
+        <!--<activity name="publish_ro" class="org.sead.workflow.activity.impl.PublishROActivity">-->
+            <!--<parameter name="matchmakerUrl">http://localhost:8080/mm</parameter>-->
+        <!--</activity>-->
+        <!--&lt;!&ndash;activity to update Project Spaces with the DOI&ndash;&gt;-->
+        <!--<activity name="update_ps" class="org.sead.workflow.activity.impl.UpdatePsActivity">-->
+            <!--<parameter name="psUrl">http://localhost:8080/ps</parameter>-->
+        <!--</activity>-->
+        <!--&lt;!&ndash;activity to update PDT with the details of the published RO&ndash;&gt;-->
+        <!--<activity name="update_pdt" class="org.sead.workflow.activity.impl.UpdatePdtActivity">-->
+            <!--<parameter name="pdtUrl">http://localhost:8080/pdt</parameter>-->
+        <!--</activity>-->
+    <!--</activities>-->
+
 
 </sead-config>

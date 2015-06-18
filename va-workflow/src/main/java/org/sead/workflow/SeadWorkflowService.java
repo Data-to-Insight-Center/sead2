@@ -15,6 +15,9 @@ import javax.ws.rs.core.Response;
 import javax.xml.namespace.QName;
 import java.io.InputStream;
 import java.util.Iterator;
+import java.util.concurrent.Semaphore;
+
+import org.sead.workflow.util.Constants;
 
 @Path("service")
 public class SeadWorkflowService {
@@ -23,7 +26,7 @@ public class SeadWorkflowService {
     private static final Log log = LogFactory.getLog(SeadWorkflowService.class);
 
     // workflow config which is shared among all invocations
-    private static SeadWorkflowConfig config = new SeadWorkflowConfig();
+    public static SeadWorkflowConfig config = new SeadWorkflowConfig();
 
     static {
         try {
@@ -53,7 +56,7 @@ public class SeadWorkflowService {
                 SeadWorkflowActivity wfActivity = (SeadWorkflowActivity) c.newInstance();
                 wfActivity.setName(activity.getAttributeValue(new QName("name")));
                 // read activity parameters
-                paramItr = docElement.getChildrenWithLocalName("parameter");
+                paramItr = activity.getChildrenWithLocalName("parameter");
                 while (paramItr.hasNext()) {
                     OMElement param = (OMElement) paramItr.next();
                     wfActivity.addParam(param.getAttributeValue(new QName("name")), param.getText());
@@ -81,20 +84,34 @@ public class SeadWorkflowService {
     /**
      * Invokes the publish workflow to publish the given Research Object.
      *
-     * @param ro - Research Object description
+     * @param roId - Research Object description
+     * @param psId - ID of the Project Space that invoked this method
      * @return DOI that is assigned to the published RO
      */
-    @POST
-    @Path("/publishRO")
-    @Consumes("application/json")
-    public String publishRO(String ro) {
-        System.out.println("Input JSON: " + ro);
+    @GET
+    @Path("/publishRO/{roId}")
+    @Produces("application/json")
+    public javax.ws.rs.core.Response publishRO(@PathParam("roId") String roId,
+                                               @QueryParam("psId") String psId) throws InterruptedException {
+
+        System.out.println("Main : Input JSON: " + roId);
+
+        // A semaphore is used to pause the main thread and spawn another thread(WorkflowThread) to execute the activities
+        // WorkflowThread executes activities and signal the main thread before calling MM
+        // When main thread is resumed, it send a response to the caller of this method.
+        // After signaling the main thread WorkflowThread calls the MM to publish the RO
+        Semaphore semaphore = new Semaphore(0);
+
         SeadWorkflowContext context = new SeadWorkflowContext();
-        for (SeadWorkflowActivity activity : config.getActivities()) {
-            activity.execute(context, config);
-        }
-//        return Response.ok().build();
-        return "SEAD Publish Workflow triggered!";
+        WorkflowThread workflowThread = new WorkflowThread(semaphore, roId, psId, context);
+        workflowThread.start(); // start the WorkflowThread thread
+
+        System.out.println("Main : acquire semaphore..");
+        semaphore.acquire(); // Pause the main thread
+        System.out.println("Main: resume");
+
+        // send response back to client when signalled by WorkflowThread
+        return Response.ok(context.getProperty(Constants.JSON_RO)).build();
     }
 
 }
