@@ -2,6 +2,7 @@ package org.sead.workflow;
 
 import org.sead.workflow.activity.SeadWorkflowActivity;
 import org.sead.workflow.context.SeadWorkflowContext;
+import org.sead.workflow.exception.SeadWorkflowException;
 import org.sead.workflow.model.PSInstance;
 import org.sead.workflow.util.Constants;
 
@@ -40,7 +41,23 @@ public class WorkflowThread extends Thread {
 
         for (SeadWorkflowActivity activity : SeadWorkflowService.config.getActivities()) {
             // execute activities
-            activity.execute(context, SeadWorkflowService.config);
+            try {
+                activity.execute(context, SeadWorkflowService.config);
+            } catch (SeadWorkflowException e) {
+                // Upon receiving Workflow Exception resume main thread if not yet signalled
+                // or else terminate the activity execution loop
+                if(!signalPS) {
+                    this.context.addProperty(Constants.EXCEPTION, e.getMessage());
+                    System.out.println("Thread: exception...");
+                    e.printStackTrace();
+                    semaphore.release();
+                } else {
+                    System.out.println("Thread: exception...");
+                    e.printStackTrace();
+                }
+                System.out.println("Thread: Breaking workflow activities");
+                break;
+            }
 
             if(context.getProperty(Constants.SIGNAL_PS).equals(Constants.TRUE) && !signalPS){
                 // if SIGNAL_PS is set to true by any activity, signal the main thread and set signalPS to true

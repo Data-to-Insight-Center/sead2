@@ -7,6 +7,7 @@ import org.sead.workflow.activity.AbstractWorkflowActivity;
 import org.sead.workflow.activity.SeadWorkflowActivity;
 import org.sead.workflow.config.SeadWorkflowConfig;
 import org.sead.workflow.context.SeadWorkflowContext;
+import org.sead.workflow.exception.SeadWorkflowException;
 import org.sead.workflow.util.Constants;
 
 import java.util.HashMap;
@@ -21,7 +22,7 @@ public class UpdateROStatusActivity extends AbstractWorkflowActivity {
         System.out.println("Executing activity : " + activityName);
 
         if(context.getProperty(Constants.VALIDATED).equals(Constants.FALSE)){
-            System.out.println(UpdateROStatusActivity.class.getName() + " : Failed to persist RO");
+            System.out.println(UpdateROStatusActivity.class.getName() + " : Not Updating RO status");
             return;
         }
 
@@ -47,8 +48,8 @@ public class UpdateROStatusActivity extends AbstractWorkflowActivity {
         if(response.getStatus() == 200){
             System.out.println(UpdateROStatusActivity.class.getName() + " : Successfully updated RO status");
         } else {
-            System.out.println(UpdateROStatusActivity.class.getName() + " : Failed to updated RO status");
-            //TODO handle exception
+            throw new SeadWorkflowException("Error occurred while updating status of the collection "
+                    + context.getCollectionId() + " to PO");
         }
 
     }

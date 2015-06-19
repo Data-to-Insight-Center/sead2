@@ -17,9 +17,9 @@ public class SignalPSActivity extends AbstractWorkflowActivity {
         String response;
 
         if(context.getProperty(Constants.VALIDATED).equals(Constants.TRUE)){
-            response = "{\"response\": \"success\", \"message\" : \""+context.getProperty(Constants.RO_ID)+"\"}\n";
+            response = "{\"response\": \"success\", \"message\" : \""+context.getProperty(Constants.RO_ID)+"\"}";
         } else {
-            response = "{\"response\": \"error\", \"message\" : \"Validation Failed\"}\n";
+            response = "{\"response\": \"error\", \"message\" : \"" + context.getProperty(Constants.VALIDATION_FAILED_MSG) + "\"}";
         }
 
         System.out.println(SignalPSActivity.class.getName() + " Created response");

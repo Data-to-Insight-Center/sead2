@@ -9,12 +9,12 @@ import org.sead.workflow.activity.AbstractWorkflowActivity;
 import org.sead.workflow.activity.SeadWorkflowActivity;
 import org.sead.workflow.config.SeadWorkflowConfig;
 import org.sead.workflow.context.SeadWorkflowContext;
+import org.sead.workflow.exception.SeadWorkflowException;
 import org.sead.workflow.util.Constants;
 
 import javax.ws.rs.core.MediaType;
 import java.io.IOException;
 import java.io.StringWriter;
-import java.net.URLEncoder;
 import java.util.HashMap;
 
 /**
@@ -56,13 +56,13 @@ public class PersistROActivity extends AbstractWorkflowActivity {
             try {
                 IOUtils.copy(response.getEntityInputStream(), writer);
             } catch (IOException e) {
-                e.printStackTrace();
+                throw new SeadWorkflowException("Error occurred while persisting collection " + context.getCollectionId()
+                        + " , Caused by: " + e.getMessage() , e);
             }
             context.addProperty(Constants.RO_ID, writer.toString());
             System.out.println(PersistROActivity.class.getName() + " : Successfully registered in RO Info Subsystem");
         } else {
-            System.out.println(PersistROActivity.class.getName() + " : Failed to register RO in RO Info Subsystem");
-            // TODO handle exception
+            throw new SeadWorkflowException("Error occurred while persisting collection " + context.getCollectionId());
         }
 
     }
