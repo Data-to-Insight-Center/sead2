@@ -23,25 +23,32 @@
     <activities>
         <!--activity to convert/traslate RO -->
         <activity name="convert_ro" class="org.sead.workflow.activity.impl.ConvertROActivity">
-            <parameter name="tempPath">path_to_temp_folder</parameter>
+            <parameter name="tempPath">/tmp/sead2/jsonld_ro/</parameter>
         </activity>
         <!--activity to persist RO in RO subsystem -->
         <activity name="persist_ro" class="org.sead.workflow.activity.impl.PersistROActivity">
-            <parameter name="roSystemUrl">http://localhost:8080/ro</parameter>
+            <parameter name="roSystemUrl">http://localhost:8180/ro</parameter>
         </activity>
         <!--activity to validate the RO-->
         <activity name="validate_ro" class="org.sead.workflow.activity.impl.ValidateROActivity">
         </activity>
         <!--activity to update RO status in registry-->
         <activity name="update_ro_status" class="org.sead.workflow.activity.impl.UpdateROStatusActivity">
-            <parameter name="roSystemUrl">http://localhost:8080/ro</parameter>
+            <parameter name="roSystemUrl">http://localhost:8180/ro</parameter>
         </activity>
         <!--activity to signal PS-->
         <activity name="signal_ps" class="org.sead.workflow.activity.impl.SignalPSActivity">
         </activity>
         <!--activity to call Matchmaker to publish the PO-->
         <activity name="publish_ro" class="org.sead.workflow.activity.impl.PublishROActivity">
-            <parameter name="metadataServiceUrl">http://localhost:8080/mm</parameter>
+            <parameter name="messaging.username"></parameter>
+            <parameter name="messaging.password"></parameter>
+            <parameter name="messaging.hostname"></parameter>
+            <parameter name="messaging.hostport"></parameter>
+            <parameter name="messaging.virtualhost"></parameter>
+            <parameter name="messaging.exchangename"></parameter>
+            <parameter name="messaging.queuename"></parameter>
+            <parameter name="messaging.routingkey"></parameter>
         </activity>
     </activities>
 
