@@ -17,8 +17,10 @@ public class PeopleServices {
 	 @GET
 	 @Path("/orcid")
 	 @Produces(MediaType.APPLICATION_JSON)
-	 public String listORCID()  {	
-		 return ORCIDcalls.getORCID();
+	 
+	 public String listORCID(
+				@QueryParam("id") String orcidID)  {	
+		 return ORCIDcalls.getORCID(orcidID);
 	 }			
 	
 	 @GET

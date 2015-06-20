@@ -43,7 +43,12 @@
   <groupId>com.rabbitmq</groupId>
   <artifactId>amqp-client</artifactId>
   <version>3.5.3</version>
-</dependency>    
+</dependency>  
+<dependency>
+    <groupId>org.json</groupId>
+    <artifactId>json</artifactId>
+    <version>20140107</version>
+</dependency>  
 
   </dependencies>
   <build>
