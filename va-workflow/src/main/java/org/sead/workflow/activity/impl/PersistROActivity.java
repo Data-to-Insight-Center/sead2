@@ -24,7 +24,9 @@ public class PersistROActivity extends AbstractWorkflowActivity {
 
     @Override
     public void execute(SeadWorkflowContext context, SeadWorkflowConfig config) {
+        System.out.println("\n=====================================");
         System.out.println("Executing activity : " + activityName);
+        System.out.println("-----------------------------------\n");
 
         HashMap<String, String> activityParams = new HashMap<String, String>();
         for(SeadWorkflowActivity activity : config.getActivities()){
@@ -64,6 +66,8 @@ public class PersistROActivity extends AbstractWorkflowActivity {
         } else {
             throw new SeadWorkflowException("Error occurred while persisting collection " + context.getCollectionId());
         }
+
+        System.out.println("=====================================\n");
 
     }
 

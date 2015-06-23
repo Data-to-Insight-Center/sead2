@@ -94,7 +94,9 @@ public class SeadWorkflowService {
     public javax.ws.rs.core.Response publishRO(@PathParam("roId") String roId,
                                                @QueryParam("psId") String psId) throws InterruptedException {
 
-        System.out.println("Main : Input JSON: " + roId);
+        System.out.println("-----------------------------------");
+        System.out.println("publishRO : Input RO : " + roId);
+        System.out.println("-----------------------------------");
 
         // A semaphore is used to pause the main thread and spawn another thread(WorkflowThread) to execute the activities
         // WorkflowThread executes activities and signal the main thread before calling MM
@@ -106,26 +108,35 @@ public class SeadWorkflowService {
         WorkflowThread workflowThread = new WorkflowThread(semaphore, roId, psId, context);
         workflowThread.start(); // start the WorkflowThread thread
 
-        System.out.println("Main : acquire semaphore..");
+        //System.out.println("Main : acquire semaphore..");
         semaphore.acquire(); // Pause the main thread
-        System.out.println("Main: resume");
+        //System.out.println("Main: resume");
 
         // send response back to client when signalled by WorkflowThread
         if(context.getProperty(Constants.VALIDATED) != null
                 && context.getProperty(Constants.VALIDATED).equals(Constants.TRUE)
                 && context.getProperty(Constants.EXCEPTION) == null){
+            System.out.println("-----------------------------------");
+            System.out.println("Respond to publishRO : " + context.getProperty(Constants.RESPONSE));
+            System.out.println("-----------------------------------");
             return Response
                     .ok(context.getProperty(Constants.RESPONSE))
                     .type(MediaType.APPLICATION_JSON_TYPE)
                     .build();
         } else {
             if(context.getProperty(Constants.EXCEPTION) != null) {
+                System.out.println("-----------------------------------");
+                System.out.println("Respond to publishRO : " + context.getProperty(Constants.EXCEPTION));
+                System.out.println("-----------------------------------");
                 return Response
                         .status(Response.Status.INTERNAL_SERVER_ERROR)
                         .type(MediaType.TEXT_PLAIN_TYPE)
                         .entity(context.getProperty(Constants.EXCEPTION))
                         .build();
             } else {
+                System.out.println("-----------------------------------");
+                System.out.println("Respond to publishRO : " + context.getProperty(Constants.RESPONSE));
+                System.out.println("-----------------------------------");
                 return Response
                         .status(Response.Status.CONFLICT)
                         .type(MediaType.APPLICATION_JSON_TYPE)

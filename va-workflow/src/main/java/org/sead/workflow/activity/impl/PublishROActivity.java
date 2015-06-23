@@ -30,10 +30,13 @@ public class PublishROActivity extends AbstractWorkflowActivity {
 
     @Override
     public void execute(SeadWorkflowContext context, SeadWorkflowConfig config) {
+
+        System.out.println("\n=====================================");
         System.out.println("Executing activity : " + activityName);
+        System.out.println("-----------------------------------\n");
 
         if(context.getProperty(Constants.VALIDATED).equals(Constants.FALSE)){
-            System.out.println(UpdateROStatusActivity.class.getName() + " : Not publishing RO");
+            System.out.println(PublishROActivity.class.getName() + " : Not publishing RO");
             return;
         }
 
@@ -98,6 +101,8 @@ public class PublishROActivity extends AbstractWorkflowActivity {
         }
 
         System.out.println(PublishROActivity.class.getName() + " : Message successfully inserted to queue");
+        System.out.println("Message : " + rootObject.toString());
+        System.out.println("=====================================\n");
 
     }
 

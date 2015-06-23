@@ -12,7 +12,9 @@ public class SignalPSActivity extends AbstractWorkflowActivity {
 
     @Override
     public void execute(SeadWorkflowContext context, SeadWorkflowConfig config) {
+        System.out.println("\n=====================================");
         System.out.println("Executing activity : " + activityName);
+        System.out.println("-----------------------------------\n");
 
         String response;
 
@@ -22,8 +24,11 @@ public class SignalPSActivity extends AbstractWorkflowActivity {
             response = "{\"response\": \"error\", \"message\" : \"" + context.getProperty(Constants.VALIDATION_FAILED_MSG) + "\"}";
         }
 
-        System.out.println(SignalPSActivity.class.getName() + " Created response");
         context.addProperty(Constants.RESPONSE, response);
         context.updateProperty(Constants.SIGNAL_PS, Constants.TRUE); // set SIGNAL_PS flag to true
+
+        System.out.println(SignalPSActivity.class.getName() + " : Created response");
+        System.out.println("=====================================\n");
+
     }
 }

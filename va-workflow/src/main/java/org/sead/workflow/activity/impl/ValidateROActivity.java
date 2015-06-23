@@ -24,7 +24,9 @@ public class ValidateROActivity extends AbstractWorkflowActivity {
 
     @Override
     public void execute(SeadWorkflowContext context, SeadWorkflowConfig config) {
+        System.out.println("\n=====================================");
         System.out.println("Executing activity : " + activityName);
+        System.out.println("-----------------------------------\n");
 
         boolean validated = true;
         String roString = context.getProperty(Constants.JSON_RO);
@@ -42,6 +44,9 @@ public class ValidateROActivity extends AbstractWorkflowActivity {
             System.out.println(ValidateROActivity.class.getName() + " : RO Validation Failed");
             context.addProperty(Constants.VALIDATED, Constants.FALSE);
         }
+
+        System.out.println("=====================================\n");
+
 
     }
 

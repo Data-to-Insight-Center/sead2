@@ -48,21 +48,21 @@ public class WorkflowThread extends Thread {
                 // or else terminate the activity execution loop
                 if(!signalPS) {
                     this.context.addProperty(Constants.EXCEPTION, e.getMessage());
-                    System.out.println("Thread: exception...");
+                    System.out.println("*** Thread: exception... ***");
                     e.printStackTrace();
                     semaphore.release();
                 } else {
-                    System.out.println("Thread: exception...");
+                    System.out.println("*** Thread: exception... ***");
                     e.printStackTrace();
                 }
-                System.out.println("Thread: Breaking workflow activities");
+                System.out.println("*** Thread: Breaking workflow activities ***");
                 break;
             }
 
             if(context.getProperty(Constants.SIGNAL_PS).equals(Constants.TRUE) && !signalPS){
                 // if SIGNAL_PS is set to true by any activity, signal the main thread and set signalPS to true
                 signalPS = true;
-                System.out.println("Thread: release semaphore");
+                //System.out.println("Thread: release semaphore");
                 semaphore.release();
             }
         }

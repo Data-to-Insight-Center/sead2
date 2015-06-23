@@ -34,7 +34,9 @@ public class ConvertROActivity extends AbstractWorkflowActivity {
 
     @Override
     public void execute(SeadWorkflowContext context, SeadWorkflowConfig config) {
+        System.out.println("\n=====================================");
         System.out.println("Executing activity : " + activityName);
+        System.out.println("-----------------------------------\n");
 
         String roId = context.getCollectionId();
 
@@ -51,7 +53,8 @@ public class ConvertROActivity extends AbstractWorkflowActivity {
         String roJsonString = getRO(roId, activityParams, context);
         context.addProperty(Constants.JSON_RO, roJsonString);
 
-        System.out.println(ConvertROActivity.class.getName() + " : Successfully converted RO");
+        System.out.println(ConvertROActivity.class.getName() + " : Successfully converted the RO");
+        System.out.println("=====================================\n");
 
 
     }

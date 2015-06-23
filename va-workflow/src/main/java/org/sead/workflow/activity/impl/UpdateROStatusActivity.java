@@ -19,7 +19,9 @@ public class UpdateROStatusActivity extends AbstractWorkflowActivity {
 
     @Override
     public void execute(SeadWorkflowContext context, SeadWorkflowConfig config) {
+        System.out.println("\n=====================================");
         System.out.println("Executing activity : " + activityName);
+        System.out.println("-----------------------------------\n");
 
         if(context.getProperty(Constants.VALIDATED).equals(Constants.FALSE)){
             System.out.println(UpdateROStatusActivity.class.getName() + " : Not Updating RO status");
@@ -48,9 +50,13 @@ public class UpdateROStatusActivity extends AbstractWorkflowActivity {
         if(response.getStatus() == 200){
             System.out.println(UpdateROStatusActivity.class.getName() + " : Successfully updated RO status");
         } else {
+            System.out.println(UpdateROStatusActivity.class.getName() + " : Failed to updated RO status");
             throw new SeadWorkflowException("Error occurred while updating status of the collection "
                     + context.getCollectionId() + " to PO");
         }
+
+        System.out.println("=====================================\n");
+
 
     }
 }
