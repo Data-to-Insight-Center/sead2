@@ -1,0 +1,16 @@
+Step 1:
+Checkout sead2/metadata-gen/
+
+Step 2:
+In sead2/metadata-gen/src/main/resources/org/seadva/metadatagen/util/Config.properties set the value of "bag.path" parameter to a valid path to a directory.
+
+Step 3:
+Build the metadata-gen module 
+mvn clean install -DskipTests
+
+Step 4:
+copy target/metadata-gen.war into tomcat/webapp/
+cp <sead2_directory>/metadata-gen/metadata-gen.war <tomcat_home>/webapps/metadata-gen.war
+
+Step 5:
+start tomcat
