@@ -3,7 +3,7 @@ Checkout sead2/va-workflow/
 
 Step 2:
 Edit the sead-config/activities/activity/parameter values in sead2/va-workflow/src/main/resources/org/sead/workflow/sead-wf.xml file as follows;
-tempPath - valid temporary directory to store the intermediate json files
+tempPath - valid temporary directory to store the intermediate JSON files
 roSystemUrl - main URL to the ro-subsystem 
 messaging.* - RabbitMQ configuration parameters
 
