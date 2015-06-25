@@ -19,6 +19,7 @@ package org.seadva.registry.service;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
+
 import org.apache.commons.io.IOUtils;
 import org.seadva.registry.database.common.DBConnectionPool;
 import org.seadva.registry.database.model.dao.vaRegistry.*;
@@ -33,6 +34,7 @@ import org.springframework.test.context.transaction.TransactionConfiguration;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
@@ -129,6 +131,19 @@ public class ResourceService {
         agentDao = new AgentDaoImpl();
     }
 
+    
+    /**
+     * Ping method to check whether the registry service is up
+     *
+     * @return ACK
+     */
+    @GET
+    @Path("/ping")
+    @Produces(MediaType.TEXT_PLAIN)
+    public String ping() {
+        return "SEAD Registry Service is up!";
+    }    
+    
     /* GET types */
 
     @GET

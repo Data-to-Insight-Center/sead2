@@ -14,6 +14,30 @@
         <module>ro-subsystem-service</module>
     </modules>
 
+    <repositories>
+        <repository>
+            <id>sead-repo-snapshot</id>
+            <name>sead-repo-snapshot</name>
+            <url>http://seadva-test.d2i.indiana.edu:8081/artifactory/ext-snapshot-local</url>
+        </repository>
+
+        <repository>
+            <id>sead-repo-release</id>
+            <name>sead-repo-release</name>
+            <url>http://seadva-test.d2i.indiana.edu:8081/artifactory/ext-release-local</url>
+        </repository>
+
+        <repository>
+            <id>central</id>
+            <name>Central Repository</name>
+            <url>http://repo.maven.apache.org/maven2</url>
+            <layout>default</layout>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>
+    </repositories>
+
 <distributionManagement>
     <snapshotRepository>
         <id>sead-repo-snapshot</id>
