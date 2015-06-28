@@ -3,6 +3,7 @@ package org.seadpdt;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
 import org.bson.Document;
@@ -21,15 +22,17 @@ public class MongoServices {
 	
 	 @GET
 	 @Path("/clear")
-	 public void clearMongo()  {	
+	 public String clearMongo()  {	
 		// collection.deleteMany(gte("i", 100));
+		 return "success";
 	 }
 	 
 	 @GET
 	 @Path("/list")
 	 @Produces(MediaType.APPLICATION_JSON)
-	 public FindIterable<Document> listMongo()  {	
-		 FindIterable<Document> iterable = db.getCollection("people").find();
+	 public FindIterable<Document> listMongo(
+				@QueryParam("collection") String collectionID)  {	
+		 FindIterable<Document> iterable = db.getCollection(collectionID).find();
 		 return iterable;
 	 }		 
 	

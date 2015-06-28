@@ -1,19 +1,12 @@
 package org.seadpdt;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.bson.Document;
 import org.json.JSONObject;
 import org.json.XML;
 
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBCollection;
-import com.mongodb.DBObject;
 import com.mongodb.MongoClient;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
-import com.mongodb.util.JSON;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
