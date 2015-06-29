@@ -33,18 +33,21 @@ public class UpdatePdtActivity extends AbstractWorkflowActivity {
         }
 
         String ro = context.getProperty(Constants.JSON_RO);
-        String pdtSystemUrl = activityParams.get("pdtSystemUrl");        
+        String pdtSystemUrl = activityParams.get("pdtSystemUrl");  
+        pdtSystemUrl = "http://localhost:8080/sead-pdt";
         
-		Client client = Client.create();
-		 
-		// need to pull some key value pairs from ro to pass
-		
-		WebResource webResource = client
-		   .resource(pdtSystemUrl + "/harvest/publishRO?" + "{\"response\": \"success\", \"message\" : \"ID_1234\"}");
- 
-		ClientResponse response = webResource.accept("application/xml")
-                   .get(ClientResponse.class);        
-        
+        // for testing, one hard coded piece from ro, needs to be parsed properly
+        String testJSON = 
+        		"{\"@context\": {\"External Identifier\": \"http://purl.org/dc/terms/identifier\"},\"External Identifier\": \"http://dx.doi.org/10.5072/FK2FF3PK7W\"}";
+              		    
+	        WebResource webResource = Client.create().resource(pdtSystemUrl);
+	        ClientResponse response = webResource.path("harvest")
+	                .path("publishRO")
+	                .accept("application/json")
+	                .type("application/json")
+	                .post(ClientResponse.class, testJSON);			
+			
+			
         System.out.println("\n=====================================");
         System.out.println("return status : " + response);
         System.out.println("-----------------------------------\n");           

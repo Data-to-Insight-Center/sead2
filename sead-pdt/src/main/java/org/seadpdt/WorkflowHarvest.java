@@ -1,6 +1,9 @@
 package org.seadpdt;
 
+import javax.ws.rs.Consumes;
+import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
@@ -38,11 +41,11 @@ public class WorkflowHarvest {
 		 return workflowID;
 	 }	
 	 	 
-	 @GET
+	 @POST
 	 @Path("/publishRO")
 	 @Produces(MediaType.APPLICATION_JSON)
-	 public String getWorkflowRO(
-				@QueryParam("data") String workflowData)  {	 
+	 @Consumes(MediaType.APPLICATION_JSON)
+	 public String getWorkflowRO(String workflowData)  {	 
 		 
 			System.out.println("data : " + workflowData);
 	 		 
