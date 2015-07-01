@@ -61,7 +61,7 @@ public class PersistROActivity extends AbstractWorkflowActivity {
                 throw new SeadWorkflowException("Error occurred while persisting collection " + context.getCollectionId()
                         + " , Caused by: " + e.getMessage() , e);
             }
-            context.addProperty(Constants.RO_ID, writer.toString());
+            //context.addProperty(Constants.RO_ID, writer.toString());
             System.out.println(PersistROActivity.class.getName() + " : Successfully registered in RO Info Subsystem");
         } else {
             throw new SeadWorkflowException("Error occurred while persisting collection " + context.getCollectionId());

@@ -14,6 +14,7 @@ import org.sead.workflow.config.SeadWorkflowConfig;
 import org.sead.workflow.context.SeadWorkflowContext;
 import org.sead.workflow.exception.SeadWorkflowException;
 import org.sead.workflow.util.Constants;
+import org.sead.workflow.util.IdGenerator;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -50,7 +51,9 @@ public class ConvertROActivity extends AbstractWorkflowActivity {
         }
 
         // generate JSONLD for the collection identified by roId
-        String roJsonString = getRO(roId, activityParams, context);
+        String sead_id = IdGenerator.generateRandomID();
+        context.addProperty(Constants.RO_ID, sead_id);
+        String roJsonString = getRO(roId, sead_id, activityParams, context);
         context.addProperty(Constants.JSON_RO, roJsonString);
 
         System.out.println(ConvertROActivity.class.getName() + " : Successfully converted the RO");
@@ -59,7 +62,7 @@ public class ConvertROActivity extends AbstractWorkflowActivity {
 
     }
 
-    private String getRO(String roId, HashMap<String, String> activityParams, SeadWorkflowContext context) {
+    private String getRO(String roId, String seadId, HashMap<String, String> activityParams, SeadWorkflowContext context) {
         String psUrl = context.getPSInstance().getUrl();
         String tempPath = activityParams.get("tempPath");
 
@@ -84,6 +87,10 @@ public class ConvertROActivity extends AbstractWorkflowActivity {
             String json = convertRO(writer.toString());
             jsonObject = new JSONObject(json);
 
+            // add Collection location
+            jsonObject.put(Constants.GEN_AT, psUrl + "/#collection?uri=" + roId);
+            jsonObject.put(Constants.IDENTIFIER, seadId);
+
             // add File metadata
             addFilesMetadata(roId, jsonObject, context);
 
@@ -95,7 +102,8 @@ public class ConvertROActivity extends AbstractWorkflowActivity {
             for (int i = 0; i < subCollectionArray.length(); i++) {
                 JSONObject arrayItem = (JSONObject) subCollectionArray.get(i);
                 // generate JSONLD for each sub-collection. This is a recursive call
-                getRO((String) arrayItem.get(Constants.IDENTIFIER), activityParams, context);
+                getRO((String) arrayItem.get(Constants.PS_IDENTIFIER), (String)arrayItem.get(Constants.IDENTIFIER), activityParams, context);
+                arrayItem.remove(Constants.PS_IDENTIFIER);
             }
 
             // Write JSONLD to a file
@@ -117,9 +125,12 @@ public class ConvertROActivity extends AbstractWorkflowActivity {
 
         jsonObject = new JSONObject(roString);
         Iterator rootIterator = jsonObject.keys();
+
         while (rootIterator.hasNext()) {
             String rootKey = (String) rootIterator.next();
             if (rootKey.equals(Constants.REST_CONTEXT)) {
+
+                // Do the ACR to ORE mapping for the namespaces in @context
                 JSONObject object = (JSONObject) jsonObject.get(rootKey);
                 Iterator iterator = object.keys();
                 while (iterator.hasNext()) {
@@ -133,15 +144,36 @@ public class ConvertROActivity extends AbstractWorkflowActivity {
                                 Constants.metadataPredicateMap.get((String) ((JSONObject) value).get(Constants.REST_ID))));
 
                     } else {
-                        //object.put(key, "test");
+                        //TODO : check what namespaces do not have a mapping URL
                     }
                 }
 
-                if (!object.has(Constants.FLOCAT)) {
+                // Adding source and Flocat namespaces
+                if (!object.has(Constants.FLOCAT))
                     object.put(Constants.FLOCAT, Constants.FLOCAT_URL);
-                }
+                if(!object.has(Constants.GEN_AT))
+                    object.put(Constants.GEN_AT, Constants.GEN_AT_URL);
+
             } else {
-                //TODO flatten the objects
+                // Flatten the Objects
+                Object object = jsonObject.get(rootKey);
+                if(object instanceof JSONObject){
+                    jsonObject.put(rootKey, ((JSONObject)object).toString());
+                } else if(object instanceof JSONArray){
+                    JSONArray arrayObject = (JSONArray)object;
+                    JSONArray newArray = new JSONArray();
+                    for(int i = 0 ; i < arrayObject.length() ; i++) {
+                        Object arrayElement = arrayObject.get(i);
+                        if (arrayElement instanceof JSONObject) {
+                            newArray.put(((JSONObject)arrayElement).toString());
+                        } else if (arrayElement instanceof JSONArray) {
+                            newArray.put(((JSONArray)arrayElement).toString());
+                        } else {
+                            newArray.put(arrayElement);
+                        }
+                    }
+                    jsonObject.put(rootKey, newArray);
+                }
             }
         }
 
@@ -195,8 +227,11 @@ public class ConvertROActivity extends AbstractWorkflowActivity {
             StringWriter fileWriter = new StringWriter();
             IOUtils.copy(fileResponse.getEntityInputStream(), fileWriter);
 
-            JSONObject fileObject = new JSONObject(fileWriter.toString());
+            JSONObject fileObject = new JSONObject(convertRO(fileWriter.toString()));
             fileObject.remove(Constants.REST_CONTEXT);
+            fileObject.put(Constants.GEN_AT, psUrl + "/#dataset?id=" + key);
+            fileObject.put(Constants.FLOCAT, "download_loc_"+key);
+            fileObject.put(Constants.IDENTIFIER, IdGenerator.generateRandomID());
             hasFilesArray.put(fileObject);
         }
     }
@@ -231,7 +266,8 @@ public class ConvertROActivity extends AbstractWorkflowActivity {
         while (iterator.hasNext()) {
             String key = (String) iterator.next();
             JSONObject fileObject = new JSONObject();
-            fileObject.put(Constants.IDENTIFIER, key);
+            fileObject.put(Constants.PS_IDENTIFIER, key);
+            fileObject.put(Constants.IDENTIFIER, IdGenerator.generateRandomID());
             fileObject.put(Constants.FLOCAT, tempPath + "ro_" + getROFileName(key) + ".json");
             hasFilesArray.put(fileObject);
         }
