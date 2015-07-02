@@ -23,9 +23,7 @@ import org.json.JSONException;
 import org.json.simple.parser.ParseException;
 import org.junit.Test;
 
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.net.URISyntaxException;
 
@@ -58,7 +56,7 @@ public class JsonDBMapperTest extends JerseyTest {
             OREParserException, OREException, URISyntaxException, ORESerialiserException, JSONException {
 
         JsonDBMapper jsonDBMapper =  new JsonDBMapper("http://localhost:8080/registry/rest/");
-        jsonDBMapper.fromJSONLD(new File("/Users/aravindh/Documents/Aravindh/sead_config_files/sample_json.json"));
+        //jsonDBMapper.mapfromJson(new File("/Users/aravindh/Documents/Aravindh/sead_config_files/sample_json.json"));
     }
 
     @Test
@@ -68,7 +66,7 @@ public class JsonDBMapperTest extends JerseyTest {
 
         JsonDBMapper jsonDBMapper =  new JsonDBMapper("http://localhost:8080/registry/rest/");
         try {
-            jsonDBMapper.readJSONLD(new File("/Users/aravindh/Documents/Aravindh/sead_config_files/sample_json.json"));
+            jsonDBMapper.readJSONLD(new File("/Users/charmadu/Downloads/sample_json.txt"));
         } catch (ParseException e) {
             e.printStackTrace();
         }

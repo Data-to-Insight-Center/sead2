@@ -54,13 +54,13 @@ public class PersistROActivity extends AbstractWorkflowActivity {
                 .post(ClientResponse.class, form);
 
         if(response.getStatus() == 200){
-            StringWriter writer = new StringWriter();
-            try {
-                IOUtils.copy(response.getEntityInputStream(), writer);
-            } catch (IOException e) {
-                throw new SeadWorkflowException("Error occurred while persisting collection " + context.getCollectionId()
-                        + " , Caused by: " + e.getMessage() , e);
-            }
+//            StringWriter writer = new StringWriter();
+//            try {
+//                IOUtils.copy(response.getEntityInputStream(), writer);
+//            } catch (IOException e) {
+//                throw new SeadWorkflowException("Error occurred while persisting collection " + context.getCollectionId()
+//                        + " , Caused by: " + e.getMessage() , e);
+//            }
             //context.addProperty(Constants.RO_ID, writer.toString());
             System.out.println(PersistROActivity.class.getName() + " : Successfully registered in RO Info Subsystem");
         } else {

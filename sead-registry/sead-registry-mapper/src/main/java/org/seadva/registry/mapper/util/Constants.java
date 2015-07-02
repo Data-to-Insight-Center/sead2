@@ -35,6 +35,10 @@ public class Constants {
     public static String abstractTerm = "http://purl.org/dc/terms/abstract";
     public static String contentSourceTerm = "http://purl.org/dc/terms/source";
     public static String contributor = "http://purl.org/dc/terms/contributor";
+    public static String typeTerm = "http://purl.org/dc/terms/type";
+    public static String referencesTerm = "http://purl.org/dc/terms/references";
     public static String documentedBy  = "http://purl.org/spar/cito/isDocumentedBy";
+    public static String documentsTerm  = "http://purl.org/spar/cito/documents";
+    public static String replicaTerm  = "http://seadva.org/terms/replica";
 
 }

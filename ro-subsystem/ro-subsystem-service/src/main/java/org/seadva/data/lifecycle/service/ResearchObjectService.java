@@ -465,7 +465,14 @@ public class ResearchObjectService {
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     public Response putJsonldResearchObject(@FormDataParam("ro") String roString) {
 
-        return Response.ok("ID_1234").build();
+        try {
+            new JsonDBMapper(registryServiceUrl).mapFromJson(roString);
+            return Response.ok().build();
+        } catch (IOException e) {
+            return Response.serverError().build();
+        } catch (URISyntaxException e) {
+            return Response.serverError().build();
+        }
     }
 
     @POST

@@ -129,9 +129,15 @@ public class ConvertROActivity extends AbstractWorkflowActivity {
         while (rootIterator.hasNext()) {
             String rootKey = (String) rootIterator.next();
             if (rootKey.equals(Constants.REST_CONTEXT)) {
+                JSONObject object = (JSONObject) jsonObject.get(rootKey);
+
+                // Adding source and Flocat namespaces
+                if (!object.has(Constants.FLOCAT))
+                    object.put(Constants.FLOCAT, Constants.FLOCAT_URL);
+                if(!object.has(Constants.GEN_AT))
+                    object.put(Constants.GEN_AT, Constants.GEN_AT_URL);
 
                 // Do the ACR to ORE mapping for the namespaces in @context
-                JSONObject object = (JSONObject) jsonObject.get(rootKey);
                 Iterator iterator = object.keys();
                 while (iterator.hasNext()) {
                     String key = (String) iterator.next();
@@ -147,13 +153,6 @@ public class ConvertROActivity extends AbstractWorkflowActivity {
                         //TODO : check what namespaces do not have a mapping URL
                     }
                 }
-
-                // Adding source and Flocat namespaces
-                if (!object.has(Constants.FLOCAT))
-                    object.put(Constants.FLOCAT, Constants.FLOCAT_URL);
-                if(!object.has(Constants.GEN_AT))
-                    object.put(Constants.GEN_AT, Constants.GEN_AT_URL);
-
             } else {
                 // Flatten the Objects
                 Object object = jsonObject.get(rootKey);
