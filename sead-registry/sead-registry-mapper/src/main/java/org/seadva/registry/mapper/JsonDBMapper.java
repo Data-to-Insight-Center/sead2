@@ -40,6 +40,7 @@ public class JsonDBMapper {
     private static Predicate DC_TERMS_ABSTRACT = null;
     private static Predicate DC_REFERENCES = null;
     private static Predicate DC_TERMS_RIGHTS = null;
+    private static Predicate DC_TERMS_SIZE = null;
     private static Predicate DC_TERMS_CONTRIBUTOR = null;
 
     private static Predicate CITO_IS_DOCUMENTED_BY = null;
@@ -53,6 +54,9 @@ public class JsonDBMapper {
     private static final String HAS_SUBCOLLECTIONS = "Has Subcollection";
     private static final String CONTEXT = "@context";
     private static final String CO_STATUS = "CurationObject";
+    private static final String OO_STATUS = "OtherObject";
+
+    private boolean isSubCollection;
 
     public JsonDBMapper(String registryUrl) throws URISyntaxException {
         client =  new RegistryClient(registryUrl);
@@ -80,8 +84,7 @@ public class JsonDBMapper {
         DC_TERMS_ABSTRACT.setNamespace(Vocab.dcterms_Agent.ns().toString());
         DC_TERMS_ABSTRACT.setPrefix(Vocab.dcterms_Agent.schema());
         //DC_TERMS_ABSTRACT.setName("abstract");
-        DC_TERMS_ABSTRACT.setURI(new URI(DC_TERMS_ABSTRACT.getNamespace()
-                + DC_TERMS_ABSTRACT.getName()));
+        DC_TERMS_ABSTRACT.setURI(new URI(Constants.abstractTerm));
 
         DC_TERMS_SOURCE = new Predicate();
         DC_TERMS_SOURCE.setNamespace(Vocab.dcterms_Agent.ns().toString());
@@ -112,37 +115,40 @@ public class JsonDBMapper {
         CITO_IS_DOCUMENTED_BY.setNamespace("http://purl.org/spar/cito/");
         CITO_IS_DOCUMENTED_BY.setPrefix("cito");
         //CITO_IS_DOCUMENTED_BY.setName("isDocumentedBy");
-        CITO_IS_DOCUMENTED_BY.setURI(new URI(CITO_IS_DOCUMENTED_BY.getNamespace()
-                + CITO_IS_DOCUMENTED_BY.getName()));
+        CITO_IS_DOCUMENTED_BY.setURI(new URI(Constants.documentedBy));
 
         DC_TERMS_TYPE = new Predicate();
         DC_TERMS_TYPE.setNamespace(Vocab.dcterms_Agent.ns().toString());
         DC_TERMS_TYPE.setPrefix(Vocab.dcterms_Agent.schema());
-        //DC_TERMS_TYPE.setName("type");
-        DC_TERMS_TYPE.setURI(new URI(DC_TERMS_TYPE.getNamespace()
-                + DC_TERMS_TYPE.getName()));
+        DC_TERMS_TYPE.setName("type");
+        DC_TERMS_TYPE.setURI(new URI(Constants.typeTerm));
 
         DC_TERMS_RIGHTS = new Predicate();
         DC_TERMS_RIGHTS.setNamespace(Vocab.dcterms_Agent.ns().toString());
         DC_TERMS_RIGHTS.setPrefix(Vocab.dcterms_Agent.schema());
         //DC_TERMS_RIGHTS.setName("rights");
-        DC_TERMS_RIGHTS.setURI(new URI(DC_TERMS_RIGHTS.getNamespace()
-                + DC_TERMS_RIGHTS.getName()));
+        DC_TERMS_RIGHTS.setURI(new URI(Constants.rightsTerm));
+
+        DC_TERMS_SIZE = new Predicate();
+        DC_TERMS_SIZE.setNamespace(Vocab.dcterms_Agent.ns().toString());
+        DC_TERMS_SIZE.setPrefix(Vocab.dcterms_Agent.schema());
+        //DC_TERMS_SIZE.setName("SizeOrDuration");
+        DC_TERMS_SIZE.setURI(new URI(Constants.sizeTerm));
 
         DC_REFERENCES = new Predicate();
         DC_REFERENCES.setNamespace(Vocab.dcterms_Agent.ns().toString());
         DC_REFERENCES.setPrefix(Vocab.dcterms_Agent.schema());
         //DC_REFERENCES.setName("references");
-        DC_REFERENCES.setURI(new URI(DC_REFERENCES.getNamespace()
-                + DC_REFERENCES.getName()));
+        DC_REFERENCES.setURI(new URI(Constants.referencesTerm));
 
         // create the CITO:documents predicate
         CITO_DOCUMENTS = new Predicate();
         CITO_DOCUMENTS.setNamespace(CITO_IS_DOCUMENTED_BY.getNamespace());
         CITO_DOCUMENTS.setPrefix(CITO_IS_DOCUMENTED_BY.getPrefix());
         //CITO_DOCUMENTS.setName("documents");
-        CITO_DOCUMENTS.setURI(new URI(CITO_DOCUMENTS.getNamespace()
-                + CITO_DOCUMENTS.getName()));
+        CITO_DOCUMENTS.setURI(new URI(Constants.documentsTerm));
+
+        isSubCollection = false;
     }
 
     public String toJSONLD(String collectionId)
@@ -196,6 +202,9 @@ public class JsonDBMapper {
         contextMap.remove(IDENTIFIER);
         contextMap.remove(HAS_FILES);
         contextMap.remove(HAS_SUBCOLLECTIONS);
+        if(contextMap.get(DC_TERMS_TYPE.getName()) == null) {
+            contextMap.put(DC_TERMS_TYPE.getName(), DC_TERMS_TYPE.getURI().toString());
+        }
         json.remove(CONTEXT);
 
         Map<String, String> reversedContextMap = new HashMap<String, String>();
@@ -213,7 +222,21 @@ public class JsonDBMapper {
         collection.setIsObsolete(0);
         collection.setEntityCreatedTime(new Date());
         collection.setEntityLastUpdatedTime(new Date());
-        collection.setState(client.getStateByName(CO_STATUS)); // CO when persisting RO initially
+
+        if(!isSubCollection) {
+            collection.setState(client.getStateByName(CO_STATUS)); // CO when persisting RO initially
+            if(json.get(DC_TERMS_TYPE.getName()) == null) {
+                json.put(DC_TERMS_TYPE.getName(), CO_STATUS);
+            } else {
+                List<String> types = json.get(DC_TERMS_TYPE.getName()) instanceof List ?
+                        (List<String>)json.get(DC_TERMS_TYPE.getName()) : Arrays.asList((String)json.get(DC_TERMS_TYPE.getName()));
+                types.add(CO_STATUS);
+                json.put(DC_TERMS_TYPE.getName(), types);
+            }
+
+        } else {
+            collection.setState(client.getStateByName(OO_STATUS)); // OO(OtherObject) for sub collections
+        }
 
         if(DC_TERMS_TITLE.getName() != null && json.get(DC_TERMS_TITLE.getName()) != null){
             String title = json.get(DC_TERMS_TITLE.getName()) instanceof List
@@ -295,12 +318,14 @@ public class JsonDBMapper {
             propertiesSet.add(property1);
 
         collection.setProperties(propertiesSet);
-        //client.postCollection(collection);
+        client.postCollection(collection);
 
         //post relation between collection and resource map if needed
 
         //call recursively for sub collections
         for(Object subCollection : hasSubCollections){
+            isSubCollection = true;
+
             if(!(subCollection instanceof Map) && METS_LOCATION.getName() != null
             && ((Map)subCollection).get(METS_LOCATION.getName()) == null)
                 continue;
@@ -323,7 +348,7 @@ public class JsonDBMapper {
             parent.setId(roId);
             aggregationWrapper.setParent(parent);
             aggregationWrappers.add(aggregationWrapper);
-            //client.postAggregation(aggregationWrappers, roId);
+            client.postAggregation(aggregationWrappers, roId);
         }
 
         //handle file metadata
@@ -349,7 +374,14 @@ public class JsonDBMapper {
                         ? (String)((List) fileMetadata.get(DC_TERMS_TITLE.getName())).get(0) : (String)fileMetadata.get(DC_TERMS_TITLE.getName());
                 file.setFileName(title);
                 file.setEntityName(title);
-                fileMetadata.remove(DC_TERMS_TITLE.getName());
+                //fileMetadata.remove(DC_TERMS_TITLE.getName()); - was in 1.5 properties table
+            }
+
+            if(DC_TERMS_SIZE.getName() != null && fileMetadata.get(DC_TERMS_SIZE.getName()) != null){
+                String size = fileMetadata.get(DC_TERMS_SIZE.getName()) instanceof List
+                        ? (String)((List) fileMetadata.get(DC_TERMS_SIZE.getName())).get(0) : (String)fileMetadata.get(DC_TERMS_SIZE.getName());
+                file.setSizeBytes(Long.valueOf(size));
+                //json.remove(DC_TERMS_SIZE.getName()); - was in 1.5 properties table
             }
 
             properties = new ArrayList<Property>();
@@ -377,7 +409,7 @@ public class JsonDBMapper {
             for(Property property1:properties)
                 file.addProperty(property1);
 
-            //client.postFile(file);
+            client.postFile(file);
 
             //post fixity if needed
 
@@ -394,7 +426,7 @@ public class JsonDBMapper {
             parent.setId(roId);
             aggregationWrapper.setParent(parent);
             aggregationWrappers.add(aggregationWrapper);
-            //client.postAggregation(aggregationWrappers, roId);
+            client.postAggregation(aggregationWrappers, roId);
         }
     }
 
@@ -422,6 +454,8 @@ public class JsonDBMapper {
             DC_TERMS_TYPE.setName(reversedContextMap.get(Constants.typeTerm));
         if(reversedContextMap.containsKey(Constants.rightsTerm))
             DC_TERMS_RIGHTS.setName(reversedContextMap.get(Constants.rightsTerm));
+        if(reversedContextMap.containsKey(Constants.sizeTerm))
+            DC_TERMS_SIZE.setName(reversedContextMap.get(Constants.sizeTerm));
         if(reversedContextMap.containsKey(Constants.referencesTerm))
             DC_REFERENCES.setName(reversedContextMap.get(Constants.referencesTerm));
         if(reversedContextMap.containsKey(Constants.documentsTerm))
