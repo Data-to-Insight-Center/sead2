@@ -18,6 +18,7 @@ import java.util.Iterator;
 import java.util.concurrent.Semaphore;
 
 import org.sead.workflow.util.Constants;
+import org.sead.workflow.util.IdGenerator;
 
 @Path("service")
 public class SeadWorkflowService {
@@ -102,18 +103,23 @@ public class SeadWorkflowService {
         // WorkflowThread executes activities and signal the main thread before calling MM
         // When main thread is resumed, it send a response to the caller of this method.
         // After signaling the main thread WorkflowThread calls the MM to publish the RO
-        Semaphore semaphore = new Semaphore(0);
+        //Semaphore semaphore = new Semaphore(0);
 
         SeadWorkflowContext context = new SeadWorkflowContext();
-        WorkflowThread workflowThread = new WorkflowThread(semaphore, roId, psId, context);
+        //WorkflowThread workflowThread = new WorkflowThread(semaphore, roId, psId, context);
+
+        String sead_id = IdGenerator.generateRandomID();
+        context.addProperty(Constants.RO_ID, sead_id);
+
+        WorkflowThread workflowThread = new WorkflowThread(roId, psId, context);
         workflowThread.start(); // start the WorkflowThread thread
 
         //System.out.println("Main : acquire semaphore..");
-        semaphore.acquire(); // Pause the main thread
+        //semaphore.acquire(); // Pause the main thread
         //System.out.println("Main: resume");
 
         // send response back to client when signalled by WorkflowThread
-        if(context.getProperty(Constants.VALIDATED) != null
+        /*if(context.getProperty(Constants.VALIDATED) != null
                 && context.getProperty(Constants.VALIDATED).equals(Constants.TRUE)
                 && context.getProperty(Constants.EXCEPTION) == null){
             System.out.println("-----------------------------------");
@@ -144,7 +150,18 @@ public class SeadWorkflowService {
                         .build();
             }
 
-        }
+        }*/
+
+        String response = "{\"response\": \"success\", \"message\" : \""+context.getProperty(Constants.RO_ID)+"\"}";
+        context.addProperty(Constants.RESPONSE, response);
+
+        System.out.println("-----------------------------------");
+        System.out.println("Respond to publishRO : " + context.getProperty(Constants.RESPONSE));
+        System.out.println("-----------------------------------");
+        return Response
+                .ok(context.getProperty(Constants.RESPONSE))
+                .type(MediaType.APPLICATION_JSON_TYPE)
+                .build();
     }
 
 }

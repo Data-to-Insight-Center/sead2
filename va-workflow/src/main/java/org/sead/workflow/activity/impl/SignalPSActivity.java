@@ -25,7 +25,8 @@ public class SignalPSActivity extends AbstractWorkflowActivity {
         }
 
         context.addProperty(Constants.RESPONSE, response);
-        context.updateProperty(Constants.SIGNAL_PS, Constants.TRUE); // set SIGNAL_PS flag to true
+//        context.updateProperty(Constants.SIGNAL_PS, Constants.TRUE); // set SIGNAL_PS flag to true
+        //TODO : PS either pull or we push the response
 
         System.out.println(SignalPSActivity.class.getName() + " : Created response");
         System.out.println("=====================================\n");

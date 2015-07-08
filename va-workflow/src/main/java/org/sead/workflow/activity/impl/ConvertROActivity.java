@@ -51,8 +51,9 @@ public class ConvertROActivity extends AbstractWorkflowActivity {
         }
 
         // generate JSONLD for the collection identified by roId
-        String sead_id = IdGenerator.generateRandomID();
-        context.addProperty(Constants.RO_ID, sead_id);
+        String sead_id = context.getProperty(Constants.RO_ID);
+        //String sead_id = IdGenerator.generateRandomID();
+        //context.addProperty(Constants.RO_ID, sead_id);
         String roJsonString = getRO(roId, sead_id, activityParams, context);
         context.addProperty(Constants.JSON_RO, roJsonString);
 
