@@ -10,6 +10,7 @@ import org.sead.workflow.context.SeadWorkflowContext;
 import org.sead.workflow.exception.SeadWorkflowException;
 import org.sead.workflow.util.Constants;
 
+import java.net.URLEncoder;
 import java.util.HashMap;
 
 /**
@@ -41,7 +42,7 @@ public class UpdateROStatusActivity extends AbstractWorkflowActivity {
 
         // Call RO Info System to update RO status
         WebResource webResource = Client.create().resource(
-                roSystemUrl + "/resource/updatetoPO/" + context.getProperty(Constants.RO_ID)
+                roSystemUrl + "/resource/updatetoPO/" + URLEncoder.encode(context.getProperty(Constants.RO_ID))
         );
 
         ClientResponse response = webResource
