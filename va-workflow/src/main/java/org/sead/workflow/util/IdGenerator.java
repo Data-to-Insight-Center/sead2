@@ -4,7 +4,7 @@ import java.util.Random;
 
 public class IdGenerator {
 
-    private static String PREFIX = "sead_";
+    private static String PREFIX = "http://sead_";
 
     public static String generateRandomID(){
 

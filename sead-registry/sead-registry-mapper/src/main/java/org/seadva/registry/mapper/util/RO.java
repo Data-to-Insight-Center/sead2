@@ -10,8 +10,7 @@ import javax.json.Json;
 import javax.json.JsonArrayBuilder;
 import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 /**
  * The RO object is used to represent a collection with its parent
@@ -57,16 +56,20 @@ public class RO {
         }
         objectBuilder.add("Has Subcollection","http://purl.org/dc/terms/hasPart");
         objectBuilder.add("Has Files","http://purl.org/dc/terms/hasPart");
-        JsonObject context = objectBuilder.build();
+
         // Context build done
 
         // Now start constructing the main object starting with the context
         // and then with properties of the parent
         JsonObjectBuilder mainBuilder = Json.createObjectBuilder();
-        mainBuilder.add("@context", context);
         if(parent != null){
-            for(Property property:parent.getProperties()){
-                mainBuilder.add(property.getMetadata().getMetadataElement(), property.getValuestr());
+            Map<String, Object> propertyMap = createPropertyMap(parent.getProperties());
+            for(String key: propertyMap.keySet()){
+                if(propertyMap.get(key) instanceof String) {
+                    mainBuilder.add(key, (String)propertyMap.get(key));
+                }else {
+                    mainBuilder.add(key, (JsonArrayBuilder)propertyMap.get(key));
+                }
             }
         }
 
@@ -88,21 +91,60 @@ public class RO {
             if(entity instanceof Collection)
                 subCollection.add(entity.getId());
             else if(entity instanceof File){
-                for(Property property:entity.getProperties()){
-                    if(property.getMetadata().getId().equalsIgnoreCase("md:6")){
-                        if(!property.getValuestr().equalsIgnoreCase("-1")){
-                            fileBuilder.add(property.getMetadata().getMetadataElement(), property.getValuestr());
-                        }
-                    }else
-                        fileBuilder.add(property.getMetadata().getMetadataElement(), property.getValuestr());
+                Map<String, Object> filePropertyMap = createPropertyMap(entity.getProperties());
+                for(String key:filePropertyMap.keySet()) {
+
+                    if (filePropertyMap.get(key) instanceof String) {
+                        fileBuilder.add(key, (String) filePropertyMap.get(key));
+                    } else {
+                        fileBuilder.add(key, (JsonArrayBuilder) filePropertyMap.get(key));
+                    }
+                }
+
+//                    if(property.getMetadata().getId().equalsIgnoreCase("md:6")){
+//                        if(!property.getValuestr().equalsIgnoreCase("-1")){
+//                            fileBuilder.add(property.getMetadata().getMetadataElement(), property.getValuestr());
+//                        }
+//                    }else
+                        //fileBuilder.add(property.getMetadata().getMetadataElement(), property.getValuestr());
+                for(Property property:entity.getProperties()) {
+                    objectBuilder.add(property.getMetadata().getMetadataElement(),
+                            property.getMetadata().getMetadataSchema()+property.getMetadata().getMetadataElement());
                 }
                 filesList.add(fileBuilder.build());
             }
         }
         mainBuilder.add("Has Subcollection", subCollection);
         mainBuilder.add("Has Files", filesList);
+
+        JsonObject context = objectBuilder.build();
+        mainBuilder.add("@context", context);
+
         JsonObject finalObject = mainBuilder.build();
         return finalObject.toString();
+    }
+
+    private Map<String, Object> createPropertyMap(Set<Property> propertySet){
+
+        Map<String, Object> map = new HashMap<String, Object>();
+
+        for(Property property : propertySet){
+            String key = property.getMetadata().getMetadataElement();
+            String value = property.getValuestr();
+            if(map.containsKey(key)) {
+                if(map.get(key) instanceof String) {
+                    JsonArrayBuilder array = Json.createArrayBuilder();
+                    array.add((String)map.get(key));
+                    array.add(value);
+                    map.put(key, array);
+                } else {
+                    ( (JsonArrayBuilder)map.get(key) ).add(value);
+                }
+            }else {
+                map.put(key, value);
+            }
+        }
+        return map;
     }
 }
 

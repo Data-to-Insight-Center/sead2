@@ -194,12 +194,12 @@ public class JsonDBMapper {
         LinkedList hasFiles = (LinkedList)json.get(HAS_FILES);
         LinkedList hasSubCollections = (LinkedList)json.get(HAS_SUBCOLLECTIONS);
 
-        json.remove(IDENTIFIER);
+        //json.remove(IDENTIFIER); collection identifier is in the properties table
         json.remove(HAS_FILES);
         json.remove(HAS_SUBCOLLECTIONS);
 
         Map<String,String> contextMap = ((Map<String,String>)json.get(CONTEXT));
-        contextMap.remove(IDENTIFIER);
+        contextMap.remove(IDENTIFIER); // since ID and external ID has same namespace
         contextMap.remove(HAS_FILES);
         contextMap.remove(HAS_SUBCOLLECTIONS);
         if(contextMap.get(DC_TERMS_TYPE.getName()) == null) {
@@ -211,6 +211,7 @@ public class JsonDBMapper {
         for (String key : contextMap.keySet()){
             reversedContextMap.put(contextMap.get(key), key);
         }
+        contextMap.put(IDENTIFIER, DC_TERMS_IDENTIFIER.getURI().toString()); // put this back since file indentifier should go to properties table
 
         // Add entity_id_resource_map if needed
 
@@ -361,7 +362,7 @@ public class JsonDBMapper {
             Map fileMetadata = (Map)object;
 
             String fileId = (String)fileMetadata.get(IDENTIFIER);
-            fileMetadata.remove(IDENTIFIER);
+            //fileMetadata.remove(IDENTIFIER); - this should be in the table
 
             file.setId(fileId);
             file.setVersionNum("1");

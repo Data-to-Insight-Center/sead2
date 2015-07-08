@@ -16,11 +16,18 @@
 
 package org.seadva.metadatagen.util;
 
+import com.sun.jersey.api.client.Client;
+import com.sun.jersey.api.client.ClientResponse;
+import com.sun.jersey.api.client.WebResource;
+import org.apache.commons.io.IOUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.seadva.metadatagen.model.MetadataObject;
 
+import java.io.IOException;
+import java.io.StringWriter;
+import java.net.URLEncoder;
 import java.util.*;
 
 public class ROQueryUtil {
@@ -31,25 +38,32 @@ public class ROQueryUtil {
 
         MetadataObject metadataObject = new MetadataObject();
 
-//        WebResource webResource = Client.create().resource(
-//                Constants.rosystemURL
-//        );
-//        webResource = webResource.path("resource")
-//                .path("ro")
-//                .path(URLEncoder.encode(entityId));
-//
-//        ClientResponse response = webResource
-//                .get(ClientResponse.class);
-//
-//        StringWriter writer = new StringWriter();
-//        try {
-//            IOUtils.copy(response.getEntityInputStream(), writer);
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
-//        String json = writer.toString();
+        String guid = null;
 
-        String json = Constants.json_map.get(tagId);
+        if(tagId.contains("/"))
+            guid = tagId.split("/")[tagId.split("/").length-1];
+        else
+            guid = tagId.split(":")[tagId.split(":").length-1];
+
+        WebResource webResource = Client.create().resource(
+                Constants.rosystemURL
+        );
+        webResource = webResource.path("resource")
+                .path("jsonldro")
+                .path(URLEncoder.encode(tagId));
+
+        ClientResponse roResponse = webResource
+                .get(ClientResponse.class);
+
+        StringWriter writer = new StringWriter();
+        try {
+            IOUtils.copy(roResponse.getEntityInputStream(), writer);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        String json = writer.toString();
+
+        //String json = Constants.json_map.get(guid);
 
         if(json == null) {
             return null;
