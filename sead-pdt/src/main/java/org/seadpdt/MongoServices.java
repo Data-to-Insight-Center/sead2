@@ -22,9 +22,10 @@ public class MongoServices {
 	
 	 @GET
 	 @Path("/clear")
-	 public String clearMongo()  {	
-		// collection.deleteMany(gte("i", 100));
-		 return "success";
+	 public String clearMongo(@QueryParam("collection") String collectionID)  {		 
+		MongoCollection<Document> collection = db.getCollection(collectionID);	
+		collection.drop();
+		return "success";
 	 }
 	 
 	 @GET

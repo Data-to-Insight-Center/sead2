@@ -38,13 +38,14 @@ public class UpdatePdtActivity extends AbstractWorkflowActivity {
         
         // for testing, one hard coded piece from ro, needs to be parsed properly
         String testJSON = 
-        		"{\"@context\": {\"External Identifier\": \"http://purl.org/dc/terms/identifier\"},\"External Identifier\": \"http://dx.doi.org/10.5072/FK2FF3PK7W\"}";
+        		"{\"@context\": {\"Identifier\": \"http://purl.org/dc/terms/identifier\"},\"Identifier\": \"tag:medici@uiuc.edu,2009:col_SqW5XUYSfhZ627ghxBfaMQ\"}";
               		    
 	        WebResource webResource = Client.create().resource(pdtSystemUrl);
 	        ClientResponse response = webResource.path("harvest")
 	                .path("publishRO")
 	                .accept("application/json")
 	                .type("application/json")
+//	                .post(ClientResponse.class, ro);			
 	                .post(ClientResponse.class, testJSON);			
 			
 			
