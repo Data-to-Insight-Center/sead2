@@ -602,4 +602,20 @@ public class ResourceService {
         baseEntityDao.updateEntity(entityId, 1);
         return Response.ok().build();
     }
+
+    @POST
+    @Path("/updateStatus")
+    public Response updateStatus(@QueryParam("entityId") String entityId,
+                                 @QueryParam("state") String stateName){
+
+        State state = stateDao.getState(stateName);
+        if(state.getId() == null)
+            throw new NotFoundException("No state found matching the given name "+stateName+" in registry");
+        boolean entityUpdated = collectionEntityDao.updateState(entityId, state.getId());
+        if(entityUpdated)
+            return Response.ok(gson.toJson(state)).build();
+        else
+            throw new NotFoundException("No collection found matching the given name "+entityId+" in registry");
+
+    }
 }

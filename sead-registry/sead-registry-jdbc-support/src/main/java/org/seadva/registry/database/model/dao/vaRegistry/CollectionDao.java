@@ -1,6 +1,7 @@
 package org.seadva.registry.database.model.dao.vaRegistry;
 
 import org.seadva.registry.database.model.obj.vaRegistry.Collection;
+import org.seadva.registry.database.model.obj.vaRegistry.Property;
 
 import java.util.List;
 
@@ -14,5 +15,7 @@ public interface CollectionDao {
     boolean insertCollection(Collection collection);
     List<Collection> listCollections(String submitterId, String repository, String type);
     public List<Collection> queryByProperty(String key, String value);
+    public boolean updateState(String collectionID, String state);
+    public List<Property> queryByCollection(String entityId, String metadataId);
 }
 

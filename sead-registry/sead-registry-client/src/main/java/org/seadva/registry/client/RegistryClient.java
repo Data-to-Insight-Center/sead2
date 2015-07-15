@@ -26,6 +26,7 @@ import com.sun.jersey.core.util.MultivaluedMapImpl;
 import org.apache.commons.io.IOUtils;
 import org.seadva.registry.database.model.obj.vaRegistry.*;
 import org.seadva.registry.database.model.obj.vaRegistry.CollectionWrapper;
+import org.seadva.registry.service.exception.NotFoundException;
 import org.seadva.registry.service.util.QueryAttributeType;
 
 import javax.ws.rs.core.MultivaluedMap;
@@ -633,5 +634,22 @@ public class RegistryClient {
 
         if(response.getStatus()!=200)
             throw new HTTPException(response.getStatus());
+    }
+
+    public void updateROStatus(String entityId, String status) throws IOException {
+
+        WebResource webResource = resource();
+        ClientResponse response = webResource.path("resource")
+                .path("updateStatus")
+                .queryParam("entityId", URLEncoder.encode(entityId))
+                .queryParam("state",status)
+                .post(ClientResponse.class);
+
+        if(response.getStatus()!=200) {
+            StringWriter writer = new StringWriter();
+            IOUtils.copy(response.getEntityInputStream(), writer);
+            throw new NotFoundException(writer.toString());
+        }
+
     }
 }

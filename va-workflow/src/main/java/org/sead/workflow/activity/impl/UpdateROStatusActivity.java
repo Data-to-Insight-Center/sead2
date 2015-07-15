@@ -41,12 +41,13 @@ public class UpdateROStatusActivity extends AbstractWorkflowActivity {
         String roSystemUrl = activityParams.get("roSystemUrl");
 
         // Call RO Info System to update RO status
-        WebResource webResource = Client.create().resource(
-                roSystemUrl + "/resource/updatetoPO/" + URLEncoder.encode(context.getProperty(Constants.RO_ID))
-        );
+        WebResource webResource = Client.create()
+                .resource(roSystemUrl + "/resource/updateROStatus/")
+                .queryParam("entityId",URLEncoder.encode(context.getProperty(Constants.RO_ID)))
+                .queryParam("status", "PublishedObject");
 
         ClientResponse response = webResource
-                .get(ClientResponse.class);
+                .post(ClientResponse.class);
 
         if(response.getStatus() == 200){
             System.out.println(UpdateROStatusActivity.class.getName() + " : Successfully updated RO status");

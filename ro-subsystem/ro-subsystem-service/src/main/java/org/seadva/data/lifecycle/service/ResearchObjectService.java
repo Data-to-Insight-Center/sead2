@@ -39,6 +39,7 @@ import org.seadva.registry.database.model.obj.vaRegistry.Agent;
 import org.seadva.registry.mapper.DcsDBMapper;
 import org.seadva.registry.mapper.OreDBMapper;
 import org.seadva.registry.mapper.JsonDBMapper;
+import org.seadva.registry.service.exception.NotFoundException;
 import org.springframework.beans.factory.annotation.Required;
 
 import javax.ws.rs.*;
@@ -334,11 +335,22 @@ public class ResearchObjectService {
     }
 
 
-    @GET
-    @Path("/updatetoPO/{entityId}")
-    public Response UpdateStatusToPO(@PathParam("entityId") String roIdentifier){
+    @POST
+    @Path("/updateROStatus")
+    public Response UpdateStatusToPO(@QueryParam("entityId") String roIdentifier,
+                                     @QueryParam("status") String status){
 
-        return Response.ok().build();
+        try {
+            new RegistryClient(registryServiceUrl).updateROStatus(roIdentifier, status);
+            return Response.ok().build();
+        } catch (NotFoundException e) {
+            return Response.serverError().
+                    status(Response.Status.NOT_FOUND).
+                    entity(e.getResponse().getEntity()).
+                    build();
+        } catch (Exception e) {
+            return Response.serverError().build();
+        }
     }
 
     /**

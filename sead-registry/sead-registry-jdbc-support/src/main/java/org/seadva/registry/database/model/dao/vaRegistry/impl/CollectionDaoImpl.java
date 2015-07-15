@@ -5,11 +5,9 @@ import org.seadva.registry.database.common.DBConnectionPool;
 import org.seadva.registry.database.common.ObjectPool;
 import org.seadva.registry.database.model.dao.vaRegistry.BaseEntityDao;
 import org.seadva.registry.database.model.dao.vaRegistry.CollectionDao;
+import org.seadva.registry.database.model.dao.vaRegistry.PropertyDao;
 import org.seadva.registry.database.model.dao.vaRegistry.StateDao;
-import org.seadva.registry.database.model.obj.vaRegistry.BaseEntity;
-import org.seadva.registry.database.model.obj.vaRegistry.Collection;
-import org.seadva.registry.database.model.obj.vaRegistry.CollectionWrapper;
-import org.seadva.registry.database.model.obj.vaRegistry.State;
+import org.seadva.registry.database.model.obj.vaRegistry.*;
 import org.springframework.stereotype.Repository;
 
 import java.sql.Connection;
@@ -17,7 +15,9 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 
 /**
@@ -33,10 +33,12 @@ public class CollectionDaoImpl implements CollectionDao {
         connectionPool = DBConnectionPool.getInstance();
         baseEntityDao = new BaseEntityDaoImpl();
         stateDao = new StateDaoImpl();
+        propertyDao = new PropertyDaoImpl();
     }
 
     BaseEntityDao baseEntityDao;
     StateDao stateDao;
+    PropertyDao propertyDao;
     private static Logger log = Logger.getLogger(CollectionDaoImpl.class);
 
 
@@ -275,6 +277,92 @@ public class CollectionDaoImpl implements CollectionDao {
 
         }
         return collectionsList;
+    }
+
+    @Override
+    public List<Property> queryByCollection(String collectionId, String metadataId){
+        List<Property> propertyList = new ArrayList<Property>();
+
+        String queryStr = "Select * from property P ";
+        queryStr+=" where P.entity_id='"+collectionId+"' AND P.metadata_id='"+metadataId+"'";
+
+        Connection connection = null;
+        PreparedStatement statement = null;
+
+        try {
+            connection = getConnection();
+
+            statement = connection.prepareStatement(queryStr);
+            ResultSet resultSet = statement.executeQuery();
+
+
+            List<CollectionWrapper> finalCollectionWrappers = new ArrayList<CollectionWrapper>();
+
+            while (resultSet.next()) {
+                String entityId = resultSet.getString("entity_id");
+                String metadata_id = resultSet.getString("metadata_id");
+                BaseEntity entity = new BaseEntityDaoImpl().getBaseEntity(entityId);
+                MetadataType metadataType = new MetadataTypeDaoImpl().getMetadataTypeById(metadata_id);
+                Property property = new Property();
+                property.setEntity(entity);
+                property.setId(resultSet.getLong("property_id"));
+                property.setValuestr(resultSet.getString("valueStr"));
+                property.setMetadata(metadataType);
+                propertyList.add(property);
+            }
+        } catch (SQLException sqle) {
+            throw new RuntimeException(sqle);
+        } finally {
+            if (statement != null) {
+                try {
+                    statement.close();
+                } catch (SQLException e) {
+                    //  log.warn("Unable to close statement", e);
+                }
+                statement = null;
+            }
+            connectionPool.releaseEntry(connection);
+
+        }
+        return propertyList;
+    }
+
+    @Override
+    public boolean updateState(String collectionId, String state) {
+        Connection connection = null;
+        PreparedStatement statement = null;
+        int rows;
+        try {
+            Property typeProperty = queryByCollection(collectionId, "md:14").get(0);
+            typeProperty.setValuestr(stateDao.getStateById(state).getStateType());
+            Set<Property> propertySet = new HashSet<Property>();
+            propertySet.add(typeProperty);
+            propertyDao.putProperties(collectionId, propertySet);
+            connection = getConnection();
+            statement = connection.prepareStatement("UPDATE collection SET state_id=? WHERE entity_id=?");
+            statement.setString(1, state);
+            statement.setString(2, collectionId);
+            rows = statement.executeUpdate();
+            statement.close();
+            log.debug("Done resetting unfinished raw notifications");
+        } catch (SQLException sqle) {
+            throw new RuntimeException(sqle);
+        } finally {
+            if (statement != null) {
+                try {
+                    statement.close();
+                } catch (SQLException e) {
+                    log.warn("Unable to close statement", e);
+                }
+                statement = null;
+            }
+            connectionPool.releaseEntry(connection);
+
+        }
+        if(rows > 0)
+            return true;
+        else
+            return false;
     }
 }
 
