@@ -36,6 +36,7 @@ import org.seadva.model.pack.ResearchObject;
 import org.seadva.registry.client.RegistryClient;
 import org.seadva.registry.database.model.obj.vaRegistry.*;
 import org.seadva.registry.database.model.obj.vaRegistry.Agent;
+import org.seadva.registry.database.model.obj.vaRegistry.Collection;
 import org.seadva.registry.mapper.DcsDBMapper;
 import org.seadva.registry.mapper.OreDBMapper;
 import org.seadva.registry.mapper.JsonDBMapper;
@@ -332,6 +333,18 @@ public class ResearchObjectService {
         );
 
         return Response.ok( new String(baos.toByteArray(), "UTF-8")).build();
+    }
+
+    @GET
+    @Path("/getStatus/{entityId}")
+    @Produces("application/json")
+    public Response getStatus( @PathParam("entityId") String roIdentifier) throws Exception {
+
+        Collection collection = new RegistryClient(registryServiceUrl).getCollection(roIdentifier);
+        JSONObject response = new JSONObject();
+        response.put("identifier", roIdentifier);
+        response.put("status", collection.getState().getStateType());
+        return Response.ok(response.toString()).build();
     }
 
 
