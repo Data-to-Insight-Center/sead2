@@ -604,8 +604,8 @@ public class ResourceService {
     }
 
     @POST
-    @Path("/updateStatus")
-    public Response updateStatus(@QueryParam("entityId") String entityId,
+    @Path("/updateState")
+    public Response updateState(@QueryParam("entityId") String entityId,
                                  @QueryParam("state") String stateName){
 
         State state = stateDao.getState(stateName);

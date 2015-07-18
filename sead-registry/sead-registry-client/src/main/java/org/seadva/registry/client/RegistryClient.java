@@ -636,13 +636,13 @@ public class RegistryClient {
             throw new HTTPException(response.getStatus());
     }
 
-    public void updateROStatus(String entityId, String status) throws IOException {
+    public void updateROState(String entityId, String state) throws IOException {
 
         WebResource webResource = resource();
         ClientResponse response = webResource.path("resource")
-                .path("updateStatus")
+                .path("updateState")
                 .queryParam("entityId", URLEncoder.encode(entityId))
-                .queryParam("state",status)
+                .queryParam("state",state)
                 .post(ClientResponse.class);
 
         if(response.getStatus()!=200) {

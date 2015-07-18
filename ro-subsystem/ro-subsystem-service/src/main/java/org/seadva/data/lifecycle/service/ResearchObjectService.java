@@ -336,25 +336,25 @@ public class ResearchObjectService {
     }
 
     @GET
-    @Path("/getStatus/{entityId}")
+    @Path("/getState/{entityId}")
     @Produces("application/json")
-    public Response getStatus( @PathParam("entityId") String roIdentifier) throws Exception {
+    public Response getState( @PathParam("entityId") String roIdentifier) throws Exception {
 
         Collection collection = new RegistryClient(registryServiceUrl).getCollection(roIdentifier);
         JSONObject response = new JSONObject();
         response.put("identifier", roIdentifier);
-        response.put("status", collection.getState().getStateType());
+        response.put("state", collection.getState().getStateType());
         return Response.ok(response.toString()).build();
     }
 
 
     @POST
-    @Path("/updateROStatus")
-    public Response UpdateStatusToPO(@QueryParam("entityId") String roIdentifier,
-                                     @QueryParam("status") String status){
+    @Path("/updateROState")
+    public Response UpdateStateToPO(@QueryParam("entityId") String roIdentifier,
+                                     @QueryParam("state") String state){
 
         try {
-            new RegistryClient(registryServiceUrl).updateROStatus(roIdentifier, status);
+            new RegistryClient(registryServiceUrl).updateROState(roIdentifier, state);
             return Response.ok().build();
         } catch (NotFoundException e) {
             return Response.serverError().

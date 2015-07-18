@@ -25,7 +25,7 @@ public class UpdateROStatusActivity extends AbstractWorkflowActivity {
         System.out.println("-----------------------------------\n");
 
         if(context.getProperty(Constants.VALIDATED).equals(Constants.FALSE)){
-            System.out.println(UpdateROStatusActivity.class.getName() + " : Not Updating RO status");
+            System.out.println(UpdateROStatusActivity.class.getName() + " : Not Updating RO state");
             return;
         }
 
@@ -40,20 +40,20 @@ public class UpdateROStatusActivity extends AbstractWorkflowActivity {
 
         String roSystemUrl = activityParams.get("roSystemUrl");
 
-        // Call RO Info System to update RO status
+        // Call RO Info System to update RO state
         WebResource webResource = Client.create()
-                .resource(roSystemUrl + "/resource/updateROStatus/")
+                .resource(roSystemUrl + "/resource/updateROState/")
                 .queryParam("entityId",URLEncoder.encode(context.getProperty(Constants.RO_ID)))
-                .queryParam("status", "PublishedObject");
+                .queryParam("state", "PublishedObject");
 
         ClientResponse response = webResource
                 .post(ClientResponse.class);
 
         if(response.getStatus() == 200){
-            System.out.println(UpdateROStatusActivity.class.getName() + " : Successfully updated RO status");
+            System.out.println(UpdateROStatusActivity.class.getName() + " : Successfully updated RO state");
         } else {
-            System.out.println(UpdateROStatusActivity.class.getName() + " : Failed to updated RO status");
-            throw new SeadWorkflowException("Error occurred while updating status of the collection "
+            System.out.println(UpdateROStatusActivity.class.getName() + " : Failed to updated RO state");
+            throw new SeadWorkflowException("Error occurred while updating state of the collection "
                     + context.getCollectionId() + " to PO");
         }
 
