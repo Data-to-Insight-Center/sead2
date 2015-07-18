@@ -492,10 +492,47 @@ public class ResearchObjectService {
 
         try {
             new JsonDBMapper(registryServiceUrl).mapFromJson(roString);
+
+            JSONObject roObject = new JSONObject(roString);
+            JSONObject context = (JSONObject)roObject.get("@context");
+            String wasDerivedFromName = null;
+            String wasRevisionOfName = null;
+            String identifierName = "Identifier";
+
+            Iterator keys = context.keys();
+            while(keys.hasNext()){
+                String key = (String)keys.next();
+                Object value = context.get(key);
+                if(value instanceof String && value.equals("http://www.w3.org/ns/prov#wasRevisionOf"))
+                    wasRevisionOfName = key;
+                if(value instanceof String && value.equals("http://www.w3.org/ns/prov#wasDerivedFrom"))
+                    wasDerivedFromName = key;
+                //if(value instanceof String && value.equals("http://purl.org/dc/terms/identifier"))
+                    //identifierName = key; // TODO : identify correct namespace for Identifier
+            }
+
+            String roId = (String)roObject.get(identifierName);
+            String parentId = null;
+            if(wasDerivedFromName != null && roObject.has(wasDerivedFromName)){
+                parentId = (String)roObject.get(wasDerivedFromName);
+                if(new RegistryClient(registryServiceUrl).getEntity(parentId, Collection.class.getName()) != null)
+                    trackDerivation(parentId, roId);
+            } else if(wasRevisionOfName != null && roObject.has(wasRevisionOfName)){
+                parentId = (String)roObject.get(wasRevisionOfName);
+                if(new RegistryClient(registryServiceUrl).getEntity(parentId, Collection.class.getName()) != null)
+                    trackRevision(parentId, roId);
+            }
+
             return Response.ok().build();
         } catch (IOException e) {
             return Response.serverError().build();
         } catch (URISyntaxException e) {
+            return Response.serverError().build();
+        } catch (ClassNotFoundException e) {
+            return Response.serverError().build();
+        } catch (JSONException e) {
+            return Response.serverError().build();
+        } catch (Exception e) {
             return Response.serverError().build();
         }
     }
@@ -510,6 +547,21 @@ public class ResearchObjectService {
 
 
         new KomaduIngester(komaduServiceUrl).trackRevision(previousRO,
+                nextRO
+        );
+        return Response.ok().build();
+    }
+
+    @POST
+    @Path("/trackDerivation")
+    public Response trackDerivation(@QueryParam("previous") String previousROId,
+                                  @QueryParam("next") String nextROId) throws Exception {
+
+        Entity previousRO = getCollection(previousROId);
+        Entity nextRO = getCollection(nextROId);
+
+
+        new KomaduIngester(komaduServiceUrl).trackDerivation(previousRO,
                 nextRO
         );
         return Response.ok().build();
