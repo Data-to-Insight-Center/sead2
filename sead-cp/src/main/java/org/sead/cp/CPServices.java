@@ -1,4 +1,4 @@
-package org.seadcp;
+package org.sead.cp;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -45,7 +45,11 @@ public class CPServices {
 		return null;
 	}
 
-	
+	/**
+	 * A simple ping
+	 * 
+	 * @return {"status":"up"}  
+	 */
 	@GET
 	@Path("/status")
 	@Produces(MediaType.APPLICATION_JSON)

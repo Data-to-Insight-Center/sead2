@@ -1,0 +1,2 @@
+
+This is the license file for SEAD's C&P API. 

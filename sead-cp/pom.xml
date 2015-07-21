@@ -167,9 +167,9 @@
 				<artifactId>maven-enunciate-plugin</artifactId>
 				<version>1.30</version>
 				<configuration>
-					<exports>
-						<java.client.library.binaries>client.jar</java.client.library.binaries>
-					</exports>
+					
+					<configFile>enunciate.xml</configFile>
+					<xml disabled="false" />
 				</configuration>
 				<executions>
 					<execution>
