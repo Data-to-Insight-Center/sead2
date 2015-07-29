@@ -40,7 +40,7 @@ import com.sun.jersey.api.client.ClientResponse.Status;
  * annotations must match base class for documentation to be correct.
  */
 
-@Path("/")
+@Path("/people")
 public class PeopleImpl extends People {
 	private MongoClient mongoClient = null;
 	private MongoDatabase db = null;
@@ -54,7 +54,7 @@ public class PeopleImpl extends People {
 	}
 
 	@POST
-	@Path("/people")
+	@Path("/")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response registerPerson(String personString) {
@@ -96,12 +96,12 @@ public class PeopleImpl extends People {
 	}
 
 	@GET
-	@Path("/people")
+	@Path("/")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response getPeopleList() {
 		FindIterable<Document> iter = peopleCollection.find();
 		iter.projection(new Document("orcid-profile.orcid-identifier.path", 1).append(
-				"orcid-bio.personal-details.given-names", 1).append("orcid-bio.personal-details.family-name",1).append("_id", 0));
+				"orcid-profile.orcid-bio.personal-details.given-names", 1).append("orcid-profile.orcid-bio.personal-details.family-name", 1).append("_id", 0));
 		MongoCursor<Document> cursor = iter.iterator();
 		JSONArray array = new JSONArray();
 		while (cursor.hasNext()) {
@@ -112,7 +112,7 @@ public class PeopleImpl extends People {
 	}
 
 	@GET
-	@Path("/people/{id}")
+	@Path("/{id}")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response getPersonProfile(@PathParam("id") String id) {
 		FindIterable<Document> iter = peopleCollection.find(new Document(
@@ -123,7 +123,7 @@ public class PeopleImpl extends People {
 	}
 
 	@PUT
-	@Path("/people/{id}")
+	@Path("/{id}")
 	@Consumes(MediaType.APPLICATION_JSON)
 	public Response updatePersonProfile(@PathParam("id") String id) {
 		FindIterable<Document> iter = peopleCollection.find(new Document(
@@ -154,7 +154,7 @@ public class PeopleImpl extends People {
 	}
 
 	@DELETE
-	@Path("/repositories/{id}")
+	@Path("/{id}")
 	public Response unregisterPerson(@PathParam("id") String id) {
 		peopleCollection.deleteOne(new Document("orcid-profile.orcid-identifier.path", id));
 		return Response.status(Status.OK).build();

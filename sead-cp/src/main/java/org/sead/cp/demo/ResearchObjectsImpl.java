@@ -25,7 +25,7 @@ import com.sun.jersey.api.client.ClientResponse.Status;
  * annotations must match base class for documentation to be correct.
  */
 
-@Path("/")
+@Path("/publications")
 public class ResearchObjectsImpl extends ResearchObjects {
 	private MongoClient mongoClient = null;
 	private MongoDatabase db = null;
@@ -39,7 +39,7 @@ public class ResearchObjectsImpl extends ResearchObjects {
 	}
 
 	@POST
-	@Path("/publications")
+	@Path("/")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response startROPublicationProcess(JSONObject publicationRequest) {
@@ -68,7 +68,7 @@ public class ResearchObjectsImpl extends ResearchObjects {
 	 */
 
 	@GET
-	@Path("/publications")
+	@Path("/")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response getROsList() {
 		return Response.status(Status.NOT_IMPLEMENTED).build();
@@ -84,7 +84,7 @@ public class ResearchObjectsImpl extends ResearchObjects {
 	}
 
 	@GET
-	@Path("/publications/{id}")
+	@Path("/{id}")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response getROProfile(String id) {
 		return Response.status(Status.NOT_IMPLEMENTED).build();
@@ -97,7 +97,7 @@ public class ResearchObjectsImpl extends ResearchObjects {
 	}
 
 	@PUT
-	@Path("/publications/{id}")
+	@Path("/{id}")
 	@Consumes(MediaType.APPLICATION_JSON)
 	public Response setROStatus(@PathParam("id") String id,
 			String profile) {
@@ -119,7 +119,7 @@ public class ResearchObjectsImpl extends ResearchObjects {
 	}
 
 	@DELETE
-	@Path("/publications/{id}")
+	@Path("/{id}")
 	public Response rescindROPublicationRequest(String id) {
 		return Response.status(Status.NOT_IMPLEMENTED).build();
 		/*

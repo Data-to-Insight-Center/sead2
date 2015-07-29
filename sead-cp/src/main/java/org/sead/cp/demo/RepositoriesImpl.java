@@ -33,7 +33,7 @@ import com.sun.jersey.api.client.ClientResponse.Status;
 /** See abstract base class for documentation of the rest api.
  *  Note - path annotations must match base class for documentation to be correct. */
 
-@Path("/")
+@Path("/repositories")
 public class RepositoriesImpl extends Repositories {
 	private MongoClient mongoClient = null;
 	private MongoDatabase db = null;
@@ -47,7 +47,7 @@ public class RepositoriesImpl extends Repositories {
 	}
 
 	@POST
-	@Path("/repositories")
+	@Path("/")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response registerRepository(String profileString) {
@@ -72,7 +72,7 @@ public class RepositoriesImpl extends Repositories {
 	}
 
 	@GET
-	@Path("/repositories")
+	@Path("/")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response getRepositoryList() {
 		FindIterable<Document> iter = repositoriesCollection.find();
@@ -87,7 +87,7 @@ public class RepositoriesImpl extends Repositories {
 	}
 
 	@GET
-	@Path("/repositories/{id}")
+	@Path("/{id}")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response getRepositoryProfile(@PathParam("id") String id) {
 		FindIterable<Document> iter = repositoriesCollection.find(new Document(
@@ -98,7 +98,7 @@ public class RepositoriesImpl extends Repositories {
 	}
 
 	@PUT
-	@Path("/repositories/{id}")
+	@Path("/{id}")
 	@Consumes(MediaType.APPLICATION_JSON)
 	public Response setRepositoryProfile(@PathParam("id") String id,
 			String profile) {
@@ -118,14 +118,14 @@ public class RepositoriesImpl extends Repositories {
 	}
 
 	@DELETE
-	@Path("/repositories/{id}")
+	@Path("/{id}")
 	public Response unregisterRepository(@PathParam("id") String id) {
 		repositoriesCollection.deleteOne(new Document("orgidentifier", id));
 		return Response.status(Status.OK).build();
 	}
 
 	@GET
-	@Path("/repositories/researchobjects")
+	@Path("/researchobjects")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response getROsByRepository() {
 		return Response.status(Status.NOT_IMPLEMENTED).build();

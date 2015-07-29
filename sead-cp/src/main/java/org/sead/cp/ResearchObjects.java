@@ -13,7 +13,7 @@ import javax.ws.rs.core.Response;
 
 import org.json.JSONObject;
 
-@Path("")
+@Path("/researchobjects")
 public abstract class ResearchObjects {
 
 	
@@ -42,7 +42,7 @@ public abstract class ResearchObjects {
 	 * 
 	 */
 	@POST
-	@Path("/researchobjects")
+	@Path("/")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	abstract public Response startROPublicationProcess(JSONObject publicationRequest);
@@ -58,7 +58,7 @@ public abstract class ResearchObjects {
 	 * 		   ]
 	 */
 	@GET
-	@Path("/researchobjects")
+	@Path("/")
 	@Produces(MediaType.APPLICATION_JSON)
 	public abstract Response getROsList();
 
@@ -71,7 +71,7 @@ public abstract class ResearchObjects {
 	 * @return : json-ld profile document 
 	 */
 	@GET
-	@Path("/researchobjects/{id}")
+	@Path("/{id}")
 	@Produces(MediaType.APPLICATION_JSON)
 	public abstract Response getROProfile(@PathParam("id") String id);
 
@@ -91,7 +91,7 @@ public abstract class ResearchObjects {
 	 *         400 Bad Request: {response: "failure", reason : &lt;string&gt;} <br>
 	 */
 	@PUT
-	@Path("/researchobjects/{id}")
+	@Path("/{id}")
 	@Consumes(MediaType.APPLICATION_JSON)
 	public abstract Response setROStatus(@PathParam("id") String id, String status);
 
@@ -105,7 +105,7 @@ public abstract class ResearchObjects {
 	 *         400 Bad Request: {response: "failure", reason : &lt;string&gt;} <br>
 	 */
 	@DELETE
-	@Path("/researchobjects/{id}")
+	@Path("/{id}")
 	public abstract Response rescindROPublicationRequest(@PathParam("id") String id);
 
 }

@@ -13,7 +13,7 @@ import javax.ws.rs.core.Response;
 
 import org.json.JSONObject;
 
-@Path("")
+@Path("/repositories")
 public abstract class Repositories {
 
 
@@ -36,7 +36,7 @@ public abstract class Repositories {
 	 * 
 	 */
 	@POST
-	@Path("/repositories")
+	@Path("/")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	public abstract Response registerRepository(String profileString);
@@ -50,7 +50,7 @@ public abstract class Repositories {
 	 * 		   ]
 	 */
 	@GET
-	@Path("/repositories")
+	@Path("/")
 	@Produces(MediaType.APPLICATION_JSON)
 	public abstract Response getRepositoryList();
 
@@ -63,7 +63,7 @@ public abstract class Repositories {
 	 * @return : json-ld profile document - as submitted
 	 */
 	@GET
-	@Path("/repositories/{id}")
+	@Path("/{id}")
 	@Produces(MediaType.APPLICATION_JSON)
 	public abstract Response getRepositoryProfile(@PathParam("id") String id);
 
@@ -77,7 +77,7 @@ public abstract class Repositories {
 	 *         400 Bad Request: {response: "failure", reason : &lt;string&gt;} <br>
 	 */
 	@PUT
-	@Path("/repositories/{id}")
+	@Path("/{id}")
 	@Consumes(MediaType.APPLICATION_JSON)
 	public abstract Response setRepositoryProfile(@PathParam("id") String id, String profile);
 
@@ -91,7 +91,7 @@ public abstract class Repositories {
 	 *         400 Bad Request: {response: "failure", reason : &lt;string&gt;} <br>
 	 */
 	@DELETE
-	@Path("/repositories/{id}")
+	@Path("/{id}")
 	public abstract Response unregisterRepository(@PathParam("id") String id);
 
 	/**
@@ -105,7 +105,7 @@ public abstract class Repositories {
 	 * 		   	]
 	 */
 	@GET
-	@Path("/repositories/researchobjects")
+	@Path("/researchobjects")
 	@Produces(MediaType.APPLICATION_JSON)
 	public abstract Response getROsByRepository();
 	

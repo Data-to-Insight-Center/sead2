@@ -13,7 +13,7 @@ import javax.ws.rs.core.Response;
 
 import org.json.JSONObject;
 
-@Path("")
+@Path("/people")
 public abstract class People {
 
 	/**
@@ -30,7 +30,7 @@ public abstract class People {
 	 * 
 	 */
 	@POST
-	@Path("/people")
+	@Path("/")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	public abstract Response registerPerson(String personString);
@@ -41,7 +41,7 @@ public abstract class People {
 	 * @return [ {"name":<name>, "identifier":<id>}, ... ]
 	 */
 	@GET
-	@Path("/people")
+	@Path("/")
 	@Produces(MediaType.APPLICATION_JSON)
 	public abstract Response getPeopleList();
 
@@ -54,7 +54,7 @@ public abstract class People {
 	 * @return : json-ld profile document - as harvested
 	 */
 	@GET
-	@Path("/people/{id}")
+	@Path("/{id}")
 	@Produces(MediaType.APPLICATION_JSON)
 	public abstract Response getPersonProfile(@PathParam("id") String id);
 
@@ -68,7 +68,7 @@ public abstract class People {
 	 *         400 Bad Request: {response: "failure", reason : &lt;string&gt;} <br>
 	 */
 	@PUT
-	@Path("/people/{id}")
+	@Path("/{id}")
 	@Consumes(MediaType.APPLICATION_JSON)
 	public abstract Response updatePersonProfile(@PathParam("id") String id);
 
@@ -82,7 +82,7 @@ public abstract class People {
 	 *         400 Bad Request: {response: "failure", reason : &lt;string&gt;} <br>
 	 */
 	@DELETE
-	@Path("/people/{id}")
+	@Path("/{id}")
 	public abstract Response unregisterPerson(@PathParam("id") String id);
 
 }

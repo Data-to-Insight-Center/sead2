@@ -22,7 +22,7 @@
         <servlet-class>com.sun.jersey.spi.container.servlet.ServletContainer</servlet-class>
         <init-param>
             <param-name>com.sun.jersey.config.property.packages</param-name>
-            <param-value>org.sead.cp.demoimpl;org.codehaus.jackson.jaxrs</param-value>
+            <param-value>org.sead.cp.demo;org.codehaus.jackson.jaxrs</param-value>
             
         </init-param>
 		<init-param>
