@@ -66,9 +66,12 @@ public class ConvertROActivity extends AbstractWorkflowActivity {
     private String getRO(String roId, String seadId, HashMap<String, String> activityParams, SeadWorkflowContext context) {
         String psUrl = context.getPSInstance().getUrl();
         String tempPath = activityParams.get("tempPath");
-
+        String ps_un = context.getPSInstance().getUser();
+        String ps_pw = context.getPSInstance().getPassword();
+        Client client = Client.create();
+        client.addFilter(new HTTPBasicAuthFilter(ps_un, ps_pw));
         // get collection level metadata
-        WebResource webResource = Client.create().resource(
+        WebResource webResource = client.resource(
                 psUrl + "/resteasy/"
         );
         webResource = webResource.path("collections")
