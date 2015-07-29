@@ -1,0 +1,14 @@
+{
+  "@context": "http://re3data.org/",
+  "@type": "repository",
+  "orgidentifier": "icpsr",
+  "repositoryName": "ICPSR",
+  "repositoryURL": "https://www.icpsr.umich.edu/icpsrweb/landing.jsp",
+  "institution": "University of Michigan",
+  "subject": "Social and Behavioral Sciences",
+  "versioning": "yes",
+  "dataAccessType": ["open","restricted"],
+  "dataLicenseName": ["other"],
+  "contentType": ["csv"],
+  "/maxFileSize": {"unit":"MB", "value": 2000}
+}
