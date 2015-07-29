@@ -1,0 +1,14 @@
+{
+  "@context": "http://re3data.org/",
+  "@type": "repository",
+  "orgidentifier": "sda",
+  "repositoryName": "IU SDA",
+  "repositoryURL": "https://www.indiana.edu",
+  "institution": "Indiana University",
+  "subject": "any",
+  "versioning": "yes",
+  "dataAccessType": ["open","restricted"],
+  "dataLicenseName": ["other"],
+  "contentType": ["any"],
+  "/maxFileSize": {"unit":"MB", "value": 3000}
+}
