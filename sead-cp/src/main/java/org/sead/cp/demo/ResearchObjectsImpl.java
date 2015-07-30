@@ -8,6 +8,7 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.core.CacheControl;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
@@ -30,12 +31,15 @@ public class ResearchObjectsImpl extends ResearchObjects {
 	private MongoClient mongoClient = null;
 	private MongoDatabase db = null;
 	private MongoCollection<Document> publicationsCollection = null;
+	private CacheControl control = new CacheControl();
 
 	public ResearchObjectsImpl() {
 		mongoClient = new MongoClient();
 		db = mongoClient.getDatabase("seadcp");
 
 		publicationsCollection = db.getCollection("repositories");
+		
+		control.setNoCache(true);
 	}
 
 	@POST
@@ -71,7 +75,7 @@ public class ResearchObjectsImpl extends ResearchObjects {
 	@Path("/")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response getROsList() {
-		return Response.status(Status.NOT_IMPLEMENTED).build();
+		return Response.status(Status.NOT_IMPLEMENTED).cacheControl(control).build();
 		/*
 		 * FindIterable<Document> iter = repositoriesCollection.find();
 		 * iter.projection(new Document("orgidentifier",
@@ -86,8 +90,8 @@ public class ResearchObjectsImpl extends ResearchObjects {
 	@GET
 	@Path("/{id}")
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response getROProfile(String id) {
-		return Response.status(Status.NOT_IMPLEMENTED).build();
+	public Response getROProfile(@PathParam("id") String id) {
+		return Response.status(Status.NOT_IMPLEMENTED).cacheControl(control).build();
 		/*
 		 * FindIterable<Document> iter = repositoriesCollection.find(new
 		 * Document( "orgidentifier", id)); Document document = iter.first();

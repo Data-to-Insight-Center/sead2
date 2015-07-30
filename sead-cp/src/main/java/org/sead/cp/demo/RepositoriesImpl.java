@@ -2,6 +2,7 @@ package org.sead.cp.demo;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -10,6 +11,7 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.core.CacheControl;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
@@ -38,12 +40,15 @@ public class RepositoriesImpl extends Repositories {
 	private MongoClient mongoClient = null;
 	private MongoDatabase db = null;
 	private MongoCollection<Document> repositoriesCollection = null;
+	private CacheControl control = new CacheControl();
 
 	public RepositoriesImpl() {
 		mongoClient = new MongoClient();
 		db = mongoClient.getDatabase("seadcp");
 
 		repositoriesCollection = db.getCollection("repositories");
+		
+		control.setNoCache(true);
 	}
 
 	@POST
@@ -82,7 +87,7 @@ public class RepositoriesImpl extends Repositories {
 		while(cursor.hasNext()) {
 			array.put(cursor.next().toJson());
 		}
-		return Response.ok(array.toString()).build();
+		return Response.ok(array.toString()).cacheControl(control).build();
 
 	}
 
@@ -94,7 +99,7 @@ public class RepositoriesImpl extends Repositories {
 				"orgidentifier", id));
 		Document document = iter.first();
 		document.remove("_id");
-		return Response.ok(document.toJson()).build();
+		return Response.ok(document.toJson()).cacheControl(control).build();
 	}
 
 	@PUT
@@ -128,7 +133,7 @@ public class RepositoriesImpl extends Repositories {
 	@Path("/researchobjects")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response getROsByRepository() {
-		return Response.status(Status.NOT_IMPLEMENTED).build();
+		return Response.status(Status.NOT_IMPLEMENTED).cacheControl(control).build();
 	};
 
 }
