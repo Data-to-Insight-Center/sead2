@@ -11,6 +11,7 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.core.CacheControl;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
@@ -45,12 +46,16 @@ public class PeopleImpl extends People {
 	private MongoClient mongoClient = null;
 	private MongoDatabase db = null;
 	private MongoCollection<Document> peopleCollection = null;
+	private CacheControl control = new CacheControl();
+	
 
 	public PeopleImpl() {
 		mongoClient = new MongoClient();
 		db = mongoClient.getDatabase("seadcp");
 
 		peopleCollection = db.getCollection("people");
+		
+		control.setNoCache(true);
 	}
 
 	@POST
@@ -107,7 +112,7 @@ public class PeopleImpl extends People {
 		while (cursor.hasNext()) {
 			array.put(cursor.next().toJson());
 		}
-		return Response.ok(array.toString()).build();
+		return Response.ok(array.toString()).cacheControl(control).build();
 
 	}
 
@@ -119,7 +124,7 @@ public class PeopleImpl extends People {
 				"orcid-profile.orcid-identifier.path", id));
 		Document document = iter.first();
 		document.remove("_id");
-		return Response.ok(document.toJson()).build();
+		return Response.ok(document.toJson()).cacheControl(control).build();
 	}
 
 	@PUT

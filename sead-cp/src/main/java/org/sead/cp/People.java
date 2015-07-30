@@ -14,6 +14,7 @@ import javax.ws.rs.core.Response;
 import org.json.JSONObject;
 
 @Path("/people")
+
 public abstract class People {
 
 	/**
