@@ -11,9 +11,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-/**
- * Created by charmadu on 7/22/15.
- */
 public class StatusDaoImpl implements StatusDao {
 
     private static Logger log = Logger.getLogger(StatusDaoImpl.class);

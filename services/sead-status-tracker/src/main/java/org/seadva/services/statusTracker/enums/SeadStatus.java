@@ -1,8 +1,5 @@
 package org.seadva.services.statusTracker.enums;
 
-/**
- * Created by charmadu on 7/22/15.
- */
 public class SeadStatus {
 
     static int globalID = 0;
@@ -52,9 +49,7 @@ public class SeadStatus {
 
     public enum PDTStatus {
         START("PDT:1", fetchAddID()),
-        PDT_ACTIVITY1_BEGIN("PDT:2:BEGIN", fetchAddID()),
-        PDT_ACTIVITY1_END("PDT:2:END", fetchAddID()),
-        END("PDT:3", fetchAddID());
+        END("PDT:2", fetchAddID());
 
         private String value;
         private int id;
