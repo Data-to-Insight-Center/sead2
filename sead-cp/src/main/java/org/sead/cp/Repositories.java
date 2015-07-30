@@ -105,8 +105,8 @@ public abstract class Repositories {
 	 * 		   	]
 	 */
 	@GET
-	@Path("/researchobjects")
+	@Path("/{id}/researchobjects")
 	@Produces(MediaType.APPLICATION_JSON)
-	public abstract Response getROsByRepository();
+	public abstract Response getROsByRepository(@PathParam("id") String id);
 	
 }

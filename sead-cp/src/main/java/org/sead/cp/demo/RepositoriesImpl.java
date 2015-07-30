@@ -130,9 +130,9 @@ public class RepositoriesImpl extends Repositories {
 	}
 
 	@GET
-	@Path("/researchobjects")
+	@Path("/{id}/researchobjects")
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response getROsByRepository() {
+	public Response getROsByRepository(@PathParam("id") String id) {
 		return Response.status(Status.NOT_IMPLEMENTED).cacheControl(control).build();
 	};
 
