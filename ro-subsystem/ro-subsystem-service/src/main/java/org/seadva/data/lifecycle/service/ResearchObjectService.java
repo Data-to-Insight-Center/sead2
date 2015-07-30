@@ -41,6 +41,7 @@ import org.seadva.registry.mapper.DcsDBMapper;
 import org.seadva.registry.mapper.OreDBMapper;
 import org.seadva.registry.mapper.JsonDBMapper;
 import org.seadva.registry.service.exception.NotFoundException;
+import org.seadva.services.statusTracker.SeadStatusTracker;
 import org.springframework.beans.factory.annotation.Required;
 
 import javax.ws.rs.*;
@@ -347,6 +348,15 @@ public class ResearchObjectService {
         return Response.ok(response.toString()).build();
     }
 
+    @GET
+    @Path("/getStatus/{entityId}")
+    public Response getStatus( @PathParam("entityId") String roIdentifier) throws Exception {
+
+        String graphPath = SeadStatusTracker.getStatusGraphByRo(roIdentifier);
+        URI targetURIForRedirection = new URI(graphPath);
+        return Response.seeOther(targetURIForRedirection).build();
+
+    }
 
     @POST
     @Path("/updateROState")
