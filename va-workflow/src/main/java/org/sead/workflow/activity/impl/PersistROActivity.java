@@ -11,6 +11,8 @@ import org.sead.workflow.config.SeadWorkflowConfig;
 import org.sead.workflow.context.SeadWorkflowContext;
 import org.sead.workflow.exception.SeadWorkflowException;
 import org.sead.workflow.util.Constants;
+import org.seadva.services.statusTracker.SeadStatusTracker;
+import org.seadva.services.statusTracker.enums.SeadStatus;
 
 import javax.ws.rs.core.MediaType;
 import java.io.IOException;
@@ -27,6 +29,8 @@ public class PersistROActivity extends AbstractWorkflowActivity {
         System.out.println("\n=====================================");
         System.out.println("Executing activity : " + activityName);
         System.out.println("-----------------------------------\n");
+
+        SeadStatusTracker.addStatus(context.getProperty(Constants.RO_ID), SeadStatus.WorkflowStatus.PERSIST_RO_BEGIN.getValue());
 
         HashMap<String, String> activityParams = new HashMap<String, String>();
         for(SeadWorkflowActivity activity : config.getActivities()){
@@ -66,6 +70,9 @@ public class PersistROActivity extends AbstractWorkflowActivity {
         } else {
             throw new SeadWorkflowException("Error occurred while persisting collection " + context.getCollectionId());
         }
+
+        SeadStatusTracker.addStatus(context.getProperty(Constants.RO_ID), SeadStatus.WorkflowStatus.PERSIST_RO_END.getValue());
+
 
         System.out.println("=====================================\n");
 

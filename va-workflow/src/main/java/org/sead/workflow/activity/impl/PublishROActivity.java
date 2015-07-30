@@ -15,6 +15,8 @@ import org.sead.workflow.config.SeadWorkflowConfig;
 import org.sead.workflow.context.SeadWorkflowContext;
 import org.sead.workflow.exception.SeadWorkflowException;
 import org.sead.workflow.util.Constants;
+import org.seadva.services.statusTracker.SeadStatusTracker;
+import org.seadva.services.statusTracker.enums.SeadStatus;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -34,6 +36,8 @@ public class PublishROActivity extends AbstractWorkflowActivity {
         System.out.println("\n=====================================");
         System.out.println("Executing activity : " + activityName);
         System.out.println("-----------------------------------\n");
+
+        SeadStatusTracker.addStatus(context.getProperty(Constants.RO_ID), SeadStatus.WorkflowStatus.PUBLISH_RO_BEGIN.getValue());
 
         if(context.getProperty(Constants.VALIDATED).equals(Constants.FALSE)){
             System.out.println(PublishROActivity.class.getName() + " : Not publishing RO");
@@ -103,6 +107,9 @@ public class PublishROActivity extends AbstractWorkflowActivity {
         System.out.println(PublishROActivity.class.getName() + " : Message successfully inserted to queue");
         System.out.println("Message : " + rootObject.toString());
         System.out.println("=====================================\n");
+
+        SeadStatusTracker.addStatus(context.getProperty(Constants.RO_ID), SeadStatus.WorkflowStatus.PUBLISH_RO_END.getValue());
+
 
     }
 

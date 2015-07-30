@@ -15,6 +15,8 @@ import org.sead.workflow.context.SeadWorkflowContext;
 import org.sead.workflow.exception.SeadWorkflowException;
 import org.sead.workflow.util.Constants;
 import org.sead.workflow.util.IdGenerator;
+import org.seadva.services.statusTracker.SeadStatusTracker;
+import org.seadva.services.statusTracker.enums.SeadStatus;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -39,7 +41,10 @@ public class ConvertROActivity extends AbstractWorkflowActivity {
         System.out.println("Executing activity : " + activityName);
         System.out.println("-----------------------------------\n");
 
+        String sead_id = context.getProperty(Constants.RO_ID);
         String roId = context.getCollectionId();
+
+        SeadStatusTracker.addStatus(sead_id, SeadStatus.WorkflowStatus.CONVERT_RO_BEGIN.getValue());
 
         HashMap<String, String> activityParams = new HashMap<String, String>();
         for(SeadWorkflowActivity activity : config.getActivities()){
@@ -51,11 +56,12 @@ public class ConvertROActivity extends AbstractWorkflowActivity {
         }
 
         // generate JSONLD for the collection identified by roId
-        String sead_id = context.getProperty(Constants.RO_ID);
         //String sead_id = IdGenerator.generateRandomID();
         //context.addProperty(Constants.RO_ID, sead_id);
         String roJsonString = getRO(roId, sead_id, activityParams, context);
         context.addProperty(Constants.JSON_RO, roJsonString);
+
+        SeadStatusTracker.addStatus(sead_id, SeadStatus.WorkflowStatus.CONVERT_RO_END.getValue());
 
         System.out.println(ConvertROActivity.class.getName() + " : Successfully converted the RO");
         System.out.println("=====================================\n");

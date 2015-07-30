@@ -5,6 +5,8 @@ import org.sead.workflow.context.SeadWorkflowContext;
 import org.sead.workflow.exception.SeadWorkflowException;
 import org.sead.workflow.model.PSInstance;
 import org.sead.workflow.util.Constants;
+import org.seadva.services.statusTracker.SeadStatusTracker;
+import org.seadva.services.statusTracker.enums.SeadStatus;
 
 import java.util.concurrent.Semaphore;
 
@@ -28,6 +30,8 @@ public class WorkflowThread extends Thread {
 
     @Override
     public void run() {
+
+        SeadStatusTracker.addStatus(context.getProperty(Constants.RO_ID), SeadStatus.WorkflowStatus.START.getValue());
 
         context.setCollectionId(roId); // set RO ID in workflow context
         //context.addProperty(Constants.SIGNAL_PS, Constants.FALSE); // set SIGNAL_PS flag to false
@@ -68,6 +72,8 @@ public class WorkflowThread extends Thread {
                 //semaphore.release();
             //}
         }
+
+        SeadStatusTracker.addStatus(context.getProperty(Constants.RO_ID), SeadStatus.WorkflowStatus.END.getValue());
 
 
     }

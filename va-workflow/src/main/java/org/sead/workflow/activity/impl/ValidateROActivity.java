@@ -9,6 +9,8 @@ import org.sead.workflow.config.SeadWorkflowConfig;
 import org.sead.workflow.context.SeadWorkflowContext;
 import org.sead.workflow.exception.SeadWorkflowException;
 import org.sead.workflow.util.Constants;
+import org.seadva.services.statusTracker.SeadStatusTracker;
+import org.seadva.services.statusTracker.enums.SeadStatus;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -28,6 +30,8 @@ public class ValidateROActivity extends AbstractWorkflowActivity {
         System.out.println("Executing activity : " + activityName);
         System.out.println("-----------------------------------\n");
 
+        SeadStatusTracker.addStatus(context.getProperty(Constants.RO_ID), SeadStatus.WorkflowStatus.VALIDATE_RO_BEGIN.getValue());
+
         boolean validated = true;
         String roString = context.getProperty(Constants.JSON_RO);
         try {
@@ -44,6 +48,8 @@ public class ValidateROActivity extends AbstractWorkflowActivity {
             System.out.println(ValidateROActivity.class.getName() + " : RO Validation Failed");
             context.addProperty(Constants.VALIDATED, Constants.FALSE);
         }
+
+        SeadStatusTracker.addStatus(context.getProperty(Constants.RO_ID), SeadStatus.WorkflowStatus.VALIDATE_RO_END.getValue());
 
         System.out.println("=====================================\n");
 

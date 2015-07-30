@@ -11,6 +11,8 @@ import org.sead.workflow.util.Constants;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
+import org.seadva.services.statusTracker.SeadStatusTracker;
+import org.seadva.services.statusTracker.enums.SeadStatus;
 
 /**
  * Responsible for updating PDT with the published RO details
@@ -21,7 +23,9 @@ public class UpdatePdtActivity extends AbstractWorkflowActivity {
     public void execute(SeadWorkflowContext context, SeadWorkflowConfig config) {
         System.out.println("\n=====================================");
         System.out.println("Executing activity : " + activityName);
-        System.out.println("-----------------------------------\n");        
+        System.out.println("-----------------------------------\n");
+
+        SeadStatusTracker.addStatus(context.getProperty(Constants.RO_ID), SeadStatus.WorkflowStatus.UPDATE_PDT_BEGIN.getValue());
 
         HashMap<String, String> activityParams = new HashMap<String, String>();
         for(SeadWorkflowActivity activity : config.getActivities()){
@@ -51,7 +55,10 @@ public class UpdatePdtActivity extends AbstractWorkflowActivity {
 			
         System.out.println("\n=====================================");
         System.out.println("return status : " + response);
-        System.out.println("-----------------------------------\n");           
-        
+        System.out.println("-----------------------------------\n");
+
+        SeadStatusTracker.addStatus(context.getProperty(Constants.RO_ID), SeadStatus.WorkflowStatus.UPDATE_PDT_END.getValue());
+
+
     }
 }

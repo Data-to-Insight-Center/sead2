@@ -9,6 +9,8 @@ import org.sead.workflow.config.SeadWorkflowConfig;
 import org.sead.workflow.context.SeadWorkflowContext;
 import org.sead.workflow.exception.SeadWorkflowException;
 import org.sead.workflow.util.Constants;
+import org.seadva.services.statusTracker.SeadStatusTracker;
+import org.seadva.services.statusTracker.enums.SeadStatus;
 
 import java.net.URLEncoder;
 import java.util.HashMap;
@@ -23,6 +25,8 @@ public class UpdateROStatusActivity extends AbstractWorkflowActivity {
         System.out.println("\n=====================================");
         System.out.println("Executing activity : " + activityName);
         System.out.println("-----------------------------------\n");
+
+        SeadStatusTracker.addStatus(context.getProperty(Constants.RO_ID), SeadStatus.WorkflowStatus.UPDATE_RO_STATE_BEGIN.getValue());
 
         if(context.getProperty(Constants.VALIDATED).equals(Constants.FALSE)){
             System.out.println(UpdateROStatusActivity.class.getName() + " : Not Updating RO state");
@@ -56,6 +60,8 @@ public class UpdateROStatusActivity extends AbstractWorkflowActivity {
             throw new SeadWorkflowException("Error occurred while updating state of the collection "
                     + context.getCollectionId() + " to PO");
         }
+
+        SeadStatusTracker.addStatus(context.getProperty(Constants.RO_ID), SeadStatus.WorkflowStatus.UPDATE_RO_STATE_END.getValue());
 
         System.out.println("=====================================\n");
 
