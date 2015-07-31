@@ -136,7 +136,7 @@ public class PeopleImpl extends People {
 				"orcid-profile.orcid-identifier.path", id));
 
 		if (iter.iterator().hasNext()) {
-			String orcidID = (String) iter.first().get("orcid-profile.orcid-identifier.path");
+			String orcidID = (((Document) ((Document) iter.first().get("orcid-profile")).get("orcid-identifier")).getString("path"));
 			String profile = null;
 			try {
 				profile = getOrcidProfile(orcidID);
