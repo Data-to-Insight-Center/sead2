@@ -367,11 +367,13 @@ public class ResearchObjectService {
             new RegistryClient(registryServiceUrl).updateROState(roIdentifier, state);
             return Response.ok().build();
         } catch (NotFoundException e) {
+            System.out.println(e.getMessage());
             return Response.serverError().
                     status(Response.Status.NOT_FOUND).
                     entity(e.getResponse().getEntity()).
                     build();
         } catch (Exception e) {
+            System.out.println(e.getMessage());
             return Response.serverError().build();
         }
     }
@@ -535,14 +537,19 @@ public class ResearchObjectService {
 
             return Response.ok().build();
         } catch (IOException e) {
+            System.out.println(e.getMessage());
             return Response.serverError().build();
         } catch (URISyntaxException e) {
+            System.out.println(e.getMessage());
             return Response.serverError().build();
         } catch (ClassNotFoundException e) {
+            System.out.println(e.getMessage());
             return Response.serverError().build();
         } catch (JSONException e) {
+            System.out.println(e.getMessage());
             return Response.serverError().build();
         } catch (Exception e) {
+            System.out.println(e.getMessage());
             return Response.serverError().build();
         }
     }
@@ -596,9 +603,9 @@ public class ResearchObjectService {
 
     }
 
-    private Agent getAgent(String agentId) throws IOException, ClassNotFoundException {
-        return (Agent)new RegistryClient(registryServiceUrl).getEntity(agentId,
-                Agent.class.getName());
+    private org.seadva.registry.database.model.obj.vaRegistry.Agent getAgent(String agentId) throws IOException, ClassNotFoundException {
+        return (org.seadva.registry.database.model.obj.vaRegistry.Agent)new RegistryClient(registryServiceUrl).getEntity(agentId,
+                org.seadva.registry.database.model.obj.vaRegistry.Agent.class.getName());
     }
 
     private Entity getCollection(String collectionId) throws IOException, ClassNotFoundException {
