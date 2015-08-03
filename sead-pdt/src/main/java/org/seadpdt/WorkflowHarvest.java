@@ -46,16 +46,10 @@ public class WorkflowHarvest {
 	 @Produces(MediaType.APPLICATION_JSON)
 	 @Consumes(MediaType.APPLICATION_JSON)
 	 public String getWorkflowRO(String workflowData)  {	 
-		 
-			System.out.println("data : " + workflowData);
 	 		 
 			JSONObject xmlJSONObj = new JSONObject(workflowData);
-			
-			System.out.println("json : " + xmlJSONObj);
-			
+						
 			Document doc = Document.parse(xmlJSONObj.toString());
-
-			System.out.println("doc : " + doc);
 			
 			collection.drop();
 			collection.insertOne(doc);

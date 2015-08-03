@@ -36,6 +36,8 @@ public class UpdatePdtActivity extends AbstractWorkflowActivity {
             }
         }
 
+        SeadStatusTracker.addStatus(context.getProperty(Constants.RO_ID), SeadStatus.PDTStatus.START.getValue());
+
         String ro = context.getProperty(Constants.JSON_RO);
         String pdtSystemUrl = activityParams.get("pdtSystemUrl");  
         
@@ -51,6 +53,7 @@ public class UpdatePdtActivity extends AbstractWorkflowActivity {
 //	                .post(ClientResponse.class, ro);			
 	                .post(ClientResponse.class, testJSON);			
 			
+	        SeadStatusTracker.addStatus(context.getProperty(Constants.RO_ID), SeadStatus.PDTStatus.END.getValue());
 			
         System.out.println("\n=====================================");
         System.out.println("return status : " + response);

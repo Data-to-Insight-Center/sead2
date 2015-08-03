@@ -47,6 +47,7 @@ public class ValidateROActivity extends AbstractWorkflowActivity {
         } else {
             System.out.println(ValidateROActivity.class.getName() + " : RO Validation Failed");
             context.addProperty(Constants.VALIDATED, Constants.FALSE);
+            throw new SeadWorkflowException("Error occurred while validating collection " + context.getCollectionId());            
         }
 
         SeadStatusTracker.addStatus(context.getProperty(Constants.RO_ID), SeadStatus.WorkflowStatus.VALIDATE_RO_END.getValue());
