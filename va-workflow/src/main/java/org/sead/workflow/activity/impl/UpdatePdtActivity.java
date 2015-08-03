@@ -38,7 +38,6 @@ public class UpdatePdtActivity extends AbstractWorkflowActivity {
 
         String ro = context.getProperty(Constants.JSON_RO);
         String pdtSystemUrl = activityParams.get("pdtSystemUrl");  
-        pdtSystemUrl = "http://localhost:8080/sead-pdt";
         
         // for testing, one hard coded piece from ro, needs to be parsed properly
         String testJSON = 
