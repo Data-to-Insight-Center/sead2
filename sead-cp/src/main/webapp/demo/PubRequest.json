@@ -1,0 +1,28 @@
+{
+"Content": {
+"Identifier": "tag:medici@uiuc.edu,2009:col_SqW5XUYSfhZ627ghxBfaMQ",
+"Title": "demo1",
+"Date": "2015-03-05T21:55:52.905Z",
+"Uploaded By": "http://cet.ncsa.uiuc.edu/2007/person/myersjd@umich.edu",
+"Abstract": "our test collection",
+"Creator": [
+"Myers, James : http://sead-vivo.d2i.indiana.edu:8080/sead-vivo/individual/n6502",
+"orcid.org/0000-0001-8462-650X"
+],
+"@context": {
+"Identifier": "http://purl.org/dc/elements/1.1/identifier",
+"Title": "http://purl.org/dc/elements/1.1/title",
+"Date": "http://purl.org/dc/terms/created",
+"Uploaded By": "http://purl.org/dc/elements/1.1/creator",
+"Abstract": "http://purl.org/dc/terms/abstract",
+"Contact": "http://sead-data.net/terms/contact",
+"Creator": "http://purl.org/dc/terms/creator"
+}
+},
+"Preferences":{
+"key1":"value1",
+"key2":"value2"
+},
+"Repository":"ideals",
+"Project Space", "https://sead-test.ncsa.illinois.edu/acr"
+}
