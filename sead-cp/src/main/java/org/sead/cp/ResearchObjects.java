@@ -35,30 +35,30 @@ import javax.ws.rs.core.Response;
 @Path("/researchobjects")
 public abstract class ResearchObjects {
 
-	
 	/**
 	 * Request publication of a new research object
 	 * 
 	 * @param publicationRequest
-	 *            {Content, &lt;ContentObject&gt;, Preferences, {&lt;Preferences list&gt;},
-	 *            Repository, &lt;RepositoryId&gt;, Project Space, &lt;Project Space URL&gt;}}
+	 *            {Content, &lt;ContentObject&gt;, Preferences, {&lt;Preferences
+	 *            list&gt;}, Repository, &lt;RepositoryId&gt;, Project Space,
+	 *            &lt;Project Space URL&gt;}}
 	 * 
 	 * <br>
-	 *            where Content is a json object including basic metadata and the unique ID for the entity the user wants to
-	 *            publish. <br>
+	 *            where Content is a json object including basic metadata and
+	 *            the unique ID for the entity the user wants to publish. <br>
 	 *            preferences is a json list of options chosen from those
 	 *            available (see api ____) <br>
 	 *            Respository is the ID of the repository as defined within SEAD
-	 *            (see api _______)
-	 *            Project Space is the base URL for the source Project Space
+	 *            (see api _______) Project Space is the base URL for the source
+	 *            Project Space
 	 * 
 	 * @see Example input file: _______ <br>
 	 *      Example output file: _______
 	 * 
 	 * @return 200: {response: "success", id : &lt;ID&gt;} <br>
 	 *         400: {response: "failure", reason : &lt;string&gt;} <br>
-	 *         401: {response: "failure", reason : &lt;string&gt;}
-	 *         409 Conflict: {response: "failure", reason : &lt;string&gt;}
+	 *         401: {response: "failure", reason : &lt;string&gt;} 409 Conflict:
+	 *         {response: "failure", reason : &lt;string&gt;}
 	 * 
 	 * 
 	 */
@@ -68,27 +68,28 @@ public abstract class ResearchObjects {
 	@Produces(MediaType.APPLICATION_JSON)
 	abstract public Response startROPublicationProcess(String matchRequest);
 
-	
 	/**
-	 * Requests matching repositories, Note - request does not create a persistent object in the CP services
+	 * Requests matching repositories, Note - request does not create a
+	 * persistent object in the CP services
 	 * 
 	 * @param publicationRequest
-	 *            {Content, &lt;ContentObject&gt;, Preferences, {&lt;Preferences list&gt;},
-	 *            Project Space, &lt;Project Space URL&gt;}}
+	 *            {Content, &lt;ContentObject&gt;, Preferences, {&lt;Preferences
+	 *            list&gt;}, Project Space, &lt;Project Space URL&gt;}}
 	 * 
 	 * <br>
-	 *            where Content is a json object including basic metadata and the unique ID for the entity the user wants to
-	 *            publish. <br>
+	 *            where Content is a json object including basic metadata and
+	 *            the unique ID for the entity the user wants to publish. <br>
 	 *            preferences is a json list of options chosen from those
 	 *            available (see api ____) <br>
 	 * 
 	 * @see Example input file: _______ <br>
 	 *      Example output file: _______
 	 * 
-	 * @return 200: {response: "success", matches : &lt;json ranked list of repositories with explanatory notes&gt;} <br>
+	 * @return 200: {response: "success", matches : &lt;json ranked list of
+	 *         repositories with explanatory notes&gt;} <br>
 	 *         400: {response: "failure", reason : &lt;string&gt;} <br>
-	 *         401: {response: "failure", reason : &lt;string&gt;}
-	 *         409 Conflict: {response: "failure", reason : &lt;string&gt;}
+	 *         401: {response: "failure", reason : &lt;string&gt;} 409 Conflict:
+	 *         {response: "failure", reason : &lt;string&gt;}
 	 * 
 	 * 
 	 */
@@ -102,31 +103,25 @@ public abstract class ResearchObjects {
 	 * Return the list of rules and their inputs
 	 * 
 	 * 
-	 * @return [
-	 * 			{"Rule name":<name>, "Repository Trigger": <the profile metadata needed to trigger this rule>},
-	 * 			...
-	 * 		   ]
+	 * @return [ {"Rule name":<name>, "Repository Trigger": <the profile
+	 *         metadata needed to trigger this rule>}, ... ]
 	 */
 	@GET
 	@Path("/matchingrepositories/rules")
 	@Produces(MediaType.APPLICATION_JSON)
 	public abstract Response getRulesList();
-	
+
 	/**
 	 * Return the list of requests
 	 * 
 	 * @param - optional param to filter by status?
 	 * 
-	 * @return [
-	 * 			{"identifier":<id>, "latest status":status},
-	 * 			...
-	 * 		   ]
+	 * @return [ {"identifier":<id>, "latest status":status}, ... ]
 	 */
 	@GET
 	@Path("/")
 	@Produces(MediaType.APPLICATION_JSON)
 	public abstract Response getROsList();
-	
 
 	/**
 	 * Return the profile and status for a given publication
@@ -134,34 +129,30 @@ public abstract class ResearchObjects {
 	 * @param id
 	 *            the assigned ro/publication ID
 	 * 
-	 * @return : json-ld profile document 
+	 * @return : json-ld profile document
 	 */
 	@GET
 	@Path("/{id}")
 	@Produces(MediaType.APPLICATION_JSON)
 	public abstract Response getROProfile(@PathParam("id") String id);
-	
+
 	/**
 	 * Return the status for a given publication
 	 * 
 	 * @param id
 	 *            the assigned ro/publication ID
 	 * 
-	 * @return : json-ld profile document 
+	 * @return : json-ld profile document
 	 */
 	@GET
 	@Path("/{id}/status")
 	@Produces(MediaType.APPLICATION_JSON)
 	public abstract Response getROStatus(@PathParam("id") String id);
 
-
 	/**
 	 * Update the status for a given publication / ro
 	 * 
-	 * Body : {
-	 * 			"status": <status>,
-	 * 			"message":<message>
-	 * 		  } 
+	 * Body : { "status": <status>, "message":<message> }
 	 * 
 	 * 
 	 * @param id
@@ -173,7 +164,8 @@ public abstract class ResearchObjects {
 	@PUT
 	@Path("/{id}")
 	@Consumes(MediaType.APPLICATION_JSON)
-	public abstract Response setROStatus(@PathParam("id") String id, String status);
+	public abstract Response setROStatus(@PathParam("id") String id,
+			String status);
 
 	/**
 	 * Rescind a publication request and mark it as obsolete
@@ -186,6 +178,7 @@ public abstract class ResearchObjects {
 	 */
 	@DELETE
 	@Path("/{id}")
-	public abstract Response rescindROPublicationRequest(@PathParam("id") String id);
+	public abstract Response rescindROPublicationRequest(
+			@PathParam("id") String id);
 
 }

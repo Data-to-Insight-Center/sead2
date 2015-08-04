@@ -1,3 +1,24 @@
+/*
+ *
+ * Copyright 2015 University of Michigan
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ *
+ *
+ * @author myersjd@umich.edu
+ */
+
 package org.sead.cp.demo.matchers;
 
 import java.io.UnsupportedEncodingException;
@@ -19,8 +40,8 @@ import com.sun.jersey.api.client.WebResource;
 
 public class DataTypeMatcher implements Matcher {
 
-	public RuleResult runRule(Document content, String projectspace, BasicBSONList affiliations, 
-			Document preferences, Document profile) {
+	public RuleResult runRule(Document content, String projectspace,
+			BasicBSONList affiliations, Document preferences, Document profile) {
 		RuleResult result = new RuleResult();
 		Client client = Client.create();
 		WebResource webResource;
@@ -40,11 +61,13 @@ public class DataTypeMatcher implements Matcher {
 			Document statsDocument = Document.parse(response
 					.getEntity(String.class));
 
-			ArrayList<String> existingTypes =  (ArrayList<String>) statsDocument.get("Data Mimetypes");
-			ArrayList<String> requiredTypes =  (ArrayList<String>) profile.get("Data Mimetypes");
+			ArrayList<String> existingTypes = (ArrayList<String>) statsDocument
+					.get("Data Mimetypes");
+			ArrayList<String> requiredTypes = (ArrayList<String>) profile
+					.get("Data Mimetypes");
 			Set<String> forbiddenTypes = new HashSet<String>();
-			for(String type: existingTypes) {
-				if(!(requiredTypes.contains(type))) {
+			for (String type : existingTypes) {
+				if (!(requiredTypes.contains(type))) {
 					forbiddenTypes.add(type);
 				}
 			}
@@ -52,7 +75,7 @@ public class DataTypeMatcher implements Matcher {
 				StringBuilder sBuilder = new StringBuilder();
 				Iterator<String> iter = forbiddenTypes.iterator();
 				sBuilder.append(iter.next());
-				while(iter.hasNext()) {
+				while (iter.hasNext()) {
 					sBuilder.append(", " + iter.next());
 				}
 				result.setResult(-1, "Collection contains forbidden types ("
@@ -80,8 +103,10 @@ public class DataTypeMatcher implements Matcher {
 	public String getName() {
 		return "Acceptable Data Types";
 	}
-	
+
 	public Document getDescription() {
-		return new Document("Rule Name", getName()).append("Repository Trigger", "\"Data Mimetypes\": \"http://purl.org/dc/elements/1.1/format\" : JSON array of String mimetypes, collection must be limited to this set");
+		return new Document("Rule Name", getName())
+				.append("Repository Trigger",
+						"\"Data Mimetypes\": \"http://purl.org/dc/elements/1.1/format\" : JSON array of String mimetypes, collection must be limited to this set");
 	}
 }
