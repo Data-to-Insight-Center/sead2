@@ -36,9 +36,10 @@ public class UpdatePdtActivity extends AbstractWorkflowActivity {
             }
         }
 
+        SeadStatusTracker.addStatus(context.getProperty(Constants.RO_ID), SeadStatus.PDTStatus.START.getValue());
+
         String ro = context.getProperty(Constants.JSON_RO);
         String pdtSystemUrl = activityParams.get("pdtSystemUrl");  
-        pdtSystemUrl = "http://localhost:8080/sead-pdt";
         
         // for testing, one hard coded piece from ro, needs to be parsed properly
         String testJSON = 
@@ -52,6 +53,7 @@ public class UpdatePdtActivity extends AbstractWorkflowActivity {
 //	                .post(ClientResponse.class, ro);			
 	                .post(ClientResponse.class, testJSON);			
 			
+	        SeadStatusTracker.addStatus(context.getProperty(Constants.RO_ID), SeadStatus.PDTStatus.END.getValue());
 			
         System.out.println("\n=====================================");
         System.out.println("return status : " + response);
