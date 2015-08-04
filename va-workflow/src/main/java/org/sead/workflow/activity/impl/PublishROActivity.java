@@ -53,24 +53,36 @@ public class PublishROActivity extends AbstractWorkflowActivity {
             }
         }
 
-        JSONObject rootObject = null;
+        JSONObject rootObject = new JSONObject();
         try {
             JSONObject ro = new JSONObject(context.getProperty(Constants.JSON_RO));
 
-            rootObject = new JSONObject();
-            rootObject.put("operation", "deposit");
+            JSONObject messageObject = new JSONObject();
+            messageObject.put("operation", "query");
             JSONObject roObject = new JSONObject();
             roObject.put("@context", "http://schema.org/");
             roObject.put("@type", "DataDownload");
             roObject.put("name", ro.has("Title") ? ro.get("Title"): "");
+            roObject.put("ROID", context.getProperty(Constants.RO_ID));
             roObject.put("description", ro.has("Abstract") ? ro.get("Abstract"): "");
             //roObject.put("sourceOrganization", "");
-            roObject.put("fileSize", new JSONObject().put("value",calculateSize(ro)).put("unit" , "bytes"));
-            roObject.put("contentUrl", context.getPSInstance().getUrl());
+            //roObject.put("fileSize", new JSONObject().put("value", 2000).put("unit", "MB"));
+            roObject.put("fileSize", new JSONObject().put("value", calculateSize(ro)).put("unit", "b"));
+            //roObject.put("contentUrl", context.getPSInstance().getUrl());
+
+            ArrayList<String> downloadLinks = getDownloadLinks(ro, new ArrayList<String>());
+            String downloadLinkList = "";
+            for(String link : downloadLinks){
+                downloadLinkList = downloadLinkList + " " + link;
+            }
+            roObject.put("contentUrl", downloadLinkList.trim());
             roObject.put("subject", ro.has("Topic") ? ro.get("Topic") : "");
-            roObject.put("contentType", getFormats(ro, new ArrayList<String>()));
-            roObject.put("author", getAuthors(ro));
-            rootObject.put("message", roObject);
+            roObject.put("contentType", getFormats(ro, new ArrayList<String>()).get(0));
+            roObject.put("author", getAuthors(ro).get(0));
+            messageObject.put("message", roObject);
+
+            rootObject.put("request", messageObject);
+            rootObject.put("responseKey", "d4419434-25df-4f41-a28f-9f89f8b9dd59");
         } catch (JSONException e) {
             throw new SeadWorkflowException("Error creating the JSONLD message", e);
         } catch (IOException e) {
@@ -206,6 +218,42 @@ public class PublishROActivity extends AbstractWorkflowActivity {
         }
 
         return formats;
+    }
+
+    private ArrayList<String> getDownloadLinks(JSONObject ro, ArrayList<String> downloadLinks) throws JSONException, IOException {
+        String downloadLink = "FLocat";
+
+        if(ro.has(Constants.HAS_FILES)){
+            Object filesObject = ro.get(Constants.HAS_FILES);
+            if(filesObject instanceof JSONArray){
+                for(int i = 0 ; i < ((JSONArray) filesObject).length() ; i ++){
+                    Object file = ((JSONArray) filesObject).get(i);
+                    if(file instanceof JSONObject && ((JSONObject) file).has(downloadLink)) {
+                        String link = (String)((JSONObject) file).get(downloadLink);
+                        if(!downloadLinks.contains(link)){
+                            downloadLinks.add(link);
+                        }
+                    }
+                }
+            }
+        }
+
+        if(ro.has(Constants.HAS_SUBCOLLECTIONS)){
+            Object collectionsObject = ro.get(Constants.HAS_SUBCOLLECTIONS);
+            if(collectionsObject instanceof JSONArray){
+                for(int i = 0 ; i < ((JSONArray) collectionsObject).length() ; i ++){
+                    Object collection = ((JSONArray) collectionsObject).get(i);
+                    if(collection instanceof JSONObject && ((JSONObject) collection).has(Constants.FLOCAT)) {
+                        String location = (String) ((JSONObject) collection).get(Constants.FLOCAT);
+                        FileInputStream roFile = new FileInputStream(new File(location));
+                        String colRoString = IOUtils.toString(roFile, "UTF-8");
+                        getDownloadLinks(new JSONObject(colRoString), downloadLinks);
+                    }
+                }
+            }
+        }
+
+        return downloadLinks;
     }
 
 }

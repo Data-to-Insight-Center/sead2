@@ -239,7 +239,7 @@ public class ConvertROActivity extends AbstractWorkflowActivity {
             JSONObject fileObject = new JSONObject(convertRO(fileWriter.toString()));
             fileObject.remove(Constants.REST_CONTEXT);
             fileObject.put(Constants.GEN_AT, psUrl + "/#dataset?id=" + key);
-            fileObject.put(Constants.FLOCAT, "download_loc_"+key);
+            fileObject.put(Constants.FLOCAT,  psUrl + "/resteasy/datasets/" + key + "/file");
             fileObject.put(Constants.IDENTIFIER, IdGenerator.generateRandomID());
             hasFilesArray.put(fileObject);
         }
