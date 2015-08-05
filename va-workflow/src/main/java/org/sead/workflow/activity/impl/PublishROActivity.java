@@ -77,8 +77,13 @@ public class PublishROActivity extends AbstractWorkflowActivity {
             }
             roObject.put("contentUrl", downloadLinkList.trim());
             roObject.put("subject", ro.has("Topic") ? ro.get("Topic") : "");
-            roObject.put("contentType", getFormats(ro, new ArrayList<String>()).get(0));
-            roObject.put("author", getAuthors(ro).get(0));
+
+            ArrayList<String> formats = getFormats(ro, new ArrayList<String>());
+            roObject.put("contentType", formats.size() > 0 ? formats.get(0) : "");
+
+            JSONArray authors = getAuthors(ro);
+            roObject.put("author", authors.length() > 0 ? authors.get(0) : new JSONObject());
+
             messageObject.put("message", roObject);
 
             rootObject.put("request", messageObject);
