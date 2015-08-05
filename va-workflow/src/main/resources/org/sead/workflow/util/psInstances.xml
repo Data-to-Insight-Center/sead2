@@ -1,68 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <instances>
-    <!--<instance>
-        <id>1</id>
-        <url>http://nced.ncsa.illinois.edu/acr</url>
-        <remoteAPI>c30c8f26-27e7-4190-86ef-f38629036ebf</remoteAPI>
-        <title>NCED Project</title>
+    <instance>
+        <id>id</id>
+        <url>url</url>
+        <remoteAPI>remort_api</remoteAPI>
+        <title>title</title>
         <type>medici</type>
-        <user>isuriara@indiana.edu</user>
-        <password>maximus</password>
-    </instance>
-    <instance>
-        <id>2</id>
-        <url>https://sead.ncsa.illinois.edu/acr</url>
-        <remoteAPI>c30c8f26-27e7-4190-86ef-f38629036ebf</remoteAPI>
-        <title>SEAD demo Project</title>
-        <type>demo</type>
-        <user>isuriara@indiana.edu</user>
-        <password>maximus</password>
-    </instance>
-    <instance>
-        <id>3</id>
-        <url>http://sead-demo.ncsa.illinois.edu/acr</url>
-        <remoteAPI>c30c8f26-27e7-4190-86ef-f38629036ebf</remoteAPI>
-        <title>Public Project</title>
-        <type>public</type>
-        <user>isuriara@indiana.edu</user>
+        <user>username</user>
         <password>password</password>
-    </instance>
-    <instance>
-        <id>4</id>
-        <url>http://lowermississippi.ncsa.illinois.edu/acr</url>
-        <remoteAPI>c30c8f26-27e7-4190-86ef-f38629036ebf</remoteAPI>
-        <title>Mississippi Project</title>
-        <type>mississippi</type>
-        <user>isuriara@indiana.edu</user>
-        <password>maximus</password>
-    </instance>-->
-    <instance>
-        <id>1</id>
-        <url>https://sead-test.ncsa.illinois.edu/acr</url>
-        <remoteAPI>c30c8f26-27e7-4190-86ef-f38629036ebf</remoteAPI>
-        <title>SEAD Beta Test</title>
-        <type>medici</type>
-        <user>sead-va@googlegroups.com</user>
-        <password>chgrwyNp</password>
-    </instance>
-    <instance>
-        <id>2</id>
-        <url>https://nced.ncsa.illinois.edu/acr</url>
-        <remoteAPI>c30c8f26-27e7-4190-86ef-f38629036ebf</remoteAPI>
-        <title>SEAD Beta Test2</title>
-        <type>medici</type>
-        <user>sead-va@googlegroups.com</user>
-        <password>chgrwyNp</password>
-    </instance>
-    <instance>
-        <id>3</id>
-        <url>https://sen.ncsa.illinois.edu/acr</url>
-        <remoteAPI>c30c8f26-27e7-4190-86ef-f38629036ebf</remoteAPI>
-        <title>SEAD Beta Test3</title>
-        <type>medici</type>
-        <user>sead-va@googlegroups.com</user>
-        <password>chgrwyNp</password>
     </instance>
 </instances>
 

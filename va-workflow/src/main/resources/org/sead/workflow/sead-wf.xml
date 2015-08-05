@@ -1,5 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE xml>
 <!--
   ~ Copyright 2015 The Trustees of Indiana University
   ~
@@ -24,7 +23,7 @@
     <activities>
         <!--activity to convert/traslate RO -->
         <activity name="convert_ro" class="org.sead.workflow.activity.impl.ConvertROActivity">
-            <parameter name="tempPath">U:\temp</parameter>
+            <parameter name="tempPath">/tmp/sead2/jsonld_ro/</parameter>
         </activity>
         <!--activity to persist RO in RO subsystem -->
         <activity name="persist_ro" class="org.sead.workflow.activity.impl.PersistROActivity">
@@ -37,21 +36,44 @@
         <activity name="update_ro_status" class="org.sead.workflow.activity.impl.UpdateROStatusActivity">
             <parameter name="roSystemUrl">http://localhost:8180/ro</parameter>
         </activity>
-        <!--activity to harvest to PDT-->
-        <activity name="harvest_pdt" class="org.sead.workflow.activity.impl.UpdatePdtActivity">
-            <parameter name="pdtSystemUrl">http://localhost:8180/sead-pdt</parameter>
+        <!--activity to signal PS-->
+        <activity name="signal_ps" class="org.sead.workflow.activity.impl.SignalPSActivity">
         </activity>
         <!--activity to call Matchmaker to publish the PO-->
-	<activity name="publish_ro" class="org.sead.workflow.activity.impl.PublishROActivity">
-    <parameter name="messaging.username">matchmaker</parameter>
-    <parameter name="messaging.password">sead-matchmaker</parameter>
-    <parameter name="messaging.hostname">seadva-test.d2i.indiana.edu</parameter>
-    <parameter name="messaging.hostport">5672</parameter>
-    <parameter name="messaging.virtualhost">/</parameter>
-    <parameter name="messaging.exchangename">MatchmakerExchange_Request</parameter>
-    <parameter name="messaging.queuename">MatchmakerQueue_Request</parameter>
-    <parameter name="messaging.routingkey">MatchmakerKey_Request</parameter>
-</activity>
+        <activity name="publish_ro" class="org.sead.workflow.activity.impl.PublishROActivity">
+            <parameter name="messaging.username"></parameter>
+            <parameter name="messaging.password"></parameter>
+            <parameter name="messaging.hostname"></parameter>
+            <parameter name="messaging.hostport"></parameter>
+            <parameter name="messaging.virtualhost"></parameter>
+            <parameter name="messaging.exchangename"></parameter>
+            <parameter name="messaging.queuename"></parameter>
+            <parameter name="messaging.routingkey"></parameter>
+        </activity>
     </activities>
+
+    <!--<activities>-->
+        <!--&lt;!&ndash;activity to persist RO in RO subsystem &ndash;&gt;-->
+        <!--<activity name="persist_ro" class="org.sead.workflow.activity.impl.PersistROActivity">-->
+            <!--<parameter name="roSystemUrl">http://localhost:8080/ro</parameter>-->
+        <!--</activity>-->
+        <!--&lt;!&ndash;activity to generate ORE/SIP etc. by calling the metadata service&ndash;&gt;-->
+        <!--<activity name="generate_metadata" class="org.sead.workflow.activity.impl.GenerateMetadataActivity">-->
+            <!--<parameter name="metadataServiceUrl">http://localhost:8080/meta</parameter>-->
+        <!--</activity>-->
+        <!--&lt;!&ndash;activity to call Matchmaker to publish the RO&ndash;&gt;-->
+        <!--<activity name="publish_ro" class="org.sead.workflow.activity.impl.PublishROActivity">-->
+            <!--<parameter name="matchmakerUrl">http://localhost:8080/mm</parameter>-->
+        <!--</activity>-->
+        <!--&lt;!&ndash;activity to update Project Spaces with the DOI&ndash;&gt;-->
+        <!--<activity name="update_ps" class="org.sead.workflow.activity.impl.UpdatePsActivity">-->
+            <!--<parameter name="psUrl">http://localhost:8080/ps</parameter>-->
+        <!--</activity>-->
+        <!--&lt;!&ndash;activity to update PDT with the details of the published RO&ndash;&gt;-->
+        <!--<activity name="update_pdt" class="org.sead.workflow.activity.impl.UpdatePdtActivity">-->
+            <!--<parameter name="pdtUrl">http://localhost:8080/pdt</parameter>-->
+        <!--</activity>-->
+    <!--</activities>-->
+
 
 </sead-config>
