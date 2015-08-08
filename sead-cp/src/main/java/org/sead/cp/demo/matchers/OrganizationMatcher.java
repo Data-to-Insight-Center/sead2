@@ -31,8 +31,8 @@ import org.sead.cp.demo.RuleResult;
 
 public class OrganizationMatcher implements Matcher {
 
-	public RuleResult runRule(Document Content, String projectspace,
-			BasicBSONList affiliations, Document Preferences, Document profile) {
+	public RuleResult runRule(Document aggregation, BasicBSONList affiliations,
+			Document Preferences, Document profile) {
 		RuleResult result = new RuleResult();
 		try {
 			ArrayList<String> requiredAffiliations = (ArrayList<String>) profile

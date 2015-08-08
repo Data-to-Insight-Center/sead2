@@ -39,9 +39,8 @@ public abstract class ResearchObjects {
 	 * Request publication of a new research object
 	 * 
 	 * @param publicationRequest
-	 *            {Content, &lt;ContentObject&gt;, Preferences, {&lt;Preferences
-	 *            list&gt;}, Repository, &lt;RepositoryId&gt;, Project Space,
-	 *            &lt;Project Space URL&gt;}}
+	 *            {Aggregation, &lt;ContentObject&gt;, Preferences, {&lt;Preferences
+	 *            list&gt;}, Repository, &lt;RepositoryId&gt;}}
 	 * 
 	 * <br>
 	 *            where Content is a json object including basic metadata and
@@ -73,11 +72,11 @@ public abstract class ResearchObjects {
 	 * persistent object in the CP services
 	 * 
 	 * @param publicationRequest
-	 *            {Content, &lt;ContentObject&gt;, Preferences, {&lt;Preferences
-	 *            list&gt;}, Project Space, &lt;Project Space URL&gt;}}
+	 *            {Aggregation, &lt;Aggregation&gt;, Preferences, {&lt;Preferences
+	 *            list&gt;} }}
 	 * 
 	 * <br>
-	 *            where Content is a json object including basic metadata and
+	 *            where Aggregation is a json object including basic metadata and
 	 *            the unique ID for the entity the user wants to publish. <br>
 	 *            preferences is a json list of options chosen from those
 	 *            available (see api ____) <br>

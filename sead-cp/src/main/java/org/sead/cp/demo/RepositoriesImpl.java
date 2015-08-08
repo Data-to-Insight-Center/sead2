@@ -23,6 +23,8 @@ package org.sead.cp.demo;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.HashSet;
+import java.util.Set;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -160,14 +162,14 @@ public class RepositoriesImpl extends Repositories {
 		publicationsCollection = db.getCollection("researchobjects");
 		FindIterable<Document> iter = publicationsCollection.find(new Document(
 				"Repository", id));
-		iter.projection(new Document("Content.Identifier", 1)
+		iter.projection(new Document("Aggregation.Identifier", 1)
 				.append("Repository", 1).append("Status", 1).append("_id", 0));
 		MongoCursor<Document> cursor = iter.iterator();
-		JSONArray array = new JSONArray();
+		Set<Document> array = new HashSet<Document>();
 		while (cursor.hasNext()) {
-			array.put(cursor.next().toJson());
+			array.add(cursor.next());
 		}
-		return Response.ok(array.toString()).cacheControl(control).build();
+		return Response.ok(array).cacheControl(control).build();
 	};
 
 }

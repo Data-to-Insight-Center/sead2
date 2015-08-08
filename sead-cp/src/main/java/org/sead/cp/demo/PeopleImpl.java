@@ -139,6 +139,8 @@ public class PeopleImpl extends People {
 	public Response getPersonProfile(@PathParam("id") String id) {
 		FindIterable<Document> iter = peopleCollection.find(new Document(
 				"orcid-profile.orcid-identifier.path", id));
+		
+	
 		Document document = iter.first();
 		document.remove("_id");
 		return Response.ok(document.toJson()).cacheControl(control).build();

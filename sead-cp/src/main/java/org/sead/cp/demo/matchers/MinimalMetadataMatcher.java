@@ -27,14 +27,8 @@ import org.sead.cp.demo.RuleResult;
 
 public class MinimalMetadataMatcher implements Matcher {
 
-	public RuleResult runRule(Document Content, String projectspace,
-			BasicBSONList affiliations, Document Preferences, Document profile) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	public RuleResult runRule(Document Content, String projectspace,
-			Document Preferences, Document profile) {
+	public RuleResult runRule(Document aggregation, 
+			BasicBSONList affiliations, Document preferences, Document profile) {
 
 		return new RuleResult();
 	}

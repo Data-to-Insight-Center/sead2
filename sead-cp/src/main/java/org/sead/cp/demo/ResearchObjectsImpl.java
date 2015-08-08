@@ -23,6 +23,8 @@ package org.sead.cp.demo;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.sql.Date;
+import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -39,6 +41,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.CacheControl;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.NewCookie;
 import javax.ws.rs.core.Response;
 
 import org.bson.BasicBSONObject;
@@ -86,10 +89,9 @@ public class ResearchObjectsImpl extends ResearchObjects {
 
 		publicationsCollection = db.getCollection("researchobjects");
 		peopleCollection = db.getCollection("people");
-		
-		//Build list of Matchers
-		
-		
+
+		// Build list of Matchers
+
 		matchers.add(new MaxDatasetSizeMatcher());
 		matchers.add(new MaxTotalSizeMatcher());
 		matchers.add(new DataTypeMatcher());
@@ -107,9 +109,9 @@ public class ResearchObjectsImpl extends ResearchObjects {
 	public Response startROPublicationProcess(String publicationRequestString) {
 		String messageString = null;
 		Document request = Document.parse(publicationRequestString);
-		Document content = (Document) request.get("Content");
+		Document content = (Document) request.get("Aggregation");
 		if (content == null) {
-			messageString += "Missing Content";
+			messageString += "Missing Aggregation";
 		}
 		Document preferences = (Document) request.get("Preferences");
 		if (preferences == null) {
@@ -125,34 +127,38 @@ public class ResearchObjectsImpl extends ResearchObjects {
 			Object creatorObject = content.get("Creator");
 			String ID = (String) content.get("Identifier");
 			BasicBSONList affiliations = new BasicBSONList();
-			if (creatorObject instanceof ArrayList) {
-				Iterator<String> iter = ((ArrayList<String>) creatorObject)
-						.iterator();
+			if (creatorObject != null) {
+				if (creatorObject instanceof ArrayList) {
+					Iterator<String> iter = ((ArrayList<String>) creatorObject)
+							.iterator();
 
-				while (iter.hasNext()) {
-					String creator = iter.next();
-					Set<String> orgs = getOrganizationforPerson(creator);
+					while (iter.hasNext()) {
+						String creator = iter.next();
+						Set<String> orgs = getOrganizationforPerson(creator);
+						if (!orgs.isEmpty()) {
+							affiliations.addAll(orgs);
+						}
+					}
+
+				} else {
+					// BasicDBObject - single value
+					Set<String> orgs = getOrganizationforPerson((String) creatorObject);
 					if (!orgs.isEmpty()) {
 						affiliations.addAll(orgs);
 					}
-				}
-
-			} else {
-				// BasicDBObject - single value
-				Set<String> orgs = getOrganizationforPerson((String) creatorObject);
-				if (!orgs.isEmpty()) {
-					affiliations.addAll(orgs);
 				}
 			}
 
 			request.append("Affiliations", affiliations);
 
-			//Add first status message
-			
+			// Add first status message
+
 			List<DBObject> statusreports = new ArrayList<DBObject>();
 			DBObject status = BasicDBObjectBuilder
 					.start()
-					.add("date", System.currentTimeMillis())
+					.add("date",
+							DateFormat.getDateTimeInstance().format(
+									new Date(System.currentTimeMillis())))
 					.add("reporter", "SEAD-CP")
 					.add("stage", "Receipt Ackowledged")
 					.add("message",
@@ -187,7 +193,7 @@ public class ResearchObjectsImpl extends ResearchObjects {
 	public Response getROsList() {
 		FindIterable<Document> iter = publicationsCollection.find();
 		iter.projection(new Document("Status", 1).append("Repository", 1)
-				.append("Content.Identifier", 1).append("_id", 0));
+				.append("Aggregation.Identifier", 1).append("Aggregation.Title", 1).append("_id", 0));
 		MongoCursor<Document> cursor = iter.iterator();
 		JSONArray array = new JSONArray();
 		while (cursor.hasNext()) {
@@ -202,8 +208,14 @@ public class ResearchObjectsImpl extends ResearchObjects {
 	public Response getROProfile(@PathParam("id") String id) {
 
 		FindIterable<Document> iter = publicationsCollection.find(new Document(
-				"Content.Identifier", id));
+				"Aggregation.Identifier", id));
+		if(iter==null) {
+			return Response.status(Status.NOT_FOUND).build();
+		}
 		Document document = iter.first();
+		if(document==null) {
+			return Response.status(Status.NOT_FOUND).build();
+		}
 		document.remove("_id");
 		return Response.ok(document.toJson()).cacheControl(control).build();
 	}
@@ -213,7 +225,7 @@ public class ResearchObjectsImpl extends ResearchObjects {
 	@Consumes(MediaType.APPLICATION_JSON)
 	public Response setROStatus(@PathParam("id") String id, String state) {
 		UpdateResult ur = publicationsCollection.updateOne(new Document(
-				"Content.Identifier", id), new BasicDBObject("$push",
+				"Aggregation.Identifier", id), new BasicDBObject("$push",
 				new BasicDBObject("Status", Document.parse(state))));
 		if (ur.wasAcknowledged()) {
 			return Response.status(Status.OK).build();
@@ -224,14 +236,13 @@ public class ResearchObjectsImpl extends ResearchObjects {
 		}
 	}
 
-
 	@GET
 	@Path("/{id}/status")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response getROStatus(@PathParam("id") String id) {
 
 		FindIterable<Document> iter = publicationsCollection.find(new Document(
-				"Content.Identifier", id));
+				"Aggregation.Identifier", id));
 		iter.projection(new Document("Status", 1).append("_id", 0));
 
 		Document document = iter.first();
@@ -243,7 +254,7 @@ public class ResearchObjectsImpl extends ResearchObjects {
 	@Path("/{id}")
 	public Response rescindROPublicationRequest(@PathParam("id") String id) {
 		DeleteResult dr = publicationsCollection.deleteOne(new Document(
-				"Content.Identifier", id));
+				"Aggregation.Identifier", id));
 		if (dr.getDeletedCount() == 1) {
 			return Response.status(Status.OK).build();
 		} else {
@@ -252,30 +263,41 @@ public class ResearchObjectsImpl extends ResearchObjects {
 	}
 
 	private Set<String> getOrganizationforPerson(String personID) {
-		Set<String> orgs = new HashSet<String>();;
+		Set<String> orgs = new HashSet<String>();
+		;
 		if (personID.startsWith("orcid.org/")) {
 			personID = personID.substring("orcid.org/".length());
 			FindIterable<Document> iter = peopleCollection.find(new Document(
 					"orcid-profile.orcid-identifier.path", personID));
+			// FixMe: NeverFail
+			if (iter == null) {
+				new PeopleImpl().registerPerson(personID);
+				iter = peopleCollection.find(new Document(
+						"orcid-profile.orcid-identifier.path", personID));
+			}
+
 			iter.projection(new Document(
-					"orcid-profile.orcid-activities.affiliations.affiliation.organization.name", 1).append(
-					"_id", 0));
+					"orcid-profile.orcid-activities.affiliations.affiliation.organization.name",
+					1).append("_id", 0));
 			MongoCursor<Document> cursor = iter.iterator();
 			if (cursor.hasNext()) {
 				Document affilDocument = cursor.next();
-				Document profile = (Document) affilDocument.get("orcid-profile");
-				
-				
-				Document activitiesDocument =  (Document) profile.get("orcid-activities");
-				
-				
-				Document affiliationsDocument = (Document) activitiesDocument.get("affiliations");
-				
-				ArrayList orgList = (ArrayList) affiliationsDocument.get("affiliation");
+				Document profile = (Document) affilDocument
+						.get("orcid-profile");
+
+				Document activitiesDocument = (Document) profile
+						.get("orcid-activities");
+
+				Document affiliationsDocument = (Document) activitiesDocument
+						.get("affiliations");
+
+				ArrayList orgList = (ArrayList) affiliationsDocument
+						.get("affiliation");
 				System.out.println(orgList.size());
-				for(Object entry: orgList) {
-					Document org = (Document) ((Document)entry).get("organization");
-					orgs.add((String)org.getString("name"));
+				for (Object entry : orgList) {
+					Document org = (Document) ((Document) entry)
+							.get("organization");
+					orgs.add((String) org.getString("name"));
 				}
 			}
 			/*
@@ -295,16 +317,12 @@ public class ResearchObjectsImpl extends ResearchObjects {
 	public Response makeMatches(String matchRequest) {
 		String messageString = null;
 		Document request = Document.parse(matchRequest);
-		Document content = (Document) request.get("Content");
+		Document content = (Document) request.get("Aggregation");
 		if (content == null) {
-			messageString += "Missing Content";
+			messageString += "Missing Aggregation";
 		}
 		Document preferences = (Document) request.get("Preferences");
 		if (preferences == null) {
-			messageString += "Missing Preferences";
-		}
-		String projectspace = (String) request.get("Project Space");
-		if (projectspace == null) {
 			messageString += "Missing Preferences";
 		}
 		if (messageString == null) {
@@ -334,55 +352,52 @@ public class ResearchObjectsImpl extends ResearchObjects {
 				}
 			}
 
-			
-			//Get repository profiles
-			FindIterable<Document> iter = db.getCollection("repositories").find();
-			//iter.projection(new Document("_id", 0));
-			
+			// Get repository profiles
+			FindIterable<Document> iter = db.getCollection("repositories")
+					.find();
+			// iter.projection(new Document("_id", 0));
 
-			
-			//Create result lists per repository
-			//Run matchers
+			// Create result lists per repository
+			// Run matchers
 			MongoCursor<Document> cursor = iter.iterator();
 
 			BasicBSONList matches = new BasicBSONList();
-			
-			int j=0;
+
+			int j = 0;
 			while (cursor.hasNext()) {
-				
+
 				BasicBSONObject repoMatch = new BasicBSONObject();
 				Document profile = cursor.next();
-				
+
 				repoMatch.put("orgidentifier", profile.get("orgidentifier"));
-				
+
 				BasicBSONList scores = new BasicBSONList();
 				int total = 0;
 				int i = 0;
-				for(Matcher m: matchers) {
+				for (Matcher m : matchers) {
 					BasicBSONObject individualScore = new BasicBSONObject();
-					
-					RuleResult result = m.runRule(content, projectspace, affiliations, preferences, profile);
-					
-					individualScore.put("Rule Name",m.getName());
-					if(result.wasTriggered()) {
-					individualScore.put("Score", result.getScore());
-					total+=result.getScore();
-					individualScore.put("Message",result.getMessage());
- 					} else {
- 						individualScore.put("Score", 0);
- 						individualScore.put("Message","Not Used"); 							
- 					}
+
+					RuleResult result = m.runRule(content, affiliations,
+							preferences, profile);
+
+					individualScore.put("Rule Name", m.getName());
+					if (result.wasTriggered()) {
+						individualScore.put("Score", result.getScore());
+						total += result.getScore();
+						individualScore.put("Message", result.getMessage());
+					} else {
+						individualScore.put("Score", 0);
+						individualScore.put("Message", "Not Used");
+					}
 					scores.put(i, individualScore);
 					i++;
 				}
-				repoMatch.put("Per Rule Scores",  scores);
+				repoMatch.put("Per Rule Scores", scores);
 				repoMatch.put("Total Score", total);
 				matches.put(j, repoMatch);
 				j++;
 			}
-			//Assemble and send
-			
-			
+			// Assemble and send
 
 			return Response.ok().entity(matches).build();
 		} else {
@@ -397,7 +412,7 @@ public class ResearchObjectsImpl extends ResearchObjects {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response getRulesList() {
 		ArrayList<Document> rulesArrayList = new ArrayList<Document>();
-		for(Matcher m: matchers) {
+		for (Matcher m : matchers) {
 			rulesArrayList.add(m.getDescription());
 		}
 		return Response.ok().entity(rulesArrayList).build();

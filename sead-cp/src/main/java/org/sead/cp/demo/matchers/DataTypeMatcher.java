@@ -40,16 +40,13 @@ import com.sun.jersey.api.client.WebResource;
 
 public class DataTypeMatcher implements Matcher {
 
-	public RuleResult runRule(Document content, String projectspace,
+	public RuleResult runRule(Document aggregation,
 			BasicBSONList affiliations, Document preferences, Document profile) {
 		RuleResult result = new RuleResult();
 		Client client = Client.create();
 		WebResource webResource;
 		try {
-			webResource = client.resource(projectspace
-					+ "/resteasy/collections/"
-					+ URLEncoder.encode(content.getString("Identifier"),
-							"UTF-8") + "/stats");
+			webResource = client.resource(aggregation.get("similarTo") + "/stats");
 
 			ClientResponse response = webResource.accept("application/json")
 					.get(ClientResponse.class);
@@ -61,8 +58,10 @@ public class DataTypeMatcher implements Matcher {
 			Document statsDocument = Document.parse(response
 					.getEntity(String.class));
 
+			@SuppressWarnings("unchecked")
 			ArrayList<String> existingTypes = (ArrayList<String>) statsDocument
 					.get("Data Mimetypes");
+			@SuppressWarnings("unchecked")
 			ArrayList<String> requiredTypes = (ArrayList<String>) profile
 					.get("Data Mimetypes");
 			Set<String> forbiddenTypes = new HashSet<String>();
@@ -92,10 +91,7 @@ public class DataTypeMatcher implements Matcher {
 			System.out.println("Missing info in MaxDepth rule for repo: "
 					+ profile.getString("orgidentifier") + " : "
 					+ nfe.getLocalizedMessage());
-		} catch (UnsupportedEncodingException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		} 
 		return result;
 
 	}
