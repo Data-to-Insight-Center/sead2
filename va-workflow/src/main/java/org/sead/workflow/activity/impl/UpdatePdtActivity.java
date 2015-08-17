@@ -27,7 +27,7 @@ public class UpdatePdtActivity extends AbstractWorkflowActivity {
     @Override
     public void execute(SeadWorkflowContext context, SeadWorkflowConfig config) {
         System.out.println("\n=====================================");
-        System.out.println("Executing activity : " + activityName);
+        System.out.println("Executing MicroService : " + activityName);
         System.out.println("-----------------------------------\n");
 
         SeadStatusTracker.addStatus(context.getProperty(Constants.RO_ID), SeadStatus.WorkflowStatus.UPDATE_PDT_BEGIN.getValue());
@@ -75,16 +75,17 @@ public class UpdatePdtActivity extends AbstractWorkflowActivity {
 	                .path("publishRO")
 	                .accept("application/json")
 	                .type("application/json")
-	                .post(ClientResponse.class, ros);					
+	                .post(ClientResponse.class, ros);
 			
 	        SeadStatusTracker.addStatus(context.getProperty(Constants.RO_ID), SeadStatus.PDTStatus.END.getValue());
 			
-        System.out.println("\n=====================================");
+        System.out.println("\n-----------------------------------");
         System.out.println("return status : " + response);
         System.out.println("-----------------------------------\n");
 
         SeadStatusTracker.addStatus(context.getProperty(Constants.RO_ID), SeadStatus.WorkflowStatus.UPDATE_PDT_END.getValue());
 
+        System.out.println("=====================================\n");
 
     }
     

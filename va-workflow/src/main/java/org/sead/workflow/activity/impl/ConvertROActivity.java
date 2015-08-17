@@ -28,7 +28,7 @@ import java.util.Iterator;
 
 /**
  * Responsible for converting the JSONLD format of metadata received from PS to the format
- * that is accepted by RO Info system.
+ * that is accepted by RO Info System.
  * Converts the namespaces of metadata in a collection and add information about files and
  * pointers to sub-collections.
  */
@@ -38,7 +38,7 @@ public class ConvertROActivity extends AbstractWorkflowActivity {
     @Override
     public void execute(SeadWorkflowContext context, SeadWorkflowConfig config) {
         System.out.println("\n=====================================");
-        System.out.println("Executing activity : " + activityName);
+        System.out.println("Executing MicroService : " + activityName);
         System.out.println("-----------------------------------\n");
 
         String sead_id = context.getProperty(Constants.RO_ID);
@@ -56,14 +56,12 @@ public class ConvertROActivity extends AbstractWorkflowActivity {
         }
 
         // generate JSONLD for the collection identified by roId
-        //String sead_id = IdGenerator.generateRandomID();
-        //context.addProperty(Constants.RO_ID, sead_id);
         String roJsonString = getRO(roId, sead_id, activityParams, context);
         context.addProperty(Constants.JSON_RO, roJsonString);
 
+        System.out.println(ConvertROActivity.class.getName() + " : Successfully converted the RO");
         SeadStatusTracker.addStatus(sead_id, SeadStatus.WorkflowStatus.CONVERT_RO_END.getValue());
 
-        System.out.println(ConvertROActivity.class.getName() + " : Successfully converted the RO");
         System.out.println("=====================================\n");
 
 

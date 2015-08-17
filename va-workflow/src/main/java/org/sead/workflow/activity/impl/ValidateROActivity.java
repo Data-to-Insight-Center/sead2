@@ -27,7 +27,7 @@ public class ValidateROActivity extends AbstractWorkflowActivity {
     @Override
     public void execute(SeadWorkflowContext context, SeadWorkflowConfig config) {
         System.out.println("\n=====================================");
-        System.out.println("Executing activity : " + activityName);
+        System.out.println("Executing MicroService : " + activityName);
         System.out.println("-----------------------------------\n");
 
         SeadStatusTracker.addStatus(context.getProperty(Constants.RO_ID), SeadStatus.WorkflowStatus.VALIDATE_RO_BEGIN.getValue());

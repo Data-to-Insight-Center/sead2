@@ -27,7 +27,7 @@ public class PersistROActivity extends AbstractWorkflowActivity {
     @Override
     public void execute(SeadWorkflowContext context, SeadWorkflowConfig config) {
         System.out.println("\n=====================================");
-        System.out.println("Executing activity : " + activityName);
+        System.out.println("Executing MicroService : " + activityName);
         System.out.println("-----------------------------------\n");
 
         SeadStatusTracker.addStatus(context.getProperty(Constants.RO_ID), SeadStatus.WorkflowStatus.PERSIST_RO_BEGIN.getValue());
@@ -58,21 +58,12 @@ public class PersistROActivity extends AbstractWorkflowActivity {
                 .post(ClientResponse.class, form);
 
         if(response.getStatus() == 200){
-//            StringWriter writer = new StringWriter();
-//            try {
-//                IOUtils.copy(response.getEntityInputStream(), writer);
-//            } catch (IOException e) {
-//                throw new SeadWorkflowException("Error occurred while persisting collection " + context.getCollectionId()
-//                        + " , Caused by: " + e.getMessage() , e);
-//            }
-            //context.addProperty(Constants.RO_ID, writer.toString());
             System.out.println(PersistROActivity.class.getName() + " : Successfully registered in RO Info Subsystem");
         } else {
             throw new SeadWorkflowException("Error occurred while persisting collection " + context.getCollectionId());
         }
 
         SeadStatusTracker.addStatus(context.getProperty(Constants.RO_ID), SeadStatus.WorkflowStatus.PERSIST_RO_END.getValue());
-
 
         System.out.println("=====================================\n");
 

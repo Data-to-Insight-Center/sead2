@@ -33,16 +33,16 @@ public class PublishROActivity extends AbstractWorkflowActivity {
     @Override
     public void execute(SeadWorkflowContext context, SeadWorkflowConfig config) {
 
-        System.out.println("\n=====================================");
-        System.out.println("Executing activity : " + activityName);
-        System.out.println("-----------------------------------\n");
-
-        SeadStatusTracker.addStatus(context.getProperty(Constants.RO_ID), SeadStatus.WorkflowStatus.PUBLISH_RO_BEGIN.getValue());
-
         if(context.getProperty(Constants.VALIDATED).equals(Constants.FALSE)){
             System.out.println(PublishROActivity.class.getName() + " : Not publishing RO");
             return;
         }
+
+        System.out.println("\n=====================================");
+        System.out.println("Executing MicroService : " + activityName);
+        System.out.println("-----------------------------------\n");
+
+        SeadStatusTracker.addStatus(context.getProperty(Constants.RO_ID), SeadStatus.WorkflowStatus.PUBLISH_RO_BEGIN.getValue());
 
         HashMap<String, String> activityParams = new HashMap<String, String>();
         for(SeadWorkflowActivity activity : config.getActivities()){
@@ -65,10 +65,8 @@ public class PublishROActivity extends AbstractWorkflowActivity {
             roObject.put("name", ro.has("Title") ? ro.get("Title"): "");
             roObject.put("ROID", context.getProperty(Constants.RO_ID));
             roObject.put("description", ro.has("Abstract") ? ro.get("Abstract"): "");
-            //roObject.put("sourceOrganization", "");
-            //roObject.put("fileSize", new JSONObject().put("value", 2000).put("unit", "MB"));
+            //roObject.put("sourceOrganization", ""); // TODO : determine sourceOrganization
             roObject.put("fileSize", new JSONObject().put("value", calculateSize(ro)).put("unit", "b"));
-            //roObject.put("contentUrl", context.getPSInstance().getUrl());
 
             ArrayList<String> downloadLinks = getDownloadLinks(ro, new ArrayList<String>());
             String downloadLinkList = "";
@@ -79,10 +77,10 @@ public class PublishROActivity extends AbstractWorkflowActivity {
             roObject.put("subject", ro.has("Topic") ? ro.get("Topic") : "");
 
             ArrayList<String> formats = getFormats(ro, new ArrayList<String>());
-            roObject.put("contentType", formats.size() > 0 ? formats.get(0) : "");
+            roObject.put("contentType", formats.size() > 0 ? formats.get(0) : ""); // TODO : return full list
 
             JSONArray authors = getAuthors(ro);
-            roObject.put("author", authors.length() > 0 ? authors.get(0) : new JSONObject());
+            roObject.put("author", authors.length() > 0 ? authors.get(0) : new JSONObject()); // TODO : return full list
 
             messageObject.put("message", roObject);
 
@@ -123,10 +121,9 @@ public class PublishROActivity extends AbstractWorkflowActivity {
 
         System.out.println(PublishROActivity.class.getName() + " : Message successfully inserted to queue");
         System.out.println("Message : " + rootObject.toString());
-        System.out.println("=====================================\n");
-
         SeadStatusTracker.addStatus(context.getProperty(Constants.RO_ID), SeadStatus.WorkflowStatus.PUBLISH_RO_END.getValue());
 
+        System.out.println("=====================================\n");
 
     }
 
