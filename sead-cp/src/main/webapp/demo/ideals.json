@@ -1,0 +1,14 @@
+{
+  "@context": "http://re3data.org/",
+  "@type": "repository",
+  "orgidentifier": "ideals",
+  "repositoryName": "IDEALS",
+  "repositoryURL": "https://www.ideals.illinois.edu/",
+  "institution": "University of Illinois",
+  "subject": "any",
+  "versioning": "no",
+  "dataAccessType": ["open","restricted"],
+  "dataLicenseName": ["other"],
+  "contentType": ["csv", "txt", "xml", "html", "tif", "jp2", "aif", "fla", "ogg", "wav", "avi", "mj2"],
+  "/maxFileSize": {"unit":"MB", "value": 1000}
+}
