@@ -150,8 +150,13 @@ public abstract class ResearchObjects {
 
 	/**
 	 * Update the status for a given publication / ro
+	 * Reporter: the entity sending status, e.g. repository (use the orgidentifier term used as an id in repository profiles)
+	 * Stage: short string describing stage: Recommended values are "Receipt Acknowledged", "Pending", "Success", "Failure"
+	 * Message" longer string describing the status. For "Success", the message MUST be the persistent identifier assigned to the research object
 	 * 
-	 * Body : { "status": <status>, "message":<message> }
+	 * A timestamp will be appended by the services.
+	 * 
+	 * Body : { "reporter": <reporter>, "Stage": <stage>, "message":<message> }
 	 * 
 	 * 
 	 * @param id
@@ -160,8 +165,8 @@ public abstract class ResearchObjects {
 	 * @return 200 OK: {response: "success", id : &lt;ID&gt;} <br>
 	 *         400 Bad Request: {response: "failure", reason : &lt;string&gt;} <br>
 	 */
-	@PUT
-	@Path("/{id}")
+	@POST
+	@Path("/{id}/status")
 	@Consumes(MediaType.APPLICATION_JSON)
 	public abstract Response setROStatus(@PathParam("id") String id,
 			String status);

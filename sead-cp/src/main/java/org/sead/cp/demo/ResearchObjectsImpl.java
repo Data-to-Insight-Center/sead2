@@ -193,7 +193,8 @@ public class ResearchObjectsImpl extends ResearchObjects {
 	public Response getROsList() {
 		FindIterable<Document> iter = publicationsCollection.find();
 		iter.projection(new Document("Status", 1).append("Repository", 1)
-				.append("Aggregation.Identifier", 1).append("Aggregation.Title", 1).append("_id", 0));
+				.append("Aggregation.Identifier", 1)
+				.append("Aggregation.Title", 1).append("_id", 0));
 		MongoCursor<Document> cursor = iter.iterator();
 		JSONArray array = new JSONArray();
 		while (cursor.hasNext()) {
@@ -209,30 +210,37 @@ public class ResearchObjectsImpl extends ResearchObjects {
 
 		FindIterable<Document> iter = publicationsCollection.find(new Document(
 				"Aggregation.Identifier", id));
-		if(iter==null) {
+		if (iter == null) {
 			return Response.status(Status.NOT_FOUND).build();
 		}
 		Document document = iter.first();
-		if(document==null) {
+		if (document == null) {
 			return Response.status(Status.NOT_FOUND).build();
 		}
 		document.remove("_id");
 		return Response.ok(document.toJson()).cacheControl(control).build();
 	}
 
-	@PUT
-	@Path("/{id}")
+	@POST
+	@Path("/{id}/status")
 	@Consumes(MediaType.APPLICATION_JSON)
 	public Response setROStatus(@PathParam("id") String id, String state) {
+		try {
+		Document statusUpdateDocument = Document.parse(state);
+		statusUpdateDocument.append("date", DateFormat.getDateTimeInstance()
+				.format(new Date(System.currentTimeMillis())));
 		UpdateResult ur = publicationsCollection.updateOne(new Document(
 				"Aggregation.Identifier", id), new BasicDBObject("$push",
-				new BasicDBObject("Status", Document.parse(state))));
+				new BasicDBObject("Status", statusUpdateDocument)));
 		if (ur.wasAcknowledged()) {
 			return Response.status(Status.OK).build();
 
 		} else {
 			return Response.status(Status.NOT_FOUND).build();
 
+		}
+		}catch (org.bson.BsonInvalidOperationException e) {
+			return Response.status(Status.BAD_REQUEST).build();
 		}
 	}
 
