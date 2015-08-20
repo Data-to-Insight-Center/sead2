@@ -137,9 +137,14 @@ public class RepositoriesImpl extends Repositories {
 		if (iter.iterator().hasNext()) {
 
 			Document document = Document.parse(profile);
-			UpdateResult ur = repositoriesCollection.replaceOne(new Document(
-					"orgidentifier", id), document);
-			return Response.status(Status.OK).build();
+			if (document.containsKey("orgidentifier")
+					&& (document.getString("orgidentifier").equals(id))) {
+				UpdateResult ur = repositoriesCollection.replaceOne(
+						new Document("orgidentifier", id), document);
+				return Response.status(Status.OK).build();
+			} else {
+				return Response.status(Status.CONFLICT).build();
+			}
 
 		} else {
 			return Response.status(Status.NOT_FOUND).build();

@@ -87,7 +87,7 @@ public abstract class Repositories {
 	public abstract Response getRepositoryProfile(@PathParam("id") String id);
 
 	/**
-	 * Update the profile for a given repository
+	 * Update the profile for a given repository. The orgidentifier element in the new profile must exist and must match the {id} being PUT.
 	 * 
 	 * @param id
 	 *            the assigned repository ID
