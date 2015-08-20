@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+
+<enunciate label="SEAD Curation and Publication Services"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:noNamespaceSchemaLocation="http://enunciate.webcohesion.com/schemas/enunciate-1.30.xsd">
+	<deployment host="localhost:8080" context="/" />
+	<api-classes>
+		<exclude pattern="org.sead.cp.demo.**" />
+	</api-classes>
+	<modules>
+		<docs splashPackage="org.sead.cp" title="SEAD C/P Services API"
+			copyright="sead-data.net">
+			<download name="License" file="LICENSE.txt"
+				description="The license file governing the use of this API." />
+		</docs>
+	</modules>
+	<services>
+		<rest defaultRestSubcontext="/cp" />
+	</services>
+</enunciate>
