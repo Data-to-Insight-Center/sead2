@@ -9,6 +9,8 @@ import org.sead.workflow.config.SeadWorkflowConfig;
 import org.sead.workflow.context.SeadWorkflowContext;
 import org.sead.workflow.exception.SeadWorkflowException;
 import org.sead.workflow.util.Constants;
+import org.seadva.services.statusTracker.SeadStatusTracker;
+import org.seadva.services.statusTracker.enums.SeadStatus;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -25,8 +27,10 @@ public class ValidateROActivity extends AbstractWorkflowActivity {
     @Override
     public void execute(SeadWorkflowContext context, SeadWorkflowConfig config) {
         System.out.println("\n=====================================");
-        System.out.println("Executing activity : " + activityName);
+        System.out.println("Executing MicroService : " + activityName);
         System.out.println("-----------------------------------\n");
+
+        SeadStatusTracker.addStatus(context.getProperty(Constants.RO_ID), SeadStatus.WorkflowStatus.VALIDATE_RO_BEGIN.getValue());
 
         boolean validated = true;
         String roString = context.getProperty(Constants.JSON_RO);
@@ -43,7 +47,10 @@ public class ValidateROActivity extends AbstractWorkflowActivity {
         } else {
             System.out.println(ValidateROActivity.class.getName() + " : RO Validation Failed");
             context.addProperty(Constants.VALIDATED, Constants.FALSE);
+            throw new SeadWorkflowException("Error occurred while validating collection " + context.getCollectionId());            
         }
+
+        SeadStatusTracker.addStatus(context.getProperty(Constants.RO_ID), SeadStatus.WorkflowStatus.VALIDATE_RO_END.getValue());
 
         System.out.println("=====================================\n");
 

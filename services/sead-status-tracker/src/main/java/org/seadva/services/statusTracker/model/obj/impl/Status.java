@@ -2,9 +2,6 @@ package org.seadva.services.statusTracker.model.obj.impl;
 
 import org.seadva.services.statusTracker.model.obj.IStatus;
 
-/**
- * Created by charmadu on 7/22/15.
- */
 public class Status implements IStatus {
 
     private String statusId;

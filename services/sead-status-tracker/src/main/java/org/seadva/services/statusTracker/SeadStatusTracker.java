@@ -21,19 +21,16 @@ import org.seadva.services.statusTracker.model.obj.impl.CollectionStatus;
 import org.seadva.services.statusTracker.model.obj.impl.Status;
 
 
-
-/**
- * Hello world!
- */
 public class SeadStatusTracker {
 
-    //  static DataLayerVaRegistry dataLayerVaRegistry;
     static StatusDao statusDao;
     static CollectionStatusDao collectionStatusDao;
 
     static String databaseUrl;
     static String databaseUser;
     static String databasePassword;
+    static String tomcatDataPath;
+    static String tomcatFilePath;
 
     static Map<Integer, Status> statusMap;
     static ArrayList<Integer>[] adj_list;
@@ -42,7 +39,7 @@ public class SeadStatusTracker {
     static {
 
         InputStream inputStream =
-                SeadStatusTracker.class.getResourceAsStream("./Config.properties");
+                SeadStatusTracker.class.getResourceAsStream("Config.properties");
 
         StringWriter writer = new StringWriter();
         try {
@@ -65,6 +62,10 @@ public class SeadStatusTracker {
                 databaseUser = value;
             else if (name.equalsIgnoreCase("database.password"))
                 databasePassword = value;
+            else if (name.equalsIgnoreCase("tomcat.path.to.data"))
+                tomcatDataPath = value;
+            else if (name.equalsIgnoreCase("tomcat.file.path"))
+                tomcatFilePath = value;
         }
         try {
             DBConnectionPool.init(databaseUrl, databaseUser, databasePassword, 8, 30, 0);
@@ -83,17 +84,12 @@ public class SeadStatusTracker {
 
     public static boolean addStatus(String collectionId, String currentStatus) {
 
-        System.out.println("adding status");
+        System.out.println("Adding status to " + collectionId + " : " + currentStatus);
         CollectionStatus collectionStatus = new CollectionStatus();
         collectionStatus.setCollectionId(collectionId);
         collectionStatus.setCurrentStatus(currentStatus);
         collectionStatus.setUpdatedTime(System.nanoTime());
         collectionStatusDao.putCollectionStatus(collectionStatus);
-        try {
-            Thread.sleep(500);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
         return true;
 
     }
@@ -101,16 +97,28 @@ public class SeadStatusTracker {
     public static String getStatusByRo(String roId) {
 
         List<CollectionStatus> collectionStatusList = collectionStatusDao.getCollectionStatusById(roId);
+        CollectionStatus lastCollectionStatus = collectionStatusList.get(0);
+        for (CollectionStatus collectionStatus : collectionStatusList){
+            if(lastCollectionStatus.getUpdatedTime() < collectionStatus.getUpdatedTime())
+                lastCollectionStatus = collectionStatus;
+        }
+        Status lastStatus = statusDao.getStatusById(lastCollectionStatus.getCurrentStatus());
+        return lastStatus.getStatusId().split(":")[0]+"-"+lastStatus.getDescription();
+    }
+
+    public static String getStatusGraphByRo(String roId) {
+
+        List<CollectionStatus> collectionStatusList = collectionStatusDao.getCollectionStatusById(roId);
         ArrayList<String> visitedNodes = new ArrayList<String>();
         for (CollectionStatus collectionStatus : collectionStatusList)
             visitedNodes.add(collectionStatus.getCurrentStatus());
         drawGraph(visitedNodes);
-        return "";
+        return tomcatFilePath;
     }
 
     private static void populateStatuses() {
 
-        System.out.println("populating status tables - START");
+        System.out.println("Populating status tables - START");
 
 
         for (SeadStatus.WorkflowStatus component : SeadStatus.WorkflowStatus.values()) {
@@ -140,7 +148,7 @@ public class SeadStatusTracker {
             statusMap.put(component.toIdx(), status);
         }
 
-        System.out.println("populating status tables - END");
+        System.out.println("Populating status tables - END");
 
     }
 
@@ -200,15 +208,7 @@ public class SeadStatusTracker {
         // Executing PDT Activities
         edges = new ArrayList<Integer>();
         adj_list[SeadStatus.PDTStatus.START.toIdx()] = edges;
-        edges.add(SeadStatus.PDTStatus.PDT_ACTIVITY1_BEGIN.toIdx()); // PDT_START -> PDT_ACTIVITY1_BEGIN
-
-        edges = new ArrayList<Integer>();
-        adj_list[SeadStatus.PDTStatus.PDT_ACTIVITY1_BEGIN.toIdx()] = edges;
-        edges.add(SeadStatus.PDTStatus.PDT_ACTIVITY1_END.toIdx()); // PDT_ACTIVITY1_BEGIN -> PDT_ACTIVITY1_END
-
-        edges = new ArrayList<Integer>();
-        adj_list[SeadStatus.PDTStatus.PDT_ACTIVITY1_END.toIdx()] = edges;
-        edges.add(SeadStatus.PDTStatus.END.toIdx()); // PDT_ACTIVITY1_END -> PDT_END
+        edges.add(SeadStatus.PDTStatus.END.toIdx()); // PDT_START -> PDT_END
 
         // PDT Finish and Workflow resume
         edges = new ArrayList<Integer>();
@@ -249,7 +249,7 @@ public class SeadStatusTracker {
 
         try {
             JSONObject object = createNode(beginIndex, 0, 0, visitedNodes);
-            FileOutputStream fileOutputStream = new FileOutputStream(new File("/Users/charmadu/projects/graph/data.json"));
+            FileOutputStream fileOutputStream = new FileOutputStream(new File(tomcatDataPath));
             IOUtils.write(object.toString(), fileOutputStream);
             fileOutputStream.close();
         } catch (JSONException e) {
@@ -359,10 +359,7 @@ public class SeadStatusTracker {
     }
 
     public static void main(String[] args) throws InterruptedException {
-        String collectionId = "http://sead_XPCQHY";
-        UpdateGraph updater = new UpdateGraph(collectionId);
-        Thread update_th = new Thread(updater);
-        update_th.start();
+        String collectionId = "http://sead_050WR3";
 
         Connection connection = null;
         PreparedStatement statement = null;
@@ -398,8 +395,6 @@ public class SeadStatusTracker {
 
         SeadStatusTracker.addStatus(collectionId, SeadStatus.WorkflowStatus.UPDATE_PDT_BEGIN.getValue());
         SeadStatusTracker.addStatus(collectionId, SeadStatus.PDTStatus.START.getValue());
-        SeadStatusTracker.addStatus(collectionId, SeadStatus.PDTStatus.PDT_ACTIVITY1_BEGIN.getValue());
-        SeadStatusTracker.addStatus(collectionId, SeadStatus.PDTStatus.PDT_ACTIVITY1_END.getValue());
         SeadStatusTracker.addStatus(collectionId, SeadStatus.PDTStatus.END.getValue());
         SeadStatusTracker.addStatus(collectionId, SeadStatus.WorkflowStatus.UPDATE_PDT_END.getValue());
 
@@ -412,8 +407,7 @@ public class SeadStatusTracker {
         SeadStatusTracker.addStatus(collectionId, SeadStatus.MatchmakerStatus.MM_ACTIVITY1_END.getValue());
         SeadStatusTracker.addStatus(collectionId, SeadStatus.MatchmakerStatus.END.getValue());
 
-        Thread.sleep(2000);
-        update_th.stop();
-        System.out.println("Hello World!");
+        //System.out.println(getStatusByRo(collectionId));
+
     }
 }

@@ -15,6 +15,8 @@ import org.sead.workflow.context.SeadWorkflowContext;
 import org.sead.workflow.exception.SeadWorkflowException;
 import org.sead.workflow.util.Constants;
 import org.sead.workflow.util.IdGenerator;
+import org.seadva.services.statusTracker.SeadStatusTracker;
+import org.seadva.services.statusTracker.enums.SeadStatus;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -26,7 +28,7 @@ import java.util.Iterator;
 
 /**
  * Responsible for converting the JSONLD format of metadata received from PS to the format
- * that is accepted by RO Info system.
+ * that is accepted by RO Info System.
  * Converts the namespaces of metadata in a collection and add information about files and
  * pointers to sub-collections.
  */
@@ -36,10 +38,13 @@ public class ConvertROActivity extends AbstractWorkflowActivity {
     @Override
     public void execute(SeadWorkflowContext context, SeadWorkflowConfig config) {
         System.out.println("\n=====================================");
-        System.out.println("Executing activity : " + activityName);
+        System.out.println("Executing MicroService : " + activityName);
         System.out.println("-----------------------------------\n");
 
+        String sead_id = context.getProperty(Constants.RO_ID);
         String roId = context.getCollectionId();
+
+        SeadStatusTracker.addStatus(sead_id, SeadStatus.WorkflowStatus.CONVERT_RO_BEGIN.getValue());
 
         HashMap<String, String> activityParams = new HashMap<String, String>();
         for(SeadWorkflowActivity activity : config.getActivities()){
@@ -51,13 +56,12 @@ public class ConvertROActivity extends AbstractWorkflowActivity {
         }
 
         // generate JSONLD for the collection identified by roId
-        String sead_id = context.getProperty(Constants.RO_ID);
-        //String sead_id = IdGenerator.generateRandomID();
-        //context.addProperty(Constants.RO_ID, sead_id);
         String roJsonString = getRO(roId, sead_id, activityParams, context);
         context.addProperty(Constants.JSON_RO, roJsonString);
 
         System.out.println(ConvertROActivity.class.getName() + " : Successfully converted the RO");
+        SeadStatusTracker.addStatus(sead_id, SeadStatus.WorkflowStatus.CONVERT_RO_END.getValue());
+
         System.out.println("=====================================\n");
 
 
@@ -233,7 +237,7 @@ public class ConvertROActivity extends AbstractWorkflowActivity {
             JSONObject fileObject = new JSONObject(convertRO(fileWriter.toString()));
             fileObject.remove(Constants.REST_CONTEXT);
             fileObject.put(Constants.GEN_AT, psUrl + "/#dataset?id=" + key);
-            fileObject.put(Constants.FLOCAT, "download_loc_"+key);
+            fileObject.put(Constants.FLOCAT,  psUrl + "/resteasy/datasets/" + key + "/file");
             fileObject.put(Constants.IDENTIFIER, IdGenerator.generateRandomID());
             hasFilesArray.put(fileObject);
         }

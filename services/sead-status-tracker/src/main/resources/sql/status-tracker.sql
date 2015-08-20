@@ -12,7 +12,7 @@ CREATE TABLE collection_status (
    current_status           VARCHAR(256) NOT NULL,
    status_updated_time      BIGINT NOT NULL,
    PRIMARY KEY (collection_id, current_status),
-   FOREIGN KEY (collection_id) REFERENCES collection(entity_id),
+--   FOREIGN KEY (collection_id) REFERENCES collection(entity_id),
    FOREIGN KEY (current_status) REFERENCES status(status_id)
 ) ENGINE=INNODB;
 

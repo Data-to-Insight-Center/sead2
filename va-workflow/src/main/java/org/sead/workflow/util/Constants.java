@@ -44,13 +44,10 @@ public class Constants {
 
     // constants in context
     public static final String JSON_RO = "jsonRO"; // JSONLD format of RO metadata
-    public static final String PS_ID = "psID"; // ID of the project space instance
-    public static final String SIGNAL_PS = "signalPs";
     public static final String VALIDATED = "validated";
     public static final String VALIDATION_FAILED_MSG = "validationFailedMsg";
     public static final String RESPONSE = "response";
     public static final String RO_ID = "roId"; // SEAD Identigier
-    public static final String EXCEPTION = "exception";
 
     // constants in JSONLD of RO
     public static final String HAS_FILES = "Has Files";

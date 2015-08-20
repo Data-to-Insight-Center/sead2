@@ -13,9 +13,6 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Created by charmadu on 7/22/15.
- */
 public class CollectionStatusDaoImpl implements CollectionStatusDao{
 
     private static Logger log = Logger.getLogger(StatusDaoImpl.class);

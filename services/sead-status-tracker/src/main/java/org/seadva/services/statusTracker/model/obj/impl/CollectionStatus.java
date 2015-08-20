@@ -4,9 +4,6 @@ import org.seadva.services.statusTracker.model.obj.ICollectionStatus;
 
 import java.util.Date;
 
-/**
- * Created by charmadu on 7/22/15.
- */
 public class CollectionStatus implements ICollectionStatus {
 
     private String collectionId;
