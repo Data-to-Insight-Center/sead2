@@ -36,6 +36,7 @@ import org.seadva.registry.database.model.obj.vaRegistry.Agent;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.net.URLEncoder;
@@ -146,11 +147,68 @@ public class ROServiceRESTTest extends JerseyTest {
     }
 
     @Test
+    public void testPutJsonLDRO() throws IOException {
+        WebResource webResource = resource();
+
+        File file = new File(
+                getClass().getResource("./Demo_Collection.json").getFile()
+        );
+        FileInputStream roFile = new FileInputStream(file);
+        String colRoString = IOUtils.toString(roFile, "UTF-8");
+
+        FormDataMultiPart formDataMultiPart = new FormDataMultiPart();
+
+        formDataMultiPart.field("ro", colRoString);
+
+        ClientResponse response = webResource.path("resource")
+                .path("putjsonldro")
+                .type(MediaType.MULTIPART_FORM_DATA)
+                .post(ClientResponse.class, formDataMultiPart);
+
+        assertEquals(200, response.getStatus());
+    }
+
+    @Test
     public void testGetJsonLDRO() throws IOException {
-        String entityID = "http://localhost:8080/sead-wf/entity/2021";
+        String entityID = "http://sead_J8WCHZ12";
         WebResource webResource = resource();
         ClientResponse response = webResource.path("resource")
                 .path("jsonldro")
+                .path(
+                        URLEncoder.encode(
+                                entityID
+                        )
+                )
+                .get(ClientResponse.class);
+
+        StringWriter writer = new StringWriter();
+        IOUtils.copy(response.getEntityInputStream(), writer);
+        System.out.println(writer.toString());
+        assertEquals(200, response.getStatus());
+    }
+
+    @Test
+    public void testUpdateState() throws IOException {
+        String entityID = "http://sead_J8WCHZ12";
+        WebResource webResource = resource();
+        ClientResponse response = webResource.path("resource")
+                .path("updateROState")
+                .queryParam("entityId", URLEncoder.encode(entityID))
+                .queryParam("state", "PublishedObject")
+                .post(ClientResponse.class);
+
+        StringWriter writer = new StringWriter();
+        IOUtils.copy(response.getEntityInputStream(), writer);
+        System.out.println(writer.toString());
+        assertEquals(200, response.getStatus());
+    }
+
+    @Test
+    public void testGetState() throws IOException {
+        String entityID = "http://sead_J8WCHZ12";
+        WebResource webResource = resource();
+        ClientResponse response = webResource.path("resource")
+                .path("getState")
                 .path(
                         URLEncoder.encode(
                                 entityID
