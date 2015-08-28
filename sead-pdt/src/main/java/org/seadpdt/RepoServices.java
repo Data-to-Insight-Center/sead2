@@ -1,90 +1,72 @@
 package org.seadpdt;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.List;
-
+import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
 
 import org.bson.Document;
+import org.json.JSONObject;
 
 import com.mongodb.MongoClient;
 import com.mongodb.client.FindIterable;
+import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 
-@Path("/repo")
+@Path("/repositories")
 public class RepoServices {
  
-	MongoClient mongoClient = new MongoClient();
-	MongoDatabase db = mongoClient.getDatabase("sead");
+	// move these to an external file?
+	String collectionName = "repo";
+	String DBname = "sead";
 	
-	 @GET
-	 @Path("/mongo")
+	MongoClient mongoClient = new MongoClient();
+	MongoDatabase db = mongoClient.getDatabase(DBname);
+	MongoCollection<Document> collection = db.getCollection(collectionName);		
+		
+	 @POST
+	 @Path("/add")
+	 @Consumes(MediaType.APPLICATION_JSON)
 	 @Produces(MediaType.APPLICATION_JSON)
-	 public FindIterable<Document> listMongo()  {	
-		 FindIterable<Document> iterable = db.getCollection("repo").find();
-		 return iterable;
+	 public String addRepository(String RepositoryData)  {	 
+		JSONObject xmlJSONObj = new JSONObject(RepositoryData);			
+		Document doc = Document.parse(xmlJSONObj.toString());
+		collection.drop(); // needs to drop by ID, not drop all
+		collection.insertOne(doc);
+		mongoClient.close();		
+		return "success";
 	 }	
-	 
+	 	 
 	 @GET
 	 @Path("/list")
 	 @Produces(MediaType.APPLICATION_JSON)
-	 public byte[] listRepos()  {	
-		 
-		 java.nio.file.Path path = Paths.get("../../sead-json/repo.json");
-		 byte[] data = new byte[] {'*'};
-		try {
-			data = Files.readAllBytes(path);
-		} catch (IOException e) {
-
-		}
-		 
-		 return data;
-	 }
-	  
-	 @GET
-	 @Path("/test")
-	 @Produces(MediaType.APPLICATION_JSON)
-	 public RepoJSON testRepos()  {	
-		 RepoJSON repository = new RepoJSON();
-		 repository.setContext("http://re3data.org/");
-		 repository.setType("repository"); 
-		 repository.setOrgIdentifier("https://www.ideals.illinois.edu");
-		 repository.setRepositoryName("IDEALS"); 
-		 return repository;
-	 }	 
+	 public FindIterable<Document> listRepositories() {	
+		 FindIterable<Document> iterable = db.getCollection(collectionName).find();
+		 return iterable;
+	 }		 
 	 
 	@GET
 	@Path("/byid")
-	public byte[] getRepoID(
-		@QueryParam("id") String repID)  {
-		 String repPath = "../../sead-json/" + repID + ".json";
-		 java.nio.file.Path path = Paths.get(repPath);
-		 byte[] data = new byte[] {'*'};
-		try {
-			data = Files.readAllBytes(path);
-		} catch (IOException e) {
+	@Produces(MediaType.APPLICATION_JSON)
+	 public FindIterable<Document> getRepository(
+		@QueryParam("id") String repID) {
+		FindIterable<Document> iterable = db.getCollection(collectionName).find();
+		return iterable;		
+	}	 	 
 
-		}	 
-		 return data;
-	}
-	
-	@GET
-	@Path("/params")
-	public Response getRepoValue(
-		@QueryParam("from") int from,
-		@QueryParam("to") int to,
-		@QueryParam("orderBy") List<String> orderBy) {
-		return Response
-		   .status(200)
-		   .entity("getUsers is called, from : " + from + ", to : " + to
-			+ ", orderBy" + orderBy.toString()).build();
-	}
+	 @POST
+	 @Path("/delete")
+	 @Consumes(MediaType.APPLICATION_JSON)
+	 @Produces(MediaType.APPLICATION_JSON)
+	 public String deleteRepository(String RepositoryData)  {	 
+		JSONObject xmlJSONObj = new JSONObject(RepositoryData);			
+		Document doc = Document.parse(xmlJSONObj.toString());
+		collection.drop(); // needs to drop by ID, not drop all
+		mongoClient.close();		
+		return "success";
+	 }		
 	
 }

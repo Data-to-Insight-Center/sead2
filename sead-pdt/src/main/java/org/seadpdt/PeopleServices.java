@@ -1,56 +1,81 @@
 package org.seadpdt;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-
+import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
+import org.bson.Document;
+import org.json.JSONObject;
+
+import com.mongodb.MongoClient;
+import com.mongodb.client.FindIterable;
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoDatabase;
+
 @Path("/people")
 
 public class PeopleServices {
 
-	 @GET
-	 @Path("/orcid")
-	 @Produces(MediaType.APPLICATION_JSON)
-	 
-	 public String listORCID(
-				@QueryParam("id") String orcidID)  {	
-		 return ORCIDcalls.getORCID(orcidID);
-	 }			
+	// move these to an external file?
+	String collectionName = "people";
+	String DBname = "sead";
 	
+	MongoClient mongoClient = new MongoClient();
+	MongoDatabase db = mongoClient.getDatabase(DBname);
+	MongoCollection<Document> collection = db.getCollection(collectionName);	
+	
+	 @POST
+	 @Path("/add")
+	 @Consumes(MediaType.APPLICATION_JSON)
+	 @Produces(MediaType.APPLICATION_JSON)
+	 public String addPerson(String personData)  {	 
+		JSONObject xmlJSONObj = new JSONObject(personData);			
+		Document doc = Document.parse(xmlJSONObj.toString());
+		collection.drop(); // needs to drop by ID, not drop all
+		collection.insertOne(doc);
+		mongoClient.close();		
+		return "success";
+	 }	
+	 	 
 	 @GET
 	 @Path("/list")
 	 @Produces(MediaType.APPLICATION_JSON)
-	 public byte[] listRepos()  {	
-		 
-		 java.nio.file.Path path = Paths.get("../../sead-json/people.json");
-		 byte[] data = new byte[] {'*'};
-		try {
-			data = Files.readAllBytes(path);
-		} catch (IOException e) {
-
-		}		 
-		 return data;
-	 }
+	 public FindIterable<Document> listPeople() {	
+		 FindIterable<Document> iterable = db.getCollection(collectionName).find();
+		 return iterable;
+	 }		 
 	 
-		@GET
-		@Path("/byid")
-		public byte[] getRepoID(
-			@QueryParam("id") String repID)  {
-			 String repPath = "../../sead-json/" + repID + ".json";
-			 java.nio.file.Path path = Paths.get(repPath);
-			 byte[] data = new byte[] {'*'};
-			try {
-				data = Files.readAllBytes(path);
-			} catch (IOException e) {
+	@GET
+	@Path("/byid")
+	@Produces(MediaType.APPLICATION_JSON)
+	 public FindIterable<Document> getPeople(
+		@QueryParam("id") String repID) {
+		FindIterable<Document> iterable = db.getCollection(collectionName).find();
+		return iterable;		
+	}	 	 
 
-			}	 
-			 return data;
-		}	 
+	 @POST
+	 @Path("/delete")
+	 @Consumes(MediaType.APPLICATION_JSON)
+	 @Produces(MediaType.APPLICATION_JSON)
+	 public String deletePerson(String personData)  {	 
+		JSONObject xmlJSONObj = new JSONObject(personData);			
+		Document doc = Document.parse(xmlJSONObj.toString());
+		collection.drop(); // needs to drop by ID, not drop all
+		mongoClient.close();		
+		return "success";
+	 }		
+	
+	 @GET
+	 @Path("/orcid")
+	 @Produces(MediaType.APPLICATION_JSON)
+	 public String listORCID(
+				@QueryParam("id") String orcidID)  {	
+		 return ORCIDcalls.getORCID(orcidID);
+	 }			 
 	
 }
