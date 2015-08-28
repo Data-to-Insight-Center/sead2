@@ -1,27 +1,26 @@
 package org.sead.matchmaker;
 
-import java.util.concurrent.TimeoutException;
-import com.rabbitmq.client.*;
-import java.util.Properties;
-import java.io.FileInputStream;
 import java.io.InputStream;
+import java.util.Properties;
+import java.util.concurrent.TimeoutException;
+
+import com.rabbitmq.client.Channel;
+import com.rabbitmq.client.Connection;
+import com.rabbitmq.client.ConnectionFactory;
+import com.rabbitmq.client.QueueingConsumer;
 
 public class BusListener {
 
 	  
 	public static void main(String[] args) throws Exception, TimeoutException {
-
-		String workingDir = System.getProperty("user.dir");
-		System.out.println("Current working directory : " + workingDir);
-		
+				
+		ConnectionFactory factory = new ConnectionFactory();
 		Properties prop = new Properties();
-		InputStream input = null;		
 		
-		input = new FileInputStream("config.properties");
+        InputStream input =
+                APIServices.class.getResourceAsStream("config.properties");		
 		prop.load(input);
 		
-	    ConnectionFactory factory = new ConnectionFactory();
-
 		String EXCHANGE_NAME = prop.getProperty("messaging.exchangename");
 		String QUEUE_NAME = prop.getProperty("messaging.queuename");
 		String ROUTING_KEY = prop.getProperty("messaging.routingkey");

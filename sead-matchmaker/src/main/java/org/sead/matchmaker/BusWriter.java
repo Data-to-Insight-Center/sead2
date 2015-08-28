@@ -1,21 +1,23 @@
 package org.sead.matchmaker;
 
-import com.rabbitmq.client.*;
-import java.util.Properties;
-import java.io.FileInputStream;
 import java.io.InputStream;
+import java.util.Properties;
+
+import com.rabbitmq.client.Channel;
+import com.rabbitmq.client.Connection;
+import com.rabbitmq.client.ConnectionFactory;
+import com.rabbitmq.client.MessageProperties;
 
 public class BusWriter {
 	  
 	public static void main(String[] args) throws Exception {
 
+		ConnectionFactory factory = new ConnectionFactory();
 		Properties prop = new Properties();
-		InputStream input = null;		
 		
-		input = new FileInputStream("config.properties");
+        InputStream input =
+                APIServices.class.getResourceAsStream("config.properties");		
 		prop.load(input);
-		
-	    ConnectionFactory factory = new ConnectionFactory();
 
 		String EXCHANGE_NAME = prop.getProperty("messaging.exchangename");
 		String QUEUE_NAME = prop.getProperty("messaging.queuename");
