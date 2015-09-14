@@ -1,0 +1,15 @@
+*.class
+*.jar
+*.war
+*.properties
+
+# Package Files #
+
+*.ear
+/bin
+
+/.build
+*.bak
+
+/target/
+

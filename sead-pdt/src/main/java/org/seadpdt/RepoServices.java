@@ -1,90 +1,125 @@
 package org.seadpdt;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.List;
+import java.net.URI;
+import java.net.URISyntaxException;
 
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.bson.Document;
+import org.json.JSONArray;
 
+import com.mongodb.BasicDBObject;
 import com.mongodb.MongoClient;
 import com.mongodb.client.FindIterable;
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoDatabase;
+import com.mongodb.util.JSON;
+import com.sun.jersey.api.client.ClientResponse.Status;
 
-@Path("/repo")
+@Path("/repositories")
 public class RepoServices {
  
-	MongoClient mongoClient = new MongoClient();
-	MongoDatabase db = mongoClient.getDatabase("sead");
+	// move these to an external file?
+	String collectionName = "repo";
+	String DBname = "sead";
 	
-	 @GET
-	 @Path("/mongo")
-	 @Produces(MediaType.APPLICATION_JSON)
-	 public FindIterable<Document> listMongo()  {	
-		 FindIterable<Document> iterable = db.getCollection("repo").find();
-		 return iterable;
-	 }	
-	 
-	 @GET
-	 @Path("/list")
-	 @Produces(MediaType.APPLICATION_JSON)
-	 public byte[] listRepos()  {	
-		 
-		 java.nio.file.Path path = Paths.get("../../sead-json/repo.json");
-		 byte[] data = new byte[] {'*'};
-		try {
-			data = Files.readAllBytes(path);
-		} catch (IOException e) {
+	MongoClient mongoClient = new MongoClient();
+	MongoDatabase db = mongoClient.getDatabase(DBname);
+	MongoCollection<Document> collection = db.getCollection(collectionName);			
+	
+		@POST
+		@Path("/")
+		@Consumes(MediaType.APPLICATION_JSON)
+		@Produces(MediaType.APPLICATION_JSON)
+		public Response registerRepository(String profileString) {
+			BasicDBObject profile = (BasicDBObject) JSON.parse(profileString);
+			String newID = (String) profile.get("orgidentifier");
+			FindIterable<Document> iter = collection.find(new Document(
+					"orgidentifier", newID));
+			if (iter.iterator().hasNext()) {
+				return Response.status(Status.CONFLICT).build();
+			} else {
+				collection
+						.insertOne(Document.parse(profile.toString()));
+				URI resource = null;
+				try {
+					resource = new URI("./" + newID);
+				} catch (URISyntaxException e) {
+					// Should not happen given simple ids
+					e.printStackTrace();
+				}
+				return Response.created(resource).entity(new Document("orgidentifier", newID)).build();
+			}
+		}
+
+		@GET
+		@Path("/")
+		@Produces(MediaType.APPLICATION_JSON)
+		public Response getRepositoryList() {
+			FindIterable<Document> iter = collection.find();
+			iter.projection(new Document("orgidentifier", 1).append("repositoryURL", 1).append("_id", 0));
+			MongoCursor<Document> cursor = iter.iterator();
+			JSONArray array = new JSONArray();
+			while(cursor.hasNext()) {
+				array.put(cursor.next().toJson());
+			}
+			return Response.ok(array.toString()).build();
 
 		}
-		 
-		 return data;
-	 }
-	  
-	 @GET
-	 @Path("/test")
-	 @Produces(MediaType.APPLICATION_JSON)
-	 public RepoJSON testRepos()  {	
-		 RepoJSON repository = new RepoJSON();
-		 repository.setContext("http://re3data.org/");
-		 repository.setType("repository"); 
-		 repository.setOrgIdentifier("https://www.ideals.illinois.edu");
-		 repository.setRepositoryName("IDEALS"); 
-		 return repository;
-	 }	 
-	 
-	@GET
-	@Path("/byid")
-	public byte[] getRepoID(
-		@QueryParam("id") String repID)  {
-		 String repPath = "../../sead-json/" + repID + ".json";
-		 java.nio.file.Path path = Paths.get(repPath);
-		 byte[] data = new byte[] {'*'};
-		try {
-			data = Files.readAllBytes(path);
-		} catch (IOException e) {
 
-		}	 
-		 return data;
-	}
-	
-	@GET
-	@Path("/params")
-	public Response getRepoValue(
-		@QueryParam("from") int from,
-		@QueryParam("to") int to,
-		@QueryParam("orderBy") List<String> orderBy) {
-		return Response
-		   .status(200)
-		   .entity("getUsers is called, from : " + from + ", to : " + to
-			+ ", orderBy" + orderBy.toString()).build();
-	}
-	
+		@GET
+		@Path("/{id}")
+		@Produces(MediaType.APPLICATION_JSON)
+		public Response getRepositoryProfile(@PathParam("id") String id) {
+			FindIterable<Document> iter = collection.find(new Document(
+					"orgidentifier", id));
+			Document document = iter.first();
+			document.remove("_id");
+			return Response.ok(document.toJson()).build();
+		}
+
+		@PUT
+		@Path("/{id}")
+		@Consumes(MediaType.APPLICATION_JSON)
+		public Response setRepositoryProfile(@PathParam("id") String id,
+				String profile) {
+			FindIterable<Document> iter = collection.find(new Document(
+					"orgidentifier", id));
+			
+			if (iter.iterator().hasNext()) {
+
+			Document document = Document.parse(profile);
+			collection.replaceOne(new Document("orgidentifier", id),document);
+			return Response.status(Status.OK).build();
+
+			} else {
+				return Response.status(Status.NOT_FOUND).build();
+				
+			}
+		}
+
+		@DELETE
+		@Path("/{id}")
+		public Response unregisterRepository(@PathParam("id") String id) {
+			collection.deleteOne(new Document("orgidentifier", id));
+			return Response.status(Status.OK).build();
+		}
+
+		@GET
+		@Path("/researchobjects")
+		@Produces(MediaType.APPLICATION_JSON)
+		public Response getROsByRepository() {
+			return Response.status(Status.NOT_IMPLEMENTED).build();
+		};	 
+	 
 }

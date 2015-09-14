@@ -10,22 +10,36 @@ import org.bson.Document;
 
 import com.mongodb.MongoClient;
 import com.mongodb.client.FindIterable;
+import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 
-@Path("/RO")
+@Path("/researchobjects")
 
 public class ROServices {
 
+	// move these to an external file?
+	String collectionName = "ro";
+	String DBname = "sead";
+	
 	MongoClient mongoClient = new MongoClient();
-	MongoDatabase db = mongoClient.getDatabase("sead");
-		 
+	MongoDatabase db = mongoClient.getDatabase(DBname);
+	MongoCollection<Document> collection = db.getCollection(collectionName);	
+		 	 	 
 	 @GET
-	 @Path("/byid")
+	 @Path("/list")
 	 @Produces(MediaType.APPLICATION_JSON)
-	 
-	 public FindIterable<Document> listMongo(@QueryParam("id") String repID)  {	
-		 FindIterable<Document> iterable = db.getCollection("ro").find();
+	 public FindIterable<Document> listRO() {	
+		 FindIterable<Document> iterable = db.getCollection(collectionName).find();
 		 return iterable;
-	 }	
+	 }		 
+	 
+	@GET
+	@Path("/byid")
+	@Produces(MediaType.APPLICATION_JSON)
+	 public FindIterable<Document> getRO(
+		@QueryParam("id") String ROID) {
+		FindIterable<Document> iterable = db.getCollection(collectionName).find();
+		return iterable;		
+	}	 	 
 	  
 }
