@@ -1,7 +1,30 @@
+/*
+ *
+ * Copyright 2015 University of Michigan
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ *
+ *
+ * @author myersjd@umich.edu
+ */
+
 package org.sead.cp.demo;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.HashSet;
+import java.util.Set;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -16,9 +39,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.bson.Document;
-import org.codehaus.enunciate.Facet;
 import org.json.JSONArray;
-import org.json.JSONObject;
 import org.sead.cp.Repositories;
 
 import com.mongodb.BasicDBObject;
@@ -31,9 +52,10 @@ import com.mongodb.client.result.UpdateResult;
 import com.mongodb.util.JSON;
 import com.sun.jersey.api.client.ClientResponse.Status;
 
-
-/** See abstract base class for documentation of the rest api.
- *  Note - path annotations must match base class for documentation to be correct. */
+/**
+ * See abstract base class for documentation of the rest api. Note - path
+ * annotations must match base class for documentation to be correct.
+ */
 
 @Path("/repositories")
 public class RepositoriesImpl extends Repositories {
@@ -47,7 +69,7 @@ public class RepositoriesImpl extends Repositories {
 		db = mongoClient.getDatabase("seadcp");
 
 		repositoriesCollection = db.getCollection("repositories");
-		
+
 		control.setNoCache(true);
 	}
 
@@ -72,7 +94,8 @@ public class RepositoriesImpl extends Repositories {
 				// Should not happen given simple ids
 				e.printStackTrace();
 			}
-			return Response.created(resource).entity(new Document("orgidentifier", newID)).build();
+			return Response.created(resource)
+					.entity(new Document("orgidentifier", newID)).build();
 		}
 	}
 
@@ -81,11 +104,12 @@ public class RepositoriesImpl extends Repositories {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response getRepositoryList() {
 		FindIterable<Document> iter = repositoriesCollection.find();
-		iter.projection(new Document("orgidentifier", 1).append("repositoryURL", 1).append("_id", 0));
+		iter.projection(new Document("orgidentifier", 1).append(
+				"repositoryURL", 1).append("_id", 0));
 		MongoCursor<Document> cursor = iter.iterator();
 		JSONArray array = new JSONArray();
-		while(cursor.hasNext()) {
-			array.put(cursor.next().toJson());
+		while (cursor.hasNext()) {
+			array.put(JSON.parse(cursor.next().toJson()));
 		}
 		return Response.ok(array.toString()).cacheControl(control).build();
 
@@ -109,16 +133,22 @@ public class RepositoriesImpl extends Repositories {
 			String profile) {
 		FindIterable<Document> iter = repositoriesCollection.find(new Document(
 				"orgidentifier", id));
-		
+
 		if (iter.iterator().hasNext()) {
 
-		Document document = Document.parse(profile);
-		UpdateResult ur = repositoriesCollection.replaceOne(new Document("orgidentifier", id),document);
-		return Response.status(Status.OK).build();
+			Document document = Document.parse(profile);
+			if (document.containsKey("orgidentifier")
+					&& (document.getString("orgidentifier").equals(id))) {
+				UpdateResult ur = repositoriesCollection.replaceOne(
+						new Document("orgidentifier", id), document);
+				return Response.status(Status.OK).build();
+			} else {
+				return Response.status(Status.CONFLICT).build();
+			}
 
 		} else {
 			return Response.status(Status.NOT_FOUND).build();
-			
+
 		}
 	}
 
@@ -130,10 +160,21 @@ public class RepositoriesImpl extends Repositories {
 	}
 
 	@GET
-	@Path("/researchobjects")
+	@Path("/{id}/researchobjects")
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response getROsByRepository() {
-		return Response.status(Status.NOT_IMPLEMENTED).cacheControl(control).build();
+	public Response getROsByRepository(@PathParam("id") String id) {
+		MongoCollection<Document> publicationsCollection = null;
+		publicationsCollection = db.getCollection("researchobjects");
+		FindIterable<Document> iter = publicationsCollection.find(new Document(
+				"Repository", id));
+		iter.projection(new Document("Aggregation.Identifier", 1)
+				.append("Repository", 1).append("Status", 1).append("_id", 0));
+		MongoCursor<Document> cursor = iter.iterator();
+		Set<Document> array = new HashSet<Document>();
+		while (cursor.hasNext()) {
+			array.add(cursor.next());
+		}
+		return Response.ok(array).cacheControl(control).build();
 	};
 
 }

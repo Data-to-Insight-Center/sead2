@@ -1,3 +1,24 @@
+/*
+ *
+ * Copyright 2015 University of Michigan
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ *
+ *
+ * @author myersjd@umich.edu
+ */
+
 package org.sead.cp.demo;
 
 import java.net.URI;
@@ -16,13 +37,8 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.bson.Document;
-import org.codehaus.enunciate.Facet;
 import org.json.JSONArray;
-import org.json.JSONObject;
-import org.json.XML;
 import org.sead.cp.People;
-import org.sead.cp.Repositories;
-
 import com.mongodb.BasicDBObject;
 import com.mongodb.MongoClient;
 import com.mongodb.client.FindIterable;
@@ -57,7 +73,7 @@ public class PeopleImpl extends People {
 		
 		control.setNoCache(true);
 	}
-
+	
 	@POST
 	@Path("/")
 	@Consumes(MediaType.APPLICATION_JSON)
@@ -110,7 +126,8 @@ public class PeopleImpl extends People {
 		MongoCursor<Document> cursor = iter.iterator();
 		JSONArray array = new JSONArray();
 		while (cursor.hasNext()) {
-			array.put(cursor.next().toJson());
+			Document next = cursor.next();
+			array.put(JSON.parse(next.toJson()));
 		}
 		return Response.ok(array.toString()).cacheControl(control).build();
 
@@ -122,6 +139,8 @@ public class PeopleImpl extends People {
 	public Response getPersonProfile(@PathParam("id") String id) {
 		FindIterable<Document> iter = peopleCollection.find(new Document(
 				"orcid-profile.orcid-identifier.path", id));
+		
+	
 		Document document = iter.first();
 		document.remove("_id");
 		return Response.ok(document.toJson()).cacheControl(control).build();
@@ -135,10 +154,9 @@ public class PeopleImpl extends People {
 				"orcid-profile.orcid-identifier.path", id));
 
 		if (iter.iterator().hasNext()) {
-			String orcidID = (String) iter.first().get("orcid-profile.orcid-identifier.path");
 			String profile = null;
 			try {
-				profile = getOrcidProfile(orcidID);
+				profile = getOrcidProfile(id);
 			} catch (RuntimeException r) {
 				return Response
 						.serverError()
@@ -170,7 +188,7 @@ public class PeopleImpl extends People {
 	private String getOrcidProfile(String id) {
 
 		Client client = Client.create();
-		WebResource webResource = client.resource("http://pub.orcid.org/v1.1/"
+		WebResource webResource = client.resource("http://pub.orcid.org/v1.2/"
 				+ id + "/orcid-profile");
 
 		ClientResponse response = webResource.accept("application/orcid+json")
