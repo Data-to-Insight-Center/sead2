@@ -1,3 +1,24 @@
+/*
+ *
+ * Copyright 2015 University of Michigan
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ *
+ *
+ * @author myersjd@umich.edu
+ */
+
 package org.sead.cp;
 
 import javax.ws.rs.Consumes;
@@ -10,8 +31,6 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-
-import org.json.JSONObject;
 
 @Path("/repositories")
 public abstract class Repositories {
@@ -68,7 +87,7 @@ public abstract class Repositories {
 	public abstract Response getRepositoryProfile(@PathParam("id") String id);
 
 	/**
-	 * Update the profile for a given repository
+	 * Update the profile for a given repository. The orgidentifier element in the new profile must exist and must match the {id} being PUT.
 	 * 
 	 * @param id
 	 *            the assigned repository ID
@@ -105,8 +124,8 @@ public abstract class Repositories {
 	 * 		   	]
 	 */
 	@GET
-	@Path("/researchobjects")
+	@Path("/{id}/researchobjects")
 	@Produces(MediaType.APPLICATION_JSON)
-	public abstract Response getROsByRepository();
+	public abstract Response getROsByRepository(@PathParam("id") String id);
 	
 }
