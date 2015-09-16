@@ -40,7 +40,8 @@ public abstract class ResearchObjects {
 	 * 
 	 * @param publicationRequest
 	 *            {Aggregation, &lt;ContentObject&gt;, Preferences, {&lt;Preferences
-	 *            list&gt;}, Repository, &lt;RepositoryId&gt;}}
+	 *            list&gt;}, Aggregation Statistics {&lt;Aggregation Statistics List
+	 *            &gt; Repository, &lt;RepositoryId&gt;}}
 	 * 
 	 * <br>
 	 *            where Content is a json object including basic metadata and
