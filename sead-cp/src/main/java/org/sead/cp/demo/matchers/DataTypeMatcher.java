@@ -70,11 +70,11 @@ public class DataTypeMatcher implements Matcher {
 			}
 		} catch (NullPointerException npe) {
 			// Just return untriggered result
-			System.out.println("Missing info in MaximumDepth rule"
+			System.out.println("Missing info in AcceptableDataTypes rule"
 					+ npe.getLocalizedMessage());
 		} catch (NumberFormatException nfe) {
 			// Just return untriggered result
-			System.out.println("Missing info in MaxDepth rule for repo: "
+			System.out.println("Missing info in AcceptableDataTypes rule for repo: "
 					+ profile.getString("orgidentifier") + " : "
 					+ nfe.getLocalizedMessage());
 		}
