@@ -73,13 +73,15 @@ public abstract class ResearchObjects {
 	 * 
 	 * @param publicationRequest
 	 *            {Aggregation, &lt;Aggregation&gt;, Preferences, {&lt;Preferences
-	 *            list&gt;} }}
+	 *            list&gt;}, Aggregation Statistics {&lt;Aggregation Statistics List
+	 *            &gt;} }}
 	 * 
 	 * <br>
 	 *            where Aggregation is a json object including basic metadata and
 	 *            the unique ID for the entity the user wants to publish. <br>
 	 *            preferences is a json list of options chosen from those
-	 *            available (see api ____) <br>
+	 *            available (see api ____), and Aggregation Statistics are values for metadata that 
+	 *            correspond to the rule matching requirements <br>
 	 * 
 	 * @see Example input file: _______ <br>
 	 *      Example output file: _______
