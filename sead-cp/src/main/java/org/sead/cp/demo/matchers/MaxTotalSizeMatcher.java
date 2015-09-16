@@ -36,25 +36,11 @@ import com.sun.jersey.api.client.WebResource;
 public class MaxTotalSizeMatcher implements Matcher {
 
 	public RuleResult runRule(Document aggregation, BasicBSONList affiliations,
-			Document preferences, Document profile) {
+			Document preferences, Document statsDocument, Document profile) {
 		RuleResult result = new RuleResult();
-		Client client = Client.create();
-		WebResource webResource;
-
+	
 		try {
-			webResource = client.resource(aggregation.get("similarTo")
-					+ "/stats");
-
-			ClientResponse response = webResource.accept("application/json")
-					.get(ClientResponse.class);
-
-			if (response.getStatus() != 200) {
-				throw new RuntimeException("" + response.getStatus());
-			}
-
-			Document statsDocument = Document.parse(response
-					.getEntity(String.class));
-
+	
 			long max = Long.parseLong(statsDocument.getString("Total Size"));
 			long repoMax = Long.parseLong(profile.getString("Total Size"));
 			if (max > repoMax) {

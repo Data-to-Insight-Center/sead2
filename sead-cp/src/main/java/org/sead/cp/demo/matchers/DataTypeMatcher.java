@@ -40,24 +40,10 @@ import com.sun.jersey.api.client.WebResource;
 
 public class DataTypeMatcher implements Matcher {
 
-	public RuleResult runRule(Document aggregation,
-			BasicBSONList affiliations, Document preferences, Document profile) {
+	public RuleResult runRule(Document aggregation, BasicBSONList affiliations,
+			Document preferences, Document statsDocument, Document profile) {
 		RuleResult result = new RuleResult();
-		Client client = Client.create();
-		WebResource webResource;
 		try {
-			webResource = client.resource(aggregation.get("similarTo") + "/stats");
-
-			ClientResponse response = webResource.accept("application/json")
-					.get(ClientResponse.class);
-
-			if (response.getStatus() != 200) {
-				throw new RuntimeException("" + response.getStatus());
-			}
-
-			Document statsDocument = Document.parse(response
-					.getEntity(String.class));
-
 			@SuppressWarnings("unchecked")
 			ArrayList<String> existingTypes = (ArrayList<String>) statsDocument
 					.get("Data Mimetypes");
@@ -84,14 +70,14 @@ public class DataTypeMatcher implements Matcher {
 			}
 		} catch (NullPointerException npe) {
 			// Just return untriggered result
-			System.out.println("Missing info in MaximumDepth rule"
+			System.out.println("Missing info in AcceptableDataTypes rule"
 					+ npe.getLocalizedMessage());
 		} catch (NumberFormatException nfe) {
 			// Just return untriggered result
-			System.out.println("Missing info in MaxDepth rule for repo: "
+			System.out.println("Missing info in AcceptableDataTypes rule for repo: "
 					+ profile.getString("orgidentifier") + " : "
 					+ nfe.getLocalizedMessage());
-		} 
+		}
 		return result;
 
 	}

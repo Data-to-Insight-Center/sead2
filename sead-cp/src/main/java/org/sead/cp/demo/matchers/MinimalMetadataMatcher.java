@@ -28,7 +28,7 @@ import org.sead.cp.demo.RuleResult;
 public class MinimalMetadataMatcher implements Matcher {
 
 	public RuleResult runRule(Document aggregation, 
-			BasicBSONList affiliations, Document preferences, Document profile) {
+			BasicBSONList affiliations, Document preferences, Document statsDocument, Document profile) {
 
 		return new RuleResult();
 	}

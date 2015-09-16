@@ -121,6 +121,10 @@ public class ResearchObjectsImpl extends ResearchObjects {
 		if (repository == null) {
 			messageString += "Missing Respository";
 		}
+		Document stats = (Document) request.get("Aggregation Statistics");
+		if (stats == null) {
+			messageString += "Missing Statistics";
+		}
 		if (messageString == null) {
 			// Get organization from profile(s)
 			// Add to base document
@@ -333,6 +337,11 @@ public class ResearchObjectsImpl extends ResearchObjects {
 		if (preferences == null) {
 			messageString += "Missing Preferences";
 		}
+		Document stats = (Document) request.get("Aggregation Statistics");
+		if (stats == null) {
+			messageString += "Missing Statistics";
+		}
+
 		if (messageString == null) {
 			// Get organization from profile(s)
 			// Add to base document
@@ -386,7 +395,7 @@ public class ResearchObjectsImpl extends ResearchObjects {
 					BasicBSONObject individualScore = new BasicBSONObject();
 
 					RuleResult result = m.runRule(content, affiliations,
-							preferences, profile);
+							preferences, stats, profile);
 
 					individualScore.put("Rule Name", m.getName());
 					if (result.wasTriggered()) {
