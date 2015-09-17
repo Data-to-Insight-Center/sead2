@@ -83,7 +83,7 @@ public class ResearchObjectsImpl extends ResearchObjects {
 
 	public ResearchObjectsImpl() {
 		mongoClient = new MongoClient();
-		db = mongoClient.getDatabase("seadcp");
+		db = mongoClient.getDatabase("seadapi");
 
 		publicationsCollection = db.getCollection("researchobjects");
 		peopleCollection = db.getCollection("people");

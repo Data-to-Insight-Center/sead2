@@ -67,7 +67,7 @@ public class PeopleImpl extends People {
 
 	public PeopleImpl() {
 		mongoClient = new MongoClient();
-		db = mongoClient.getDatabase("seadcp");
+		db = mongoClient.getDatabase("seadapi");
 
 		peopleCollection = db.getCollection("people");
 		

@@ -66,7 +66,7 @@ public class RepositoriesImpl extends Repositories {
 
 	public RepositoriesImpl() {
 		mongoClient = new MongoClient();
-		db = mongoClient.getDatabase("seadcp");
+		db = mongoClient.getDatabase("seadapi");
 
 		repositoriesCollection = db.getCollection("repositories");
 
