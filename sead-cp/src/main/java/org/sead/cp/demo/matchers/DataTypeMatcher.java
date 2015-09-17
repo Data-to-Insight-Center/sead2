@@ -93,6 +93,6 @@ public class DataTypeMatcher implements Matcher {
 				.append("Repository Trigger",
 						" \"Data Mimetypes\": \"http://purl.org/dc/elements/1.1/format\" : JSON array of String mimetypes, collection must be limited to this set")
 				.append("Publication Trigger",
-						" \"Data Mimetypes\": \"http://purl.org/dc/elements/1.1/format\" : JSON array of String mimetypes, in publication request (collection must be limited to this set)");
+						" \"Data Mimetypes\": \"http://purl.org/dc/elements/1.1/format\" : JSON array of String mimetypes, in \"Aggregation Statistics\": \"http://sead-data.net/terms/publicationstatistics\", in publication request (collection must be limited to this set)");
 	}
 }

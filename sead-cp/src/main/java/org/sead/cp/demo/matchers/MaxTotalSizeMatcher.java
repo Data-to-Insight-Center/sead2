@@ -73,6 +73,6 @@ public class MaxTotalSizeMatcher implements Matcher {
 				.append("Repository Trigger",
 						" \"Total Size\": \"tag:tupeloproject.org,2006:/2.0/files/length\" : long size (Bytes) as String")
 				.append("Publication Trigger",
-						" \"Total Size\": \"tag:tupeloproject.org,2006:/2.0/files/length\" : long size (Bytes) as String, in publication request");
+						" \"Total Size\": \"tag:tupeloproject.org,2006:/2.0/files/length\" : long size (Bytes) as String, in \"Aggregation Statistics\": \"http://sead-data.net/terms/publicationstatistics\", in publication request");
 	}
 }

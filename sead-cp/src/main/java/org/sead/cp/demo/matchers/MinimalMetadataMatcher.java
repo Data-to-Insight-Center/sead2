@@ -42,7 +42,7 @@ public class MinimalMetadataMatcher implements Matcher {
 				.append("Repository Trigger",
 						" \"Metadata Terms\": \"http://sead-data.net/terms/terms\" : JSON array of String predicates, Not yet implemented")
 				.append("Publication Trigger",
-						" \"Metadata Terms\": \"http://sead-data.net/terms/terms\" : JSON array of String predicates in publication request, Not yet implemented");
+						" \"Metadata Terms\": \"http://sead-data.net/terms/terms\" : JSON array of String predicates in \"Aggregation Statistics\": \"http://sead-data.net/terms/publicationstatistics\", in publication request, Not yet implemented");
 	}
 
 }

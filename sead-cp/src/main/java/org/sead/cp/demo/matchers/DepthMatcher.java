@@ -75,7 +75,7 @@ public class DepthMatcher implements Matcher {
 				.append("Repository Trigger",
 						" \"Max Collection Depth\": \"http://sead-data.net/terms/maxcollectiondepth\" : int depth as String, main collection is depth 0")
 				.append("Publication Trigger",
-						" \"Max Collection Depth\": \"http://sead-data.net/terms/maxcollectiondepth\" : int depth as String, in publication request (main collection is depth 0)");
+						" \"Max Collection Depth\": \"http://sead-data.net/terms/maxcollectiondepth\" : int depth as String, in \"Aggregation Statistics\": \"http://sead-data.net/terms/publicationstatistics\", in publication request (main collection is depth 0)");
 	}
 
 }
