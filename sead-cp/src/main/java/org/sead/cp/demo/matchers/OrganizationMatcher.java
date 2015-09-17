@@ -24,6 +24,10 @@ package org.sead.cp.demo.matchers;
 import java.util.ArrayList;
 import java.util.Iterator;
 
+import javax.ws.rs.core.NewCookie;
+
+import org.bson.BsonArray;
+import org.bson.BsonString;
 import org.bson.Document;
 import org.bson.types.BasicBSONList;
 import org.sead.cp.demo.Matcher;
@@ -31,12 +35,16 @@ import org.sead.cp.demo.RuleResult;
 
 public class OrganizationMatcher implements Matcher {
 
+	@SuppressWarnings("unchecked")
 	public RuleResult runRule(Document aggregation, BasicBSONList affiliations,
-			Document Preferences, Document statsDocument, Document profile) {
+			Document preferences, Document statsDocument, Document profile) {
 		RuleResult result = new RuleResult();
 		try {
+			//Get required affiliations from profile
 			ArrayList<String> requiredAffiliations = (ArrayList<String>) profile
 					.get("Affiliations");
+			//Add asserted affiliations to the derived ones
+			affiliations.addAll((ArrayList<String>) preferences.get("Affiliations"));
 			boolean affiliated = false;
 			String requiredOrgString = null;
 			for (String org : affiliations.toArray(new String[0])) {
@@ -74,9 +82,19 @@ public class OrganizationMatcher implements Matcher {
 	}
 
 	public Document getDescription() {
+		BsonArray triggersArray = new BsonArray();
+		triggersArray
+				.add(new BsonString(
+						"\"Affiliations\": \"http://sead-data.net/terms/affiliations\" : derived from profiles of the dcTerms creators"));
+		triggersArray
+				.add(new BsonString(
+						"\"Affiliations\": \"http://sead-data.net/terms/affiliations\" : may also be provided as an assertion within the Preferences: \"http://sead-data.net/terms/publicationpreferences\" object"));
 		return new Document("Rule Name", getName())
 				.append("Repository Trigger",
-						"\"Affiliations\": \"http://sead-data.net/terms/affiliations\" : JSON array of String organization names, at least one must match exactly");
+						"\"Affiliations\": \"http://sead-data.net/terms/affiliations\" :"
+								+ " JSON array of String organization names, at least one must match exactly")
+				.append("Publication Trigger", triggersArray);
+
 	}
 
 }
