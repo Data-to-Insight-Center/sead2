@@ -73,7 +73,9 @@ public class MaxDatasetSizeMatcher implements Matcher {
 	public Document getDescription() {
 		return new Document("Rule Name", getName())
 				.append("Repository Trigger",
-						"\"Max Dataset Size\": \"http://sead-data.net/terms/maxdatasetsize\" : long size (Bytes) as String");
+						" \"Max Dataset Size\": \"http://sead-data.net/terms/maxdatasetsize\" : long size (Bytes) as String")
+				.append("Publication Trigger",
+						" \"Max Dataset Size\": \"http://sead-data.net/terms/maxdatasetsize\" : long size (Bytes) as String, in publication request");
 	}
 
 }

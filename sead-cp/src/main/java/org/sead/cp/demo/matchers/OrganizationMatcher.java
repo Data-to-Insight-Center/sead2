@@ -40,11 +40,12 @@ public class OrganizationMatcher implements Matcher {
 			Document preferences, Document statsDocument, Document profile) {
 		RuleResult result = new RuleResult();
 		try {
-			//Get required affiliations from profile
+			// Get required affiliations from profile
 			ArrayList<String> requiredAffiliations = (ArrayList<String>) profile
 					.get("Affiliations");
-			//Add asserted affiliations to the derived ones
-			affiliations.addAll((ArrayList<String>) preferences.get("Affiliations"));
+			// Add asserted affiliations to the derived ones
+			affiliations.addAll((ArrayList<String>) preferences
+					.get("Affiliations"));
 			boolean affiliated = false;
 			String requiredOrgString = null;
 			for (String org : affiliations.toArray(new String[0])) {
@@ -82,16 +83,14 @@ public class OrganizationMatcher implements Matcher {
 	}
 
 	public Document getDescription() {
-		BsonArray triggersArray = new BsonArray();
+		ArrayList<String> triggersArray = new ArrayList<String>();
 		triggersArray
-				.add(new BsonString(
-						"\"Affiliations\": \"http://sead-data.net/terms/affiliations\" : derived from profiles of the dcTerms creators"));
+				.add(" \"Affiliations\": \"http://sead-data.net/terms/affiliations\" : automatically derived from profiles of the dcTerms creators, currently requires the ORCID of the creator");
 		triggersArray
-				.add(new BsonString(
-						"\"Affiliations\": \"http://sead-data.net/terms/affiliations\" : may also be provided as an assertion within the Preferences: \"http://sead-data.net/terms/publicationpreferences\" object"));
+				.add(" \"Affiliations\": \"http://sead-data.net/terms/affiliations\" : may also be provided as an assertion within the Preferences: \"http://sead-data.net/terms/publicationpreferences\" object");
 		return new Document("Rule Name", getName())
 				.append("Repository Trigger",
-						"\"Affiliations\": \"http://sead-data.net/terms/affiliations\" :"
+						" \"Affiliations\": \"http://sead-data.net/terms/affiliations\" :"
 								+ " JSON array of String organization names, at least one must match exactly")
 				.append("Publication Trigger", triggersArray);
 

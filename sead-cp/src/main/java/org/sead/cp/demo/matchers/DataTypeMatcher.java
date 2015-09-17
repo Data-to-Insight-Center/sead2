@@ -74,9 +74,11 @@ public class DataTypeMatcher implements Matcher {
 					+ npe.getLocalizedMessage());
 		} catch (NumberFormatException nfe) {
 			// Just return untriggered result
-			System.out.println("Missing info in AcceptableDataTypes rule for repo: "
-					+ profile.getString("orgidentifier") + " : "
-					+ nfe.getLocalizedMessage());
+			System.out
+					.println("Missing info in AcceptableDataTypes rule for repo: "
+							+ profile.getString("orgidentifier")
+							+ " : "
+							+ nfe.getLocalizedMessage());
 		}
 		return result;
 
@@ -89,6 +91,8 @@ public class DataTypeMatcher implements Matcher {
 	public Document getDescription() {
 		return new Document("Rule Name", getName())
 				.append("Repository Trigger",
-						"\"Data Mimetypes\": \"http://purl.org/dc/elements/1.1/format\" : JSON array of String mimetypes, collection must be limited to this set");
+						" \"Data Mimetypes\": \"http://purl.org/dc/elements/1.1/format\" : JSON array of String mimetypes, collection must be limited to this set")
+				.append("Publication Trigger",
+						" \"Data Mimetypes\": \"http://purl.org/dc/elements/1.1/format\" : JSON array of String mimetypes, in publication request (collection must be limited to this set)");
 	}
 }

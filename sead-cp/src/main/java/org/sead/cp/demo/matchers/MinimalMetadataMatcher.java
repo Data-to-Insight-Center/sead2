@@ -27,8 +27,8 @@ import org.sead.cp.demo.RuleResult;
 
 public class MinimalMetadataMatcher implements Matcher {
 
-	public RuleResult runRule(Document aggregation, 
-			BasicBSONList affiliations, Document preferences, Document statsDocument, Document profile) {
+	public RuleResult runRule(Document aggregation, BasicBSONList affiliations,
+			Document preferences, Document statsDocument, Document profile) {
 
 		return new RuleResult();
 	}
@@ -40,7 +40,9 @@ public class MinimalMetadataMatcher implements Matcher {
 	public Document getDescription() {
 		return new Document("Rule Name", getName())
 				.append("Repository Trigger",
-						"\"Metadata Terms\": \"http://sead-data.net/terms/terms\" : JSON array of String predicates, Not yet implemented");
+						" \"Metadata Terms\": \"http://sead-data.net/terms/terms\" : JSON array of String predicates, Not yet implemented")
+				.append("Publication Trigger",
+						" \"Metadata Terms\": \"http://sead-data.net/terms/terms\" : JSON array of String predicates in publication request, Not yet implemented");
 	}
 
 }
