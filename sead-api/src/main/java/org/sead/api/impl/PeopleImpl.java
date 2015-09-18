@@ -21,36 +21,16 @@
 
 package org.sead.api.impl;
 
-import java.net.URI;
-import java.net.URISyntaxException;
-
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.CacheControl;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-
-import org.bson.Document;
-import org.json.JSONArray;
-import org.sead.api.People;
-import com.mongodb.BasicDBObject;
-import com.mongodb.MongoClient;
-import com.mongodb.client.FindIterable;
-import com.mongodb.client.MongoCollection;
-import com.mongodb.client.MongoCursor;
-import com.mongodb.client.MongoDatabase;
-import com.mongodb.client.result.UpdateResult;
-import com.mongodb.util.JSON;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
+import com.sun.jersey.api.client.GenericType;
 import com.sun.jersey.api.client.WebResource;
-import com.sun.jersey.api.client.ClientResponse.Status;
+import org.sead.api.People;
+import org.sead.api.util.Constants;
+
+import javax.ws.rs.*;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
 /**
  * See abstract base class for documentation of the rest api. Note - path
@@ -59,19 +39,17 @@ import com.sun.jersey.api.client.ClientResponse.Status;
 
 @Path("/people")
 public class PeopleImpl extends People {
-	private MongoClient mongoClient = null;
-	private MongoDatabase db = null;
-	private MongoCollection<Document> peopleCollection = null;
-	private CacheControl control = new CacheControl();
+	private WebResource resource;
+	private String serviceUrl;
+
+	private WebResource resource(){
+        return resource;
+    }
 	
 
 	public PeopleImpl() {
-		mongoClient = new MongoClient();
-		db = mongoClient.getDatabase("seadcp");
-
-		peopleCollection = db.getCollection("people");
-		
-		control.setNoCache(true);
+        this.serviceUrl = Constants.pdtUrl;
+        resource = Client.create().resource(serviceUrl);
 	}
 	
 	@POST
@@ -80,125 +58,72 @@ public class PeopleImpl extends People {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response registerPerson(String personString) {
 
-		BasicDBObject person = (BasicDBObject) JSON.parse(personString);
+        WebResource webResource = resource();
 
-		String newID = (String) person.get("identifier");
-		FindIterable<Document> iter = peopleCollection.find(new Document(
-				"identifier", newID));
-		if (iter.iterator().hasNext()) {
-			return Response.status(Status.CONFLICT).build();
-		} else {
-			if (person.get("provider").equals("ORCID")) {
-				String orcidID = (String) person.get("identifier");
-				String profile = null;
-				try {
-					profile = getOrcidProfile(orcidID);
-				} catch (RuntimeException r) {
-					return Response
-							.serverError()
-							.entity(new BasicDBObject("failure",
-									"Provider call failed with status: "
-											+ r.getMessage())).build();
-				}
-				peopleCollection.insertOne(Document.parse(profile));
-				URI resource = null;
-				try {
-					resource = new URI("./" + newID);
-				} catch (URISyntaxException e) {
-					// Should not happen given simple ids
-					e.printStackTrace();
-				}
-				return Response.created(resource)
-						.entity(new Document("identifier", newID)).build();
-			} else {
-				return Response.status(Status.BAD_REQUEST).entity(new BasicDBObject("Failure", "Provider " + person.get("provider") + " not supported")).build();
-			}
-		}
+        ClientResponse response = webResource.path("people")
+                .accept("application/json")
+                .type("application/json")
+                .post(ClientResponse.class, personString);
+
+        return Response.status(response.getStatus()).entity(response.getEntity(new GenericType<String>() {})).build();
 	}
 
 	@GET
 	@Path("/")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response getPeopleList() {
-		FindIterable<Document> iter = peopleCollection.find();
-		iter.projection(new Document("orcid-profile.orcid-identifier.path", 1).append(
-				"orcid-profile.orcid-bio.personal-details.given-names", 1).append("orcid-profile.orcid-bio.personal-details.family-name", 1).append("_id", 0));
-		MongoCursor<Document> cursor = iter.iterator();
-		JSONArray array = new JSONArray();
-		while (cursor.hasNext()) {
-			Document next = cursor.next();
-			array.put(JSON.parse(next.toJson()));
-		}
-		return Response.ok(array.toString()).cacheControl(control).build();
+        WebResource webResource = resource();
 
+        ClientResponse response = webResource.path("people")
+                .accept("application/json")
+                .type("application/json")
+                .get(ClientResponse.class);
+
+        return Response.status(response.getStatus()).entity(response.getEntity(new GenericType<String>(){})).build();
 	}
 
 	@GET
 	@Path("/{id}")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response getPersonProfile(@PathParam("id") String id) {
-		FindIterable<Document> iter = peopleCollection.find(new Document(
-				"orcid-profile.orcid-identifier.path", id));
-		
-	
-		Document document = iter.first();
-		document.remove("_id");
-		return Response.ok(document.toJson()).cacheControl(control).build();
-	}
+        WebResource webResource = resource();
+
+        ClientResponse response = webResource.path("people")
+                .path(id)
+                .accept("application/json")
+                .type("application/json")
+                .get(ClientResponse.class);
+
+        return Response.status(response.getStatus()).entity(response.getEntity(new GenericType<String>() {})).build();
+    }
 
 	@PUT
 	@Path("/{id}")
 	@Consumes(MediaType.APPLICATION_JSON)
 	public Response updatePersonProfile(@PathParam("id") String id) {
-		FindIterable<Document> iter = peopleCollection.find(new Document(
-				"orcid-profile.orcid-identifier.path", id));
+        WebResource webResource = resource();
 
-		if (iter.iterator().hasNext()) {
-			String profile = null;
-			try {
-				profile = getOrcidProfile(id);
-			} catch (RuntimeException r) {
-				return Response
-						.serverError()
-						.entity(new BasicDBObject("failure",
-								"Provider call failed with status: "
-										+ r.getMessage())).build();
-			}
-		
-			
-			UpdateResult ur = peopleCollection.replaceOne(new Document(
-					"orcid-profile.orcid-identifier.path", id), Document.parse(profile));
-			return Response.status(Status.OK).build();
+        ClientResponse response = webResource.path("people")
+                .path(id)
+                .accept("application/json")
+                .type("application/json")
+                .put(ClientResponse.class);
 
-		} else {
-			return Response.status(Status.NOT_FOUND).build();
-
-		}
-	}
+        return Response.status(response.getStatus()).entity(response.getEntity(new GenericType<String>() {})).build();
+    }
 
 	@DELETE
 	@Path("/{id}")
 	public Response unregisterPerson(@PathParam("id") String id) {
-		peopleCollection.deleteOne(new Document("orcid-profile.orcid-identifier.path", id));
-		return Response.status(Status.OK).build();
-	}
+        WebResource webResource = resource();
 
+        ClientResponse response = webResource.path("people")
+                .path(id)
+                .accept("application/json")
+                .type("application/json")
+                .delete(ClientResponse.class);
 
-
-	private String getOrcidProfile(String id) {
-
-		Client client = Client.create();
-		WebResource webResource = client.resource("http://pub.orcid.org/v1.2/"
-				+ id + "/orcid-profile");
-
-		ClientResponse response = webResource.accept("application/orcid+json")
-				.get(ClientResponse.class);
-
-		if (response.getStatus() != 200) {
-			throw new RuntimeException("" + response.getStatus());
-		}
-
-		return response.getEntity(String.class);
-	}
+        return Response.status(response.getStatus()).entity(response.getEntity(new GenericType<String>() {})).build();
+    }
 
 }
