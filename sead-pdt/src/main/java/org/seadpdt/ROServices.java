@@ -12,6 +12,7 @@ import com.mongodb.MongoClient;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
+import org.seadpdt.util.Constants;
 
 @Path("/researchobjects")
 
@@ -19,7 +20,7 @@ public class ROServices {
 
 	// move these to an external file?
 	String collectionName = "ro";
-	String DBname = "sead";
+	String DBname = Constants.pdtDbName;
 	
 	MongoClient mongoClient = new MongoClient();
 	MongoDatabase db = mongoClient.getDatabase(DBname);

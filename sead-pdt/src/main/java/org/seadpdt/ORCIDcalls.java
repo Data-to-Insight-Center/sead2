@@ -10,6 +10,7 @@ import com.mongodb.client.MongoDatabase;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
+import org.seadpdt.util.Constants;
 
 public class ORCIDcalls {
 	public static int PRETTY_PRINT_INDENT_FACTOR = 4;
@@ -18,7 +19,7 @@ public class ORCIDcalls {
 		  String output = "";
 		  String jsonPrettyPrintString = "";
 			MongoClient mongoClient = new MongoClient();
-			MongoDatabase db = mongoClient.getDatabase("sead");
+			MongoDatabase db = mongoClient.getDatabase(Constants.pdtDbName);
 			MongoCollection<Document> collection = db.getCollection("people");
 			
 			try {

@@ -14,12 +14,13 @@ import org.json.JSONObject;
 import com.mongodb.MongoClient;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
+import org.seadpdt.util.Constants;
 
 @Path("/harvest")
 public class WorkflowHarvest {
 
 	MongoClient mongoClient = new MongoClient();
-	MongoDatabase db = mongoClient.getDatabase("sead");
+	MongoDatabase db = mongoClient.getDatabase(Constants.pdtDbName);
 	MongoCollection<Document> collection = db.getCollection("ro");	
 			
     /**

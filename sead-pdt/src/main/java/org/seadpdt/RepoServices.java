@@ -11,6 +11,7 @@ import com.sun.jersey.api.client.ClientResponse.Status;
 import org.bson.Document;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.seadpdt.util.Constants;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
@@ -23,7 +24,7 @@ public class RepoServices {
 
     // move these to an external file?
     String collectionName = "repo";
-    String DBname = "sead";
+    String DBname = Constants.pdtDbName;
 
     MongoClient mongoClient = new MongoClient();
     MongoDatabase db = mongoClient.getDatabase(DBname);

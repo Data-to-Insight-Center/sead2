@@ -14,6 +14,7 @@ import com.sun.jersey.api.client.WebResource;
 import org.bson.Document;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.seadpdt.util.Constants;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.CacheControl;
@@ -28,7 +29,7 @@ public class PeopleServices {
 
     // move these to an external file?
     String collectionName = "people";
-    String DBname = "sead";
+    String DBname = Constants.pdtDbName;
 
     MongoClient mongoClient = new MongoClient();
     MongoDatabase db = mongoClient.getDatabase(DBname);
