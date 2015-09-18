@@ -1,67 +1,56 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-  <modelVersion>4.0.0</modelVersion>
-  <groupId>org.sead.matchmaker</groupId>
-  <artifactId>sead-matchmaker</artifactId>
-  <packaging>war</packaging>
-  <version>0.0.1-SNAPSHOT</version>
-  <name>SEAD Matchmaker Maven Webapp</name>
-  <url>http://maven.apache.org</url>
-  <dependencies>
-    <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <version>3.8.1</version>
-      <scope>test</scope>
-    </dependency>
-<dependency>
-<groupId>com.sun.jersey</groupId>
-<artifactId>jersey-server</artifactId>
-<version>1.9</version>
-</dependency>
-<dependency>
-<groupId>com.sun.jersey</groupId>
-<artifactId>jersey-client</artifactId>
-<version>1.10</version>
-</dependency>
-<dependency>
-    <groupId>com.sun.jersey</groupId>
-    <artifactId>jersey-json</artifactId>
-    <version>1.14</version>
-</dependency>
-<dependency>
-<groupId>com.sun.jersey.contribs</groupId>
-<artifactId>jersey-multipart</artifactId>
-<version>1.10</version>
-</dependency>
-    <dependency>
-        <groupId>org.mongodb</groupId>
-        <artifactId>mongodb-driver</artifactId>
-        <version>3.0.1</version>
-    </dependency>
-<dependency>
-  <groupId>com.rabbitmq</groupId>
-  <artifactId>amqp-client</artifactId>
-  <version>3.5.3</version>
-</dependency>  
-<dependency>
-    <groupId>org.json</groupId>
-    <artifactId>json</artifactId>
-    <version>20140107</version>
-</dependency>  
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>org.sead.matchmaker</groupId>
+    <artifactId>sead-matchmaker</artifactId>
+    <packaging>war</packaging>
+    <version>1.0.0-SNAPSHOT</version>
+    <name>SEAD Matchmaker Webapp</name>
+    <url>http://maven.apache.org</url>
 
-  </dependencies>
-  <build>
-    <finalName>sead-matchmaker</finalName>
-    
+    <dependencies>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>3.8.1</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.sun.jersey</groupId>
+            <artifactId>jersey-server</artifactId>
+            <version>1.8</version>
+        </dependency>
+        <dependency>
+            <groupId>com.sun.jersey</groupId>
+            <artifactId>jersey-client</artifactId>
+            <version>1.10</version>
+        </dependency>
+        <dependency>
+            <groupId>com.sun.jersey</groupId>
+            <artifactId>jersey-json</artifactId>
+            <version>1.14</version>
+        </dependency>
+        <dependency>
+            <groupId>com.sun.jersey.contribs</groupId>
+            <artifactId>jersey-multipart</artifactId>
+            <version>1.10</version>
+        </dependency>
+        <dependency>
+            <groupId>org.json</groupId>
+            <artifactId>json</artifactId>
+            <version>20140107</version>
+        </dependency>
+        <dependency>
+            <groupId>org.mongodb</groupId>
+            <artifactId>mongodb-driver</artifactId>
+            <version>3.0.1</version>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <finalName>sead-matchmaker</finalName>
         <plugins>
-        <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>tomcat-maven-plugin</artifactId>
-        <configuration>
-                <warFile>U:\apache-tomcat-8.0.22\webapps\warFile.war</warFile>
-        </configuration>
-		</plugin>
             <plugin>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>2.3.2</version>
@@ -75,7 +64,7 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-war-plugin</artifactId>
                 <version>2.2</version>
-                    <configuration>
+                <configuration>
                     <archiveClasses>false</archiveClasses>
                     <webResources>
                         <resource>
@@ -105,7 +94,7 @@
                     </execution>
                 </executions>
             </plugin>
-        </plugins>    
-    
-  </build>
+        </plugins>
+    </build>
+
 </project>
