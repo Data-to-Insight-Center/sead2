@@ -16,8 +16,8 @@ import javax.xml.namespace.QName;
 import java.io.InputStream;
 import java.util.Iterator;
 
+import org.sead.workflow.exception.SeadWorkflowException;
 import org.sead.workflow.util.Constants;
-import org.sead.workflow.util.IdGenerator;
 
 @Path("service")
 public class SeadWorkflowService {
@@ -84,36 +84,47 @@ public class SeadWorkflowService {
     /**
      * Invokes the publish workflow to publish the given Research Object.
      *
-     * @param roId - Research Object description
-     * @param psId - ID of the Project Space that invoked this method
-     * @return DOI that is assigned to the published RO
+     * @param ro - Research Object description
+     * @return response to publishRO request
      */
-    @GET
-    @Path("/publishRO/{roId}")
+    @POST
+    @Path("/publishRO")
     @Produces("application/json")
-    public javax.ws.rs.core.Response publishRO(@PathParam("roId") String roId,
-                                               @QueryParam("psId") String psId) throws InterruptedException {
+    public javax.ws.rs.core.Response publishRO(String ro) throws InterruptedException {
 
         System.out.println("-----------------------------------");
-        System.out.println("SeadWorkflowService - publishRO : Input RO : " + roId);
+        System.out.println("SeadWorkflowService - publishRO : Input RO : " + ro);
         System.out.println("-----------------------------------");
 
         SeadWorkflowContext context = new SeadWorkflowContext();
+        context.addProperty(Constants.JSON_RO, ro);
 
-        String sead_id = IdGenerator.generateRandomID();
-        context.addProperty(Constants.RO_ID, sead_id);
+        String response = "";
 
-        WorkflowThread workflowThread = new WorkflowThread(roId, psId, context);
-        workflowThread.start(); // start the WorkflowThread thread
+        for (SeadWorkflowActivity activity : SeadWorkflowService.config.getActivities()) {
+            // execute activities
+            try {
+                activity.execute(context, SeadWorkflowService.config);
+            } catch (SeadWorkflowException e) {
+                System.out.println("*** WorkflowThread : exception... ***");
+                e.printStackTrace();
+                //TODO : add error handling
+                System.out.println("*** WorkflowThread : Breaking the MicroService loop ***");
 
-        String response = "{\"response\": \"success\", \"message\" : \""+context.getProperty(Constants.RO_ID)+"\"}";
-        context.addProperty(Constants.RESPONSE, response);
+                response = "{\"response\": \"failure\", \"message\": \"" + e.getMessage() + "\"}";
+                System.out.println("-----------------------------------");
+                System.out.println("SeadWorkflowService - Respond to publishRO request : " + response);
+                System.out.println("-----------------------------------");
+                return Response.serverError().entity(response).type(MediaType.APPLICATION_JSON_TYPE).build();
+            }
+        }
 
+        response = "{\"response\": \"success\", \"message\": \"Research Object was published successfully\"}";
         System.out.println("-----------------------------------");
-        System.out.println("SeadWorkflowService - Respond to publishRO request : " + context.getProperty(Constants.RESPONSE));
+        System.out.println("SeadWorkflowService - Respond to publishRO request : " + response);
         System.out.println("-----------------------------------");
         return Response
-                .ok(context.getProperty(Constants.RESPONSE))
+                .ok(response)
                 .type(MediaType.APPLICATION_JSON_TYPE)
                 .build();
     }

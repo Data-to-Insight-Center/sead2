@@ -30,8 +30,6 @@ public class PersistROActivity extends AbstractWorkflowActivity {
         System.out.println("Executing MicroService : " + activityName);
         System.out.println("-----------------------------------\n");
 
-        SeadStatusTracker.addStatus(context.getProperty(Constants.RO_ID), SeadStatus.WorkflowStatus.PERSIST_RO_BEGIN.getValue());
-
         HashMap<String, String> activityParams = new HashMap<String, String>();
         for(SeadWorkflowActivity activity : config.getActivities()){
             AbstractWorkflowActivity abstractActivity = (AbstractWorkflowActivity)activity;
@@ -42,28 +40,20 @@ public class PersistROActivity extends AbstractWorkflowActivity {
         }
 
         String ro = context.getProperty(Constants.JSON_RO);
-        String roSystemUrl = activityParams.get("roSystemUrl");
-
+        String pdtUrl = activityParams.get("pdtUrl");
 
         // Call RO Info System to persist the JSONLD RO
-        WebResource webResource = Client.create().resource(
-                roSystemUrl + "/resource/putjsonldro"
-        );
-
-        FormDataMultiPart form = new FormDataMultiPart();
-        form.field("ro", ro);
-
+        WebResource webResource = Client.create().resource(pdtUrl);
         ClientResponse response = webResource
-                .type(MediaType.MULTIPART_FORM_DATA)
-                .post(ClientResponse.class, form);
+                .accept("application/json")
+                .type("application/json")
+                .post(ClientResponse.class, ro);
 
-        if(response.getStatus() == 200){
-            System.out.println(PersistROActivity.class.getName() + " : Successfully registered in RO Info Subsystem");
+        if(response.getStatus() == 200 || response.getStatus() == 201){
+            System.out.println(PersistROActivity.class.getName() + " : Successfully registered in PDT");
         } else {
             throw new SeadWorkflowException("Error occurred while persisting collection " + context.getCollectionId());
         }
-
-        SeadStatusTracker.addStatus(context.getProperty(Constants.RO_ID), SeadStatus.WorkflowStatus.PERSIST_RO_END.getValue());
 
         System.out.println("=====================================\n");
 

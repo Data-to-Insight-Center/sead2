@@ -10,6 +10,7 @@ import java.io.StringWriter;
 public class Constants {
 
     public static String pdtUrl;
+    public static String curBeeUrl;
 
     static {
         try {
@@ -37,6 +38,9 @@ public class Constants {
 
             if(name.equals("pdt.url")){
                 pdtUrl = value;
+            }
+            if(name.equals("curBee.url")){
+                curBeeUrl = value;
             }
         }
     }

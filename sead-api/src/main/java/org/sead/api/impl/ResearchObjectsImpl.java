@@ -42,6 +42,10 @@ import javax.ws.rs.core.CacheControl;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import com.sun.jersey.api.client.Client;
+import com.sun.jersey.api.client.ClientResponse;
+import com.sun.jersey.api.client.GenericType;
+import com.sun.jersey.api.client.WebResource;
 import org.bson.BasicBSONObject;
 import org.bson.Document;
 import org.bson.types.BasicBSONList;
@@ -66,6 +70,7 @@ import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
 import com.mongodb.util.JSON;
 import com.sun.jersey.api.client.ClientResponse.Status;
+import org.sead.api.util.Constants;
 
 /**
  * See abstract base class for documentation of the rest api. Note - path
@@ -74,30 +79,12 @@ import com.sun.jersey.api.client.ClientResponse.Status;
 
 @Path("/researchobjects")
 public class ResearchObjectsImpl extends ResearchObjects {
-	private MongoClient mongoClient = null;
-	private MongoDatabase db = null;
-	private MongoCollection<Document> publicationsCollection = null;
-	private MongoCollection<Document> peopleCollection = null;
-	private CacheControl control = new CacheControl();
-	Set<Matcher> matchers = new HashSet<Matcher>();
+    private WebResource pdtWebService;
+    private WebResource curBeeWebService;
 
 	public ResearchObjectsImpl() {
-		mongoClient = new MongoClient();
-		db = mongoClient.getDatabase("seadapi");
-
-		publicationsCollection = db.getCollection("researchobjects");
-		peopleCollection = db.getCollection("people");
-
-		// Build list of Matchers
-
-		matchers.add(new MaxDatasetSizeMatcher());
-		matchers.add(new MaxTotalSizeMatcher());
-		matchers.add(new DataTypeMatcher());
-		matchers.add(new OrganizationMatcher());
-		matchers.add(new DepthMatcher());
-		matchers.add(new MinimalMetadataMatcher());
-
-		control.setNoCache(true);
+        pdtWebService = Client.create().resource(Constants.pdtUrl);
+        curBeeWebService = Client.create().resource(Constants.curBeeUrl);
 	}
 
 	@POST
@@ -105,177 +92,91 @@ public class ResearchObjectsImpl extends ResearchObjects {
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response startROPublicationProcess(String publicationRequestString) {
-		String messageString = null;
-		Document request = Document.parse(publicationRequestString);
-		Document content = (Document) request.get("Aggregation");
-		if (content == null) {
-			messageString += "Missing Aggregation";
-		}
-		Document preferences = (Document) request.get("Preferences");
-		if (preferences == null) {
-			messageString += "Missing Preferences";
-		}
-		Object repository = request.get("Repository");
-		if (repository == null) {
-			messageString += "Missing Respository";
-		}
-		Document stats = (Document) request.get("Aggregation Statistics");
-		if (stats == null) {
-			messageString += "Missing Statistics";
-		}
-		if (messageString == null) {
-			// Get organization from profile(s)
-			// Add to base document
-			Object creatorObject = content.get("Creator");
-			String ID = (String) content.get("Identifier");
-			BasicBSONList affiliations = new BasicBSONList();
-			if (creatorObject != null) {
-				if (creatorObject instanceof ArrayList) {
-					Iterator<String> iter = ((ArrayList<String>) creatorObject)
-							.iterator();
+        WebResource webResource = curBeeWebService;
 
-					while (iter.hasNext()) {
-						String creator = iter.next();
-						Set<String> orgs = getOrganizationforPerson(creator);
-						if (!orgs.isEmpty()) {
-							affiliations.addAll(orgs);
-						}
-					}
+        ClientResponse response = webResource.path("service/publishRO")
+                .accept("application/json")
+                .type("application/json")
+                .post(ClientResponse.class, publicationRequestString);
 
-				} else {
-					// BasicDBObject - single value
-					Set<String> orgs = getOrganizationforPerson((String) creatorObject);
-					if (!orgs.isEmpty()) {
-						affiliations.addAll(orgs);
-					}
-				}
-			}
-
-			request.append("Affiliations", affiliations);
-
-			// Add first status message
-
-			List<DBObject> statusreports = new ArrayList<DBObject>();
-			DBObject status = BasicDBObjectBuilder
-					.start()
-					.add("date",
-							DateFormat.getDateTimeInstance().format(
-									new Date(System.currentTimeMillis())))
-					.add("reporter", "SEAD-CP")
-					.add("stage", "Receipt Ackowledged")
-					.add("message",
-							"request recorded and processing will begin").get();
-			statusreports.add(status);
-			request.append("Status", statusreports);
-			// Create initial status message - add
-			// Add timestamp
-			// Generate ID - by calling Workflow?
-			// Add doc, return 201
-
-			publicationsCollection.insertOne(request);
-			URI resource = null;
-			try {
-				resource = new URI("./" + ID);
-			} catch (URISyntaxException e) {
-				// Should not happen given simple ids
-				e.printStackTrace();
-			}
-			return Response.created(resource)
-					.entity(new Document("identifier", ID)).build();
-		} else {
-			return Response.status(Status.BAD_REQUEST)
-					.entity(new BasicDBObject("Failure", messageString))
-					.build();
-		}
+        return Response.status(response.getStatus()).entity(response.getEntity(new GenericType<String>() {})).build();
 	}
 
 	@GET
 	@Path("/")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response getROsList() {
-		FindIterable<Document> iter = publicationsCollection.find();
-		iter.projection(new Document("Status", 1).append("Repository", 1)
-				.append("Aggregation.Identifier", 1)
-				.append("Aggregation.Title", 1).append("_id", 0));
-		MongoCursor<Document> cursor = iter.iterator();
-		JSONArray array = new JSONArray();
-		while (cursor.hasNext()) {
-			array.put(JSON.parse(cursor.next().toJson()));
-		}
-		return Response.ok(array.toString()).cacheControl(control).build();
+        WebResource webResource = pdtWebService;
+
+        ClientResponse response = webResource.path("researchobjects")
+                .accept("application/json")
+                .type("application/json")
+                .get(ClientResponse.class);
+
+        return Response.status(response.getStatus()).entity(response.getEntity(new GenericType<String>() {})).build();
 	}
 
 	@GET
 	@Path("/{id}")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response getROProfile(@PathParam("id") String id) {
+        WebResource webResource = pdtWebService;
 
-		FindIterable<Document> iter = publicationsCollection.find(new Document(
-				"Aggregation.Identifier", id));
-		if (iter == null) {
-			return Response.status(Status.NOT_FOUND).build();
-		}
-		Document document = iter.first();
-		if (document == null) {
-			return Response.status(Status.NOT_FOUND).build();
-		}
-		document.remove("_id");
-		return Response.ok(document.toJson()).cacheControl(control).build();
+        ClientResponse response = webResource.path("researchobjects")
+                .path(id)
+                .accept("application/json")
+                .type("application/json")
+                .get(ClientResponse.class);
+
+        return Response.status(response.getStatus()).entity(response.getEntity(new GenericType<String>() {})).build();
 	}
 
 	@POST
 	@Path("/{id}/status")
 	@Consumes(MediaType.APPLICATION_JSON)
 	public Response setROStatus(@PathParam("id") String id, String state) {
-		try {
-		Document statusUpdateDocument = Document.parse(state);
-		statusUpdateDocument.append("date", DateFormat.getDateTimeInstance()
-				.format(new Date(System.currentTimeMillis())));
-		UpdateResult ur = publicationsCollection.updateOne(new Document(
-				"Aggregation.Identifier", id), new BasicDBObject("$push",
-				new BasicDBObject("Status", statusUpdateDocument)));
-		if (ur.wasAcknowledged()) {
-			return Response.status(Status.OK).build();
+        WebResource webResource = pdtWebService;
 
-		} else {
-			return Response.status(Status.NOT_FOUND).build();
+        ClientResponse response = webResource.path("researchobjects")
+                .path(id + "/status")
+                .accept("application/json")
+                .type("application/json")
+                .post(ClientResponse.class, state);
 
-		}
-		}catch (org.bson.BsonInvalidOperationException e) {
-			return Response.status(Status.BAD_REQUEST).build();
-		}
+        return Response.status(response.getStatus()).entity(response.getEntity(new GenericType<String>() {})).build();
 	}
 
 	@GET
 	@Path("/{id}/status")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response getROStatus(@PathParam("id") String id) {
+        WebResource webResource = pdtWebService;
 
-		FindIterable<Document> iter = publicationsCollection.find(new Document(
-				"Aggregation.Identifier", id));
-		iter.projection(new Document("Status", 1).append("_id", 0));
+        ClientResponse response = webResource.path("researchobjects")
+                .path(id + "/status")
+                .accept("application/json")
+                .type("application/json")
+                .get(ClientResponse.class);
 
-		Document document = iter.first();
-		document.remove("_id");
-		return Response.ok(document.toJson()).cacheControl(control).build();
+        return Response.status(response.getStatus()).entity(response.getEntity(new GenericType<String>() {})).build();
 	}
 
 	@DELETE
 	@Path("/{id}")
 	public Response rescindROPublicationRequest(@PathParam("id") String id) {
-		DeleteResult dr = publicationsCollection.deleteOne(new Document(
-				"Aggregation.Identifier", id));
-		if (dr.getDeletedCount() == 1) {
-			return Response.status(Status.OK).build();
-		} else {
+		//DeleteResult dr = publicationsCollection.deleteOne(new Document(
+		//		"Aggregation.Identifier", id));
+		//if (dr.getDeletedCount() == 1) {
+		//	return Response.status(Status.OK).build();
+		//} else {
 			return Response.status(Status.NOT_FOUND).build();
-		}
+		//}
 	}
 
 	private Set<String> getOrganizationforPerson(String personID) {
 		Set<String> orgs = new HashSet<String>();
 		;
-		if (personID.startsWith("orcid.org/")) {
+		/*if (personID.startsWith("orcid.org/")) {
 			personID = personID.substring("orcid.org/".length());
 			FindIterable<Document> iter = peopleCollection.find(new Document(
 					"orcid-profile.orcid-identifier.path", personID));
@@ -310,12 +211,12 @@ public class ResearchObjectsImpl extends ResearchObjects {
 					orgs.add((String) org.getString("name"));
 				}
 			}
-			/*
+			*//*
 			 * JSONArray array = new JSONArray(); while(cursor.hasNext()) {
 			 * array.put(JSON.parse(cursor.next().toJson())); }
-			 */
+			 *//*
 
-		}
+		}*/
 		return orgs;
 
 	}
@@ -326,7 +227,7 @@ public class ResearchObjectsImpl extends ResearchObjects {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response makeMatches(String matchRequest) {
 		String messageString = null;
-		Document request = Document.parse(matchRequest);
+		/*Document request = Document.parse(matchRequest);
 		Document content = (Document) request.get("Aggregation");
 		if (content == null) {
 			messageString += "Missing Aggregation";
@@ -415,11 +316,11 @@ public class ResearchObjectsImpl extends ResearchObjects {
 			// Assemble and send
 
 			return Response.ok().entity(matches).build();
-		} else {
+		} else {*/
 			return Response.status(Status.BAD_REQUEST)
 					.entity(new BasicDBObject("Failure", messageString))
 					.build();
-		}
+		//}
 	}
 
 	@GET
@@ -427,9 +328,9 @@ public class ResearchObjectsImpl extends ResearchObjects {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response getRulesList() {
 		ArrayList<Document> rulesArrayList = new ArrayList<Document>();
-		for (Matcher m : matchers) {
+		/*for (Matcher m : matchers) {
 			rulesArrayList.add(m.getDescription());
-		}
+		}*/
 		return Response.ok().entity(rulesArrayList).build();
 	}
 
