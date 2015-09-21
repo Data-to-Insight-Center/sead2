@@ -21,6 +21,7 @@
 
 package org.sead.cp;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -29,6 +30,7 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
@@ -66,7 +68,7 @@ public abstract class ResearchObjects {
 	@Path("/")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	abstract public Response startROPublicationProcess(String matchRequest);
+	abstract public Response startROPublicationProcess(String matchRequest, @Context HttpServletRequest request);
 
 	/**
 	 * Requests matching repositories, Note - request does not create a
@@ -137,6 +139,20 @@ public abstract class ResearchObjects {
 	@Path("/{id}")
 	@Produces(MediaType.APPLICATION_JSON)
 	public abstract Response getROProfile(@PathParam("id") String id);
+	
+	/**
+	 * Return the OREMap associated with the give request
+	 * 
+	 * @param id
+	 *            the assigned ro/publication ID
+	 * 
+	 * @return : json-ld profile document
+	 */
+	@GET
+	@Path("/{id}/oremap")
+	@Produces(MediaType.APPLICATION_JSON)
+	public abstract Response getROOREMap(@PathParam("id") String id);
+
 
 	/**
 	 * Return the status for a given publication
