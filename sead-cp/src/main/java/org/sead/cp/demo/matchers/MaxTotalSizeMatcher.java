@@ -38,9 +38,9 @@ public class MaxTotalSizeMatcher implements Matcher {
 	public RuleResult runRule(Document aggregation, BasicBSONList affiliations,
 			Document preferences, Document statsDocument, Document profile) {
 		RuleResult result = new RuleResult();
-	
+
 		try {
-	
+
 			long max = Long.parseLong(statsDocument.getString("Total Size"));
 			long repoMax = Long.parseLong(profile.getString("Total Size"));
 			if (max > repoMax) {
@@ -71,6 +71,8 @@ public class MaxTotalSizeMatcher implements Matcher {
 	public Document getDescription() {
 		return new Document("Rule Name", getName())
 				.append("Repository Trigger",
-						"\"Total Size\": \"tag:tupeloproject.org,2006:/2.0/files/length\" : long size (Bytes) as String");
+						" \"Total Size\": \"tag:tupeloproject.org,2006:/2.0/files/length\" : long size (Bytes) as String")
+				.append("Publication Trigger",
+						" \"Total Size\": \"tag:tupeloproject.org,2006:/2.0/files/length\" : long size (Bytes) as String, in \"Aggregation Statistics\": \"http://sead-data.net/terms/publicationstatistics\", in publication request");
 	}
 }

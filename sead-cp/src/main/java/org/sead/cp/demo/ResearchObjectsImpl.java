@@ -31,6 +31,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -40,6 +41,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.CacheControl;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.NewCookie;
 import javax.ws.rs.core.Response;
@@ -47,6 +49,7 @@ import javax.ws.rs.core.Response;
 import org.bson.BasicBSONObject;
 import org.bson.Document;
 import org.bson.types.BasicBSONList;
+import org.bson.types.ObjectId;
 import org.json.JSONArray;
 import org.sead.cp.ResearchObjects;
 import org.sead.cp.demo.matchers.DataTypeMatcher;
@@ -67,7 +70,10 @@ import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
 import com.mongodb.util.JSON;
+import com.sun.jersey.api.client.Client;
+import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.ClientResponse.Status;
+import com.sun.jersey.api.client.WebResource;
 
 /**
  * See abstract base class for documentation of the rest api. Note - path
@@ -80,6 +86,7 @@ public class ResearchObjectsImpl extends ResearchObjects {
 	private MongoDatabase db = null;
 	private MongoCollection<Document> publicationsCollection = null;
 	private MongoCollection<Document> peopleCollection = null;
+	private MongoCollection<Document> oreMapCollection = null;
 	private CacheControl control = new CacheControl();
 	Set<Matcher> matchers = new HashSet<Matcher>();
 
@@ -89,6 +96,7 @@ public class ResearchObjectsImpl extends ResearchObjects {
 
 		publicationsCollection = db.getCollection("researchobjects");
 		peopleCollection = db.getCollection("people");
+		oreMapCollection = db.getCollection("oreMaps");
 
 		// Build list of Matchers
 
@@ -106,8 +114,9 @@ public class ResearchObjectsImpl extends ResearchObjects {
 	@Path("/")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response startROPublicationProcess(String publicationRequestString) {
+	public Response startROPublicationProcess(String publicationRequestString, @Context HttpServletRequest servletRequest ) {
 		String messageString = null;
+		
 		Document request = Document.parse(publicationRequestString);
 		Document content = (Document) request.get("Aggregation");
 		if (content == null) {
@@ -174,6 +183,43 @@ public class ResearchObjectsImpl extends ResearchObjects {
 			// Generate ID - by calling Workflow?
 			// Add doc, return 201
 
+			// retrieve OREMap
+			Document aggregation = (Document) request.get("Aggregation");
+			Client client = Client.create();
+			WebResource webResource;
+
+			webResource = client.resource(aggregation.get("@id").toString());
+
+			ClientResponse response = webResource.accept("application/json")
+					.get(ClientResponse.class);
+
+			if (response.getStatus() != 200) {
+				throw new RuntimeException("" + response.getStatus());
+			}
+
+			Document oreMapDocument = Document.parse(response
+					.getEntity(String.class));
+			ObjectId mapId = new ObjectId();
+			oreMapDocument.put("_id", mapId);
+			aggregation.put("authoratativeMap", mapId);
+			
+			//Update 'actionable' identifiers for map and aggregation:
+			//Note these changes retain the tag-style identifier for the aggregation created by the space
+			//These changes essentially work like ARKs/ARTs and represent the <aggId> moving from the custodianship of the space <SpaceURL>/<aggId>
+			// to that of the CP services <servicesURL>/<aggId>
+			String newMapURL = servletRequest.getRequestURL().append("/").append(ID).append("/oremap").toString();
+			
+			//Aggregation @id in the request
+			
+			aggregation.put("@id", newMapURL+ "#aggregation");
+			
+			//@id of the map in the map
+			oreMapDocument.put("@id", newMapURL);
+			
+			//@id of describes object (the aggregation)  in map
+			((Document)oreMapDocument.get("describes")).put("@id", newMapURL + "#aggregation");
+
+			oreMapCollection.insertOne(oreMapDocument);
 			publicationsCollection.insertOne(request);
 			URI resource = null;
 			try {
@@ -221,7 +267,10 @@ public class ResearchObjectsImpl extends ResearchObjects {
 		if (document == null) {
 			return Response.status(Status.NOT_FOUND).build();
 		}
+		//Internal meaning only - strip from exported doc
 		document.remove("_id");
+		Document aggDocument = (Document) document.get("Aggregation");
+		aggDocument.remove("authoratativeMap");
 		return Response.ok(document.toJson()).cacheControl(control).build();
 	}
 
@@ -230,20 +279,22 @@ public class ResearchObjectsImpl extends ResearchObjects {
 	@Consumes(MediaType.APPLICATION_JSON)
 	public Response setROStatus(@PathParam("id") String id, String state) {
 		try {
-		Document statusUpdateDocument = Document.parse(state);
-		statusUpdateDocument.append("date", DateFormat.getDateTimeInstance()
-				.format(new Date(System.currentTimeMillis())));
-		UpdateResult ur = publicationsCollection.updateOne(new Document(
-				"Aggregation.Identifier", id), new BasicDBObject("$push",
-				new BasicDBObject("Status", statusUpdateDocument)));
-		if (ur.wasAcknowledged()) {
-			return Response.status(Status.OK).build();
+			Document statusUpdateDocument = Document.parse(state);
+			statusUpdateDocument.append(
+					"date",
+					DateFormat.getDateTimeInstance().format(
+							new Date(System.currentTimeMillis())));
+			UpdateResult ur = publicationsCollection.updateOne(new Document(
+					"Aggregation.Identifier", id), new BasicDBObject("$push",
+					new BasicDBObject("Status", statusUpdateDocument)));
+			if (ur.wasAcknowledged()) {
+				return Response.status(Status.OK).build();
 
-		} else {
-			return Response.status(Status.NOT_FOUND).build();
+			} else {
+				return Response.status(Status.NOT_FOUND).build();
 
-		}
-		}catch (org.bson.BsonInvalidOperationException e) {
+			}
+		} catch (org.bson.BsonInvalidOperationException e) {
 			return Response.status(Status.BAD_REQUEST).build();
 		}
 	}
@@ -265,6 +316,26 @@ public class ResearchObjectsImpl extends ResearchObjects {
 	@DELETE
 	@Path("/{id}")
 	public Response rescindROPublicationRequest(@PathParam("id") String id) {
+		//Is there ever a reason to preserve the map and not the pub request?
+		//FixMe: Don't allow a delete after the request is complete?
+		
+		//First remove map
+		FindIterable<Document> iter = publicationsCollection.find(new Document(
+				"Aggregation.Identifier", id));
+		iter.projection(new Document("Aggregation", 1).append("_id", 0));
+
+		Document document = iter.first();
+		if(document==null) {
+			return Response.status(javax.ws.rs.core.Response.Status.NOT_FOUND).build();
+		}
+		ObjectId mapId = (ObjectId) ((Document)document.get("Aggregation")).get("authoratativeMap");
+		
+		DeleteResult mapDeleteResult = oreMapCollection.deleteOne(new Document("_id", mapId));
+		if (mapDeleteResult.getDeletedCount() != 1) {
+			//Report error
+			System.out.println("Could not find map corresponding to " + id);
+		}
+		
 		DeleteResult dr = publicationsCollection.deleteOne(new Document(
 				"Aggregation.Identifier", id));
 		if (dr.getDeletedCount() == 1) {
@@ -433,6 +504,28 @@ public class ResearchObjectsImpl extends ResearchObjects {
 			rulesArrayList.add(m.getDescription());
 		}
 		return Response.ok().entity(rulesArrayList).build();
+	}
+
+	@GET
+	@Path("/{id}/oremap")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response getROOREMap(@PathParam("id") String id) {;
+
+		FindIterable<Document> iter = publicationsCollection.find(new Document(
+				"Aggregation.Identifier", id));
+		iter.projection(new Document("Aggregation", 1).append("_id", 0));
+
+		Document document = iter.first();
+		if(document==null) {
+			return Response.status(javax.ws.rs.core.Response.Status.NOT_FOUND).build();
+		}
+		ObjectId mapId = (ObjectId) ((Document)document.get("Aggregation")).get("authoratativeMap");
+		
+		iter = oreMapCollection.find(new Document("_id", mapId));
+		Document map = iter.first();
+		//Internal meaning only
+		map.remove("_id");
+		return Response.ok(map.toJson()).cacheControl(control).build();
 	}
 
 }
