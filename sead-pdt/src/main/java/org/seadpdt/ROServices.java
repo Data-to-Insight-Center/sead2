@@ -10,14 +10,18 @@ import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.result.UpdateResult;
 import com.mongodb.util.JSON;
+import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
+import com.sun.jersey.api.client.WebResource;
 import org.bson.Document;
 import org.bson.types.BasicBSONList;
+import org.bson.types.ObjectId;
 import org.json.JSONArray;
 import org.seadpdt.util.Constants;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.CacheControl;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.net.URI;
@@ -38,6 +42,7 @@ public class ROServices {
 	MongoDatabase db = mongoClient.getDatabase(DBname);
 	MongoCollection<Document> publicationsCollection = db.getCollection(collectionName);
     MongoCollection<Document> peopleCollection = db.getCollection("people");
+    MongoCollection<Document> oreMapCollection = db.getCollection("oreMaps");
     private CacheControl control = new CacheControl();
 
 
@@ -45,7 +50,7 @@ public class ROServices {
     @Path("/")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public Response startROPublicationProcess(String publicationRequestString) {
+    public Response startROPublicationProcess(String publicationRequestString, @QueryParam("requestUrl") String requestURL) {
         String messageString = null;
         Document request = Document.parse(publicationRequestString);
         Document content = (Document) request.get("Aggregation");
@@ -113,6 +118,43 @@ public class ROServices {
             // Generate ID - by calling Workflow?
             // Add doc, return 201
 
+            // retrieve OREMap
+            Document aggregation = (Document) request.get("Aggregation");
+            Client client = Client.create();
+            WebResource webResource;
+
+            webResource = client.resource(aggregation.get("@id").toString());
+
+            ClientResponse response = webResource.accept("application/json")
+                    .get(ClientResponse.class);
+
+            if (response.getStatus() != 200) {
+                throw new RuntimeException("" + response.getStatus());
+            }
+
+            Document oreMapDocument = Document.parse(response
+                    .getEntity(String.class));
+            ObjectId mapId = new ObjectId();
+            oreMapDocument.put("_id", mapId);
+            aggregation.put("authoratativeMap", mapId);
+
+            //Update 'actionable' identifiers for map and aggregation:
+            //Note these changes retain the tag-style identifier for the aggregation created by the space
+            //These changes essentially work like ARKs/ARTs and represent the <aggId> moving from the custodianship of the space <SpaceURL>/<aggId>
+            // to that of the CP services <servicesURL>/<aggId>
+            String newMapURL = requestURL + "/" + ID + "/oremap";
+
+            //Aggregation @id in the request
+
+            aggregation.put("@id", newMapURL+ "#aggregation");
+
+            //@id of the map in the map
+            oreMapDocument.put("@id", newMapURL);
+
+            //@id of describes object (the aggregation)  in map
+            ((Document)oreMapDocument.get("describes")).put("@id", newMapURL + "#aggregation");
+
+            oreMapCollection.insertOne(oreMapDocument);
             publicationsCollection.insertOne(request);
             URI resource = null;
             try {
@@ -160,7 +202,10 @@ public class ROServices {
         if (document == null) {
             return Response.status(ClientResponse.Status.NOT_FOUND).build();
         }
+        //Internal meaning only - strip from exported doc
         document.remove("_id");
+        Document aggDocument = (Document) document.get("Aggregation");
+        aggDocument.remove("authoratativeMap");
         return Response.ok(document.toJson()).cacheControl(control).build();
     }
 
@@ -170,8 +215,10 @@ public class ROServices {
     public Response setROStatus(@PathParam("id") String id, String state) {
         try {
             Document statusUpdateDocument = Document.parse(state);
-            statusUpdateDocument.append("date", DateFormat.getDateTimeInstance()
-                    .format(new Date(System.currentTimeMillis())));
+            statusUpdateDocument.append(
+                    "date",
+                    DateFormat.getDateTimeInstance().format(
+                            new Date(System.currentTimeMillis())));
             UpdateResult ur = publicationsCollection.updateOne(new Document(
                     "Aggregation.Identifier", id), new BasicDBObject("$push",
                     new BasicDBObject("Status", statusUpdateDocument)));
@@ -182,7 +229,7 @@ public class ROServices {
                 return Response.status(ClientResponse.Status.NOT_FOUND).build();
 
             }
-        }catch (org.bson.BsonInvalidOperationException e) {
+        } catch (org.bson.BsonInvalidOperationException e) {
             return Response.status(ClientResponse.Status.BAD_REQUEST).build();
         }
     }
@@ -191,14 +238,13 @@ public class ROServices {
     @Path("/{id}/status")
     @Produces(MediaType.APPLICATION_JSON)
     public Response getROStatus(@PathParam("id") String id) {
-
         FindIterable<Document> iter = publicationsCollection.find(new Document(
                 "Aggregation.Identifier", id));
         iter.projection(new Document("Status", 1).append("_id", 0));
 
         Document document = iter.first();
         document.remove("_id");
-        return Response.ok(document.toJson()).cacheControl(control).build();
+                return Response.ok(document.toJson()).cacheControl(control).build();
     }
 
     private Set<String> getOrganizationforPerson(String personID) {

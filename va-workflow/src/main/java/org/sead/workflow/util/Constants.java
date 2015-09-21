@@ -36,6 +36,7 @@ public class Constants {
 
     // constants in context
     public static final String JSON_RO = "jsonRO"; // JSONLD format of RO metadata
+    public static final String REQUEST_URL = "requestUrl"; // JSONLD format of RO metadata
     public static final String VALIDATED = "validated";
 
     // constants in JSONLD of RO

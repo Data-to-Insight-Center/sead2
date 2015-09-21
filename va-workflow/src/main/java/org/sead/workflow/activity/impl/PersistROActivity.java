@@ -17,6 +17,7 @@ import org.seadva.services.statusTracker.enums.SeadStatus;
 import javax.ws.rs.core.MediaType;
 import java.io.IOException;
 import java.io.StringWriter;
+import java.net.URLEncoder;
 import java.util.HashMap;
 
 /**
@@ -45,6 +46,7 @@ public class PersistROActivity extends AbstractWorkflowActivity {
         // Call RO Info System to persist the JSONLD RO
         WebResource webResource = Client.create().resource(pdtUrl);
         ClientResponse response = webResource
+                .queryParam("requestUrl", URLEncoder.encode(context.getProperty(Constants.REQUEST_URL)))
                 .accept("application/json")
                 .type("application/json")
                 .post(ClientResponse.class, ro);

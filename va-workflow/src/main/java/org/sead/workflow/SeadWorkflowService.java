@@ -90,7 +90,7 @@ public class SeadWorkflowService {
     @POST
     @Path("/publishRO")
     @Produces("application/json")
-    public javax.ws.rs.core.Response publishRO(String ro) throws InterruptedException {
+    public javax.ws.rs.core.Response publishRO(String ro, @QueryParam("requestUrl") String requestURL) throws InterruptedException {
 
         System.out.println("-----------------------------------");
         System.out.println("SeadWorkflowService - publishRO : Input RO : " + ro);
@@ -98,6 +98,7 @@ public class SeadWorkflowService {
 
         SeadWorkflowContext context = new SeadWorkflowContext();
         context.addProperty(Constants.JSON_RO, ro);
+        context.addProperty(Constants.REQUEST_URL, requestURL);
 
         String response = "";
 
