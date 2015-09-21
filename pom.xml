@@ -14,8 +14,9 @@
         <module>ps-stub</module>
         <module>sead-doi-service</module>
         <module>metadata-gen</module>
-        <module>ro-subsystem</module>
-        <module>sead-registry</module>
+        <module>sead-api</module>
+        <module>sead-matchmaker</module>
+        <module>sead-pdt</module>
     </modules>
 
 </project>
