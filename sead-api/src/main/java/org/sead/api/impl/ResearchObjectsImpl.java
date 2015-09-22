@@ -21,16 +21,6 @@
 
 package org.sead.api.impl;
 
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.sql.Date;
-import java.text.DateFormat;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
-
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -45,24 +35,15 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import com.sun.jersey.api.client.GenericType;
-import org.bson.BasicBSONObject;
 import org.bson.Document;
-import org.bson.types.BasicBSONList;
 import org.bson.types.ObjectId;
-import org.json.JSONArray;
 import org.sead.api.ResearchObjects;
 
-import com.mongodb.BasicDBObject;
-import com.mongodb.BasicDBObjectBuilder;
-import com.mongodb.DBObject;
 import com.mongodb.MongoClient;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
-import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.result.DeleteResult;
-import com.mongodb.client.result.UpdateResult;
-import com.mongodb.util.JSON;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.ClientResponse.Status;
@@ -76,28 +57,30 @@ import org.sead.api.util.Constants;
 
 @Path("/researchobjects")
 public class ResearchObjectsImpl extends ResearchObjects {
+
+    // TODO: Remove all MongoDB access variables. This API should not do any MongoDB calls.
 	private MongoClient mongoClient = null;
 	private MongoDatabase db = null;
 	private MongoCollection<Document> publicationsCollection = null;
-	private MongoCollection<Document> peopleCollection = null;
 	private MongoCollection<Document> oreMapCollection = null;
 	private CacheControl control = new CacheControl();
 
     private WebResource pdtWebService;
     private WebResource curBeeWebService;
+    private WebResource mmWebService;
 
 	public ResearchObjectsImpl() {
 		mongoClient = new MongoClient();
 		db = mongoClient.getDatabase("seadcp");
 
 		publicationsCollection = db.getCollection("researchobjects");
-		peopleCollection = db.getCollection("people");
 		oreMapCollection = db.getCollection("oreMaps");
 
 		control.setNoCache(true);
 
         pdtWebService = Client.create().resource(Constants.pdtUrl);
         curBeeWebService = Client.create().resource(Constants.curBeeUrl);
+        mmWebService = Client.create().resource(Constants.matchmakerUrl);
 	}
 
     @POST
@@ -208,128 +191,41 @@ public class ResearchObjectsImpl extends ResearchObjects {
 			return Response.status(Status.NOT_FOUND).build();
 		}
 	}
-    
 
 	@POST
-	@Path("/matchingrepositories")
-	@Consumes(MediaType.APPLICATION_JSON)
-	@Produces(MediaType.APPLICATION_JSON)
-	public Response makeMatches(String matchRequest) {
-        // TODO Isuru: call matchmaker API
-//		String messageString = null;
-//		Document request = Document.parse(matchRequest);
-//		Document content = (Document) request.get("Aggregation");
-//		if (content == null) {
-//			messageString += "Missing Aggregation";
-//		}
-//		Document preferences = (Document) request.get("Preferences");
-//		if (preferences == null) {
-//			messageString += "Missing Preferences";
-//		}
-//		Document stats = (Document) request.get("Aggregation Statistics");
-//		if (stats == null) {
-//			messageString += "Missing Statistics";
-//		}
-//
-//		if (messageString == null) {
-//			// Get organization from profile(s)
-//			// Add to base document
-//			Object creatorObject = content.get("Creator");
-//			String ID = (String) content.get("Identifier");
-//
-//			BasicBSONList affiliations = new BasicBSONList();
-//			if (creatorObject instanceof ArrayList) {
-//				Iterator<String> iter = ((ArrayList<String>) creatorObject)
-//						.iterator();
-//
-//				while (iter.hasNext()) {
-//					String creator = iter.next();
-//					Set<String> orgs = getOrganizationforPerson(creator);
-//					if (!orgs.isEmpty()) {
-//						affiliations.addAll(orgs);
-//					}
-//				}
-//
-//			} else {
-//				// BasicDBObject - single value
-//				Set<String> orgs = getOrganizationforPerson((String) creatorObject);
-//				if (!orgs.isEmpty()) {
-//					affiliations.addAll(orgs);
-//				}
-//			}
-//
-//			// Get repository profiles
-//			FindIterable<Document> iter = db.getCollection("repositories")
-//					.find();
-//			// iter.projection(new Document("_id", 0));
-//
-//			// Create result lists per repository
-//			// Run matchers
-//			MongoCursor<Document> cursor = iter.iterator();
-//
-//			BasicBSONList matches = new BasicBSONList();
-//
-//			int j = 0;
-//			while (cursor.hasNext()) {
-//
-//				BasicBSONObject repoMatch = new BasicBSONObject();
-//				Document profile = cursor.next();
-//
-//				repoMatch.put("orgidentifier", profile.get("orgidentifier"));
-//
-//				BasicBSONList scores = new BasicBSONList();
-//				int total = 0;
-//				int i = 0;
-//				for (Matcher m : matchers) {
-//					BasicBSONObject individualScore = new BasicBSONObject();
-//
-//					RuleResult result = m.runRule(content, affiliations,
-//							preferences, stats, profile);
-//
-//					individualScore.put("Rule Name", m.getName());
-//					if (result.wasTriggered()) {
-//						individualScore.put("Score", result.getScore());
-//						total += result.getScore();
-//						individualScore.put("Message", result.getMessage());
-//					} else {
-//						individualScore.put("Score", 0);
-//						individualScore.put("Message", "Not Used");
-//					}
-//					scores.put(i, individualScore);
-//					i++;
-//				}
-//				repoMatch.put("Per Rule Scores", scores);
-//				repoMatch.put("Total Score", total);
-//				matches.put(j, repoMatch);
-//				j++;
-//			}
-//			// Assemble and send
-//
-//			return Response.ok().entity(matches).build();
-//		} else {
-//			return Response.status(Status.BAD_REQUEST)
-//					.entity(new BasicDBObject("Failure", messageString))
-//					.build();
-//		}
-        return Response.ok().entity(null).build();
-	}
+    @Path("/matchingrepositories")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response makeMatches(String matchRequest) {
+        ClientResponse response = mmWebService.path("ro")
+                .path("matchingrepositories")
+                .accept("application/json")
+                .type("application/json")
+                .post(ClientResponse.class, matchRequest);
 
-	@GET
-	@Path("/matchingrepositories/rules")
-	@Produces(MediaType.APPLICATION_JSON)
-	public Response getRulesList() {
-        // TODO Isuru: Call matchmaker API
-//		ArrayList<Document> rulesArrayList = new ArrayList<Document>();
-//		for (Matcher m : matchers) {
-//			rulesArrayList.add(m.getDescription());
-//		}
-		return Response.ok().entity(null).build();
-	}
+        return Response.status(response.getStatus()).entity(
+                response.getEntity(new GenericType<String>() {})).build();
+    }
+
+    @GET
+    @Path("/matchingrepositories/rules")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getRulesList() {
+        ClientResponse response = mmWebService.path("ro")
+                .path("matchingrepositories")
+                .path("rules")
+                .accept("application/json")
+                .type("application/json")
+                .get(ClientResponse.class);
+
+        return Response.status(response.getStatus()).entity(
+                response.getEntity(new GenericType<String>() {})).build();
+    }
 
 	@GET
 	@Path("/{id}/oremap")
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response getROOREMap(@PathParam("id") String id) {;
+	public Response getROOREMap(@PathParam("id") String id) {
 
 		FindIterable<Document> iter = publicationsCollection.find(new Document(
 				"Aggregation.Identifier", id));

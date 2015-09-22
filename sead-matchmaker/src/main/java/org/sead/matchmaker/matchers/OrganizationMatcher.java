@@ -22,7 +22,6 @@
 package org.sead.matchmaker.matchers;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 
 import org.bson.Document;
 import org.bson.types.BasicBSONList;
@@ -44,20 +43,18 @@ public class OrganizationMatcher implements Matcher {
 					.get("Affiliations"));
 			boolean affiliated = false;
 			String requiredOrgString = null;
-			for (String org : affiliations.toArray(new String[0])) {
+			for (String org : affiliations.toArray(new String[affiliations.size()])) {
 				if ((requiredAffiliations.contains(org))) {
 					affiliated = true;
 					requiredOrgString = org;
 					break;
 				}
 			}
-			if (!affiliated) {
-				StringBuilder sBuilder = new StringBuilder();
-				Iterator<String> iter = requiredAffiliations.iterator();
-				sBuilder.append((String) iter.next());
-				while (iter.hasNext()) {
-					sBuilder.append(", " + (String) iter.next());
-				}
+            if (!affiliated) {
+                StringBuilder sBuilder = new StringBuilder();
+                for (String requiredAffiliation : requiredAffiliations) {
+                    sBuilder.append(", ").append(requiredAffiliation);
+                }
 				result.setResult(-1,
 						"Collection does not have an affiliation with a required organization ("
 								+ sBuilder.toString() + ").");

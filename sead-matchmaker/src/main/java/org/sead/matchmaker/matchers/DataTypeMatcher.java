@@ -54,7 +54,7 @@ public class DataTypeMatcher implements Matcher {
 				Iterator<String> iter = forbiddenTypes.iterator();
 				sBuilder.append(iter.next());
 				while (iter.hasNext()) {
-					sBuilder.append(", " + iter.next());
+					sBuilder.append(", ").append(iter.next());
 				}
 				result.setResult(-1, "Collection contains forbidden types ("
 						+ sBuilder.toString() + ").");
