@@ -1,21 +1,20 @@
 package org.sead.matchmaker.service;
 
 import com.mongodb.BasicDBObject;
-import com.mongodb.MongoClient;
-import com.mongodb.client.FindIterable;
-import com.mongodb.client.MongoCollection;
-import com.mongodb.client.MongoCursor;
-import com.mongodb.client.MongoDatabase;
+import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
+import com.sun.jersey.api.client.WebResource;
 import org.bson.BasicBSONObject;
 import org.bson.Document;
 import org.bson.types.BasicBSONList;
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.sead.matchmaker.Matcher;
+import org.sead.matchmaker.MatchmakerConstants;
 import org.sead.matchmaker.RuleResult;
 import org.sead.matchmaker.matchers.*;
 
 import javax.ws.rs.*;
-import javax.ws.rs.core.CacheControl;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.ArrayList;
@@ -25,19 +24,12 @@ import java.util.Set;
 
 @Path("/ro")
 public class MatchMaker {
-
-    private MongoClient mongoClient = null;
-    private MongoDatabase db = null;
-    private MongoCollection<Document> peopleCollection = null;
-    private CacheControl control = new CacheControl();
+    // set of matchers
     Set<Matcher> matchers = new HashSet<Matcher>();
+    // common resource for all PDT calls
+    WebResource pdtResource;
 
     public MatchMaker() {
-        mongoClient = new MongoClient();
-        db = mongoClient.getDatabase("seadcp");
-
-        peopleCollection = db.getCollection("people");
-
         // Build list of Matchers
         matchers.add(new MaxDatasetSizeMatcher());
         matchers.add(new MaxTotalSizeMatcher());
@@ -46,7 +38,7 @@ public class MatchMaker {
         matchers.add(new DepthMatcher());
         matchers.add(new MinimalMetadataMatcher());
 
-        control.setNoCache(true);
+        pdtResource = Client.create().resource(MatchmakerConstants.pdtUrl);
     }
 
     @POST
@@ -97,22 +89,17 @@ public class MatchMaker {
             }
 
             // Get repository profiles
-            // TODO Isuru: call PDT API for this
-            FindIterable<Document> iter = db.getCollection("repositories").find();
-            // iter.projection(new Document("_id", 0));
-
-            // Create result lists per repository
-            // Run matchers
-            MongoCursor<Document> cursor = iter.iterator();
-
+            JSONArray reposJson = new JSONArray(pdtGET(MatchmakerConstants.PDT_REPOSITORIES));
             BasicBSONList matches = new BasicBSONList();
 
-            int j = 0;
-            while (cursor.hasNext()) {
+            for (int j = 0; j < reposJson.length(); j++) {
+                JSONObject repoJson = reposJson.getJSONObject(j);
+                String orgId = repoJson.get("orgidentifier").toString();
+                // call PDT to get profile
+                Document profile = Document.parse(pdtGET(MatchmakerConstants.PDT_REPOSITORIES +
+                        "/" + orgId));
 
                 BasicBSONObject repoMatch = new BasicBSONObject();
-                Document profile = cursor.next();
-
                 repoMatch.put("orgidentifier", profile.get("orgidentifier"));
 
                 BasicBSONList scores = new BasicBSONList();
@@ -139,10 +126,8 @@ public class MatchMaker {
                 repoMatch.put("Per Rule Scores", scores);
                 repoMatch.put("Total Score", total);
                 matches.put(j, repoMatch);
-                j++;
             }
             // Assemble and send
-
             return Response.ok().entity(matches).build();
         } else {
             return Response.status(ClientResponse.Status.BAD_REQUEST)
@@ -166,48 +151,54 @@ public class MatchMaker {
         Set<String> orgs = new HashSet<String>();
         if (personID.startsWith("orcid.org/")) {
             personID = personID.substring("orcid.org/".length());
-            FindIterable<Document> iter = peopleCollection.find(new Document(
-                    "orcid-profile.orcid-identifier.path", personID));
-            // FixMe: NeverFail
-            if (iter == null) {
-                // TODO Isuru: call PDT to register person if he's not already there
-//                new PeopleImpl().registerPerson(personID);
-                iter = peopleCollection.find(new Document(
-                        "orcid-profile.orcid-identifier.path", personID));
+            // call PDT to get the profile using the ID
+            String personProfile = pdtGET(MatchmakerConstants.PDT_PEOPLE + "/" + personID);
+            if (personProfile == null) {
+                // if the person doesn't exist, add
+                pdtPOST(MatchmakerConstants.PDT_PEOPLE, "{\"provider\": \"ORCID\", \"identifier\":\"" +
+                        personID + "\"}");
+                // now try to get the profile
+                personProfile = pdtGET(MatchmakerConstants.PDT_PEOPLE + "/" + personID);
             }
 
-            iter.projection(new Document(
-                    "orcid-profile.orcid-activities.affiliations.affiliation.organization.name",
-                    1).append("_id", 0));
-            MongoCursor<Document> cursor = iter.iterator();
-            if (cursor.hasNext()) {
-                Document affilDocument = cursor.next();
-                Document profile = (Document) affilDocument
-                        .get("orcid-profile");
-
-                Document activitiesDocument = (Document) profile
-                        .get("orcid-activities");
-
-                Document affiliationsDocument = (Document) activitiesDocument
-                        .get("affiliations");
-
-                ArrayList orgList = (ArrayList) affiliationsDocument
-                        .get("affiliation");
-                System.out.println(orgList.size());
-                for (Object entry : orgList) {
-                    Document org = (Document) ((Document) entry)
-                            .get("organization");
-                    orgs.add((String) org.getString("name"));
-                }
+            if (personProfile == null) {
+                throw new RuntimeException("Can't identify the person: " + personID);
             }
-			/*
-			 * JSONArray array = new JSONArray(); while(cursor.hasNext()) {
-			 * array.put(JSON.parse(cursor.next().toJson())); }
-			 */
-
+            // find organization names of the person
+            Document affilDocument = Document.parse(personProfile);
+            Document profile = (Document) affilDocument.get("orcid-profile");
+            Document activitiesDocument = (Document) profile.get("orcid-activities");
+            Document affiliationsDocument = (Document) activitiesDocument.get("affiliations");
+            ArrayList orgList = (ArrayList) affiliationsDocument.get("affiliation");
+            for (Object entry : orgList) {
+                Document org = (Document) ((Document) entry)
+                        .get("organization");
+                orgs.add(org.getString("name"));
+            }
         }
         return orgs;
+    }
 
+    private String pdtGET(String path) {
+        ClientResponse response = pdtResource.path(path)
+                .accept(MatchmakerConstants.JSON_CONTENT_TYPE)
+                .type(MatchmakerConstants.JSON_CONTENT_TYPE)
+                .get(ClientResponse.class);
+        if (response.getStatus() == 200) {
+            return response.getEntity(String.class);
+        } else {
+            return null;
+        }
+    }
+
+    private void pdtPOST(String path, String message) {
+        ClientResponse response = pdtResource.path(path)
+                .accept(MatchmakerConstants.JSON_CONTENT_TYPE)
+                .type(MatchmakerConstants.JSON_CONTENT_TYPE)
+                .post(ClientResponse.class, message);
+        if (response.getStatus() == 500) {
+            throw new RuntimeException("Error while POSTing profile");
+        }
     }
 
 }
