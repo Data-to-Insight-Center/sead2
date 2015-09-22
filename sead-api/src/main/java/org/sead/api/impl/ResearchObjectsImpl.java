@@ -44,6 +44,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import com.sun.jersey.api.client.GenericType;
 import org.bson.BasicBSONObject;
 import org.bson.Document;
 import org.bson.types.BasicBSONList;
@@ -66,6 +67,7 @@ import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.ClientResponse.Status;
 import com.sun.jersey.api.client.WebResource;
+import org.sead.api.util.Constants;
 
 /**
  * See abstract base class for documentation of the rest api. Note - path
@@ -81,6 +83,9 @@ public class ResearchObjectsImpl extends ResearchObjects {
 	private MongoCollection<Document> oreMapCollection = null;
 	private CacheControl control = new CacheControl();
 
+    private WebResource pdtWebService;
+    private WebResource curBeeWebService;
+
 	public ResearchObjectsImpl() {
 		mongoClient = new MongoClient();
 		db = mongoClient.getDatabase("seadcp");
@@ -90,210 +95,87 @@ public class ResearchObjectsImpl extends ResearchObjects {
 		oreMapCollection = db.getCollection("oreMaps");
 
 		control.setNoCache(true);
+
+        pdtWebService = Client.create().resource(Constants.pdtUrl);
+        curBeeWebService = Client.create().resource(Constants.curBeeUrl);
 	}
 
-	@POST
-	@Path("/")
-	@Consumes(MediaType.APPLICATION_JSON)
-	@Produces(MediaType.APPLICATION_JSON)
-	public Response startROPublicationProcess(String publicationRequestString, @Context HttpServletRequest servletRequest ) {
-		String messageString = null;
-		
-		Document request = Document.parse(publicationRequestString);
-		Document content = (Document) request.get("Aggregation");
-		if (content == null) {
-			messageString += "Missing Aggregation";
-		}
-		Document preferences = (Document) request.get("Preferences");
-		if (preferences == null) {
-			messageString += "Missing Preferences";
-		}
-		Object repository = request.get("Repository");
-		if (repository == null) {
-			messageString += "Missing Respository";
-		}
-		Document stats = (Document) request.get("Aggregation Statistics");
-		if (stats == null) {
-			messageString += "Missing Statistics";
-		}
-		if (messageString == null) {
-			// Get organization from profile(s)
-			// Add to base document
-			Object creatorObject = content.get("Creator");
-			String ID = (String) content.get("Identifier");
-			BasicBSONList affiliations = new BasicBSONList();
-			if (creatorObject != null) {
-				if (creatorObject instanceof ArrayList) {
-					Iterator<String> iter = ((ArrayList<String>) creatorObject)
-							.iterator();
+    @POST
+    @Path("/")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response startROPublicationProcess(String publicationRequestString, @Context HttpServletRequest servletRequest) {
+        WebResource webResource = curBeeWebService;
 
-					while (iter.hasNext()) {
-						String creator = iter.next();
-						Set<String> orgs = getOrganizationforPerson(creator);
-						if (!orgs.isEmpty()) {
-							affiliations.addAll(orgs);
-						}
-					}
+        String requestUrl = servletRequest.getRequestURL().toString();
 
-				} else {
-					// BasicDBObject - single value
-					Set<String> orgs = getOrganizationforPerson((String) creatorObject);
-					if (!orgs.isEmpty()) {
-						affiliations.addAll(orgs);
-					}
-				}
-			}
+        ClientResponse response = webResource.path("service/publishRO")
+                .queryParam("requestUrl", requestUrl)
+                .accept("application/json")
+                .type("application/json")
+                .post(ClientResponse.class, publicationRequestString);
 
-			request.append("Affiliations", affiliations);
+        return Response.status(response.getStatus()).entity(response.getEntity(new GenericType<String>() {})).build();
+    }
 
-			// Add first status message
+    @GET
+    @Path("/")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getROsList() {
+        WebResource webResource = pdtWebService;
 
-			List<DBObject> statusreports = new ArrayList<DBObject>();
-			DBObject status = BasicDBObjectBuilder
-					.start()
-					.add("date",
-							DateFormat.getDateTimeInstance().format(
-									new Date(System.currentTimeMillis())))
-					.add("reporter", "SEAD-CP")
-					.add("stage", "Receipt Ackowledged")
-					.add("message",
-							"request recorded and processing will begin").get();
-			statusreports.add(status);
-			request.append("Status", statusreports);
-			// Create initial status message - add
-			// Add timestamp
-			// Generate ID - by calling Workflow?
-			// Add doc, return 201
+        ClientResponse response = webResource.path("researchobjects")
+                .accept("application/json")
+                .type("application/json")
+                .get(ClientResponse.class);
 
-			// retrieve OREMap
-			Document aggregation = (Document) request.get("Aggregation");
-			Client client = Client.create();
-			WebResource webResource;
+        return Response.status(response.getStatus()).entity(response.getEntity(new GenericType<String>() {})).build();
+    }
 
-			webResource = client.resource(aggregation.get("@id").toString());
+    @GET
+    @Path("/{id}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getROProfile(@PathParam("id") String id) {
+        WebResource webResource = pdtWebService;
 
-			ClientResponse response = webResource.accept("application/json")
-					.get(ClientResponse.class);
+        ClientResponse response = webResource.path("researchobjects")
+                .path(id)
+                .accept("application/json")
+                .type("application/json")
+                .get(ClientResponse.class);
 
-			if (response.getStatus() != 200) {
-				throw new RuntimeException("" + response.getStatus());
-			}
+        return Response.status(response.getStatus()).entity(response.getEntity(new GenericType<String>() {})).build();
+    }
 
-			Document oreMapDocument = Document.parse(response
-					.getEntity(String.class));
-			ObjectId mapId = new ObjectId();
-			oreMapDocument.put("_id", mapId);
-			aggregation.put("authoratativeMap", mapId);
-			
-			//Update 'actionable' identifiers for map and aggregation:
-			//Note these changes retain the tag-style identifier for the aggregation created by the space
-			//These changes essentially work like ARKs/ARTs and represent the <aggId> moving from the custodianship of the space <SpaceURL>/<aggId>
-			// to that of the CP services <servicesURL>/<aggId>
-			String newMapURL = servletRequest.getRequestURL().append("/").append(ID).append("/oremap").toString();
-			
-			//Aggregation @id in the request
-			
-			aggregation.put("@id", newMapURL+ "#aggregation");
-			
-			//@id of the map in the map
-			oreMapDocument.put("@id", newMapURL);
-			
-			//@id of describes object (the aggregation)  in map
-			((Document)oreMapDocument.get("describes")).put("@id", newMapURL + "#aggregation");
+    @POST
+    @Path("/{id}/status")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response setROStatus(@PathParam("id") String id, String state) {
+        WebResource webResource = pdtWebService;
 
-			oreMapCollection.insertOne(oreMapDocument);
-			publicationsCollection.insertOne(request);
-			URI resource = null;
-			try {
-				resource = new URI("./" + ID);
-			} catch (URISyntaxException e) {
-				// Should not happen given simple ids
-				e.printStackTrace();
-			}
-			return Response.created(resource)
-					.entity(new Document("identifier", ID)).build();
-		} else {
-			return Response.status(Status.BAD_REQUEST)
-					.entity(new BasicDBObject("Failure", messageString))
-					.build();
-		}
-	}
+        ClientResponse response = webResource.path("researchobjects")
+                .path(id + "/status")
+                .accept("application/json")
+                .type("application/json")
+                .post(ClientResponse.class, state);
 
-	@GET
-	@Path("/")
-	@Produces(MediaType.APPLICATION_JSON)
-	public Response getROsList() {
-		FindIterable<Document> iter = publicationsCollection.find();
-		iter.projection(new Document("Status", 1).append("Repository", 1)
-				.append("Aggregation.Identifier", 1)
-				.append("Aggregation.Title", 1).append("_id", 0));
-		MongoCursor<Document> cursor = iter.iterator();
-		JSONArray array = new JSONArray();
-		while (cursor.hasNext()) {
-			array.put(JSON.parse(cursor.next().toJson()));
-		}
-		return Response.ok(array.toString()).cacheControl(control).build();
-	}
+        return Response.status(response.getStatus()).entity(response.getEntity(new GenericType<String>() {})).build();
+    }
 
-	@GET
-	@Path("/{id}")
-	@Produces(MediaType.APPLICATION_JSON)
-	public Response getROProfile(@PathParam("id") String id) {
+    @GET
+    @Path("/{id}/status")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getROStatus(@PathParam("id") String id) {
+        WebResource webResource = pdtWebService;
 
-		FindIterable<Document> iter = publicationsCollection.find(new Document(
-				"Aggregation.Identifier", id));
-		if (iter == null) {
-			return Response.status(Status.NOT_FOUND).build();
-		}
-		Document document = iter.first();
-		if (document == null) {
-			return Response.status(Status.NOT_FOUND).build();
-		}
-		//Internal meaning only - strip from exported doc
-		document.remove("_id");
-		Document aggDocument = (Document) document.get("Aggregation");
-		aggDocument.remove("authoratativeMap");
-		return Response.ok(document.toJson()).cacheControl(control).build();
-	}
+        ClientResponse response = webResource.path("researchobjects")
+                .path(id + "/status")
+                .accept("application/json")
+                .type("application/json")
+                .get(ClientResponse.class);
 
-	@POST
-	@Path("/{id}/status")
-	@Consumes(MediaType.APPLICATION_JSON)
-	public Response setROStatus(@PathParam("id") String id, String state) {
-		try {
-			Document statusUpdateDocument = Document.parse(state);
-			statusUpdateDocument.append(
-					"date",
-					DateFormat.getDateTimeInstance().format(
-							new Date(System.currentTimeMillis())));
-			UpdateResult ur = publicationsCollection.updateOne(new Document(
-					"Aggregation.Identifier", id), new BasicDBObject("$push",
-					new BasicDBObject("Status", statusUpdateDocument)));
-			if (ur.wasAcknowledged()) {
-				return Response.status(Status.OK).build();
-
-			} else {
-				return Response.status(Status.NOT_FOUND).build();
-
-			}
-		} catch (org.bson.BsonInvalidOperationException e) {
-			return Response.status(Status.BAD_REQUEST).build();
-		}
-	}
-
-	@GET
-	@Path("/{id}/status")
-	@Produces(MediaType.APPLICATION_JSON)
-	public Response getROStatus(@PathParam("id") String id) {
-
-		FindIterable<Document> iter = publicationsCollection.find(new Document(
-				"Aggregation.Identifier", id));
-		iter.projection(new Document("Status", 1).append("_id", 0));
-
-		Document document = iter.first();
-		document.remove("_id");
-		return Response.ok(document.toJson()).cacheControl(control).build();
-	}
+        return Response.status(response.getStatus()).entity(response.getEntity(new GenericType<String>() {})).build();
+    }
 
 	@DELETE
 	@Path("/{id}")
