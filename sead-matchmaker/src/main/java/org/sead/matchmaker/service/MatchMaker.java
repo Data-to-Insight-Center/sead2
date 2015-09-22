@@ -19,7 +19,6 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Set;
 
 @Path("/ro")
@@ -65,21 +64,15 @@ public class MatchMaker {
             // Get organization from profile(s)
             // Add to base document
             Object creatorObject = content.get("Creator");
-            String ID = (String) content.get("Identifier");
 
             BasicBSONList affiliations = new BasicBSONList();
             if (creatorObject instanceof ArrayList) {
-                Iterator<String> iter = ((ArrayList<String>) creatorObject)
-                        .iterator();
-
-                while (iter.hasNext()) {
-                    String creator = iter.next();
+                for (String creator : ((ArrayList<String>) creatorObject)) {
                     Set<String> orgs = getOrganizationforPerson(creator);
                     if (!orgs.isEmpty()) {
                         affiliations.addAll(orgs);
                     }
                 }
-
             } else {
                 // BasicDBObject - single value
                 Set<String> orgs = getOrganizationforPerson((String) creatorObject);
@@ -171,8 +164,7 @@ public class MatchMaker {
             Document affiliationsDocument = (Document) activitiesDocument.get("affiliations");
             ArrayList orgList = (ArrayList) affiliationsDocument.get("affiliation");
             for (Object entry : orgList) {
-                Document org = (Document) ((Document) entry)
-                        .get("organization");
+                Document org = (Document) ((Document) entry).get("organization");
                 orgs.add(org.getString("name"));
             }
         }
