@@ -10,9 +10,8 @@ import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.result.UpdateResult;
 import com.mongodb.util.JSON;
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.WebResource;
+import com.sun.jersey.api.client.*;
+import com.sun.jersey.api.client.filter.ClientFilter;
 import org.bson.Document;
 import org.bson.types.BasicBSONList;
 import org.bson.types.ObjectId;
@@ -20,10 +19,7 @@ import org.json.JSONArray;
 import org.seadpdt.util.Constants;
 
 import javax.ws.rs.*;
-import javax.ws.rs.core.CacheControl;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
+import javax.ws.rs.core.*;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.sql.Date;
@@ -124,6 +120,7 @@ public class ROServices {
             WebResource webResource;
 
             webResource = client.resource(aggregation.get("@id").toString());
+            webResource.addFilter(new RedirectFilter());
 
             ClientResponse response = webResource.accept("application/json")
                     .get(ClientResponse.class);
@@ -255,7 +252,7 @@ public class ROServices {
             FindIterable<Document> iter = peopleCollection.find(new Document(
                     "orcid-profile.orcid-identifier.path", personID));
             // FixMe: NeverFail
-            if (iter == null) {
+            if (iter.first() == null) {
                 new PeopleServices().registerPerson("{\"provider\": \"ORCID\", \"identifier\":\"" + personID + "\" }");
                 iter = peopleCollection.find(new Document(
                         "orcid-profile.orcid-identifier.path", personID));
@@ -270,12 +267,15 @@ public class ROServices {
                 Document profile = (Document) affilDocument
                         .get("orcid-profile");
 
+                if (profile == null)  return  orgs;
                 Document activitiesDocument = (Document) profile
                         .get("orcid-activities");
 
+                if (activitiesDocument == null)  return  orgs;
                 Document affiliationsDocument = (Document) activitiesDocument
                         .get("affiliations");
 
+                if (affiliationsDocument == null)  return  orgs;
                 ArrayList orgList = (ArrayList) affiliationsDocument
                         .get("affiliation");
                 System.out.println(orgList.size());
@@ -292,6 +292,27 @@ public class ROServices {
 
         }
         return orgs;
+
+    }
+
+    class RedirectFilter extends ClientFilter {
+
+        @Override
+        public ClientResponse handle(ClientRequest cr) throws ClientHandlerException {
+            ClientHandler ch = getNext();
+            ClientResponse resp = ch.handle(cr);
+
+            if (resp.getClientResponseStatus().getFamily() != Response.Status.Family.REDIRECTION) {
+                return resp;
+            }
+            else {
+                // try location
+                String redirectTarget = resp.getHeaders().getFirst("Location");
+                cr.setURI(UriBuilder.fromUri(redirectTarget).build());
+                return ch.handle(cr);
+            }
+
+        }
 
     }
 	  

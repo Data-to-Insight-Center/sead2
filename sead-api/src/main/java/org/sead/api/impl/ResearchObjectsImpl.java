@@ -208,54 +208,7 @@ public class ResearchObjectsImpl extends ResearchObjects {
 			return Response.status(Status.NOT_FOUND).build();
 		}
 	}
-
-	private Set<String> getOrganizationforPerson(String personID) {
-		Set<String> orgs = new HashSet<String>();
-		;
-		if (personID.startsWith("orcid.org/")) {
-			personID = personID.substring("orcid.org/".length());
-			FindIterable<Document> iter = peopleCollection.find(new Document(
-					"orcid-profile.orcid-identifier.path", personID));
-			// FixMe: NeverFail
-			if (iter == null) {
-				new PeopleImpl().registerPerson(personID);
-				iter = peopleCollection.find(new Document(
-						"orcid-profile.orcid-identifier.path", personID));
-			}
-
-			iter.projection(new Document(
-					"orcid-profile.orcid-activities.affiliations.affiliation.organization.name",
-					1).append("_id", 0));
-			MongoCursor<Document> cursor = iter.iterator();
-			if (cursor.hasNext()) {
-				Document affilDocument = cursor.next();
-				Document profile = (Document) affilDocument
-						.get("orcid-profile");
-
-				Document activitiesDocument = (Document) profile
-						.get("orcid-activities");
-
-				Document affiliationsDocument = (Document) activitiesDocument
-						.get("affiliations");
-
-				ArrayList orgList = (ArrayList) affiliationsDocument
-						.get("affiliation");
-				System.out.println(orgList.size());
-				for (Object entry : orgList) {
-					Document org = (Document) ((Document) entry)
-							.get("organization");
-					orgs.add((String) org.getString("name"));
-				}
-			}
-			/*
-			 * JSONArray array = new JSONArray(); while(cursor.hasNext()) {
-			 * array.put(JSON.parse(cursor.next().toJson())); }
-			 */
-
-		}
-		return orgs;
-
-	}
+    
 
 	@POST
 	@Path("/matchingrepositories")
