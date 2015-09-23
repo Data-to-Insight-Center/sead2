@@ -1,7 +1,8 @@
-package org.seadva.metadatagen;
+package org.seadva.metadatagen.metagen.impl;
 
 import noNamespace.*;
 import org.apache.xmlbeans.XmlOptions;
+import org.seadva.metadatagen.metagen.BaseMetadataGen;
 import org.seadva.metadatagen.model.AggregationType;
 import org.seadva.metadatagen.model.MetadataObject;
 import org.seadva.metadatagen.util.ROQueryUtil;

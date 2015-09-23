@@ -46,7 +46,7 @@ public class ROServices {
     @Path("/")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public Response startROPublicationProcess(String publicationRequestString, @QueryParam("requestUrl") String requestURL) {
+    public Response startROPublicationProcess(String publicationRequestString) {
         String messageString = null;
         Document request = Document.parse(publicationRequestString);
         Document content = (Document) request.get("Aggregation");
@@ -114,44 +114,6 @@ public class ROServices {
             // Generate ID - by calling Workflow?
             // Add doc, return 201
 
-            // retrieve OREMap
-            Document aggregation = (Document) request.get("Aggregation");
-            Client client = Client.create();
-            WebResource webResource;
-
-            webResource = client.resource(aggregation.get("@id").toString());
-            webResource.addFilter(new RedirectFilter());
-
-            ClientResponse response = webResource.accept("application/json")
-                    .get(ClientResponse.class);
-
-            if (response.getStatus() != 200) {
-                throw new RuntimeException("" + response.getStatus());
-            }
-
-            Document oreMapDocument = Document.parse(response
-                    .getEntity(String.class));
-            ObjectId mapId = new ObjectId();
-            oreMapDocument.put("_id", mapId);
-            aggregation.put("authoratativeMap", mapId);
-
-            //Update 'actionable' identifiers for map and aggregation:
-            //Note these changes retain the tag-style identifier for the aggregation created by the space
-            //These changes essentially work like ARKs/ARTs and represent the <aggId> moving from the custodianship of the space <SpaceURL>/<aggId>
-            // to that of the CP services <servicesURL>/<aggId>
-            String newMapURL = requestURL + "/" + ID + "/oremap";
-
-            //Aggregation @id in the request
-
-            aggregation.put("@id", newMapURL+ "#aggregation");
-
-            //@id of the map in the map
-            oreMapDocument.put("@id", newMapURL);
-
-            //@id of describes object (the aggregation)  in map
-            ((Document)oreMapDocument.get("describes")).put("@id", newMapURL + "#aggregation");
-
-            oreMapCollection.insertOne(oreMapDocument);
             publicationsCollection.insertOne(request);
             URI resource = null;
             try {
@@ -292,27 +254,6 @@ public class ROServices {
 
         }
         return orgs;
-
-    }
-
-    class RedirectFilter extends ClientFilter {
-
-        @Override
-        public ClientResponse handle(ClientRequest cr) throws ClientHandlerException {
-            ClientHandler ch = getNext();
-            ClientResponse resp = ch.handle(cr);
-
-            if (resp.getClientResponseStatus().getFamily() != Response.Status.Family.REDIRECTION) {
-                return resp;
-            }
-            else {
-                // try location
-                String redirectTarget = resp.getHeaders().getFirst("Location");
-                cr.setURI(UriBuilder.fromUri(redirectTarget).build());
-                return ch.handle(cr);
-            }
-
-        }
 
     }
 	  

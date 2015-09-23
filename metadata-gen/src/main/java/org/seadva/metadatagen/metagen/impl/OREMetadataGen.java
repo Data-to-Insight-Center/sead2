@@ -1,8 +1,9 @@
-package org.seadva.metadatagen;
+package org.seadva.metadatagen.metagen.impl;
 
 import org.dspace.foresite.*;
 import org.dspace.foresite.jena.TripleJena;
 import org.json.JSONException;
+import org.seadva.metadatagen.metagen.BaseMetadataGen;
 import org.seadva.metadatagen.model.AggregationType;
 import org.seadva.metadatagen.model.MetadataObject;
 import org.seadva.metadatagen.util.Constants;

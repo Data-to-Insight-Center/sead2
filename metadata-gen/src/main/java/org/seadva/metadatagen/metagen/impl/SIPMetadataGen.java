@@ -1,11 +1,11 @@
-package org.seadva.metadatagen;
+package org.seadva.metadatagen.metagen.impl;
 
 import com.thoughtworks.xstream.XStream;
 import com.thoughtworks.xstream.io.xml.DomDriver;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.dspace.foresite.*;
-import org.json.JSONException;
+import org.seadva.metadatagen.metagen.BaseMetadataGen;
 import org.seadva.metadatagen.util.Constants;
 
 import java.io.*;

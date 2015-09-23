@@ -4,6 +4,7 @@ import org.apache.commons.io.IOUtils;
 
 import java.io.IOException;
 import java.io.StringWriter;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -13,6 +14,8 @@ public class Constants {
     public static String rosystemURL;
     public static String dcsBaseURL;
     public static String bagPath;
+    public static String metagenDbName;
+    public static String dbOreCollection = "oreMaps";
 
     public static String FORMAT_IANA_SCHEME = "http://www.iana.org/assignments/media-types/";
     public static String titleTerm = "http://purl.org/dc/terms/title";
@@ -57,24 +60,13 @@ public class Constants {
                 if (name.equals("bag.path")) {
                     bagPath = value;
                 }
+                if (name.equals("metagen.db.name")) {
+                    metagenDbName = value;
+                }
             }
 
         } catch (IOException e) {
             e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-        }
-
-
-        for (int i = 0; i < 3 ; i++) {
-            StringWriter writer = new StringWriter();
-            try {
-                IOUtils.copy(Constants.class.getResourceAsStream("./../util/test_202"+i+".json")
-                        , writer);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-
-            String content = writer.toString();
-            json_map.put(dcsBaseURL+"entity/202"+i,content);
         }
     }
 
