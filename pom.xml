@@ -13,10 +13,11 @@
         <module>va-workflow</module>
         <module>ps-stub</module>
         <module>sead-doi-service</module>
-        <module>metadata-gen</module>
-        <module>sead-api</module>
+        <module>sda-agent</module>
+        <module>metadata-gen</module> 
         <module>sead-matchmaker</module>
         <module>sead-pdt</module>
+<!--		<module>sead-api</module>-->
     </modules>
 
 </project>
