@@ -158,19 +158,20 @@ public class MetadataGenerator {
 
         FindIterable<Document> iter = oreMapCollection.find(new Document(
                 "describes.Identifier", id));
-        iter.projection(new Document("describes", 1).append("_id", 0));
+        //iter.projection(new Document("describes", 1).append("_id", 0));
 
         Document document = iter.first();
         if(document==null) {
             return Response.status(javax.ws.rs.core.Response.Status.NOT_FOUND).build();
         }
-        ObjectId mapId = (ObjectId) ((Document)document.get("Aggregation")).get("authoratativeMap");
+        //ObjectId mapId = (ObjectId) ((Document)document.get("Aggregation")).get("authoratativeMap");
 
-        iter = oreMapCollection.find(new Document("_id", mapId));
-        Document map = iter.first();
+        //iter = oreMapCollection.find(new Document("_id", mapId));
+        //Document map = iter.first();
         //Internal meaning only
-        map.remove("_id");
-        return Response.ok(map.toJson()).build();
+        //map.remove("_id");
+        document.remove("_id");
+        return Response.ok(document.toJson()).build();
     }
 
 

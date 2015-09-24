@@ -46,7 +46,7 @@ public class ROServices {
     @Path("/")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public Response startROPublicationProcess(String publicationRequestString) {
+    public Response startROPublicationProcess(String publicationRequestString, @QueryParam("requestUrl") String requestURL) {
         String messageString = null;
         Document request = Document.parse(publicationRequestString);
         Document content = (Document) request.get("Aggregation");
@@ -113,6 +113,9 @@ public class ROServices {
             // Add timestamp
             // Generate ID - by calling Workflow?
             // Add doc, return 201
+
+            String newMapURL = requestURL + "/" + ID + "/oremap";
+            content.put("@id", newMapURL+ "#aggregation");
 
             publicationsCollection.insertOne(request);
             URI resource = null;
