@@ -5,6 +5,8 @@ import org.apache.axiom.om.OMXMLBuilderFactory;
 import org.apache.axiom.om.OMXMLParserWrapper;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.sead.workflow.activity.SeadWorkflowActivity;
 import org.sead.workflow.config.SeadWorkflowConfig;
 import org.sead.workflow.context.SeadWorkflowContext;
@@ -96,9 +98,20 @@ public class SeadWorkflowService {
         System.out.println("SeadWorkflowService - publishRO : Input RO : " + ro);
         System.out.println("-----------------------------------");
 
+        String id = null;
+
+        try {
+            JSONObject roObject = new JSONObject(ro);
+            JSONObject aggregation = (JSONObject)roObject.get("Aggregation");
+            id = aggregation.get("Identifier").toString();
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
         SeadWorkflowContext context = new SeadWorkflowContext();
         context.addProperty(Constants.JSON_RO, ro);
         context.addProperty(Constants.REQUEST_URL, requestURL);
+        context.setCollectionId(id);
 
         String response = "";
 

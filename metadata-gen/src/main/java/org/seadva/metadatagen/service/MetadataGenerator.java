@@ -2,6 +2,7 @@ package org.seadva.metadatagen.service;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.MongoClient;
+import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.sun.jersey.api.client.*;
@@ -149,6 +150,29 @@ public class MetadataGenerator {
                     .build();
         }
     }
+
+    @GET
+    @Path("/{id}/oremap")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getROOREMap(@PathParam("id") String id) {
+
+        FindIterable<Document> iter = oreMapCollection.find(new Document(
+                "describes.Identifier", id));
+        iter.projection(new Document("describes", 1).append("_id", 0));
+
+        Document document = iter.first();
+        if(document==null) {
+            return Response.status(javax.ws.rs.core.Response.Status.NOT_FOUND).build();
+        }
+        ObjectId mapId = (ObjectId) ((Document)document.get("Aggregation")).get("authoratativeMap");
+
+        iter = oreMapCollection.find(new Document("_id", mapId));
+        Document map = iter.first();
+        //Internal meaning only
+        map.remove("_id");
+        return Response.ok(map.toJson()).build();
+    }
+
 
     class RedirectFilter extends ClientFilter {
 

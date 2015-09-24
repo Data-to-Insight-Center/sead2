@@ -8,6 +8,7 @@ public class Constants {
     public static String pdtUrl;
     public static String curBeeUrl;
     public static String matchmakerUrl;
+    public static String metadataGenUrl;
 
     static {
         try {
@@ -28,5 +29,6 @@ public class Constants {
         pdtUrl = properties.getProperty("pdt.url");
         curBeeUrl = properties.getProperty("curBee.url");
         matchmakerUrl = properties.getProperty("matchmaker.url");
+        metadataGenUrl = properties.getProperty("metadatagen.url");
     }
 }

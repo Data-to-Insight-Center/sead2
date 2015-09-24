@@ -68,6 +68,7 @@ public class ResearchObjectsImpl extends ResearchObjects {
     private WebResource pdtWebService;
     private WebResource curBeeWebService;
     private WebResource mmWebService;
+    private WebResource metadataGenWebService;
 
 	public ResearchObjectsImpl() {
 		mongoClient = new MongoClient();
@@ -81,6 +82,7 @@ public class ResearchObjectsImpl extends ResearchObjects {
         pdtWebService = Client.create().resource(Constants.pdtUrl);
         curBeeWebService = Client.create().resource(Constants.curBeeUrl);
         mmWebService = Client.create().resource(Constants.matchmakerUrl);
+        metadataGenWebService = Client.create().resource(Constants.metadataGenUrl);
 	}
 
     @POST
@@ -226,22 +228,16 @@ public class ResearchObjectsImpl extends ResearchObjects {
 	@Path("/{id}/oremap")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response getROOREMap(@PathParam("id") String id) {
+        WebResource webResource = metadataGenWebService;
 
-		FindIterable<Document> iter = publicationsCollection.find(new Document(
-				"Aggregation.Identifier", id));
-		iter.projection(new Document("Aggregation", 1).append("_id", 0));
+        ClientResponse response = webResource.path("rest")
+                .path(id + "/oremap")
+                .accept("application/json")
+                .type("application/json")
+                .get(ClientResponse.class);
 
-		Document document = iter.first();
-		if(document==null) {
-			return Response.status(javax.ws.rs.core.Response.Status.NOT_FOUND).build();
-		}
-		ObjectId mapId = (ObjectId) ((Document)document.get("Aggregation")).get("authoratativeMap");
-		
-		iter = oreMapCollection.find(new Document("_id", mapId));
-		Document map = iter.first();
-		//Internal meaning only
-		map.remove("_id");
-		return Response.ok(map.toJson()).cacheControl(control).build();
+        return Response.status(response.getStatus()).entity(response.getEntity(new GenericType<String>() {
+        })).build();
 	}
 
 }
