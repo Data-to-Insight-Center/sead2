@@ -18,17 +18,20 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.HashSet;
+import java.util.Set;
 
 @Path("/repositories")
 public class RepoServices {
 
     // move these to an external file?
-    String collectionName = "repo";
+    String repoCollectionName = "repo";
+    String roCollectionName = "ro";
     String DBname = Constants.pdtDbName;
 
     MongoClient mongoClient = new MongoClient();
     MongoDatabase db = mongoClient.getDatabase(DBname);
-    MongoCollection<Document> collection = db.getCollection(collectionName);
+    MongoCollection<Document> collection = db.getCollection(repoCollectionName);
 
     @POST
     @Path("/")
@@ -126,7 +129,18 @@ public class RepoServices {
     @Path("/{id}/researchobjects")
     @Produces(MediaType.APPLICATION_JSON)
     public Response getROsByRepository(@PathParam("id") String id) {
-        return Response.status(Status.NOT_IMPLEMENTED).build();
+        MongoCollection<Document> publicationsCollection = null;
+        publicationsCollection = db.getCollection(roCollectionName);
+        FindIterable<Document> iter = publicationsCollection.find(new Document(
+                "Repository", id));
+        iter.projection(new Document("Aggregation.Identifier", 1)
+                .append("Repository", 1).append("Status", 1).append("_id", 0));
+        MongoCursor<Document> cursor = iter.iterator();
+        Set<Document> array = new HashSet<Document>();
+        while (cursor.hasNext()) {
+            array.add(cursor.next());
+        }
+        return Response.ok(array).build();
     }
 
     ;
