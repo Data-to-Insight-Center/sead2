@@ -1,6 +1,6 @@
 /*
  *
- * Copyright 2015 University of Michigan
+ * Copyright 2015 University of Michigan, 2015 The Trustees of Indiana University,
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@
  *
  *
  * @author myersjd@umich.edu
+ * @author charmadu@umail.iu.edu
  */
 
 package org.sead.api.impl;

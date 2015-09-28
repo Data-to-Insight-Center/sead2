@@ -1,6 +1,6 @@
 /*
  *
- * Copyright 2015 University of Michigan
+ * Copyright 2015 University of Michigan, 2015 The Trustees of Indiana University,
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,45 +17,21 @@
  *
  *
  * @author myersjd@umich.edu
+ * @author charmadu@umail.iu.edu
  */
 
 package org.sead.api.impl;
-
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.HashSet;
-import java.util.Set;
-
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.CacheControl;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
 
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.GenericType;
 import com.sun.jersey.api.client.WebResource;
-import org.bson.Document;
-import org.json.JSONArray;
 import org.sead.api.Repositories;
-
-import com.mongodb.BasicDBObject;
-import com.mongodb.MongoClient;
-import com.mongodb.client.FindIterable;
-import com.mongodb.client.MongoCollection;
-import com.mongodb.client.MongoCursor;
-import com.mongodb.client.MongoDatabase;
-import com.mongodb.client.result.UpdateResult;
-import com.mongodb.util.JSON;
-import com.sun.jersey.api.client.ClientResponse.Status;
 import org.sead.api.util.Constants;
+
+import javax.ws.rs.*;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
 /**
  * See abstract base class for documentation of the rest api. Note - path
