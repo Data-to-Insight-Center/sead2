@@ -12,13 +12,12 @@
     <modules>
         <module>services/sead-status-tracker</module>
         <module>va-workflow</module>
-        <module>ps-stub</module>
         <module>sead-doi-service</module>
-        <module>sda-agent</module>
+        <!--<module>sda-agent</module>-->
         <module>metadata-gen</module> 
         <module>sead-matchmaker</module>
         <module>sead-pdt</module>
-		<module>sead-api</module>
+        <module>sead-api</module>
     </modules>
 
 </project>
