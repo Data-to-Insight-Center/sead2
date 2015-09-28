@@ -15,6 +15,7 @@ import org.bson.Document;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.seadpdt.util.Constants;
+import org.seadpdt.util.MongoDB;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.CacheControl;
@@ -27,14 +28,15 @@ import java.net.URISyntaxException;
 
 public class PeopleServices {
 
-    // move these to an external file?
-    String collectionName = "people";
-    String DBname = Constants.pdtDbName;
+    private MongoDatabase db = null;
+    private MongoCollection<Document> peopleCollection = null;
+    private CacheControl control = new CacheControl();
 
-    MongoClient mongoClient = new MongoClient();
-    MongoDatabase db = mongoClient.getDatabase(DBname);
-    MongoCollection<Document> collection = db.getCollection(collectionName);
-    CacheControl control = new CacheControl();
+    public PeopleServices() {
+        db = MongoDB.getServicesDB();
+        peopleCollection = db.getCollection(MongoDB.people);
+        control.setNoCache(true);
+    }
 
     @POST
     @Path("/")
@@ -49,7 +51,7 @@ public class PeopleServices {
         }
 
         String newID = (String) person.get("identifier");
-        FindIterable<Document> iter = collection.find(new Document(
+        FindIterable<Document> iter = peopleCollection.find(new Document(
                 "orcid-profile.orcid-identifier.path", newID));
         if (iter.iterator().hasNext()) {
             return Response.status(Status.CONFLICT).entity(new BasicDBObject("Failure", "Person with ORCID Identifier " + newID + " already exists")).build();
@@ -66,7 +68,7 @@ public class PeopleServices {
                                     "Provider call failed with status: "
                                             + r.getMessage())).build();
                 }
-                collection.insertOne(Document.parse(profile));
+                peopleCollection.insertOne(Document.parse(profile));
                 URI resource = null;
                 try {
                     resource = new URI("./" + newID);
@@ -86,7 +88,7 @@ public class PeopleServices {
     @Path("/")
     @Produces(MediaType.APPLICATION_JSON)
     public Response getPeopleList() {
-        FindIterable<Document> iter = collection.find();
+        FindIterable<Document> iter = peopleCollection.find();
         iter.projection(new Document("orcid-profile.orcid-identifier.path", 1).append(
                 "orcid-profile.orcid-bio.personal-details.given-names", 1).append("orcid-profile.orcid-bio.personal-details.family-name", 1).append("_id", 0));
         MongoCursor<Document> cursor = iter.iterator();
@@ -102,12 +104,12 @@ public class PeopleServices {
     @Path("/{id}")
     @Produces(MediaType.APPLICATION_JSON)
     public Response getPersonProfile(@PathParam("id") String id) {
-        FindIterable<Document> iter = collection.find(new Document(
+        FindIterable<Document> iter = peopleCollection.find(new Document(
                 "orcid-profile.orcid-identifier.path", id));
         if(iter.first() != null) {
             Document document = iter.first();
             document.remove("_id");
-            return Response.ok(document.toJson()).build();
+            return Response.ok(document.toJson()).cacheControl(control).build();
         } else {
             return Response.status(Status.NOT_FOUND).build();
         }
@@ -117,7 +119,7 @@ public class PeopleServices {
     @Path("/{id}")
     @Consumes(MediaType.APPLICATION_JSON)
     public Response updatePersonProfile(@PathParam("id") String id) {
-        FindIterable<Document> iter = collection.find(new Document(
+        FindIterable<Document> iter = peopleCollection.find(new Document(
                 "orcid-profile.orcid-identifier.path", id));
 
         if (iter.iterator().hasNext()) {
@@ -134,7 +136,7 @@ public class PeopleServices {
             }
 
 
-            collection.replaceOne(new Document(
+            peopleCollection.replaceOne(new Document(
                     "orcid-profile.orcid-identifier.path", id), Document.parse(profile));
             return Response.status(Status.OK).build();
 
@@ -147,7 +149,7 @@ public class PeopleServices {
     @DELETE
     @Path("/{id}")
     public Response unregisterPerson(@PathParam("id") String id) {
-        DeleteResult result = collection.deleteOne(new Document("orcid-profile.orcid-identifier.path", id));
+        DeleteResult result = peopleCollection.deleteOne(new Document("orcid-profile.orcid-identifier.path", id));
         if(result.getDeletedCount() == 0 ){
             return Response.status(Status.NOT_FOUND).build();
         } else {

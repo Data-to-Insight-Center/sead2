@@ -17,6 +17,7 @@ import org.bson.types.BasicBSONList;
 import org.bson.types.ObjectId;
 import org.json.JSONArray;
 import org.seadpdt.util.Constants;
+import org.seadpdt.util.MongoDB;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.*;
@@ -30,16 +31,18 @@ import java.util.*;
 
 public class ROServices {
 
-	// move these to an external file?
-	String collectionName = "ro";
-	String DBname = Constants.pdtDbName;
-	
-	MongoClient mongoClient = new MongoClient();
-	MongoDatabase db = mongoClient.getDatabase(DBname);
-	MongoCollection<Document> publicationsCollection = db.getCollection(collectionName);
-    MongoCollection<Document> peopleCollection = db.getCollection("people");
-    MongoCollection<Document> oreMapCollection = db.getCollection("oreMaps");
+    private MongoClient mongoClient = null;
+    private MongoDatabase db = null;
+    private MongoCollection<Document> publicationsCollection = null;
+    private MongoCollection<Document> peopleCollection = null;
     private CacheControl control = new CacheControl();
+
+    public ROServices() {
+        db = MongoDB.getServicesDB();
+        publicationsCollection = db.getCollection(MongoDB.researchObjects);
+        peopleCollection = db.getCollection(MongoDB.people);
+        control.setNoCache(true);
+    }
 
 
     @POST
@@ -104,7 +107,7 @@ public class ROServices {
                             DateFormat.getDateTimeInstance().format(
                                     new Date(System.currentTimeMillis())))
                     .add("reporter", "SEAD-CP")
-                    .add("stage", "Receipt Ackowledged")
+                    .add("stage", "Receipt Acknowledged")
                     .add("message",
                             "request recorded and processing will begin").get();
             statusreports.add(status);

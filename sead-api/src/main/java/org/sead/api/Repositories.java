@@ -65,7 +65,7 @@ public abstract class Repositories {
 	 * 
 	 * @return [
 	 * 			{"orgidentifier":<id>, "repositoryUrl":<url>},
-	 * 			...
+	 * 			"repositoryName":<name>, "lastUpdate":<profile update date>
 	 * 		   ]
 	 */
 	@GET
