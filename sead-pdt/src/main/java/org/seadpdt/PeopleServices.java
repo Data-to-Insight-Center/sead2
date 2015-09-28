@@ -158,7 +158,7 @@ public class PeopleServices {
     private String getOrcidProfile(String id) {
 
         Client client = Client.create();
-        WebResource webResource = client.resource("http://pub.orcid.org/v1.1/"
+        WebResource webResource = client.resource("http://pub.orcid.org/v1.2/"
                 + id + "/orcid-profile");
 
         ClientResponse response = webResource.accept("application/orcid+json")
