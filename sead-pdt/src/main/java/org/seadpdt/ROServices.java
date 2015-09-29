@@ -193,7 +193,7 @@ public class ROServices {
         //Internal meaning only - strip from exported doc
         document.remove("_id");
         Document aggDocument = (Document) document.get("Aggregation");
-        aggDocument.remove("authoratativeMap");
+        //aggDocument.remove("authoratativeMap");
         return Response.ok(document.toJson()).cacheControl(control).build();
     }
 

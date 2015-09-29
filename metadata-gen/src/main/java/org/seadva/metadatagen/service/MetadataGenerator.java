@@ -1,3 +1,24 @@
+/*
+ *
+ * Copyright 2015 The Trustees of Indiana University, 2015 University of Michigan
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ *
+ * @author charmadu@umail.iu.edu
+ * @author myersjd@umich.edu
+ */
+
 package org.seadva.metadatagen.service;
 
 import com.mongodb.BasicDBObject;
@@ -117,17 +138,12 @@ public class MetadataGenerator {
                     .getEntity(String.class));
             ObjectId mapId = new ObjectId();
             oreMapDocument.put("_id", mapId);
-            aggregation.put("authoratativeMap", mapId);
 
             //Update 'actionable' identifiers for map and aggregation:
             //Note these changes retain the tag-style identifier for the aggregation created by the space
             //These changes essentially work like ARKs/ARTs and represent the <aggId> moving from the custodianship of the space <SpaceURL>/<aggId>
             // to that of the CP services <servicesURL>/<aggId>
             String newMapURL = requestURL + "/" + ID + "/oremap";
-
-            //Aggregation @id in the request
-
-            aggregation.put("@id", newMapURL+ "#aggregation");
 
             //@id of the map in the map
             oreMapDocument.put("@id", newMapURL);
