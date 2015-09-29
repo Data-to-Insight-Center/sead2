@@ -31,6 +31,8 @@ public class MongoDB {
 	public static String researchObjects = "ro";
 	public static String people="people";
 	public static String repositories = "repo";
+    public static String oreMap = "oreMaps";
+
 	public static synchronized MongoClient getMongoClientInstance() {
 	    if (mongoClientInstance == null) {
 	        try {
@@ -41,8 +43,14 @@ public class MongoDB {
 	    }
 	    return mongoClientInstance;
 	}
+
 	static public MongoDatabase getServicesDB() {
 		MongoDatabase db = getMongoClientInstance().getDatabase(Constants.pdtDbName);
 		return db;
 	}
+
+    static public MongoDatabase geMetaGenDB() {
+        MongoDatabase db = getMongoClientInstance().getDatabase(Constants.metaDbName);
+        return db;
+    }
 }

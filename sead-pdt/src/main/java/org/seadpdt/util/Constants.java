@@ -28,6 +28,7 @@ import org.apache.commons.io.IOUtils;
 public class Constants {
 
     public static String pdtDbName;
+    public static String metaDbName;
 
     static {
         try {
@@ -55,6 +56,9 @@ public class Constants {
 
             if(name.equals("pdt.db.name")){
                 pdtDbName = value;
+            }
+            if(name.equals("metagen.db.name")){
+                metaDbName = value;
             }
         }
     }

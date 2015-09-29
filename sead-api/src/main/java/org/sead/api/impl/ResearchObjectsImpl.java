@@ -22,34 +22,19 @@
 
 package org.sead.api.impl;
 
+import com.sun.jersey.api.client.Client;
+import com.sun.jersey.api.client.ClientResponse;
+import com.sun.jersey.api.client.GenericType;
+import com.sun.jersey.api.client.WebResource;
+import org.sead.api.ResearchObjects;
+import org.sead.api.util.Constants;
+
 import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
+import javax.ws.rs.*;
 import javax.ws.rs.core.CacheControl;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-
-import com.sun.jersey.api.client.GenericType;
-import org.bson.Document;
-import org.bson.types.ObjectId;
-import org.sead.api.ResearchObjects;
-
-import com.mongodb.MongoClient;
-import com.mongodb.client.FindIterable;
-import com.mongodb.client.MongoCollection;
-import com.mongodb.client.MongoDatabase;
-import com.mongodb.client.result.DeleteResult;
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.ClientResponse.Status;
-import com.sun.jersey.api.client.WebResource;
-import org.sead.api.util.Constants;
 
 /**
  * See abstract base class for documentation of the rest api. Note - path
@@ -59,11 +44,6 @@ import org.sead.api.util.Constants;
 @Path("/researchobjects")
 public class ResearchObjectsImpl extends ResearchObjects {
 
-    // TODO: Remove all MongoDB access variables. This API should not do any MongoDB calls.
-	private MongoClient mongoClient = null;
-	private MongoDatabase db = null;
-	private MongoCollection<Document> publicationsCollection = null;
-	private MongoCollection<Document> oreMapCollection = null;
 	private CacheControl control = new CacheControl();
 
     private WebResource pdtWebService;
@@ -72,14 +52,7 @@ public class ResearchObjectsImpl extends ResearchObjects {
     private WebResource metadataGenWebService;
 
 	public ResearchObjectsImpl() {
-		mongoClient = new MongoClient();
-		db = mongoClient.getDatabase("seadcp");
-
-		publicationsCollection = db.getCollection("researchobjects");
-		oreMapCollection = db.getCollection("oreMaps");
-
 		control.setNoCache(true);
-
         pdtWebService = Client.create().resource(Constants.pdtUrl);
         curBeeWebService = Client.create().resource(Constants.curBeeUrl);
         mmWebService = Client.create().resource(Constants.matchmakerUrl);
@@ -166,33 +139,15 @@ public class ResearchObjectsImpl extends ResearchObjects {
 	@DELETE
 	@Path("/{id}")
 	public Response rescindROPublicationRequest(@PathParam("id") String id) {
-		//Is there ever a reason to preserve the map and not the pub request?
-		//FixMe: Don't allow a delete after the request is complete?
-		
-		//First remove map
-		FindIterable<Document> iter = publicationsCollection.find(new Document(
-				"Aggregation.Identifier", id));
-		iter.projection(new Document("Aggregation", 1).append("_id", 0));
+        WebResource webResource = pdtWebService;
 
-		Document document = iter.first();
-		if(document==null) {
-			return Response.status(javax.ws.rs.core.Response.Status.NOT_FOUND).build();
-		}
-		ObjectId mapId = (ObjectId) ((Document)document.get("Aggregation")).get("authoratativeMap");
-		
-		DeleteResult mapDeleteResult = oreMapCollection.deleteOne(new Document("_id", mapId));
-		if (mapDeleteResult.getDeletedCount() != 1) {
-			//Report error
-			System.out.println("Could not find map corresponding to " + id);
-		}
-		
-		DeleteResult dr = publicationsCollection.deleteOne(new Document(
-				"Aggregation.Identifier", id));
-		if (dr.getDeletedCount() == 1) {
-			return Response.status(Status.OK).build();
-		} else {
-			return Response.status(Status.NOT_FOUND).build();
-		}
+        ClientResponse response = webResource.path("researchobjects")
+                .path(id)
+                .accept("application/json")
+                .type("application/json")
+                .delete(ClientResponse.class);
+
+        return Response.status(response.getStatus()).entity(response.getEntity(new GenericType<String>() {})).build();
 	}
 
 	@POST

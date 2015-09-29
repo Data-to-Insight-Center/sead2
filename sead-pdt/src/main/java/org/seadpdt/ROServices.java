@@ -28,11 +28,13 @@ import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
 import com.mongodb.util.JSON;
 import com.sun.jersey.api.client.ClientResponse;
 import org.bson.Document;
 import org.bson.types.BasicBSONList;
+import org.bson.types.ObjectId;
 import org.json.JSONArray;
 import org.seadpdt.util.MongoDB;
 
@@ -51,16 +53,20 @@ import java.util.*;
 public class ROServices {
 
     private MongoDatabase db = null;
+    private MongoDatabase metaDb = null;
     private MongoCollection<Document> publicationsCollection = null;
     private MongoCollection<Document> peopleCollection = null;
     private MongoCollection<Document> repositoriesCollection = null;
+    private MongoCollection<Document> oreMapCollection = null;
     private CacheControl control = new CacheControl();
 
     public ROServices() {
         db = MongoDB.getServicesDB();
+        metaDb = MongoDB.geMetaGenDB();
         publicationsCollection = db.getCollection(MongoDB.researchObjects);
         peopleCollection = db.getCollection(MongoDB.people);
         repositoriesCollection = db.getCollection(MongoDB.repositories);
+        oreMapCollection = metaDb.getCollection(MongoDB.oreMap);
         control.setNoCache(true);
     }
 
@@ -233,6 +239,39 @@ public class ROServices {
         Document document = iter.first();
         document.remove("_id");
         return Response.ok(document.toJson()).cacheControl(control).build();
+    }
+
+    @DELETE
+    @Path("/{id}")
+    public Response rescindROPublicationRequest(@PathParam("id") String id) {
+        // Is there ever a reason to preserve the map and not the pub request?
+        // FixMe: Don't allow a delete after the request is complete?
+
+        // First remove map
+        FindIterable<Document> iter = publicationsCollection.find(new Document(
+                "Aggregation.Identifier", id));
+        iter.projection(new Document("Aggregation", 1).append("_id", 0));
+
+        Document document = iter.first();
+        if (document == null) {
+            return Response.status(javax.ws.rs.core.Response.Status.NOT_FOUND)
+                    .build();
+        }
+
+        DeleteResult mapDeleteResult = oreMapCollection.deleteOne(new Document(
+                "describes.Identifier", id));
+        if (mapDeleteResult.getDeletedCount() != 1) {
+            // Report error
+            System.out.println("Could not find map corresponding to " + id);
+        }
+
+        DeleteResult dr = publicationsCollection.deleteOne(new Document(
+                "Aggregation.Identifier", id));
+        if (dr.getDeletedCount() == 1) {
+            return Response.status(ClientResponse.Status.OK).build();
+        } else {
+            return Response.status(ClientResponse.Status.NOT_FOUND).build();
+        }
     }
 
     private List<String> getOrganizationforPerson(String pID) {
