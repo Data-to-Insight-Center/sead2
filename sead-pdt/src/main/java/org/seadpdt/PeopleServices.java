@@ -22,7 +22,6 @@
 package org.seadpdt;
 
 import com.mongodb.BasicDBObject;
-import com.mongodb.MongoClient;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
@@ -33,9 +32,7 @@ import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.ClientResponse.Status;
 import com.sun.jersey.api.client.WebResource;
 import org.bson.Document;
-import org.json.JSONArray;
 import org.json.JSONObject;
-import org.seadpdt.util.Constants;
 import org.seadpdt.util.MongoDB;
 
 import javax.ws.rs.*;
@@ -44,6 +41,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
 
 @Path("/people")
 
@@ -110,15 +108,19 @@ public class PeopleServices {
     @Produces(MediaType.APPLICATION_JSON)
     public Response getPeopleList() {
         FindIterable<Document> iter = peopleCollection.find();
-        iter.projection(new Document("orcid-profile.orcid-identifier.path", 1).append(
-                "orcid-profile.orcid-bio.personal-details.given-names", 1).append("orcid-profile.orcid-bio.personal-details.family-name", 1).append("_id", 0));
-        MongoCursor<Document> cursor = iter.iterator();
-        JSONArray array = new JSONArray();
-        while (cursor.hasNext()) {
-            array.put(new JSONObject(cursor.next().toJson()));
-        }
-        return Response.ok(array.toString()).cacheControl(control).build();
+        iter.projection(getOrcidPersonProjection());
 
+        MongoCursor<Document> cursor = iter.iterator();
+        ArrayList<Object> array = new ArrayList<Object>();
+        while (cursor.hasNext()) {
+            Document next = cursor.next();
+            array.add(getPersonInfo(next));
+        }
+        Document peopleDocument = new Document();
+        peopleDocument.put("persons", array);
+        peopleDocument.put("@context", getPersonContext());
+        return Response.ok(peopleDocument.toJson()).cacheControl(control)
+                .build();
     }
 
     @GET
@@ -128,8 +130,24 @@ public class PeopleServices {
         FindIterable<Document> iter = peopleCollection.find(new Document(
                 "orcid-profile.orcid-identifier.path", id));
         if(iter.first() != null) {
+            iter.projection(getOrcidPersonProjection());
+            Document document = getPersonInfo(iter.first());
+            document.put("@context", getPersonContext());
+            return Response.ok(document.toJson()).cacheControl(control).build();
+        } else {
+            return Response.status(Status.NOT_FOUND).build();
+        }
+    }
+
+    @GET
+    @Path("/{id}/raw")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getRawPersonProfile(@PathParam("id") String id) {
+        FindIterable<Document> iter = peopleCollection.find(new Document(
+                "orcid-profile.orcid-identifier.path", id));
+
+        if(iter.first() != null) {
             Document document = iter.first();
-            document.remove("_id");
             return Response.ok(document.toJson()).cacheControl(control).build();
         } else {
             return Response.status(Status.NOT_FOUND).build();
@@ -144,7 +162,6 @@ public class PeopleServices {
                 "orcid-profile.orcid-identifier.path", id));
 
         if (iter.iterator().hasNext()) {
-            //String orcidID = (String) iter.first().get("orcid-profile.orcid-identifier.path");
             String profile = null;
             try {
                 profile = getOrcidProfile(id);
@@ -155,7 +172,6 @@ public class PeopleServices {
                                 "Provider call failed with status: "
                                         + r.getMessage())).build();
             }
-
 
             peopleCollection.replaceOne(new Document(
                     "orcid-profile.orcid-identifier.path", id), Document.parse(profile));
@@ -176,6 +192,74 @@ public class PeopleServices {
         } else {
             return Response.status(Status.OK).build();
         }
+    }
+
+    static protected Document getPersonInfo(Document next) {
+        Document standardForm = new Document();
+        standardForm.put("@id",	((Document) ((Document) next.get("orcid-profile"))
+                .get("orcid-identifier")).get("path"));
+        Document detailsDocument = (Document) ((Document) ((Document) next
+                .get("orcid-profile")).get("orcid-bio"))
+                .get("personal-details");
+        standardForm.put("givenName",
+                ((Document) detailsDocument.get("given-names")).get("value"));
+        standardForm.put("familyName",
+                ((Document) detailsDocument.get("family-name")).get("value"));
+        ArrayList emails = ((ArrayList<?>) ((Document) ((Document) ((Document) next
+                .get("orcid-profile")).get("orcid-bio"))
+                .get("contact-details")).get("email"));
+        if(!emails.isEmpty()) {
+            standardForm
+                    .put("email",
+                            ((Document) emails.get(0))
+                                    .get("value"));
+        }
+        standardForm.put("PersonalProfileDocument",
+                ((Document) ((Document) next.get("orcid-profile"))
+                        .get("orcid-identifier")).get("uri"));
+        @SuppressWarnings("unchecked")
+        ArrayList<Document> affiliationsList = (ArrayList<Document>) ((Document) ((Document) ((Document) next
+                .get("orcid-profile")).get("orcid-activities"))
+                .get("affiliations")).get("affiliation");
+        StringBuffer affs = new StringBuffer();
+        for (Document affiliationDocument : affiliationsList) {
+            if (affiliationDocument.getString("type").equals("EMPLOYMENT")
+                    && (affiliationDocument.get("end-date") == null)) {
+                if(affs.length()!=0) {
+                    affs.append(", ");
+                }
+                affs.append(((Document) affiliationDocument.get("organization"))
+                        .getString("name"));
+
+            }
+            standardForm.append("affiliation",affs.toString());
+        }
+        return standardForm;
+    }
+
+    static protected Document getOrcidPersonProjection() {
+        return new Document("orcid-profile.orcid-identifier.uri", 1)
+                .append("orcid-profile.orcid-identifier.path", 1)
+                .append("orcid-profile.orcid-bio.personal-details.given-names",
+                        1)
+                .append("orcid-profile.orcid-bio.personal-details.family-name",
+                        1)
+                .append("orcid-profile.orcid-bio.contact-details.email", 1)
+                .append("orcid-profile.orcid-activities.affiliations.affiliation",
+                        1).append("_id", 0);
+    }
+
+    static private Document getPersonContext() {
+        Document contextDocument = new Document();
+        contextDocument.put("givenName", "http://schema.org/Person/givenName");
+        contextDocument
+                .put("familyName", "http://schema.org/Person/familyName");
+        contextDocument.put("email", "http://schema.org/Person/email");
+        contextDocument.put("affiliation",
+                "http://schema.org/Person/affiliation");
+        contextDocument.put("PersonalProfileDocument",
+                "http://schema.org/Thing/mainEntityOfPage");
+        return contextDocument;
     }
 
     private String getOrcidProfile(String id) {

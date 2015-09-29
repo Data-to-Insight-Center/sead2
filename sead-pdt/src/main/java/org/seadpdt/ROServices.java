@@ -24,24 +24,22 @@ package org.seadpdt;
 import com.mongodb.BasicDBObject;
 import com.mongodb.BasicDBObjectBuilder;
 import com.mongodb.DBObject;
-import com.mongodb.MongoClient;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.result.UpdateResult;
 import com.mongodb.util.JSON;
-import com.sun.jersey.api.client.*;
-import com.sun.jersey.api.client.filter.ClientFilter;
+import com.sun.jersey.api.client.ClientResponse;
 import org.bson.Document;
 import org.bson.types.BasicBSONList;
-import org.bson.types.ObjectId;
 import org.json.JSONArray;
-import org.seadpdt.util.Constants;
 import org.seadpdt.util.MongoDB;
 
 import javax.ws.rs.*;
-import javax.ws.rs.core.*;
+import javax.ws.rs.core.CacheControl;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.sql.Date;
@@ -52,16 +50,17 @@ import java.util.*;
 
 public class ROServices {
 
-    private MongoClient mongoClient = null;
     private MongoDatabase db = null;
     private MongoCollection<Document> publicationsCollection = null;
     private MongoCollection<Document> peopleCollection = null;
+    private MongoCollection<Document> repositoriesCollection = null;
     private CacheControl control = new CacheControl();
 
     public ROServices() {
         db = MongoDB.getServicesDB();
         publicationsCollection = db.getCollection(MongoDB.researchObjects);
         peopleCollection = db.getCollection(MongoDB.people);
+        repositoriesCollection = db.getCollection(MongoDB.repositories);
         control.setNoCache(true);
     }
 
@@ -84,11 +83,14 @@ public class ROServices {
         Object repository = request.get("Repository");
         if (repository == null) {
             messageString += "Missing Respository";
+        } else {
+            FindIterable<Document> iter = repositoriesCollection.find(new Document("orgidentifier", repository));
+            if(iter.first()==null) {
+                messageString += "Unknown Repository: " + repository;
+            }
+
         }
-        //Document stats = (Document) request.get("Aggregation Statistics");
-        //if (stats == null) {
-        //    messageString += "Missing Statistics";
-        //}
+
         if (messageString == null) {
             // Get organization from profile(s)
             // Add to base document
@@ -102,7 +104,7 @@ public class ROServices {
 
                     while (iter.hasNext()) {
                         String creator = iter.next();
-                        Set<String> orgs = getOrganizationforPerson(creator);
+                        List<String> orgs = getOrganizationforPerson(creator);
                         if (!orgs.isEmpty()) {
                             affiliations.addAll(orgs);
                         }
@@ -110,7 +112,7 @@ public class ROServices {
 
                 } else {
                     // BasicDBObject - single value
-                    Set<String> orgs = getOrganizationforPerson((String) creatorObject);
+                    List<String> orgs = getOrganizationforPerson((String) creatorObject);
                     if (!orgs.isEmpty()) {
                         affiliations.addAll(orgs);
                     }
@@ -230,57 +232,44 @@ public class ROServices {
 
         Document document = iter.first();
         document.remove("_id");
-                return Response.ok(document.toJson()).cacheControl(control).build();
+        return Response.ok(document.toJson()).cacheControl(control).build();
     }
 
-    private Set<String> getOrganizationforPerson(String personID) {
-        Set<String> orgs = new HashSet<String>();
-        ;
-        if (personID.startsWith("orcid.org/")) {
-            personID = personID.substring("orcid.org/".length());
-            FindIterable<Document> iter = peopleCollection.find(new Document(
-                    "orcid-profile.orcid-identifier.path", personID));
-            // FixMe: NeverFail
-            if (iter.first() == null) {
+    private List<String> getOrganizationforPerson(String pID) {
+
+        List<String> orgs = new ArrayList<String>();
+
+        String personID = getInternalId(pID);
+        FindIterable<Document> iter = peopleCollection.find(new Document(
+                "orcid-profile.orcid-identifier.path", personID));
+
+        // NeverFail
+        if (iter.first() == null) {
+            if (pID.startsWith("orcid.org/")) {
                 new PeopleServices().registerPerson("{\"provider\": \"ORCID\", \"identifier\":\"" + personID + "\" }");
-                iter = peopleCollection.find(new Document(
-                        "orcid-profile.orcid-identifier.path", personID));
             }
-
-            iter.projection(new Document(
-                    "orcid-profile.orcid-activities.affiliations.affiliation.organization.name",
-                    1).append("_id", 0));
-            MongoCursor<Document> cursor = iter.iterator();
-            if (cursor.hasNext()) {
-                Document affilDocument = cursor.next();
-                Document profile = (Document) affilDocument
-                        .get("orcid-profile");
-
-                if (profile == null)  return  orgs;
-                Document activitiesDocument = (Document) profile
-                        .get("orcid-activities");
-
-                if (activitiesDocument == null)  return  orgs;
-                Document affiliationsDocument = (Document) activitiesDocument
-                        .get("affiliations");
-
-                if (affiliationsDocument == null)  return  orgs;
-                ArrayList orgList = (ArrayList) affiliationsDocument
-                        .get("affiliation");
-                System.out.println(orgList.size());
-                for (Object entry : orgList) {
-                    Document org = (Document) ((Document) entry)
-                            .get("organization");
-                    orgs.add((String) org.getString("name"));
-                }
-            }
-			/*
-			 * JSONArray array = new JSONArray(); while(cursor.hasNext()) {
-			 * array.put(JSON.parse(cursor.next().toJson())); }
-			 */
-
+            iter = peopleCollection.find(new Document(
+                    "orcid-profile.orcid-identifier.path", personID));
         }
+
+        if (iter.first() != null) {
+            iter.projection(PeopleServices.getOrcidPersonProjection());
+            Document document = PeopleServices.getPersonInfo(iter.first());
+            String currentAffiliations = document.getString("affiliation");
+            orgs = Arrays.asList(currentAffiliations.split("\\s*,\\s*"));
+        }
+
         return orgs;
+    }
+
+    private String getInternalId(String personID) {
+        //ORCID
+        if (personID.startsWith("orcid.org/")) {
+            return personID.substring("orcid.org/".length());
+        } else {
+            //Add other providers here
+            return personID;
+        }
 
     }
 	  
