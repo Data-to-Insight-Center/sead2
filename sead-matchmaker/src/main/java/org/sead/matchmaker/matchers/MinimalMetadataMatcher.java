@@ -18,6 +18,7 @@
  *
  * @author myersjd@umich.edu
  */
+
 package org.sead.matchmaker.matchers;
 
 import org.bson.Document;
