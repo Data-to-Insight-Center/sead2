@@ -49,267 +49,276 @@ import java.text.DateFormat;
 import java.util.*;
 
 @Path("/researchobjects")
-
 public class ROServices {
 
-    private MongoDatabase db = null;
-    private MongoDatabase metaDb = null;
-    private MongoCollection<Document> publicationsCollection = null;
-    private MongoCollection<Document> peopleCollection = null;
-    private MongoCollection<Document> repositoriesCollection = null;
-    private MongoCollection<Document> oreMapCollection = null;
-    private CacheControl control = new CacheControl();
+	private MongoDatabase db = null;
+	private MongoDatabase metaDb = null;
+	private MongoCollection<Document> publicationsCollection = null;
+	private MongoCollection<Document> peopleCollection = null;
+	private MongoCollection<Document> repositoriesCollection = null;
+	private MongoCollection<Document> oreMapCollection = null;
+	private CacheControl control = new CacheControl();
 
-    public ROServices() {
-        db = MongoDB.getServicesDB();
-        metaDb = MongoDB.geMetaGenDB();
-        publicationsCollection = db.getCollection(MongoDB.researchObjects);
-        peopleCollection = db.getCollection(MongoDB.people);
-        repositoriesCollection = db.getCollection(MongoDB.repositories);
-        oreMapCollection = metaDb.getCollection(MongoDB.oreMap);
-        control.setNoCache(true);
-    }
+	public ROServices() {
+		db = MongoDB.getServicesDB();
+		metaDb = MongoDB.geMetaGenDB();
+		publicationsCollection = db.getCollection(MongoDB.researchObjects);
+		peopleCollection = db.getCollection(MongoDB.people);
+		repositoriesCollection = db.getCollection(MongoDB.repositories);
+		oreMapCollection = metaDb.getCollection(MongoDB.oreMap);
+		control.setNoCache(true);
+	}
 
+	@POST
+	@Path("/")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response startROPublicationProcess(String publicationRequestString,
+			@QueryParam("requestUrl") String requestURL) {
+		String messageString = null;
+		Document request = Document.parse(publicationRequestString);
+		Document content = (Document) request.get("Aggregation");
+		if (content == null) {
+			messageString += "Missing Aggregation";
+		}
+		Document preferences = (Document) request.get("Preferences");
+		if (preferences == null) {
+			messageString += "Missing Preferences";
+		}
+		Object repository = request.get("Repository");
+		if (repository == null) {
+			messageString += "Missing Respository";
+		} else {
+			FindIterable<Document> iter = repositoriesCollection
+					.find(new Document("orgidentifier", repository));
+			if (iter.first() == null) {
+				messageString += "Unknown Repository: " + repository;
+			}
 
-    @POST
-    @Path("/")
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    public Response startROPublicationProcess(String publicationRequestString, @QueryParam("requestUrl") String requestURL) {
-        String messageString = null;
-        Document request = Document.parse(publicationRequestString);
-        Document content = (Document) request.get("Aggregation");
-        if (content == null) {
-            messageString += "Missing Aggregation";
-        }
-        Document preferences = (Document) request.get("Preferences");
-        if (preferences == null) {
-            messageString += "Missing Preferences";
-        }
-        Object repository = request.get("Repository");
-        if (repository == null) {
-            messageString += "Missing Respository";
-        } else {
-            FindIterable<Document> iter = repositoriesCollection.find(new Document("orgidentifier", repository));
-            if(iter.first()==null) {
-                messageString += "Unknown Repository: " + repository;
-            }
+		}
 
-        }
+		if (messageString == null) {
+			// Get organization from profile(s)
+			// Add to base document
+			Object creatorObject = content.get("Creator");
+			String ID = (String) content.get("Identifier");
+			BasicBSONList affiliations = new BasicBSONList();
+			if (creatorObject != null) {
+				if (creatorObject instanceof ArrayList) {
+					Iterator<String> iter = ((ArrayList<String>) creatorObject)
+							.iterator();
 
-        if (messageString == null) {
-            // Get organization from profile(s)
-            // Add to base document
-            Object creatorObject = content.get("Creator");
-            String ID = (String) content.get("Identifier");
-            BasicBSONList affiliations = new BasicBSONList();
-            if (creatorObject != null) {
-                if (creatorObject instanceof ArrayList) {
-                    Iterator<String> iter = ((ArrayList<String>) creatorObject)
-                            .iterator();
+					while (iter.hasNext()) {
+						String creator = iter.next();
+						List<String> orgs = getOrganizationforPerson(creator);
+						if (!orgs.isEmpty()) {
+							affiliations.addAll(orgs);
+						}
+					}
 
-                    while (iter.hasNext()) {
-                        String creator = iter.next();
-                        List<String> orgs = getOrganizationforPerson(creator);
-                        if (!orgs.isEmpty()) {
-                            affiliations.addAll(orgs);
-                        }
-                    }
+				} else {
+					// BasicDBObject - single value
+					List<String> orgs = getOrganizationforPerson((String) creatorObject);
+					if (!orgs.isEmpty()) {
+						affiliations.addAll(orgs);
+					}
+				}
+			}
 
-                } else {
-                    // BasicDBObject - single value
-                    List<String> orgs = getOrganizationforPerson((String) creatorObject);
-                    if (!orgs.isEmpty()) {
-                        affiliations.addAll(orgs);
-                    }
-                }
-            }
+			request.append("Affiliations", affiliations);
 
-            request.append("Affiliations", affiliations);
+			// Add first status message
 
-            // Add first status message
+			List<DBObject> statusreports = new ArrayList<DBObject>();
+			DBObject status = BasicDBObjectBuilder
+					.start()
+					.add("date",
+							DateFormat.getDateTimeInstance().format(
+									new Date(System.currentTimeMillis())))
+					.add("reporter", "SEAD-CP")
+					.add("stage", "Receipt Acknowledged")
+					.add("message",
+							"request recorded and processing will begin").get();
+			statusreports.add(status);
+			request.append("Status", statusreports);
+			// Create initial status message - add
+			// Add timestamp
+			// Generate ID - by calling Workflow?
+			// Add doc, return 201
 
-            List<DBObject> statusreports = new ArrayList<DBObject>();
-            DBObject status = BasicDBObjectBuilder
-                    .start()
-                    .add("date",
-                            DateFormat.getDateTimeInstance().format(
-                                    new Date(System.currentTimeMillis())))
-                    .add("reporter", "SEAD-CP")
-                    .add("stage", "Receipt Acknowledged")
-                    .add("message",
-                            "request recorded and processing will begin").get();
-            statusreports.add(status);
-            request.append("Status", statusreports);
-            // Create initial status message - add
-            // Add timestamp
-            // Generate ID - by calling Workflow?
-            // Add doc, return 201
+			String newMapURL = requestURL + "/" + ID + "/oremap";
+			content.put("@id", newMapURL + "#aggregation");
 
-            String newMapURL = requestURL + "/" + ID + "/oremap";
-            content.put("@id", newMapURL+ "#aggregation");
+			publicationsCollection.insertOne(request);
+			URI resource = null;
+			try {
+				resource = new URI("./" + ID);
+			} catch (URISyntaxException e) {
+				// Should not happen given simple ids
+				e.printStackTrace();
+			}
+			return Response.created(resource)
+					.entity(new Document("identifier", ID)).build();
+		} else {
+			return Response.status(ClientResponse.Status.BAD_REQUEST)
+					.entity(new BasicDBObject("Failure", messageString))
+					.build();
+		}
+	}
 
-            publicationsCollection.insertOne(request);
-            URI resource = null;
-            try {
-                resource = new URI("./" + ID);
-            } catch (URISyntaxException e) {
-                // Should not happen given simple ids
-                e.printStackTrace();
-            }
-            return Response.created(resource)
-                    .entity(new Document("identifier", ID)).build();
-        } else {
-            return Response.status(ClientResponse.Status.BAD_REQUEST)
-                    .entity(new BasicDBObject("Failure", messageString))
-                    .build();
-        }
-    }
+	@GET
+	@Path("/")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response getROsList() {
+		FindIterable<Document> iter = publicationsCollection.find();
+		iter.projection(new Document("Status", 1).append("Repository", 1)
+				.append("Aggregation.Identifier", 1)
+				.append("Aggregation.Title", 1).append("_id", 0));
+		MongoCursor<Document> cursor = iter.iterator();
+		JSONArray array = new JSONArray();
+		while (cursor.hasNext()) {
+			array.put(JSON.parse(cursor.next().toJson()));
+		}
+		return Response.ok(array.toString()).cacheControl(control).build();
+	}
 
-    @GET
-    @Path("/")
-    @Produces(MediaType.APPLICATION_JSON)
-    public Response getROsList() {
-        FindIterable<Document> iter = publicationsCollection.find();
-        iter.projection(new Document("Status", 1).append("Repository", 1)
-                .append("Aggregation.Identifier", 1)
-                .append("Aggregation.Title", 1).append("_id", 0));
-        MongoCursor<Document> cursor = iter.iterator();
-        JSONArray array = new JSONArray();
-        while (cursor.hasNext()) {
-            array.put(JSON.parse(cursor.next().toJson()));
-        }
-        return Response.ok(array.toString()).cacheControl(control).build();
-    }
+	@GET
+	@Path("/{id}")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response getROProfile(@PathParam("id") String id) {
 
-    @GET
-    @Path("/{id}")
-    @Produces(MediaType.APPLICATION_JSON)
-    public Response getROProfile(@PathParam("id") String id) {
+		FindIterable<Document> iter = publicationsCollection.find(new Document(
+				"Aggregation.Identifier", id));
+		if (iter == null) {
+			return Response.status(ClientResponse.Status.NOT_FOUND).build();
+		}
+		Document document = iter.first();
+		if (document == null) {
+			return Response.status(ClientResponse.Status.NOT_FOUND).build();
+		}
+		// Internal meaning only - strip from exported doc
+		document.remove("_id");
+		Document aggDocument = (Document) document.get("Aggregation");
+		// aggDocument.remove("authoratativeMap");
+		return Response.ok(document.toJson()).cacheControl(control).build();
+	}
 
-        FindIterable<Document> iter = publicationsCollection.find(new Document(
-                "Aggregation.Identifier", id));
-        if (iter == null) {
-            return Response.status(ClientResponse.Status.NOT_FOUND).build();
-        }
-        Document document = iter.first();
-        if (document == null) {
-            return Response.status(ClientResponse.Status.NOT_FOUND).build();
-        }
-        //Internal meaning only - strip from exported doc
-        document.remove("_id");
-        Document aggDocument = (Document) document.get("Aggregation");
-        //aggDocument.remove("authoratativeMap");
-        return Response.ok(document.toJson()).cacheControl(control).build();
-    }
+	@POST
+	@Path("/{id}/status")
+	@Consumes(MediaType.APPLICATION_JSON)
+	public Response setROStatus(@PathParam("id") String id, String state) {
+		try {
+			Document statusUpdateDocument = Document.parse(state);
+			statusUpdateDocument.append(
+					"date",
+					DateFormat.getDateTimeInstance().format(
+							new Date(System.currentTimeMillis())));
+			UpdateResult ur = publicationsCollection.updateOne(new Document(
+					"Aggregation.Identifier", id), new BasicDBObject("$push",
+					new BasicDBObject("Status", statusUpdateDocument)));
+			if (ur.wasAcknowledged()) {
+				return Response.status(ClientResponse.Status.OK).build();
 
-    @POST
-    @Path("/{id}/status")
-    @Consumes(MediaType.APPLICATION_JSON)
-    public Response setROStatus(@PathParam("id") String id, String state) {
-        try {
-            Document statusUpdateDocument = Document.parse(state);
-            statusUpdateDocument.append(
-                    "date",
-                    DateFormat.getDateTimeInstance().format(
-                            new Date(System.currentTimeMillis())));
-            UpdateResult ur = publicationsCollection.updateOne(new Document(
-                    "Aggregation.Identifier", id), new BasicDBObject("$push",
-                    new BasicDBObject("Status", statusUpdateDocument)));
-            if (ur.wasAcknowledged()) {
-                return Response.status(ClientResponse.Status.OK).build();
+			} else {
+				return Response.status(ClientResponse.Status.NOT_FOUND).build();
 
-            } else {
-                return Response.status(ClientResponse.Status.NOT_FOUND).build();
+			}
+		} catch (org.bson.BsonInvalidOperationException e) {
+			return Response.status(ClientResponse.Status.BAD_REQUEST).build();
+		}
+	}
 
-            }
-        } catch (org.bson.BsonInvalidOperationException e) {
-            return Response.status(ClientResponse.Status.BAD_REQUEST).build();
-        }
-    }
+	@GET
+	@Path("/{id}/status")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response getROStatus(@PathParam("id") String id) {
+		FindIterable<Document> iter = publicationsCollection.find(new Document(
+				"Aggregation.Identifier", id));
+		iter.projection(new Document("Status", 1).append("_id", 0));
 
-    @GET
-    @Path("/{id}/status")
-    @Produces(MediaType.APPLICATION_JSON)
-    public Response getROStatus(@PathParam("id") String id) {
-        FindIterable<Document> iter = publicationsCollection.find(new Document(
-                "Aggregation.Identifier", id));
-        iter.projection(new Document("Status", 1).append("_id", 0));
+		Document document = iter.first();
+		document.remove("_id");
+		return Response.ok(document.toJson()).cacheControl(control).build();
+	}
 
-        Document document = iter.first();
-        document.remove("_id");
-        return Response.ok(document.toJson()).cacheControl(control).build();
-    }
+	@DELETE
+	@Path("/{id}")
+	public Response rescindROPublicationRequest(@PathParam("id") String id) {
+		// Is there ever a reason to preserve the map and not the pub request?
+		// FixMe: Don't allow a delete after the request is complete?
 
-    @DELETE
-    @Path("/{id}")
-    public Response rescindROPublicationRequest(@PathParam("id") String id) {
-        // Is there ever a reason to preserve the map and not the pub request?
-        // FixMe: Don't allow a delete after the request is complete?
+		// First remove map
+		FindIterable<Document> iter = publicationsCollection.find(new Document(
+				"Aggregation.Identifier", id));
+		iter.projection(new Document("Aggregation", 1).append("_id", 0));
 
-        // First remove map
-        FindIterable<Document> iter = publicationsCollection.find(new Document(
-                "Aggregation.Identifier", id));
-        iter.projection(new Document("Aggregation", 1).append("_id", 0));
+		Document document = iter.first();
+		if (document == null) {
+			return Response.status(javax.ws.rs.core.Response.Status.NOT_FOUND)
+					.build();
+		}
 
-        Document document = iter.first();
-        if (document == null) {
-            return Response.status(javax.ws.rs.core.Response.Status.NOT_FOUND)
-                    .build();
-        }
+		DeleteResult mapDeleteResult = oreMapCollection.deleteOne(new Document(
+				"describes.Identifier", id));
+		if (mapDeleteResult.getDeletedCount() != 1) {
+			// Report error
+			System.out.println("Could not find map corresponding to " + id);
+		}
 
-        DeleteResult mapDeleteResult = oreMapCollection.deleteOne(new Document(
-                "describes.Identifier", id));
-        if (mapDeleteResult.getDeletedCount() != 1) {
-            // Report error
-            System.out.println("Could not find map corresponding to " + id);
-        }
+		DeleteResult dr = publicationsCollection.deleteOne(new Document(
+				"Aggregation.Identifier", id));
+		if (dr.getDeletedCount() == 1) {
+			return Response.status(ClientResponse.Status.OK).build();
+		} else {
+			return Response.status(ClientResponse.Status.NOT_FOUND).build();
+		}
+	}
 
-        DeleteResult dr = publicationsCollection.deleteOne(new Document(
-                "Aggregation.Identifier", id));
-        if (dr.getDeletedCount() == 1) {
-            return Response.status(ClientResponse.Status.OK).build();
-        } else {
-            return Response.status(ClientResponse.Status.NOT_FOUND).build();
-        }
-    }
+	private List<String> getOrganizationforPerson(String pID) {
 
-    private List<String> getOrganizationforPerson(String pID) {
+		List<String> orgs = new ArrayList<String>();
 
-        List<String> orgs = new ArrayList<String>();
+		String personID = getInternalId(pID);
+		//If null, no chance that we have a profile...
+		if (personID != null) {
+			FindIterable<Document> iter = peopleCollection.find(new Document(
+					"orcid-profile.orcid-identifier.path", personID));
 
-        String personID = getInternalId(pID);
-        FindIterable<Document> iter = peopleCollection.find(new Document(
-                "orcid-profile.orcid-identifier.path", personID));
+			// NeverFail
+			if (iter.first() == null) {
+				//Handle per provider - ORCID only at present
+				if (pID.startsWith("orcid.org/")) {
+					new PeopleServices()
+							.registerPerson("{\"provider\": \"ORCID\", \"identifier\":\""
+									+ personID + "\" }");
+				}
+				iter = peopleCollection.find(new Document(
+						"orcid-profile.orcid-identifier.path", personID));
+			}
 
-        // NeverFail
-        if (iter.first() == null) {
-            if (pID.startsWith("orcid.org/")) {
-                new PeopleServices().registerPerson("{\"provider\": \"ORCID\", \"identifier\":\"" + personID + "\" }");
-            }
-            iter = peopleCollection.find(new Document(
-                    "orcid-profile.orcid-identifier.path", personID));
-        }
+			if (iter.first() != null) {
+				iter.projection(PeopleServices.getOrcidPersonProjection());
+				Document document = PeopleServices.getPersonInfo(iter.first());
+				String currentAffiliations = document.getString("affiliation");
+				orgs = Arrays.asList(currentAffiliations.split("\\s*,\\s*"));
+			}
+		}
 
-        if (iter.first() != null) {
-            iter.projection(PeopleServices.getOrcidPersonProjection());
-            Document document = PeopleServices.getPersonInfo(iter.first());
-            String currentAffiliations = document.getString("affiliation");
-            orgs = Arrays.asList(currentAffiliations.split("\\s*,\\s*"));
-        }
+		return orgs;
+	}
 
-        return orgs;
-    }
+	//Parse the string to get the internal ID that the profile would have been stored under. 
+	//If the value is a plain string name, or a 1.5 style name:VIVO URL, return null since we
+	//have no profiles
+	private String getInternalId(String personID) {
+		// ORCID
+		if (personID.startsWith("orcid.org/")) {
+			return personID.substring("orcid.org/".length());
+		} else {
+			// Add other providers here
+			return null; // Unrecognized/no id/profile in system
+		}
 
-    private String getInternalId(String personID) {
-        //ORCID
-        if (personID.startsWith("orcid.org/")) {
-            return personID.substring("orcid.org/".length());
-        } else {
-            //Add other providers here
-            return personID;
-        }
+	}
 
-    }
-	  
 }
