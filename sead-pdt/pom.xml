@@ -1,12 +1,11 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
     <modelVersion>4.0.0</modelVersion>
-    <groupId>org.sead.pdt</groupId>
     <artifactId>sead-pdt</artifactId>
+    <version>2.0.0-SNAPSHOT</version>
     <packaging>war</packaging>
-    <version>0.0.1-SNAPSHOT</version>
-    <name>SEAD PDT Maven Webapp</name>
-    <url>http://maven.apache.org</url>
+    <name>SEAD PDT Webapp</name>
 
     <parent>
         <groupId>org.sead.va</groupId>
@@ -62,17 +61,10 @@
             <version>1.3.2</version>
         </dependency>
     </dependencies>
+
     <build>
         <finalName>sead-pdt</finalName>
-
         <plugins>
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>tomcat-maven-plugin</artifactId>
-                <configuration>
-                    <warFile>U:\apache-tomcat-8.0.22\webapps\warFile.war</warFile>
-                </configuration>
-            </plugin>
             <plugin>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>2.3.2</version>
