@@ -1,0 +1,104 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+    <artifactId>sda-LandingPage</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+    <name>SDA LandingPage Webapp</name>
+    <packaging>war</packaging>
+    
+    <parent>
+		<groupId>org.sead.va</groupId>
+		<artifactId>va-parent</artifactId>
+		<version>2.0.0-SNAPSHOT</version>
+	</parent>
+
+    <parent>
+        <groupId>org.sead.va</groupId>
+        <artifactId>va-parent</artifactId>
+        <version>2.0.0-SNAPSHOT</version>
+    </parent>
+	<build>
+		<finalName>Landing_Page</finalName>
+
+		<plugins>
+		
+		  <plugin>
+
+	      <groupId>org.apache.maven.plugins</groupId>
+	      <artifactId>maven-compiler-plugin</artifactId>
+	      <configuration>
+	        <source>1.8</source>
+	        <target>1.8</target>
+	      </configuration>
+	    </plugin>
+
+
+		  <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-war-plugin</artifactId>
+            <version>2.2</version>
+            <configuration>
+            	<archiveClasses>false</archiveClasses>
+                    <webResources>
+                        <resource>
+                            <filtering>true</filtering>
+                            <directory>${basedir}/src/main/webapp</directory>
+                            <includes>
+                                <include>WEB-INF/web.xml</include>
+                            </includes>
+                        </resource>
+                    </webResources>
+            </configuration>
+            <executions>
+                <execution>
+                    <phase>prepare-package</phase>
+                </execution>
+            </executions>
+        </plugin>
+                
+        <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+           	<artifactId>maven-jar-plugin</artifactId>
+            <version>2.2</version>
+            <executions>
+                <execution>
+                    <goals>
+                        <goal>jar</goal>
+                    </goals>
+                </execution>
+            </executions>
+        </plugin>
+
+	</plugins>
+
+	</build>
+    <dependencies>
+    	<dependency>
+			<groupId>javax.ws.rs</groupId>
+			<artifactId>javax.ws.rs-api</artifactId>
+			<version>2.0</version>
+		</dependency>
+		
+		<dependency>
+			<groupId>com.googlecode.json-simple</groupId>
+			<artifactId>json-simple</artifactId>
+			<version>1.1</version>
+		</dependency>
+		
+		<dependency>
+			<groupId>com.jcraft</groupId>
+			<artifactId>jsch</artifactId>
+			<version>0.1.50</version>
+		</dependency>
+		
+		<dependency>
+			<groupId>javax.servlet</groupId>
+			<artifactId>servlet-api</artifactId>
+			<version>2.5</version>
+		</dependency>
+	</dependencies>
+	
+	
+</project>

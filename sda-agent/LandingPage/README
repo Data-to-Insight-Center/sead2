@@ -1,0 +1,29 @@
+Step 1:
+
+Modify config/config.properties file
+
+need to get correct information for sftp.host, sftp.user and sftp.pass
+
+
+Step 2:
+
+modify src/main/java/org/sead/Landing_Page/LandingPage.java
+
+make correct 'propertiesPath' to config/config.propertie
+
+
+Step 3:
+
+Build the Landing-Page  
+
+mvn clean install -DskipTests
+
+
+Step 4:
+
+copy target/Landing_Page.war file into tomcat/webapp/
+
+
+Step 5:
+
+start Tomcat
