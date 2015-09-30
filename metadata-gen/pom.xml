@@ -1,116 +1,155 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/POM/4.0.0"
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-  <modelVersion>4.0.0</modelVersion>
-  <parent>
-    <artifactId>va-parent</artifactId>
-    <groupId>org.sead.va</groupId>
-    <version>2.0.0-SNAPSHOT</version>
-  </parent>
-  <groupId>org.seadva.metadatagen</groupId>
-  <artifactId>metadata-gen</artifactId>
-  <version>1.0-SNAPSHOT</version>
-  <packaging>war</packaging>
-  <name>metadata-gen</name>
-  <build>
-    <finalName>metadata-gen</finalName>
-    <plugins>
-      <plugin>
-        <artifactId>maven-compiler-plugin</artifactId>
-        <version>2.5.1</version>
-        <inherited>true</inherited>
-        <configuration>
-          <source>1.7</source>
-          <target>1.7</target>
-        </configuration>
-      </plugin>
-    </plugins>
-  </build>
-  <dependencies>
-      <dependency>
-          <groupId>org.glassfish.jersey.containers</groupId>
-          <artifactId>jersey-container-servlet-core</artifactId>
-          <!-- use the following artifactId if you don't need servlet 2.x compatibility -->
-          <!-- artifactId>jersey-container-servlet</artifactId -->
-      </dependency>
-      <!-- uncomment this to get JSON support-->
-      <dependency>
-          <groupId>org.glassfish.jersey.media</groupId>
-          <artifactId>jersey-media-moxy</artifactId>
-      </dependency>
-      <dependency>
-          <groupId>com.sun.jersey</groupId>
-          <artifactId>jersey-client</artifactId>
-          <version>1.8</version>
-      </dependency>
-      <dependency>
-          <groupId>javax.ws.rs</groupId>
-          <artifactId>jsr311-api</artifactId>
-          <version>1.1.1</version>
-      </dependency>
-      <dependency>
-          <groupId>org.apache.commons</groupId>
-          <artifactId>commons-io</artifactId>
-          <version>1.3.2</version>
-      </dependency>
-      <dependency>
-          <groupId>com.googlecode.foresite-toolkit</groupId>
-          <artifactId>foresite</artifactId>
-          <version>0.9</version>
-      </dependency>
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"
+        xmlns="http://maven.apache.org/POM/4.0.0"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 
-      <!-- Model jars imported from DSC and SEAD -->
-      <dependency>
-          <artifactId>dcs-model</artifactId>
-          <groupId>org.dataconservancy.model</groupId>
-          <version>1.1.0-SNAPSHOT</version>
-          <type>jar</type>
-      </dependency>
-      <dependency>
-          <artifactId>dcs-model-builder-xstream</artifactId>
-          <groupId>org.dataconservancy.model</groupId>
-          <version>1.1.0-SNAPSHOT</version>
-          <type>jar</type>
-      </dependency>
-      <dependency>
-          <artifactId>sead-model</artifactId>
-          <groupId>org.seadva.model</groupId>
-          <version>1.0.1-SNAPSHOT</version>
-          <type>jar</type>
-      </dependency>
-      <dependency>
-          <artifactId>sead-model-builder-xstream</artifactId>
-          <groupId>org.seadva.model</groupId>
-          <version>1.0.1-SNAPSHOT</version>
-          <type>jar</type>
-      </dependency>
-      <dependency>
-          <groupId>d2i</groupId>
-          <artifactId>d2i-fgdc-schema</artifactId>
-          <version>1.0.0</version>
-      </dependency>
-      <dependency>
-          <groupId>org.apache.xmlbeans</groupId>
-          <artifactId>xmlbeans-xpath</artifactId>
-          <version>2.3.0</version>
-      </dependency>
-      <dependency>
-          <groupId>org.mongodb</groupId>
-          <artifactId>mongodb-driver</artifactId>
-          <version>3.0.1</version>
-      </dependency>
-  </dependencies>
-  <dependencyManagement>
+    <modelVersion>4.0.0</modelVersion>
+    <artifactId>metadata-gen</artifactId>
+    <version>2.0.0-SNAPSHOT</version>
+    <name>SEAD Metadata Generator Webapp</name>
+    <packaging>war</packaging>
+
+    <parent>
+        <artifactId>va-parent</artifactId>
+        <groupId>org.sead.va</groupId>
+        <version>2.0.0-SNAPSHOT</version>
+    </parent>
+
     <dependencies>
-      <dependency>
-        <groupId>org.glassfish.jersey</groupId>
-        <artifactId>jersey-bom</artifactId>
-        <version>${jersey.version}</version>
-        <type>pom</type>
-        <scope>import</scope>
-      </dependency>
+        <dependency>
+            <groupId>org.glassfish.jersey.containers</groupId>
+            <artifactId>jersey-container-servlet-core</artifactId>
+            <!-- use the following artifactId if you don't need servlet 2.x compatibility -->
+            <!-- artifactId>jersey-container-servlet</artifactId -->
+        </dependency>
+        <!-- uncomment this to get JSON support-->
+        <dependency>
+            <groupId>org.glassfish.jersey.media</groupId>
+            <artifactId>jersey-media-moxy</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.sun.jersey</groupId>
+            <artifactId>jersey-client</artifactId>
+            <version>1.8</version>
+        </dependency>
+        <dependency>
+            <groupId>javax.ws.rs</groupId>
+            <artifactId>jsr311-api</artifactId>
+            <version>1.1.1</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>1.3.2</version>
+        </dependency>
+        <dependency>
+            <groupId>com.googlecode.foresite-toolkit</groupId>
+            <artifactId>foresite</artifactId>
+            <version>0.9</version>
+        </dependency>
+
+        <!-- Model jars imported from DSC and SEAD -->
+        <dependency>
+            <artifactId>dcs-model</artifactId>
+            <groupId>org.dataconservancy.model</groupId>
+            <version>1.1.0-SNAPSHOT</version>
+            <type>jar</type>
+        </dependency>
+        <dependency>
+            <artifactId>dcs-model-builder-xstream</artifactId>
+            <groupId>org.dataconservancy.model</groupId>
+            <version>1.1.0-SNAPSHOT</version>
+            <type>jar</type>
+        </dependency>
+        <dependency>
+            <artifactId>sead-model</artifactId>
+            <groupId>org.seadva.model</groupId>
+            <version>1.0.1-SNAPSHOT</version>
+            <type>jar</type>
+        </dependency>
+        <dependency>
+            <artifactId>sead-model-builder-xstream</artifactId>
+            <groupId>org.seadva.model</groupId>
+            <version>1.0.1-SNAPSHOT</version>
+            <type>jar</type>
+        </dependency>
+        <dependency>
+            <groupId>d2i</groupId>
+            <artifactId>d2i-fgdc-schema</artifactId>
+            <version>1.0.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.xmlbeans</groupId>
+            <artifactId>xmlbeans-xpath</artifactId>
+            <version>2.3.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.mongodb</groupId>
+            <artifactId>mongodb-driver</artifactId>
+            <version>3.0.1</version>
+        </dependency>
     </dependencies>
-  </dependencyManagement>
+
+    <build>
+        <finalName>metadata-gen</finalName>
+        <plugins>
+            <plugin>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>2.3.2</version>
+                <inherited>true</inherited>
+                <configuration>
+                    <source>1.6</source>
+                    <target>1.6</target>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-war-plugin</artifactId>
+                <version>2.2</version>
+                <configuration>
+                    <archiveClasses>false</archiveClasses>
+                    <webResources>
+                        <resource>
+                            <filtering>true</filtering>
+                            <directory>${basedir}/src/main/webapp</directory>
+                            <includes>
+                                <include>WEB-INF/web.xml</include>
+                            </includes>
+                        </resource>
+                    </webResources>
+                </configuration>
+                <executions>
+                    <execution>
+                        <phase>prepare-package</phase>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>2.2</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.glassfish.jersey</groupId>
+                <artifactId>jersey-bom</artifactId>
+                <version>${jersey.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 
     <repositories>
         <repository>
@@ -125,8 +164,9 @@
         </repository>
     </repositories>
 
-  <properties>
-    <jersey.version>2.17</jersey.version>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-  </properties>
+    <properties>
+        <jersey.version>2.17</jersey.version>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
+
 </project>
