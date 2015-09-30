@@ -15,7 +15,10 @@ public class Constants {
     public static String dcsBaseURL;
     public static String bagPath;
     public static String metagenDbName;
+    public static String pdtDbName;
     public static String dbOreCollection = "oreMaps";
+    public static String dbFgdcCollection = "fgdc";
+    public static String pdtRoCollection = "ro";
 
     public static String FORMAT_IANA_SCHEME = "http://www.iana.org/assignments/media-types/";
     public static String titleTerm = "http://purl.org/dc/terms/title";
@@ -62,6 +65,9 @@ public class Constants {
                 }
                 if (name.equals("metagen.db.name")) {
                     metagenDbName = value;
+                }
+                if (name.equals("pdt.db.name")) {
+                    pdtDbName = value;
                 }
             }
 

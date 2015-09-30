@@ -72,15 +72,15 @@ public class MetadataGenerator {
      * @return String that will be returned as a text/plain response.
      */
     @GET
-    @Path("/getMetadata")
+    @Path("/{id}/metadata/{type}")
     @Produces(MediaType.APPLICATION_XML)
-    public Response getIt(@QueryParam("entityId") String entityId,
-                          @QueryParam("type") String metadataType) throws URISyntaxException {
+    public Response getIt(@PathParam("id") String entityId,
+                          @PathParam("type") String metadataType) throws URISyntaxException {
 
         String errorMsg ="<error>\n" +
-                "<description>EntityId and type(ORE/SIP/FGDC) are required query parameters. Please specify.</description>\n" +
+                "<description>EntityId and type(ORE/SIP/FGDC) are required path parameters. Please specify.</description>\n" +
                 "<traceInformation>\n" +
-                "method: metadata-gen.getMetadata \n" +
+                "method: metadata-gen/rest/{id}/metadata/{type} \n" +
                 "</traceInformation>\n" +
                 "</error>";
 
@@ -91,15 +91,18 @@ public class MetadataGenerator {
         String response = "";
 
         if(metadataType.equalsIgnoreCase("ORE")) {
-            OREMetadataGen oreMetadataGen = new OREMetadataGen();
-            response = oreMetadataGen.generateMetadata(entityId);
+            //OREMetadataGen oreMetadataGen = new OREMetadataGen();
+            //response = oreMetadataGen.generateMetadata(entityId);
         } else if(metadataType.equalsIgnoreCase("FGDC")){
             FGDCMetadataGen fgdcMetadataGen = new FGDCMetadataGen();
             response = fgdcMetadataGen.generateMetadata(entityId);
         }
 
-        return Response.ok(response
-        ).build();
+        if(!response.equals("")) {
+            return Response.ok(response).build();
+        } else {
+            return Response.status(ClientResponse.Status.NOT_FOUND).build();
+        }
     }
 
     @POST
