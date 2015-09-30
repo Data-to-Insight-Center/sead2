@@ -1,0 +1,110 @@
+{
+	"orgidentifier":"icpsr",
+	"re3data":{
+		"repository":{
+			"orgIdentifier":"r3d100010255",
+			"repositoryName":{
+				"language":"en-US",
+				"content":"Inter-university Consortium for Political and Social Research"
+			},
+			"additionalName":{
+				"language":"en-US",
+				"content":"ICPSR data archive"
+			},
+			"repositoryURL":"htt//tempuri.org",
+			"description":{
+				"language":"en-US",
+				"content":"ICPSR maintains a data archive of more than 500,000 files of research in the social sciences. It hosts 16 specialized collections of data in education, aging, criminal justice, substance abuse, terrorism, and other fields."
+			},
+			"repositoryContact":"Linda Detterman",
+			"type":"serviceProvider",
+			"size":{
+				"updated":"",
+				"content":"500,000+"
+			},
+			"dataAccess":{
+				"dataAccessType":"open"
+			},
+			"repositoryIdentifier":"htt//tempuri.org",
+			"dataUpload":{
+				"dataUploadType":"open"
+			},
+			"enhancedPublication":"yes",
+			"databaseAccess":{
+				"databaseAccessType":"open"
+			},
+			"versioning":"yes",
+			"repositoryLanguage":"en-US",
+			"databaseLicense":{
+				"databaseLicenseURL":"htt//tempuri.org",
+				"databaseLicenseName":"Apache License 2.0"
+			},
+			"dataLicense":{
+				"dataLicenseName":"Apache License 2.0",
+				"dataLicenseURL":"htt//tempuri.org"
+			},
+			"institution":{
+				"institutionCountry":"ABW",
+				"institutionName":{
+					"language":"en-US",
+					"content":"institutionName"
+				}
+			},
+			"api":{
+				"apiType":"FTP",
+				"content":"htt//tempuri.org"
+			},
+			"qualityManagement":"yes",
+			"lastUpdate":"lastUpdate",
+			"startDate":"startDate",
+			"citationGuidelineURL":"htt//tempuri.org",
+			"entryDate":"entryDate",
+			"policy":{
+				"policyName":"policyName",
+				"policyURL":"htt//tempuri.org"
+			},
+			"providerType":"dataProvider",
+			"contentType":{
+				"contentTypeScheme":"parse",
+				"content":"Standard office documents"
+			},
+			"dataUploadLicense":{
+				"dataUploadLicenseName":"Copyrights",
+				"dataUploadLicenseURL":"http://www.icpsr.umich.edu/icpsrweb/content/datamanagement/lifecycle/details.html"
+			},
+			"aidSystem":"AuthorClaim",
+			"remarks":"remarks",
+			"missionStatementURL":"htt//tempuri.org",
+			"metadataStandard":{
+				"metadataStandardURL":"htt//www.dcc.ac.uk/resources/metadata-standards/abcd-access-biological-collection-data",
+				"metadataStandardName":{
+					"metadataStandardScheme":"DCC",
+					"content":"ABCD - Access to Biological Collection Data"
+				}
+			},
+			"keyword":"keyword",
+			"software":{
+				"softwareName":"CKAN"
+			},
+			"syndication":{
+				"syndicationType":"ATOM",
+				"content":"htt//tempuri.org"
+			},
+			"certificate":"CLARIN certificate B",
+			"subject":{
+				"content":"1 Humanities and Social Sciences",
+				"subjectScheme":"DFG"
+			},
+			"pidSystem":"ARK",
+			"endDate":"endDate"
+		}
+	},
+	"seaddata":{
+		"maxFileSize":{
+			"unit":"MB",
+			"value":1000
+		},
+		"depositReSTURL":"http://server/api/deposit/{id}",
+		"searchReSTURL":"http://server/api/search/{term}"
+	}
+}

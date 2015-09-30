@@ -1,0 +1,36 @@
+[
+	{
+		"Repository":"sda",
+		"Aggregation":{
+			"Identifier":"tag:sead-data.net,2015:RO_rmu1jp-OW9h8KG9OLEtmMQ"
+		},
+		"Status":[
+			{
+				"date":"Aug 9, 2015 2:01:57 PM",
+				"reporter":"SEAD-CP",
+				"stage":"Receipt Ackowledged",
+				"message":"request recorded and processing will begin"
+			},
+			{
+				"reporter":"Inspector 42",
+				"stage":"Inspected",
+				"message":"manual review complete",
+				"date":"Aug 17, 2015 11:04:18 AM"
+			}
+		]
+	},
+	{
+		"Repository":"sda",
+		"Aggregation":{
+			"Identifier":"tag:sead-data.net,2015:RO_qgZSzPVzDV3kr4QBetwhUw"
+		},
+		"Status":[
+			{
+				"date":"Aug 8, 2015 1:09:58 PM",
+				"reporter":"SEAD-CP",
+				"stage":"Receipt Ackowledged",
+				"message":"request recorded and processing will begin"
+			}
+		]
+	}
+]

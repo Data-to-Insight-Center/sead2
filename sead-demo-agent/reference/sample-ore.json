@@ -1,0 +1,175 @@
+{
+	"@context":[
+		"https://w3id.org/ore/context",
+		{
+			"Identifier":"http://purl.org/dc/elements/1.1/identifier",
+			"License":"http://purl.org/dc/terms/license",
+			"Rights Holder":"http://purl.org/dc/terms/rightsHolder",
+			"Rights":"http://purl.org/dc/terms/rights",
+			"Date":"http://purl.org/dc/elements/1.1/date",
+			"Creation Date":"http://purl.org/dc/terms/created",
+			"Size":"tag:tupeloproject.org,2006:/2.0/files/length",
+			"Label":"http://www.w3.org/2000/01/rdf-schema#label",
+			"Mimetype":"http://purl.org/dc/elements/1.1/format",
+			"Description":"http://purl.org/dc/elements/1.1/description",
+			"Title":"http://purl.org/dc/elements/1.1/title",
+			"Uploaded By":"http://purl.org/dc/elements/1.1/creator",
+			"Abstract":"http://purl.org/dc/terms/abstract",
+			"Contact":"http://sead-data.net/terms/contact",
+			"Creator":"http://purl.org/dc/terms/creator",
+			"Publication Date":"http://purl.org/dc/terms/issued",
+			"GeoPoint":{
+				"@id":"tag:tupeloproject.org,2006:/2.0/gis/hasGeoPoint",
+				"long":"http://www.w3.org/2003/01/geo/wgs84_pos#long",
+				"lat":"http://www.w3.org/2003/01/geo/wgs84_pos#lat"
+			},
+			"Comment":{
+				"comment_body":"http://purl.org/dc/elements/1.1/description",
+				"comment_date":"http://purl.org/dc/elements/1.1/date",
+				"@id":"http://cet.ncsa.uiuc.edu/2007/annotation/hasAnnotation",
+				"comment_author":"http://purl.org/dc/elements/1.1/creator"
+			},
+			"Where":"http://sead-data.net/vocab/demo/expsite",
+			"Has Description":"http://purl.org/dc/terms/description",
+			"Experiment Site":"http://sead-data.net/terms/odm/location",
+			"Experimental Method":"http://sead-data.net/terms/odm/method",
+			"Primary Source":"http://www.w3.org/ns/prov#hadPrimarySource",
+			"Topic":"http://purl.org/dc/terms/subject",
+			"Audience":"http://purl.org/dc/terms/audience",
+			"Bibliographic citation":"http://purl.org/dc/terms/bibliographicCitation",
+			"http://purl.org/vocab/frbr/core#embodimentOf":"http://purl.org/vocab/frbr/core#embodimentOf",
+			"Coverage":"http://purl.org/dc/terms/coverage",
+			"Published In":"http://purl.org/dc/terms/isPartOf",
+			"Publisher":"http://purl.org/dc/terms/publisher",
+			"Quality Control Level":"http://sead-data.net/terms/odm/QualityControlLevel",
+			"Who":"http://sead-data.net/vocab/demo/creator",
+			"Alternative title":"http://purl.org/dc/terms/alternative",
+			"External Identifier":"http://purl.org/dc/terms/identifier",
+			"Proposed for Publication ":"http://sead-data.net/terms/ProposedForPublication",
+			"Start/End Date":"http://purl.org/dc/terms/temporal",
+			"duplicates":"http://cet.ncsa.uiuc.edu/2007/mmdb/duplicates",
+			"is derived from":"http://www.w3.org/ns/prov#wasDerivedFrom",
+			"describes":"http://cet.ncsa.uiuc.edu/2007/mmdb/describes",
+			"has newer version":"http://www.w3.org/ns/prov/#hadRevision",
+			"relates to":"http://cet.ncsa.uiuc.edu/2007/mmdb/relatesTo",
+			"references":"http://purl.org/dc/terms/references",
+			"is referenced by":"http://purl.org/dc/terms/isReferencedBy",
+			"has derivative":"http://www.w3.org/ns/prov/#hadDerivation",
+			"has prior version":"http://www.w3.org/ns/prov#wasRevisionOf",
+			"keyword":"http://www.holygoat.co.uk/owl/redwood/0.1/tags/taggedWithTag",
+			"Is Version Of":"http://purl.org/dc/terms/isVersionOf",
+			"Has Part":"http://purl.org/dc/terms/hasPart"
+		}
+	],
+	"Rights":"This Resource Map is available under the Creative Commons Attribution-Noncommercial Generic license.",
+	"describes":{
+		"Identifier":"tag:cet.ncsa.uiuc.edu,2008:/bean/Collection/616EA007-BFC6-4596-9FE3-5D9E30319CB3/v1",
+		"Creation Date":"2015-08-09T17:27:06.910Z",
+		"Label":"2.0PubDemo1",
+		"Title":"2.0PubDemo1",
+		"Uploaded By":"http://cet.ncsa.uiuc.edu/2007/person/myersjd@umich.edu",
+		"Abstract":"The unused shoe - when my daughter had a cast in the summer of 2015",
+		"Creator":"orcid.org/0000-0001-8462-650X",
+		"Comment":{
+			"comment_body":"It looks so lonely!",
+			"comment_date":"2015-08-09T18:14:18.312Z",
+			"Identifier":"tag:cet.ncsa.uiuc.edu,2008:/bean/Annotation/2150164A-B8ED-4D74-AD35-2B5603EEF783",
+			"comment_author":"http://cet.ncsa.uiuc.edu/2007/person/myersjd@umich.edu"
+		},
+		"Proposed for Publication ":"true",
+		"keyword":"tag:cet.ncsa.uiuc.edu,2008:/tag#footwear",
+		"@id":"https://sead-test.ncsa.illinois.edu/acr/resteasy/researchobjects/tag:sead-data.net,2015:RO_rmu1jp-OW9h8KG9OLEtmMQ#aggregation",
+		"@type":[
+			"Aggregation",
+			"http://cet.ncsa.uiuc.edu/2007/Collection"
+		],
+		"Is Version Of":"tag:cet.ncsa.uiuc.edu,2008:/bean/Collection/616EA007-BFC6-4596-9FE3-5D9E30319CB3",
+		"similarTo":"https://sead-test.ncsa.illinois.edu/acr/resteasy/collections/tag%3Acet.ncsa.uiuc.edu%2C2008%3A%2Fbean%2FCollection%2F616EA007-BFC6-4596-9FE3-5D9E30319CB3",
+		"aggregates":[
+			{
+				"Identifier":"tag:cet.ncsa.uiuc.edu,2008:/bean/Collection/C2619D8C-EE97-4AD5-A5F4-BAC21F06C79B/v1",
+				"Creation Date":"2015-08-09T17:27:31.329Z",
+				"Label":"PubDemoSubcollection1",
+				"Title":"PubDemoSubcollection1",
+				"Uploaded By":"http://cet.ncsa.uiuc.edu/2007/person/myersjd@umich.edu",
+				"@type":[
+					"AggregatedResource",
+					"http://cet.ncsa.uiuc.edu/2007/Collection"
+				],
+				"Version Of":"tag:cet.ncsa.uiuc.edu,2008:/bean/Collection/C2619D8C-EE97-4AD5-A5F4-BAC21F06C79B",
+				"Has Part":[
+					"tag:sead-data.net,2015:data_przbcj9w5Vbg-lnIPPiBgQ/v1",
+					"tag:sead-data.net,2015:data_HPFBa5_UL6ZIp2xsUfTdbg/v1"
+				]
+			},
+			{
+				"Identifier":"tag:sead-data.net,2015:data_przbcj9w5Vbg-lnIPPiBgQ/v1",
+				"Date":"2015-08-09T18:00:52.528Z",
+				"Size":"3614615",
+				"Label":"20150704_103127.jpg",
+				"Mimetype":"image/jpeg",
+				"Title":"20150704_103127.jpg",
+				"Uploaded By":"http://cet.ncsa.uiuc.edu/2007/person/myersjd@umich.edu",
+				"Abstract":"Large balloons but low traffic lights. Each one had to maneuver below the lights...",
+				"GeoPoint":{
+					"long":"-73.245384",
+					"Identifier":"tag:cet.ncsa.uiuc.edu,2008:/bean/GeoPoint/e07df74d-5e2f-403e-85b9-90ef3095a15b",
+					"lat":"42.450085"
+				},
+				"Version Of":"tag:sead-data.net,2015:data_przbcj9w5Vbg-lnIPPiBgQ",
+				"@type":[
+					"AggregatedResource",
+					"http://cet.ncsa.uiuc.edu/2007/Dataset"
+				]
+			},
+			{
+				"Identifier":"tag:sead-data.net,2015:data_HPFBa5_UL6ZIp2xsUfTdbg/v1",
+				"Date":"2015-08-13T16:40:53.374Z",
+				"Size":"1267871",
+				"Label":"morrowPlot-withGPSLocation.jpg",
+				"Mimetype":"image/jpeg",
+				"Title":"morrowPlot-withGPSLocation.jpg",
+				"Uploaded By":"http://cet.ncsa.uiuc.edu/2007/person/myersjd@umich.edu",
+				"GeoPoint":{
+					"long":"-88.22572",
+					"Identifier":"tag:cet.ncsa.uiuc.edu,2008:/bean/GeoPoint/4593e307-cf1c-462b-85bf-9e25241cc435",
+					"lat":"40.104603"
+				},
+				"keyword":[
+					"tag:cet.ncsa.uiuc.edu,2008:/tag#morrow",
+					"tag:cet.ncsa.uiuc.edu,2008:/tag#illinois"
+				],
+				"Version Of":"tag:sead-data.net,2015:data_HPFBa5_UL6ZIp2xsUfTdbg",
+				"@type":[
+					"AggregatedResource",
+					"http://cet.ncsa.uiuc.edu/2007/Dataset"
+				]
+			},
+			{
+				"Identifier":"tag:sead-data.net,2015:data_G4dg9jjZAzxcgmzSnZmv1w/v1",
+				"Date":"2015-08-09T18:01:07.361Z",
+				"Size":"2556329",
+				"Label":"20150717_132154.jpg",
+				"Mimetype":"image/jpeg",
+				"Title":"20150717_132154.jpg",
+				"Uploaded By":"http://cet.ncsa.uiuc.edu/2007/person/myersjd@umich.edu",
+				"Version Of":"tag:sead-data.net,2015:data_G4dg9jjZAzxcgmzSnZmv1w",
+				"@type":[
+					"AggregatedResource",
+					"http://cet.ncsa.uiuc.edu/2007/Dataset"
+				]
+			}
+		],
+		"Has Part":[
+			"tag:cet.ncsa.uiuc.edu,2008:/bean/Collection/C2619D8C-EE97-4AD5-A5F4-BAC21F06C79B/v1",
+			"tag:sead-data.net,2015:data_G4dg9jjZAzxcgmzSnZmv1w/v1"
+		]
+	},
+	"Creation Date":"Aug 19, 2015 9:30:02 AM",
+	"Creator":[
+		"http://cet.ncsa.uiuc.edu/2007/person/anonymous",
+		"SEAD Version 1.5, https://sead-test.ncsa.illinois.edu/acr"
+	],
+	"@type":"ResourceMap",
+	"@id":"https://sead-test.ncsa.illinois.edu/acr/resteasy/researchobjects/tag:sead-data.net,2015:RO_rmu1jp-OW9h8KG9OLEtmMQ"
+}
