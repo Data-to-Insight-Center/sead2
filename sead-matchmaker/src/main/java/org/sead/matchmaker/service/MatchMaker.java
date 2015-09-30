@@ -170,7 +170,7 @@ public class MatchMaker {
                 pdtPOST(MatchmakerConstants.PDT_PEOPLE, "{\"provider\": \"ORCID\", \"identifier\":\"" +
                         personID + "\"}");
                 // now try to get the profile
-                personProfile = pdtGET(MatchmakerConstants.PDT_PEOPLE + "/" + personID);
+                personProfile = pdtGET(MatchmakerConstants.PDT_PEOPLE + "/" + personID + "/raw");
             }
 
             if (personProfile == null) {
