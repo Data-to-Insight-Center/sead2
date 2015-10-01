@@ -88,7 +88,7 @@ public class SeadNCEDConstants {
         cntaddrType.setState("Minnesota");
         cntaddrType.setPostal("55414");
         CntvoiceType cntvoiceType = DEFAULT_METADATACONTACT.addNewCntvoice();
-        //cntvoiceType.setStringValue("800-555-6666");
+        cntvoiceType.setStringValue("800-555-6666");
     };
     
     public static final String DEFAULT_METADATANAME = "FGDC Standard for Digital Geospatial Metadata";

@@ -1,22 +1,40 @@
+/*
+ *
+ * Copyright 2015 The Trustees of Indiana University
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * @author kavchand@imail.iu.edu
+ * @author charmadu@umail.iu.edu
+ */
+
 package org.seadva.metadatagen.metagen.impl;
 
 import com.mongodb.MongoClient;
-import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
+import com.sun.jersey.api.client.Client;
+import com.sun.jersey.api.client.ClientResponse;
+import com.sun.jersey.api.client.WebResource;
 import noNamespace.*;
 import org.apache.commons.lang.StringUtils;
 import org.apache.xmlbeans.XmlOptions;
 import org.bson.Document;
 import org.seadva.metadatagen.metagen.BaseMetadataGen;
-import org.seadva.metadatagen.model.AggregationType;
-import org.seadva.metadatagen.model.MetadataObject;
 import org.seadva.metadatagen.util.Constants;
 import org.seadva.metadatagen.util.ROQueryUtil;
 import org.seadva.metadatagen.util.SeadNCEDConstants;
 
-import javax.ws.rs.core.Response;
-import java.net.URISyntaxException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -25,17 +43,21 @@ public class FGDCMetadataGen extends BaseMetadataGen {
 
 
     static MongoCollection<Document> fgdcCollection;
-    static MongoCollection<Document> roCollection;
     static MongoClient mongoClient;
     static MongoDatabase db;
-    static MongoDatabase pdtDb;
+    static WebResource pdtWebService;
+
+    private String doi;
 
     static {
         mongoClient = new MongoClient();
         db = mongoClient.getDatabase(Constants.metagenDbName);
         fgdcCollection = db.getCollection(Constants.dbFgdcCollection);
-        pdtDb = mongoClient.getDatabase(Constants.pdtDbName);
-        roCollection = pdtDb.getCollection(Constants.pdtRoCollection);
+        pdtWebService = Client.create().resource(Constants.pdtURL);
+    }
+
+    public FGDCMetadataGen(String doi){
+        this.doi = doi;
     }
 
     ROQueryUtil util = new ROQueryUtil();
@@ -52,15 +74,20 @@ public class FGDCMetadataGen extends BaseMetadataGen {
     @Override
     public String generateMetadata(String id){
 
-        FindIterable<Document> iter = roCollection.find(new Document(
-                "Aggregation.Identifier", id));
+        fgdcCollection.deleteMany(new Document("@id", id));
 
-        Document document = iter.first();
-        if(document==null) {
+        ClientResponse roResponse = pdtWebService.path("researchobjects")
+                .path(id)
+                .accept("application/json")
+                .type("application/json")
+                .get(ClientResponse.class);
+        Document roDoc = Document.parse(roResponse.getEntity(String.class));
+
+        if(roDoc==null) {
             return "";
         }
 
-        Document aggregation = (Document)document.get("Aggregation");
+        Document aggregation = (Document)roDoc.get("Aggregation");
         String title = "";
         if(aggregation.get(TITLE) instanceof String){
             title = aggregation.get(TITLE).toString();
@@ -98,14 +125,17 @@ public class FGDCMetadataGen extends BaseMetadataGen {
         SimpleDateFormat sdfDate = new SimpleDateFormat("yyyyMMdd");
         Date now = new Date();
         String pubDate = sdfDate.format(now);
-
-        String result = "";
-
-        result = toFGDC(title, creators, contacts, ro_abstract, pubDate, "");
+        
+        String result = toFGDC(title, creators, contacts, ro_abstract, pubDate, this.doi);
         String fgdcXML = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n" + result;
 
         fgdcXML = fgdcXML.replace("<metadata>","<metadata xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"" +
                 " xsi:noNamespaceSchemaLocation=\"http://www.fgdc.gov/metadata/fgdc-std-001-1998.xsd\">");
+
+        Document document = new Document();
+        document.put("@id", id);
+        document.put("metadata", fgdcXML);
+        fgdcCollection.insertOne(document);
 
         return fgdcXML;
 
@@ -209,7 +239,7 @@ public class FGDCMetadataGen extends BaseMetadataGen {
         MetainfoType metainfoType = metadataType.addNewMetainfo();
         metainfoType.setMetd(SeadNCEDConstants.DEFAULT_METD);
 
-        if(contacts!=null){
+        if(contacts!=null && !contacts.isEmpty()){
             String contactsAppended = "";
             Iterator<String> it = contacts.iterator();
             int i=0;

@@ -29,10 +29,8 @@ import com.mongodb.client.MongoDatabase;
 import com.sun.jersey.api.client.*;
 import com.sun.jersey.api.client.filter.ClientFilter;
 import org.bson.Document;
-import org.bson.types.BasicBSONList;
 import org.bson.types.ObjectId;
 import org.seadva.metadatagen.metagen.impl.FGDCMetadataGen;
-import org.seadva.metadatagen.metagen.impl.OREMetadataGen;
 import org.seadva.metadatagen.util.Constants;
 
 import javax.ws.rs.*;
@@ -41,12 +39,6 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.sql.Date;
-import java.text.DateFormat;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
 
 /**
  * Root resource (exposed at "rest" path)
@@ -55,6 +47,7 @@ import java.util.Set;
 public class MetadataGenerator {
 
     static MongoCollection<Document> oreMapCollection;
+    static MongoCollection<Document> fgdcCollection;
     static MongoClient mongoClient;
     static MongoDatabase db;
 
@@ -62,19 +55,56 @@ public class MetadataGenerator {
         mongoClient = new MongoClient();
         db = mongoClient.getDatabase(Constants.metagenDbName);
         oreMapCollection = db.getCollection(Constants.dbOreCollection);
+        fgdcCollection = db.getCollection(Constants.dbFgdcCollection);
     }
 
+    @POST
+    @Path("/{id}/metadata/{type}")
+    @Produces(MediaType.APPLICATION_XML)
+    public Response putMetadata(@PathParam("id") String entityId,
+                          @PathParam("type") String metadataType,
+                          String doi) throws URISyntaxException {
 
-    /**
-     * Method handling HTTP GET requests. The returned object will be sent
-     * to the client as "text/plain" media type.
-     *
-     * @return String that will be returned as a text/plain response.
-     */
+        String errorMsg ="<error>\n" +
+                "<description>EntityId and type(ORE/SIP/FGDC) are required path parameters. Please specify.</description>\n" +
+                "<traceInformation>\n" +
+                "method: metadata-gen/rest/{id}/metadata/{type} \n" +
+                "</traceInformation>\n" +
+                "</error>";
+
+        if(entityId == null || metadataType == null){
+            return Response.status(Response.Status.BAD_REQUEST).entity(errorMsg).type(MediaType.APPLICATION_XML).build();
+        }
+
+        if(metadataType.equalsIgnoreCase("FGDC")){
+            if(doi == null || doi.equals("")){
+                errorMsg ="<error><description>DOI is needed to create FGDC metadata.</description></error>";
+                return Response.status(Response.Status.BAD_REQUEST).entity(errorMsg).type(MediaType.APPLICATION_XML).build();
+            }
+        }
+
+        String response = null;
+
+        if(metadataType.equalsIgnoreCase("FGDC")){
+            FGDCMetadataGen fgdcMetadataGen = new FGDCMetadataGen(doi);
+            response = fgdcMetadataGen.generateMetadata(entityId);
+        }
+
+        if(response == null){
+            errorMsg ="<error><description>Metadata type " + metadataType + " is not supported.</description></error>";
+            return Response.status(Response.Status.BAD_REQUEST).entity(errorMsg).type(MediaType.APPLICATION_XML).build();
+        } else if(response.equals("")) {
+            return Response.status(ClientResponse.Status.NOT_FOUND).build();
+        } else {
+            return Response.ok(response).build();
+        }
+    }
+
+    
     @GET
     @Path("/{id}/metadata/{type}")
     @Produces(MediaType.APPLICATION_XML)
-    public Response getIt(@PathParam("id") String entityId,
+    public Response getMetadata(@PathParam("id") String entityId,
                           @PathParam("type") String metadataType) throws URISyntaxException {
 
         String errorMsg ="<error>\n" +
@@ -88,20 +118,19 @@ public class MetadataGenerator {
             return Response.status(Response.Status.BAD_REQUEST).entity(errorMsg).type(MediaType.APPLICATION_XML).build();
         }
 
-        String response = "";
+        FindIterable<Document> iter = null;
 
-        if(metadataType.equalsIgnoreCase("ORE")) {
-            //OREMetadataGen oreMetadataGen = new OREMetadataGen();
-            //response = oreMetadataGen.generateMetadata(entityId);
-        } else if(metadataType.equalsIgnoreCase("FGDC")){
-            FGDCMetadataGen fgdcMetadataGen = new FGDCMetadataGen();
-            response = fgdcMetadataGen.generateMetadata(entityId);
+        if(metadataType.equalsIgnoreCase("FGDC")){
+            iter = fgdcCollection.find(new Document("@id", entityId));
         }
 
-        if(!response.equals("")) {
-            return Response.ok(response).build();
-        } else {
+        if(iter == null){
+            errorMsg ="<error><description>Metadata type " + metadataType + " is not supported.</description></error>";
+            return Response.status(Response.Status.BAD_REQUEST).entity(errorMsg).type(MediaType.APPLICATION_XML).build();
+        } else if(iter.first() == null) {
             return Response.status(ClientResponse.Status.NOT_FOUND).build();
+        } else {
+            return Response.ok(iter.first().get("metadata").toString()).build();
         }
     }
 

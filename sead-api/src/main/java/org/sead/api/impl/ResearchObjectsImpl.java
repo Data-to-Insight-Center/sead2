@@ -126,6 +126,16 @@ public class ResearchObjectsImpl extends ResearchObjects {
             // if the status update in PDT is not successful, return the error
             return Response.status(response.getStatus()).entity(response.getEntity(new GenericType<String>() {})).build();
         } else {
+            // Calling MetadataGenerator to generate FGDC metadata for the RO
+            ClientResponse metagenResponse = metadataGenWebService.path("rest")
+                    .path(id + "/metadata/fgdc")
+                    .accept("application/json")
+                    .type("application/json")
+                    .post(ClientResponse.class, message);
+            if(metagenResponse.getStatus() != 200){
+                System.out.println("Failed to generate FGDC metadata for " + id);
+            }
+
             // if the status update in PDT is successful, we have to send to DOI to Clowder
             // first get the RO JSON to find the callback URL
             ClientResponse roResponse = pdtWebService.path("researchobjects")
@@ -230,5 +240,20 @@ public class ResearchObjectsImpl extends ResearchObjects {
         return Response.status(response.getStatus()).entity(response.getEntity(new GenericType<String>() {
         })).build();
 	}
+
+    @GET
+    @Path("/{id}/fgdc")
+    @Produces(MediaType.APPLICATION_XML)
+    public Response getFgdc(@PathParam("id") String id) {
+        WebResource webResource = metadataGenWebService;
+
+        ClientResponse response = webResource.path("rest")
+                .path(id + "/metadata/fgdc")
+                .accept("application/xml")
+                .type("application/xml")
+                .get(ClientResponse.class);
+
+        return Response.status(response.getStatus()).entity(response.getEntity(new GenericType<String>() {})).build();
+    }
 
 }
