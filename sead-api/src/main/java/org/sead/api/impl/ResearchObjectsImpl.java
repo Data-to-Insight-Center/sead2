@@ -51,12 +51,14 @@ public class ResearchObjectsImpl extends ResearchObjects {
     private WebResource curBeeWebService;
     private WebResource mmWebService;
     private WebResource metadataGenWebService;
+    private CacheControl control = new CacheControl();
 
 	public ResearchObjectsImpl() {
         pdtWebService = Client.create().resource(Constants.pdtUrl);
         curBeeWebService = Client.create().resource(Constants.curBeeUrl);
         mmWebService = Client.create().resource(Constants.matchmakerUrl);
         metadataGenWebService = Client.create().resource(Constants.metadataGenUrl);
+        control.setNoCache(true);
 	}
 
     @POST
@@ -74,7 +76,8 @@ public class ResearchObjectsImpl extends ResearchObjects {
                 .type("application/json")
                 .post(ClientResponse.class, publicationRequestString);
 
-        return Response.status(response.getStatus()).entity(response.getEntity(new GenericType<String>() {})).build();
+        return Response.status(response.getStatus()).entity(response
+                .getEntity(new GenericType<String>() {})).cacheControl(control).build();
     }
 
     @GET
@@ -88,7 +91,8 @@ public class ResearchObjectsImpl extends ResearchObjects {
                 .type("application/json")
                 .get(ClientResponse.class);
 
-        return Response.status(response.getStatus()).entity(response.getEntity(new GenericType<String>() {})).build();
+        return Response.status(response.getStatus()).entity(response
+                .getEntity(new GenericType<String>() {})).cacheControl(control).build();
     }
 
     @GET
@@ -103,7 +107,8 @@ public class ResearchObjectsImpl extends ResearchObjects {
                 .type("application/json")
                 .get(ClientResponse.class);
 
-        return Response.status(response.getStatus()).entity(response.getEntity(new GenericType<String>() {})).build();
+        return Response.status(response.getStatus()).entity(response
+                .getEntity(new GenericType<String>() {})).cacheControl(control).build();
     }
 
     @POST
@@ -124,7 +129,8 @@ public class ResearchObjectsImpl extends ResearchObjects {
 
         if (!"Success".equals(stage) || response.getStatus() != 200) {
             // if the status update in PDT is not successful, return the error
-            return Response.status(response.getStatus()).entity(response.getEntity(new GenericType<String>() {})).build();
+            return Response.status(response.getStatus()).entity(response
+                    .getEntity(new GenericType<String>() {})).cacheControl(control).build();
         } else {
             // Calling MetadataGenerator to generate FGDC metadata for the RO
             ClientResponse metagenResponse = metadataGenWebService.path("rest")
@@ -150,19 +156,20 @@ public class ResearchObjectsImpl extends ResearchObjects {
                 // now we POST to callback URL to update Clowder with the DOI
                 Client client = Client.create();
                 // set credentials
+                // TODO use keys when those are available
                 client.addFilter(new HTTPBasicAuthFilter(Constants.clowderUser, Constants.clowderPassword));
-                WebResource clowderResource = client.resource(callbackUrl);
+                WebResource callbackResource = client.resource(callbackUrl);
                 // DOI is in message when the stage is Success
                 String body = "{\"uri\":\"" + message + "\", \"@context\": " +
                         "{\"uri\": \"http://purl.org/dc/terms/identifier\"}}";
-                ClientResponse clowderResponse = clowderResource
+                ClientResponse pubRequestorResponse = callbackResource
                         .accept("application/json")
                         .type("application/json")
                         .post(ClientResponse.class, body);
                 // TODO log
-                System.out.println("Clowder Updated, Response : " + clowderResponse.getEntity(String.class));
+                System.out.println("Clowder Updated, Response : " + pubRequestorResponse.getEntity(String.class));
             }
-            return Response.status(ClientResponse.Status.OK).build();
+            return Response.status(ClientResponse.Status.OK).cacheControl(control).build();
         }
     }
 
@@ -178,7 +185,8 @@ public class ResearchObjectsImpl extends ResearchObjects {
                 .type("application/json")
                 .get(ClientResponse.class);
 
-        return Response.status(response.getStatus()).entity(response.getEntity(new GenericType<String>() {})).build();
+        return Response.status(response.getStatus()).entity(response
+                .getEntity(new GenericType<String>() {})).cacheControl(control).build();
     }
 
 	@DELETE
@@ -192,7 +200,8 @@ public class ResearchObjectsImpl extends ResearchObjects {
                 .type("application/json")
                 .delete(ClientResponse.class);
 
-        return Response.status(response.getStatus()).entity(response.getEntity(new GenericType<String>() {})).build();
+        return Response.status(response.getStatus()).entity(response
+                .getEntity(new GenericType<String>() {})).cacheControl(control).build();
 	}
 
 	@POST
@@ -206,8 +215,8 @@ public class ResearchObjectsImpl extends ResearchObjects {
                 .type("application/json")
                 .post(ClientResponse.class, matchRequest);
 
-        return Response.status(response.getStatus()).entity(
-                response.getEntity(new GenericType<String>() {})).build();
+        return Response.status(response.getStatus()).entity(response
+                .getEntity(new GenericType<String>() {})).cacheControl(control).build();
     }
 
     @GET
@@ -221,8 +230,8 @@ public class ResearchObjectsImpl extends ResearchObjects {
                 .type("application/json")
                 .get(ClientResponse.class);
 
-        return Response.status(response.getStatus()).entity(
-                response.getEntity(new GenericType<String>() {})).build();
+        return Response.status(response.getStatus()).entity(response
+                .getEntity(new GenericType<String>() {})).cacheControl(control).build();
     }
 
 	@GET
@@ -237,8 +246,8 @@ public class ResearchObjectsImpl extends ResearchObjects {
                 .type("application/json")
                 .get(ClientResponse.class);
 
-        return Response.status(response.getStatus()).entity(response.getEntity(new GenericType<String>() {
-        })).build();
+        return Response.status(response.getStatus()).entity(response
+                .getEntity(new GenericType<String>() {})).cacheControl(control).build();
 	}
 
     @GET
@@ -253,7 +262,8 @@ public class ResearchObjectsImpl extends ResearchObjects {
                 .type("application/xml")
                 .get(ClientResponse.class);
 
-        return Response.status(response.getStatus()).entity(response.getEntity(new GenericType<String>() {})).build();
+        return Response.status(response.getStatus()).entity(response
+                .getEntity(new GenericType<String>() {})).cacheControl(control).build();
     }
 
 }

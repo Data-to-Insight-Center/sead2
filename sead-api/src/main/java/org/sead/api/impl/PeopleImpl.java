@@ -30,6 +30,7 @@ import org.sead.api.People;
 import org.sead.api.util.Constants;
 
 import javax.ws.rs.*;
+import javax.ws.rs.core.CacheControl;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
@@ -42,6 +43,7 @@ import javax.ws.rs.core.Response;
 public class PeopleImpl extends People {
 	private WebResource resource;
 	private String serviceUrl;
+    private CacheControl control = new CacheControl();
 
 	private WebResource resource(){
         return resource;
@@ -51,6 +53,7 @@ public class PeopleImpl extends People {
 	public PeopleImpl() {
         this.serviceUrl = Constants.pdtUrl;
         resource = Client.create().resource(serviceUrl);
+        control.setNoCache(true);
 	}
 	
 	@POST
@@ -66,7 +69,8 @@ public class PeopleImpl extends People {
                 .type("application/json")
                 .post(ClientResponse.class, personString);
 
-        return Response.status(response.getStatus()).entity(response.getEntity(new GenericType<String>() {})).build();
+        return Response.status(response.getStatus()).entity(response
+                .getEntity(new GenericType<String>() {})).cacheControl(control).build();
 	}
 
 	@GET
@@ -80,7 +84,8 @@ public class PeopleImpl extends People {
                 .type("application/json")
                 .get(ClientResponse.class);
 
-        return Response.status(response.getStatus()).entity(response.getEntity(new GenericType<String>(){})).build();
+        return Response.status(response.getStatus()).entity(response
+                .getEntity(new GenericType<String>(){})).cacheControl(control).build();
 	}
 
 	@GET
@@ -95,7 +100,8 @@ public class PeopleImpl extends People {
                 .type("application/json")
                 .get(ClientResponse.class);
 
-        return Response.status(response.getStatus()).entity(response.getEntity(new GenericType<String>() {})).build();
+        return Response.status(response.getStatus()).entity(response
+                .getEntity(new GenericType<String>() {})).cacheControl(control).build();
     }
 
     @GET
@@ -110,7 +116,8 @@ public class PeopleImpl extends People {
                 .type("application/json")
                 .get(ClientResponse.class);
 
-        return Response.status(response.getStatus()).entity(response.getEntity(new GenericType<String>() {})).build();
+        return Response.status(response.getStatus()).entity(response
+                .getEntity(new GenericType<String>() {})).cacheControl(control).build();
     }
 
 	@PUT
@@ -125,7 +132,8 @@ public class PeopleImpl extends People {
                 .type("application/json")
                 .put(ClientResponse.class);
 
-        return Response.status(response.getStatus()).entity(response.getEntity(new GenericType<String>() {})).build();
+        return Response.status(response.getStatus()).entity(response
+                .getEntity(new GenericType<String>() {})).cacheControl(control).build();
     }
 
 	@DELETE
@@ -139,7 +147,8 @@ public class PeopleImpl extends People {
                 .type("application/json")
                 .delete(ClientResponse.class);
 
-        return Response.status(response.getStatus()).entity(response.getEntity(new GenericType<String>() {})).build();
+        return Response.status(response.getStatus()).entity(response
+                .getEntity(new GenericType<String>() {})).cacheControl(control).build();
     }
 
 }
