@@ -164,7 +164,7 @@ public class MatchMaker {
         if (personID.startsWith("orcid.org/")) {
             personID = personID.substring("orcid.org/".length());
             // call PDT to get the profile using the ID
-            String personProfile = pdtGET(MatchmakerConstants.PDT_PEOPLE + "/" + personID);
+            String personProfile = pdtGET(MatchmakerConstants.PDT_PEOPLE + "/" + personID + "/raw");
             if (personProfile == null) {
                 // if the person doesn't exist, add
                 pdtPOST(MatchmakerConstants.PDT_PEOPLE, "{\"provider\": \"ORCID\", \"identifier\":\"" +

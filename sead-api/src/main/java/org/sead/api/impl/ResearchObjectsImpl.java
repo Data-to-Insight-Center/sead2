@@ -26,6 +26,9 @@ import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.GenericType;
 import com.sun.jersey.api.client.WebResource;
+import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
+import org.bson.Document;
+import org.json.JSONObject;
 import org.sead.api.ResearchObjects;
 import org.sead.api.util.Constants;
 
@@ -44,15 +47,12 @@ import javax.ws.rs.core.Response;
 @Path("/researchobjects")
 public class ResearchObjectsImpl extends ResearchObjects {
 
-	private CacheControl control = new CacheControl();
-
     private WebResource pdtWebService;
     private WebResource curBeeWebService;
     private WebResource mmWebService;
     private WebResource metadataGenWebService;
 
 	public ResearchObjectsImpl() {
-		control.setNoCache(true);
         pdtWebService = Client.create().resource(Constants.pdtUrl);
         curBeeWebService = Client.create().resource(Constants.curBeeUrl);
         mmWebService = Client.create().resource(Constants.matchmakerUrl);
@@ -110,15 +110,50 @@ public class ResearchObjectsImpl extends ResearchObjects {
     @Path("/{id}/status")
     @Consumes(MediaType.APPLICATION_JSON)
     public Response setROStatus(@PathParam("id") String id, String state) {
-        WebResource webResource = pdtWebService;
+        JSONObject stateJson = new JSONObject(state);
+        // read stage and message from status
+        String stage = stateJson.get("stage").toString();
+        String message = stateJson.get("message").toString();
 
-        ClientResponse response = webResource.path("researchobjects")
+        // update PDT with the status
+        ClientResponse response = pdtWebService.path("researchobjects")
                 .path(id + "/status")
                 .accept("application/json")
                 .type("application/json")
                 .post(ClientResponse.class, state);
 
-        return Response.status(response.getStatus()).entity(response.getEntity(new GenericType<String>() {})).build();
+        if (!"Success".equals(stage) || response.getStatus() != 200) {
+            // if the status update in PDT is not successful, return the error
+            return Response.status(response.getStatus()).entity(response.getEntity(new GenericType<String>() {})).build();
+        } else {
+            // if the status update in PDT is successful, we have to send to DOI to Clowder
+            // first get the RO JSON to find the callback URL
+            ClientResponse roResponse = pdtWebService.path("researchobjects")
+                    .path(id)
+                    .accept("application/json")
+                    .type("application/json")
+                    .get(ClientResponse.class);
+            Document roDoc = Document.parse(roResponse.getEntity(String.class));
+            String callbackUrl = roDoc.getString("Publication Callback");
+
+            if (callbackUrl != null) {
+                // now we POST to callback URL to update Clowder with the DOI
+                Client client = Client.create();
+                // set credentials
+                client.addFilter(new HTTPBasicAuthFilter(Constants.clowderUser, Constants.clowderPassword));
+                WebResource clowderResource = client.resource(callbackUrl);
+                // DOI is in message when the stage is Success
+                String body = "{\"uri\":\"" + message + "\", \"@context\": " +
+                        "{\"uri\": \"http://purl.org/dc/terms/identifier\"}}";
+                ClientResponse clowderResponse = clowderResource
+                        .accept("application/json")
+                        .type("application/json")
+                        .post(ClientResponse.class, body);
+                // TODO log
+                System.out.println("Clowder Updated, Response : " + clowderResponse.getEntity(String.class));
+            }
+            return Response.status(ClientResponse.Status.OK).build();
+        }
     }
 
     @GET
