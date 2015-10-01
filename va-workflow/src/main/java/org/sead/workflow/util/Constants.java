@@ -40,7 +40,10 @@ public class Constants {
     public static final String VALIDATED = "validated";
 
     // constants in JSONLD of RO
-
+    public static String AGGREGATION = "Aggregation";
+    public static String CREATOR = "Creator";
+    public static String ABSTRACT = "Abstract";
+    public static String TITLE = "Title";
 
     static{
         try {

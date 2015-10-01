@@ -18,12 +18,16 @@
 
 package org.sead.workflow.activity.impl;
 
+import org.json.JSONArray;
 import org.json.JSONException;
+import org.json.JSONObject;
 import org.sead.workflow.activity.AbstractWorkflowActivity;
 import org.sead.workflow.config.SeadWorkflowConfig;
 import org.sead.workflow.context.SeadWorkflowContext;
 import org.sead.workflow.exception.SeadWorkflowException;
 import org.sead.workflow.util.Constants;
+
+import java.util.ArrayList;
 
 /**
  * Responsible for validating the RO.
@@ -62,7 +66,42 @@ public class ValidateROActivity extends AbstractWorkflowActivity {
     }
 
     private boolean validateFilesInCollection(String roString, SeadWorkflowContext context) throws JSONException{
-        // TODO: Implement Validation
-        return true;
+        boolean validated = true;
+
+        // Checking whether RO metadata includes Creator, Title and Abstract
+        // These are the metadata required to generate FGDC
+        JSONObject roObject = new JSONObject(roString);
+        JSONObject object = (JSONObject)roObject.get(Constants.AGGREGATION);
+
+        if(!object.has(Constants.CREATOR) || !nullCheck(object.get(Constants.CREATOR)) ||
+                !object.has(Constants.TITLE) || !nullCheck(object.get(Constants.TITLE)) ||
+                !object.has(Constants.ABSTRACT) || !nullCheck(object.get(Constants.ABSTRACT)) ) {
+            validated = false;
+        }
+
+        return validated;
+    }
+
+    private boolean nullCheck(Object object) throws JSONException {
+        boolean isNotNull = false;
+
+        if(object instanceof String ){
+            if(object != null || !object.equals("")) {
+                isNotNull = true;
+            }
+        } else if(object instanceof JSONArray){
+            JSONArray list = (JSONArray)object;
+            for(int i = 0 ; i < list.length() ; i++){
+                Object arrayItem = list.get(i);
+                if(arrayItem != null && !arrayItem.equals("")){
+                    isNotNull = true;
+                    break;
+                }
+            }
+        } else {
+            System.out.println(ValidateROActivity.class.getName() + " : Unable to validate RO since " + object + " is not either a String or an Array");
+        }
+
+        return isNotNull;
     }
 }
