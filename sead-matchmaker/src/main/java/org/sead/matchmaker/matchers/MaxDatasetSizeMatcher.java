@@ -29,7 +29,7 @@ import org.sead.matchmaker.RuleResult;
 public class MaxDatasetSizeMatcher implements Matcher {
 
 	public RuleResult runRule(Document aggregation, BasicBSONList affiliations,
-			Document preferences, Document statsDocument, Document profile) {
+			Document preferences, Document statsDocument, Document profile, Object context) {
 		RuleResult result = new RuleResult();
 		try {
 

@@ -78,6 +78,10 @@ public class MatchMaker {
         if (stats == null) {
             messageString += "Missing Statistics";
         }
+        Object context = request.get("@context");
+        if (context == null) {
+            messageString += "Missing @context";
+        }
 
         if (messageString == null) {
             // Get organization from profile(s)
@@ -113,6 +117,7 @@ public class MatchMaker {
 
                 BasicBSONObject repoMatch = new BasicBSONObject();
                 repoMatch.put("orgidentifier", profile.get("orgidentifier"));
+                repoMatch.put("repositoryName", profile.get("repositoryName"));
 
                 BasicBSONList scores = new BasicBSONList();
                 int total = 0;
@@ -121,7 +126,7 @@ public class MatchMaker {
                     BasicBSONObject individualScore = new BasicBSONObject();
 
                     RuleResult result = m.runRule(content, affiliations,
-                            preferences, stats, profile);
+                            preferences, stats, profile, context);
 
                     individualScore.put("Rule Name", m.getName());
                     if (result.wasTriggered()) {

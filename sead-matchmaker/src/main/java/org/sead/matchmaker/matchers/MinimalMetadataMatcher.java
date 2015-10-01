@@ -26,24 +26,75 @@ import org.bson.types.BasicBSONList;
 import org.sead.matchmaker.Matcher;
 import org.sead.matchmaker.RuleResult;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+
 public class MinimalMetadataMatcher implements Matcher {
 
-	public RuleResult runRule(Document aggregation, BasicBSONList affiliations,
-			Document preferences, Document statsDocument, Document profile) {
+    public RuleResult runRule(Document aggregation, BasicBSONList affiliations,
+                              Document preferences, Document statsDocument, Document profile,
+                              Object context) {
+        RuleResult result = new RuleResult();
+        ArrayList preds = (ArrayList) profile.get("Metadata Terms");
+        if (preds == null) {
+            return result;
+        }
+        // Create map to look for metadata
+        HashMap<String, String> labelsByPred = new HashMap<String, String>();
+        if (context == null) {
+            return result;
+        }
+        if (context instanceof List) {
+            Iterator<Document> docIter = (Iterator<Document>) ((List) context)
+                    .listIterator();
+            while (docIter.hasNext()) {
+                Object next = docIter.next();
+                if (next != null) {
+                    Document doc = (Document) next;
+                    for (String k : doc.keySet()) {
+                        labelsByPred.put(doc.getString(k), k);
+                    }
+                }
+            }
+        } else if (context instanceof Document) {
+            Document doc = (Document) context;
+            for (String k : doc.keySet()) {
+                labelsByPred.put(doc.getString(k), k);
+            }
+        }
+        StringBuffer missing = new StringBuffer();
+        for (Object pred : preds) {
+            String label = labelsByPred.get(pred);
+            // No label for pred or no value for that label == missing
+            if ((label == null) || (aggregation.get(label) == null)) {
+                if (missing.length() != 0) {
+                    missing.append(", ");
+                }
+                missing.append(pred);
+            }
+        }
+        if (missing.length() == 0) {
+            result.setResult(1, "All required metadata exists");
+        } else {
+            result.setResult(-1,
+                    "Required metadata is missing: " + missing.toString());
+        }
 
-		return new RuleResult();
-	}
+        return result;
+    }
 
-	public String getName() {
-		return "Minimal Metadata";
-	}
+    public String getName() {
+        return "Minimal Metadata";
+    }
 
-	public Document getDescription() {
-		return new Document("Rule Name", getName())
-				.append("Repository Trigger",
-						" \"Metadata Terms\": \"http://sead-data.net/terms/terms\" : JSON array of String predicates, Not yet implemented")
-				.append("Publication Trigger",
-						" \"Metadata Terms\": \"http://sead-data.net/terms/terms\" : JSON array of String predicates in \"Aggregation Statistics\": \"http://sead-data.net/terms/publicationstatistics\", in publication request, Not yet implemented");
-	}
+    public Document getDescription() {
+        return new Document("Rule Name", getName())
+                .append("Repository Trigger",
+                        " \"Metadata Terms\": \"http://sead-data.net/terms/terms\" : JSON array of String predicates, Not yet implemented")
+                .append("Publication Trigger",
+                        " Predicates matching repository profile : existence of predicates in \"Aggregation\" in publication request");
+    }
 
 }

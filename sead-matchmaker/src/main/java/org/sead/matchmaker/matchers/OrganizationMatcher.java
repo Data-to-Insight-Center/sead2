@@ -32,7 +32,7 @@ public class OrganizationMatcher implements Matcher {
 
 	@SuppressWarnings("unchecked")
 	public RuleResult runRule(Document aggregation, BasicBSONList affiliations,
-			Document preferences, Document statsDocument, Document profile) {
+			Document preferences, Document statsDocument, Document profile, Object context) {
 		RuleResult result = new RuleResult();
 		try {
 			// Get required affiliations from profile
