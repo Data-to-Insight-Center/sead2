@@ -8,7 +8,7 @@
 		<exclude pattern="org.sead.api.impl.**" />
 	</api-classes>
 	<modules>
-		<docs splashPackage="org.sead.api" title="SEAD C/P Services API"
+		<docs splashPackage="org.sead.api" title="SEAD C3P-R Services API"
 			copyright="sead-data.net">
 			<download name="License" file="LICENSE.txt"
 				description="The license file governing the use of this API." />

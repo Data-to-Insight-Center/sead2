@@ -126,7 +126,7 @@
     </dependencies>
 
     <build>
-        <finalName>sead-api</finalName>
+        <finalName>sead-c3pr</finalName>
         <plugins>
             <plugin>
                 <artifactId>maven-compiler-plugin</artifactId>

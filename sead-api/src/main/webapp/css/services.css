@@ -1,0 +1,55 @@
+.key {
+display:inline;
+color:blue;
+}
+.value {
+display:inline;
+color:green;
+}
+.jqtree-element span {
+display:inline-block;
+}
+#repositoriesDetails, #requestsDetails, #ROsDetails, .tab-pane .span5, .tab-pane .span10  {
+word-wrap:break-word;
+word-break:break-all;
+height:400px;
+overflow-y:auto;
+}
+th {
+word-break:normal;
+}
+#requestsfilter, #repositoriesfilter, #ROsfilter, #peoplefilter {
+width:96%;
+}
+#page {
+height:750px;
+}
+/*footer*/
+#servicesfooter {
+	padding: 5px 0px;
+	background-color: #0b5ca3;
+	color: #fff !important;
+	font-size: 12px;
+	width: 1200px;
+	height: 30px;
+	
+margin:auto;
+margin-top:-100px;
+	bottom: 10px;
+	left: 0;
+	right: 0;
+}
+
+#servicesfooter .copyright {
+	color: #fff;
+	max-width: 90%;
+	float: left;
+	font-size: 12px;
+	margin-left: 2%;
+	line-height: 30px;
+}
+
+#servicesfooter a {
+	color: #fff !important;
+	text-decoration:none;
+}
