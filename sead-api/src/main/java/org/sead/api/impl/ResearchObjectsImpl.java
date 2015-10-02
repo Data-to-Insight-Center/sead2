@@ -135,8 +135,8 @@ public class ResearchObjectsImpl extends ResearchObjects {
             // Calling MetadataGenerator to generate FGDC metadata for the RO
             ClientResponse metagenResponse = metadataGenWebService.path("rest")
                     .path(id + "/metadata/fgdc")
-                    .accept("application/json")
-                    .type("application/json")
+                    .accept("application/xml")
+                    .type("application/xml")
                     .post(ClientResponse.class, message);
             if(metagenResponse.getStatus() != 200){
                 System.out.println("Failed to generate FGDC metadata for " + id);
