@@ -11,7 +11,7 @@ prog="build.sh"
 ###################################################################
 
 build() {
-    mvn install -Dmaven.test.skip=true
+    mvn clean install -Dmaven.test.skip=true
     mvn dependency:copy-dependencies
     mkdir bin
 
@@ -19,7 +19,7 @@ echo "
 #!/bin/sh
 BUILD=$BUILD
 LIB=$LIB
-" > ./bin/SDA_Agent.sh
+" > ./bin/sda-agent.sh
 
 echo '
 
@@ -39,9 +39,9 @@ echo "Polling request from Shim API ......"
 echo
 
 CP=:$CLASSPATH:$CLASSES:.
-java -classpath $CP Service.ServiceLauncher
-' >> ./bin/SDA_Agent.sh
-chmod 755 ./bin/SDA_Agent.sh
+java -classpath $CP org.sead.sda.agent.service.ServiceLauncher $1
+' >> ./bin/sda-agent.sh
+chmod 755 ./bin/sda-agent.sh
 
 
 

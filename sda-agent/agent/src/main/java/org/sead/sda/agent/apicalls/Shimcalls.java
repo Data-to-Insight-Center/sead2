@@ -6,7 +6,6 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.Properties;
 import java.util.Set;
 
 import javax.ws.rs.core.MediaType;
@@ -19,18 +18,15 @@ import org.sead.sda.agent.engine.PropertiesReader;
 
 public class Shimcalls {
 	
-	private Properties property;
 	private String sda_researchobjects;
 	private String cp_researchobject;
 	private String output = null;
 	
-	public Shimcalls(PropertiesReader properties){
-		this.property = properties.getProperties();
-		this.sda_researchobjects = this.property.getProperty("sda.researchobjects");
-		this.cp_researchobject = this.property.getProperty("cp.researchobject");
+	public Shimcalls(){
+		this.sda_researchobjects = PropertiesReader.sdaResearchObjects;
+		this.cp_researchobject = PropertiesReader.allResearchObjects;
 	}
-	
-	
+
 	public StringBuilder getCalls(String url_string){
 		
 		StringBuilder sb = new StringBuilder();
@@ -108,12 +104,12 @@ public class Shimcalls {
 		JSONParser parser = new JSONParser();
 		
 
-		StringBuilder new_sb = null;
-		if (ore_url.startsWith("https")){
-			new_sb = getCalls(ore_url);
-		}else{
-			new_sb = getCalls("https"+ore_url.substring(ore_url.indexOf(":")));
-		}
+		StringBuilder new_sb = getCalls(ore_url);
+//		if (ore_url.startsWith("https")){
+//			new_sb = getCalls(ore_url);
+//		}else{
+//			new_sb = getCalls("https"+ore_url.substring(ore_url.indexOf(":")));
+//		}
 		try {
 			Object obj = parser.parse(new_sb.toString());
 			object = (JSONObject) obj;
