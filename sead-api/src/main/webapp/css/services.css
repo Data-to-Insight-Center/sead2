@@ -1,47 +1,56 @@
 .key {
-display:inline;
-color:blue;
+	display: inline;
+	color: blue;
 }
+
 .value {
-display:inline;
-color:green;
+	display: inline;
+	color: green;
 }
+
 .jqtree-element span {
-display:inline-block;
+	display: inline-block;
 }
+
 #repositoriesDetails, #requestsDetails, #ROsDetails {
-word-wrap:break-word;
-word-break:break-all;
-height:437px;
+	word-wrap: break-word;
+	word-break: break-all;
+	height: 437px;
 }
+
 .tab-pane {
-overflow:none;
+	overflow: none;
 }
 
 .itemlist, .details div {
-word-wrap:break-word;
-word-break:break-all;
-overflow-y:auto;
+	word-wrap: break-word;
+	word-break: break-all;
+	overflow-y: auto;
 }
-.itemlist .selecteditem, .itemlist .selecteditem:hover, .itemlist .selecteditem:hover td{
-    background-color: #95C9FF!important;
+
+.itemlist .selecteditem, .itemlist .selecteditem:hover, .itemlist .selecteditem:hover td
+	{
+	background-color: #95C9FF !important;
 }
 
 .itemlist {
-max-height:400px;
+	max-height: 400px;
 }
+
 .details {
-	float:right;
+	float: right;
 }
 
 th {
-word-break:normal;
+	word-break: normal;
 }
+
 #requestsfilter, #repositoriesfilter, #ROsfilter, #peoplefilter {
-width:96%;
+	width: 96%;
 }
+
 #page {
-height:800px;
+	height: 800px;
 }
 /*footer*/
 #servicesfooter {
@@ -51,9 +60,8 @@ height:800px;
 	font-size: 12px;
 	width: 1200px;
 	height: 30px;
-	
-margin:auto;
-margin-top:-100px;
+	margin: auto;
+	margin-top: -100px;
 	bottom: 10px;
 	left: 0;
 	right: 0;
@@ -70,8 +78,9 @@ margin-top:-100px;
 
 #servicesfooter a {
 	color: #fff !important;
-	text-decoration:none;
+	text-decoration: none;
 }
+
 .rooptions input[type='radio'] {
-margin: 10px 5px 10px 10px;
+	margin: 10px 5px 10px 10px;
 }

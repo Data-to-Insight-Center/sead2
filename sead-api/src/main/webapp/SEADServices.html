@@ -188,16 +188,18 @@
 									placeholder="Type here...">
 							</div>
 
-							<div class="itemlist"><table class="table table-hover">
-								<thead>
-									<tr>
-										<th>Repository Name</th>
-										<th>Home URL</th>
-										<th>Last Updated</th>
-									</tr>
-								</thead>
-								<tbody class="searchable" />
-							</table></div>
+							<div class="itemlist">
+								<table class="table table-hover">
+									<thead>
+										<tr>
+											<th>Repository Name</th>
+											<th>Home URL</th>
+											<th>Last Updated</th>
+										</tr>
+									</thead>
+									<tbody class="searchable" />
+								</table>
+							</div>
 						</div>
 						<div class="span7 details">
 							Profile Details
@@ -206,24 +208,27 @@
 					</div>
 
 					<div id="people" class="tab-pane fade">
-<div class="span10">
+						<div class="span10">
 							<div class="input-group">
 								<span class="input-group-addon">Filter</span><input
 									id="peoplefilter" type="text" class="form-control"
 									placeholder="Type here...">
 							</div>
-							<div class="itemlist"><table class="table table-hover">
-								<thead>
-									<tr>
-										<th>Name</th>
-										<th>eMail</th>
-										<th>Profile</th><th>Affiliations</th>
-									</tr>
-								</thead>
-								<tbody class="searchable" />
-							</table>
-</div>
-</div>						</div>
+							<div class="itemlist">
+								<table class="table table-hover">
+									<thead>
+										<tr>
+											<th>Name</th>
+											<th>eMail</th>
+											<th>Profile</th>
+											<th>Affiliations</th>
+										</tr>
+									</thead>
+									<tbody class="searchable" />
+								</table>
+							</div>
+						</div>
+					</div>
 
 					<div id="requests" class="tab-pane fade">
 						<div class="span7">
@@ -232,27 +237,30 @@
 									id="requestsfilter" type="text" class="form-control"
 									placeholder="Type here...">
 							</div>
-<div class="itemlist">
-							<table class="table table-hover">
-								<thead>
-									<tr>
-										<th>Name</th>
-										<th>Creation Date</th>
-										<th>Latest Status</th>
-										<th>Repository</th>
-									</tr>
-								</thead>
-								<tbody class="searchable" />
-							</table>
-</div>
+							<div class="itemlist">
+								<table class="table table-hover">
+									<thead>
+										<tr>
+											<th>Name</th>
+											<th>Creation Date</th>
+											<th>Latest Status</th>
+											<th>Repository</th>
+										</tr>
+									</thead>
+									<tbody class="searchable" />
+								</table>
+							</div>
 						</div>
 						<div class="span7 details">
-<form class="rooptions">
-<input type="radio" name="requestsDetailsfuncs" onclick="check(this.value)" value="Details" checked="">Request Details
-<input type="radio" name="requestsDetailsfuncs" onclick="check(this.value)" value="Matches">Matches
-<input type="radio" name="requestsDetailsfuncs" onclick="check(this.value)" value="Status">Status
-</form>
-						
+							<form class="rooptions">
+								<input type="radio" name="requestsDetailsfuncs"
+									onclick="check(this.value)" value="Details" checked="">Request
+								Details <input type="radio" name="requestsDetailsfuncs"
+									onclick="check(this.value)" value="Matches">Matches <input
+									type="radio" name="requestsDetailsfuncs"
+									onclick="check(this.value)" value="Status">Status
+							</form>
+
 							<div id="requestsDetails"></div>
 						</div>
 
@@ -264,27 +272,30 @@
 									id="ROsfilter" type="text" class="form-control"
 									placeholder="Type here...">
 							</div>
-<div class="itemlist">
-							<table class="table table-hover">
-								<thead>
-									<tr>
-										<th>Name</th>
-										<th>Creation Date</th>
-										<th>Latest Status</th>
-										<th>Repository</th>
-									</tr>
-								</thead>
-								<tbody class="searchable" />
-							</table>
-</div>
+							<div class="itemlist">
+								<table class="table table-hover">
+									<thead>
+										<tr>
+											<th>Name</th>
+											<th>Creation Date</th>
+											<th>Latest Status</th>
+											<th>Repository</th>
+										</tr>
+									</thead>
+									<tbody class="searchable" />
+								</table>
+							</div>
 						</div>
 						<div class="span7 details">
-							
-<form class="rooptions">
-<input type="radio" name="ROsDetailsfuncs" onclick="check(this.value)" value="Details" checked="">RO Details
-<input type="radio" name="ROsDetailsfuncs" onclick="check(this.value)" value="Matches">Matches
-<input type="radio" name="ROsDetailsfuncs" onclick="check(this.value)" value="Status">Status
-</form>
+
+							<form class="rooptions">
+								<input type="radio" name="ROsDetailsfuncs"
+									onclick="check(this.value)" value="Details" checked="">RO
+								Details <input type="radio" name="ROsDetailsfuncs"
+									onclick="check(this.value)" value="Matches">Matches <input
+									type="radio" name="ROsDetailsfuncs" onclick="check(this.value)"
+									value="Status">Status
+							</form>
 
 							<div id="ROsDetails"></div>
 						</div>
@@ -294,21 +305,22 @@
 		</section>
 	</div>
 
-<hr>
+	<hr>
 
 	<div id="servicesfooter">
-			<div class="copyright">
-				<img id="nsf" src="images/nsf2.png" alt="NSF">
-			</div>
-			<div id="nsf-text">
-				<a>SEAD is funded by the National Science Foundation under
-					cooperative agreement #OCI0940824.</a>
-			</div>
-			<div id="contact" style="float: right">
-				<a href="http://sead-data.net/">SEAD ACR</a>: v1.5.2 | Powered by <a href="http://medici.ncsa.illinois.edu">NCSA Medici</a>: v1.3.1 |
-				Build: @VERSION@ | <a href="#feedback"> Contact SEAD </a>
-			</div>
-	<script>
+		<div class="copyright">
+			<img id="nsf" src="images/nsf2.png" alt="NSF">
+		</div>
+		<div id="nsf-text">
+			<a>SEAD is funded by the National Science Foundation under
+				cooperative agreement #OCI0940824.</a>
+		</div>
+		<div id="contact" style="float: right">
+			<a href="http://sead-data.net/">SEAD ACR</a>: v1.5.2 | Powered by <a
+				href="http://medici.ncsa.illinois.edu">NCSA Medici</a>: v1.3.1 |
+			Build: @VERSION@ | <a href="#feedback"> Contact SEAD </a>
+		</div>
+		<script>
 $(document).ready(function(){
     $(".nav-tabs a").click(function(){
         $(this).tab('show');
@@ -335,6 +347,5 @@ loadRepos();
     
 });
 </script>
-
 </body>
 </html>
