@@ -13,7 +13,7 @@
         <module>services/sead-status-tracker</module>
         <module>va-workflow</module>
         <module>sead-doi-service</module>
-        <!--<module>sda-agent</module>-->
+        <module>sda-agent</module>
         <module>metadata-gen</module> 
         <module>sead-matchmaker</module>
         <module>sead-pdt</module>
