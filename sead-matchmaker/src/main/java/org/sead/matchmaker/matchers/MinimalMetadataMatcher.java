@@ -92,7 +92,7 @@ public class MinimalMetadataMatcher implements Matcher {
     public Document getDescription() {
         return new Document("Rule Name", getName())
                 .append("Repository Trigger",
-                        " \"Metadata Terms\": \"http://sead-data.net/terms/terms\" : JSON array of String predicates, Not yet implemented")
+                        " \"Metadata Terms\": \"http://sead-data.net/terms/terms\" : JSON array of String predicates")
                 .append("Publication Trigger",
                         " Predicates matching repository profile : existence of predicates in \"Aggregation\" in publication request");
     }

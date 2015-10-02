@@ -23,6 +23,7 @@ import com.mongodb.BasicDBObject;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
+
 import org.bson.BasicBSONObject;
 import org.bson.Document;
 import org.bson.types.BasicBSONList;
@@ -36,6 +37,7 @@ import org.sead.matchmaker.matchers.*;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
@@ -55,6 +57,7 @@ public class MatchMaker {
         matchers.add(new OrganizationMatcher());
         matchers.add(new DepthMatcher());
         matchers.add(new MinimalMetadataMatcher());
+        matchers.add(new CreatorIDsRequiredMatcher());
 
         pdtResource = Client.create().resource(MatchmakerConstants.pdtUrl);
     }
