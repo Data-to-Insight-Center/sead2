@@ -152,6 +152,18 @@ public abstract class ResearchObjects {
 	@Produces(MediaType.APPLICATION_JSON)
 	public abstract Response getROOREMap(@PathParam("id") String id);
 
+    /**
+     * Return the FGDC metadata associated with the give request
+     *
+     * @param id
+     *            the assigned ro/publication ID
+     *
+     * @return : FGDC metadata document
+     */
+    @GET
+    @Path("/{id}/fgdc")
+    @Produces(MediaType.APPLICATION_XML)
+    public abstract Response getFgdc(@PathParam("id") String id);
 
 	/**
 	 * Return the status for a given publication

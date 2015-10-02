@@ -172,28 +172,21 @@ public class MatchMaker {
         if (personID.startsWith("orcid.org/")) {
             personID = personID.substring("orcid.org/".length());
             // call PDT to get the profile using the ID
-            String personProfile = pdtGET(MatchmakerConstants.PDT_PEOPLE + "/" + personID + "/raw");
+            String personProfile = pdtGET(MatchmakerConstants.PDT_PEOPLE + "/" + personID);
             if (personProfile == null) {
                 // if the person doesn't exist, add
                 pdtPOST(MatchmakerConstants.PDT_PEOPLE, "{\"provider\": \"ORCID\", \"identifier\":\"" +
                         personID + "\"}");
                 // now try to get the profile
-                personProfile = pdtGET(MatchmakerConstants.PDT_PEOPLE + "/" + personID + "/raw");
+                personProfile = pdtGET(MatchmakerConstants.PDT_PEOPLE + "/" + personID);
             }
 
             if (personProfile == null) {
                 throw new RuntimeException("Can't identify the person: " + personID);
             }
             // find organization names of the person
-            Document affilDocument = Document.parse(personProfile);
-            Document profile = (Document) affilDocument.get("orcid-profile");
-            Document activitiesDocument = (Document) profile.get("orcid-activities");
-            Document affiliationsDocument = (Document) activitiesDocument.get("affiliations");
-            ArrayList orgList = (ArrayList) affiliationsDocument.get("affiliation");
-            for (Object entry : orgList) {
-                Document org = (Document) ((Document) entry).get("organization");
-                orgs.add(org.getString("name"));
-            }
+            Document profileDocument = Document.parse(personProfile);
+            orgs.add(profileDocument.getString("affiliation"));
         }
         return orgs;
     }

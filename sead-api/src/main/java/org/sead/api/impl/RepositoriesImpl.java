@@ -30,6 +30,7 @@ import org.sead.api.Repositories;
 import org.sead.api.util.Constants;
 
 import javax.ws.rs.*;
+import javax.ws.rs.core.CacheControl;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
@@ -42,6 +43,7 @@ import javax.ws.rs.core.Response;
 public class RepositoriesImpl extends Repositories {
     private WebResource resource;
     private String serviceUrl;
+    private CacheControl control = new CacheControl();
 
     private WebResource resource(){
         return resource;
@@ -50,6 +52,7 @@ public class RepositoriesImpl extends Repositories {
 	public RepositoriesImpl() {
         this.serviceUrl = Constants.pdtUrl;
         resource = Client.create().resource(serviceUrl);
+        control.setNoCache(true);
 	}
 
 	@POST
@@ -64,7 +67,8 @@ public class RepositoriesImpl extends Repositories {
                 .type("application/json")
                 .post(ClientResponse.class, profileString);
 
-        return Response.status(response.getStatus()).entity(response.getEntity(new GenericType<String>() {})).build();
+        return Response.status(response.getStatus()).entity(response
+                .getEntity(new GenericType<String>() {})).cacheControl(control).build();
 	}
 
 	@GET
@@ -78,7 +82,8 @@ public class RepositoriesImpl extends Repositories {
                 .type("application/json")
                 .get(ClientResponse.class);
 
-        return Response.status(response.getStatus()).entity(response.getEntity(new GenericType<String>() {})).build();
+        return Response.status(response.getStatus()).entity(response
+                .getEntity(new GenericType<String>() {})).cacheControl(control).build();
 
 	}
 
@@ -94,7 +99,8 @@ public class RepositoriesImpl extends Repositories {
                 .type("application/json")
                 .get(ClientResponse.class);
 
-        return Response.status(response.getStatus()).entity(response.getEntity(new GenericType<String>() {})).build();
+        return Response.status(response.getStatus()).entity(response
+                .getEntity(new GenericType<String>() {})).cacheControl(control).build();
 	}
 
 	@PUT
@@ -110,7 +116,8 @@ public class RepositoriesImpl extends Repositories {
                 .type("application/json")
                 .put(ClientResponse.class, profile);
 
-        return Response.status(response.getStatus()).entity(response.getEntity(new GenericType<String>() {})).build();
+        return Response.status(response.getStatus()).entity(response
+                .getEntity(new GenericType<String>() {})).cacheControl(control).build();
 	}
 
 	@DELETE
@@ -124,7 +131,8 @@ public class RepositoriesImpl extends Repositories {
                 .type("application/json")
                 .delete(ClientResponse.class);
 
-        return Response.status(response.getStatus()).entity(response.getEntity(new GenericType<String>() {})).build();
+        return Response.status(response.getStatus()).entity(response
+                .getEntity(new GenericType<String>() {})).cacheControl(control).build();
 	}
 
 	@GET
@@ -139,7 +147,8 @@ public class RepositoriesImpl extends Repositories {
                 .type("application/json")
                 .get(ClientResponse.class);
 
-        return Response.status(response.getStatus()).entity(response.getEntity(new GenericType<String>() {})).build();
+        return Response.status(response.getStatus()).entity(response
+                .getEntity(new GenericType<String>() {})).cacheControl(control).build();
 	}
 
 }

@@ -75,29 +75,29 @@ public class ROServices {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response startROPublicationProcess(String publicationRequestString,
 			@QueryParam("requestUrl") String requestURL) {
-		String messageString = null;
+		String messageString = "";
 		Document request = Document.parse(publicationRequestString);
 		Document content = (Document) request.get("Aggregation");
 		if (content == null) {
-			messageString += "Missing Aggregation";
+			messageString += "Missing Aggregation ";
 		}
 		Document preferences = (Document) request.get("Preferences");
 		if (preferences == null) {
-			messageString += "Missing Preferences";
+			messageString += "Missing Preferences ";
 		}
 		Object repository = request.get("Repository");
 		if (repository == null) {
-			messageString += "Missing Respository";
+			messageString += "Missing Respository ";
 		} else {
 			FindIterable<Document> iter = repositoriesCollection
 					.find(new Document("orgidentifier", repository));
 			if (iter.first() == null) {
-				messageString += "Unknown Repository: " + repository;
+				messageString += "Unknown Repository: " + repository + " ";
 			}
 
 		}
 
-		if (messageString == null) {
+		if (messageString.equals("")) {
 			// Get organization from profile(s)
 			// Add to base document
 			Object creatorObject = content.get("Creator");
@@ -161,7 +161,7 @@ public class ROServices {
 					.entity(new Document("identifier", ID)).build();
 		} else {
 			return Response.status(ClientResponse.Status.BAD_REQUEST)
-					.entity(new BasicDBObject("Failure", messageString))
+					.entity(messageString)
 					.build();
 		}
 	}
