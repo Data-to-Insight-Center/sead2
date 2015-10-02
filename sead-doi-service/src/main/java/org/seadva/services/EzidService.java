@@ -1,19 +1,27 @@
 package org.seadva.services;
 
+import com.sun.jersey.api.client.ClientResponse;
 import org.seadva.services.util.Constants;
 import org.seadva.services.util.IdMetadata;
 
 import org.json.*;
 
 import java.io.*;
+import java.sql.Date;
+import java.text.DateFormat;
 import java.util.HashMap;
 import java.util.Map;
+import javax.ws.rs.*;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
 /**
  * EzidService is a helper class that enables to create and update DOIs using the
  * EZID service.
  *
  */
+
+@Path("/doi")
 public class EzidService {
 
     private DataciteIdService dataciteIdService;
@@ -192,5 +200,44 @@ public class EzidService {
      */
     public void setPermanentDOI(boolean permanentDOI) {
         this.permanentDOI = permanentDOI;
+    }
+
+
+    @POST
+    @Path("/")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response setROStatus(String doiInfo) {
+        try {
+            EzidService ezidService = new EzidService();
+
+            JSONObject doiInfoObj = new JSONObject(doiInfo);
+            if(!doiInfoObj.has("target")){
+                return Response.status(ClientResponse.Status.BAD_REQUEST)
+                        .entity(new JSONObject().put("Failure", "target not specified").toString())
+                        .build();
+            }
+
+            String targetUrl = doiInfoObj.get("target").toString();
+            String metadata = doiInfoObj.has("metadata") ? doiInfoObj.get("metadata").toString() : "";
+
+            if(doiInfoObj.has("permanent") && doiInfoObj.get("permanent").toString().equals("true")){
+                ezidService.setPermanentDOI(true);
+            }
+
+            String doi_url = ezidService.createDOI(metadata, targetUrl);
+            if(doi_url != null) {
+                System.out.println(EzidService.class.getName() + " : DOI created Successfully - " + doi_url);
+                return Response.ok(new JSONObject().put("doi", doi_url).toString()).build();
+            } else {
+                System.out.println(EzidService.class.getName() + " : Error creating DOI ");
+                return Response.status(ClientResponse.Status.INTERNAL_SERVER_ERROR)
+                        .entity(new JSONObject().put("Failure", "Error occurred while generating DOI").toString())
+                        .build();
+            }
+        } catch (JSONException e) {
+            e.printStackTrace();
+            return Response.status(ClientResponse.Status.BAD_REQUEST).build();
+        }
     }
 }

@@ -30,6 +30,7 @@ public class Constants {
     public static String curBeeUrl;
     public static String matchmakerUrl;
     public static String metadataGenUrl;
+    public static String doiServiceUrl;
     public static String clowderUser;
     public static String clowderPassword;
 
@@ -53,6 +54,7 @@ public class Constants {
         curBeeUrl = properties.getProperty("curBee.url");
         matchmakerUrl = properties.getProperty("matchmaker.url");
         metadataGenUrl = properties.getProperty("metadatagen.url");
+        doiServiceUrl = properties.getProperty("doi.service.url");
         clowderUser = properties.getProperty("clowder.user");
         clowderPassword = properties.getProperty("clowder.pw");
     }
