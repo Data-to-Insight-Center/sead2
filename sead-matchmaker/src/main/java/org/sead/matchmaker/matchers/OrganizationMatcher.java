@@ -39,8 +39,12 @@ public class OrganizationMatcher implements Matcher {
 			ArrayList<String> requiredAffiliations = (ArrayList<String>) profile
 					.get("Affiliations");
 			// Add asserted affiliations to the derived ones
-			affiliations.addAll((ArrayList<String>) preferences
-					.get("Affiliations"));
+            Object aff = preferences.get("Affiliations");
+            if (aff instanceof ArrayList) {
+                affiliations.addAll((ArrayList<String>) aff);
+            } else {
+                affiliations.add(aff);
+            }
 			boolean affiliated = false;
 			String requiredOrgString = null;
 			for (String org : affiliations.toArray(new String[affiliations.size()])) {
