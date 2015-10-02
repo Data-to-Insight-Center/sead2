@@ -9,12 +9,31 @@ color:green;
 .jqtree-element span {
 display:inline-block;
 }
-#repositoriesDetails, #requestsDetails, #ROsDetails, .tab-pane .span5, .tab-pane .span10  {
+#repositoriesDetails, #requestsDetails, #ROsDetails {
 word-wrap:break-word;
 word-break:break-all;
-height:400px;
+height:437px;
+}
+.tab-pane {
+overflow:none;
+}
+
+.itemlist, .details div {
+word-wrap:break-word;
+word-break:break-all;
 overflow-y:auto;
 }
+.itemlist .selecteditem, .itemlist .selecteditem:hover, .itemlist .selecteditem:hover td{
+    background-color: #95C9FF!important;
+}
+
+.itemlist {
+max-height:400px;
+}
+.details {
+	float:right;
+}
+
 th {
 word-break:normal;
 }
@@ -22,7 +41,7 @@ word-break:normal;
 width:96%;
 }
 #page {
-height:750px;
+height:800px;
 }
 /*footer*/
 #servicesfooter {
@@ -52,4 +71,7 @@ margin-top:-100px;
 #servicesfooter a {
 	color: #fff !important;
 	text-decoration:none;
+}
+.rooptions input[type='radio'] {
+margin: 10px 5px 10px 10px;
 }

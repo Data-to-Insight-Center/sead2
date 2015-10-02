@@ -181,13 +181,14 @@
 				</ul>
 				<div class="tab-content">
 					<div id="repositories" class="tab-pane fade in active">
-						<div class="span5">
+						<div class="span7">
 							<div class="input-group">
 								<span class="input-group-addon">Filter</span><input
 									id="repositoriesfilter" type="text" class="form-control"
 									placeholder="Type here...">
 							</div>
-							<table class="table table-hover">
+
+							<div class="itemlist"><table class="table table-hover">
 								<thead>
 									<tr>
 										<th>Repository Name</th>
@@ -196,9 +197,9 @@
 									</tr>
 								</thead>
 								<tbody class="searchable" />
-							</table>
+							</table></div>
 						</div>
-						<div class="span7">
+						<div class="span7 details">
 							Profile Details
 							<div id="repositoriesDetails"></div>
 						</div>
@@ -211,7 +212,7 @@
 									id="peoplefilter" type="text" class="form-control"
 									placeholder="Type here...">
 							</div>
-							<table class="table table-hover">
+							<div class="itemlist"><table class="table table-hover">
 								<thead>
 									<tr>
 										<th>Name</th>
@@ -221,15 +222,17 @@
 								</thead>
 								<tbody class="searchable" />
 							</table>
+</div>
 </div>						</div>
 
 					<div id="requests" class="tab-pane fade">
-						<div class="span5">
+						<div class="span7">
 							<div class="input-group">
 								<span class="input-group-addon">Filter</span><input
 									id="requestsfilter" type="text" class="form-control"
 									placeholder="Type here...">
 							</div>
+<div class="itemlist">
 							<table class="table table-hover">
 								<thead>
 									<tr>
@@ -241,20 +244,27 @@
 								</thead>
 								<tbody class="searchable" />
 							</table>
+</div>
 						</div>
-						<div class="span7">
-							Request Details
+						<div class="span7 details">
+<form class="rooptions">
+<input type="radio" name="requestsDetailsfuncs" onclick="check(this.value)" value="Details" checked="">Request Details
+<input type="radio" name="requestsDetailsfuncs" onclick="check(this.value)" value="Matches">Matches
+<input type="radio" name="requestsDetailsfuncs" onclick="check(this.value)" value="Status">Status
+</form>
+						
 							<div id="requestsDetails"></div>
 						</div>
 
 					</div>
 					<div id="ROs" class="tab-pane fade">
-						<div class="span5">
+						<div class="span7">
 							<div class="input-group">
 								<span class="input-group-addon">Filter</span><input
 									id="ROsfilter" type="text" class="form-control"
 									placeholder="Type here...">
 							</div>
+<div class="itemlist">
 							<table class="table table-hover">
 								<thead>
 									<tr>
@@ -266,9 +276,16 @@
 								</thead>
 								<tbody class="searchable" />
 							</table>
+</div>
 						</div>
-						<div class="span7">
-							RO Details
+						<div class="span7 details">
+							
+<form class="rooptions">
+<input type="radio" name="ROsDetailsfuncs" onclick="check(this.value)" value="Details" checked="">RO Details
+<input type="radio" name="ROsDetailsfuncs" onclick="check(this.value)" value="Matches">Matches
+<input type="radio" name="ROsDetailsfuncs" onclick="check(this.value)" value="Status">Status
+</form>
+
 							<div id="ROsDetails"></div>
 						</div>
 					</div>

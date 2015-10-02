@@ -1,10 +1,11 @@
+var apiprefix = "./cp";
 
 function loadPeople() {
-$('#people>div>table>tbody').empty();
+$('#people>div>div>table>tbody').empty();
 
 $.ajax({
 		type : "GET",
-		url : "./api/people",
+		url : apiprefix + "/people",
 		dataType : "json",
 		success : updatePeople,
 		error : errorAlert
@@ -14,11 +15,11 @@ $.ajax({
 
 
 function loadRepos() {
-$('#repositories>div>table>tbody').empty();
+$('#repositories>div>div>table>tbody').empty();
 
 $.ajax({
 		type : "GET",
-		url : "./api/repositories",
+		url : apiprefix + "/repositories",
 		dataType : "json",
 		success : updateRepos,
 		error : errorAlert
@@ -27,8 +28,7 @@ $.ajax({
 }
 
 function errorAlert(msg) {
-alert("fail");
-alert(msg);
+alert(JSON.stringify(msg));
 }
 
 
@@ -52,9 +52,9 @@ function updatePeople(people) {
 people=people.persons;
 for(var x in people) {
 
-$('#people>div>table')
+$('#people>div>div>table')
 .append($('<tr/>')
-	.append($('<td/>').append($('<a/>').text(people[x].givenName + people[x].familyName).attr('href','./api/people/' + people[x]['@id'])))
+	.append($('<td/>').append($('<a/>').text(people[x].givenName + people[x].familyName).attr('href',apiprefix + '/people/' + people[x]['@id'])))
 	.append($('<td/>').append($('<a/>').text(people[x].email).attr('href',"mailTo:" + people[x].email)))
 .append($('<td/>').append($('<a/>').text(people[x].PersonalProfileDocument).attr('href',people[x].PersonalProfileDocument)))
 .append($('<td/>').text(people[x].affiliation)));
@@ -82,21 +82,23 @@ function updateRepos(repos) {
 
 for(var x in repos) {
 
-$('#repositories>div>table')
-.append($('<tr/>')
-	.append($('<td/>').append($('<a/>').text(repos[x].repositoryName).attr('href','./api/repositories/' + repos[x].orgidentifier)))
+var rowId=makeCSSName(repos[x].orgidentifier);
+$('#repositories>div>div>table')
+.append($('<tr/>').attr('id', rowId)
+	.append($('<td/>').append($('<a/>').text(repos[x].repositoryName).attr('href',apiprefix + '/repositories/' + repos[x].orgidentifier)))
 	.append($('<td/>').append($('<a/>').text(repos[x].repositoryURL).attr('href',repos[x].repositoryURL)))
-.append($('<td/>').text(repos[x].lastUpdate)).attr('onmouseover','showDets(\"./api/repositories/' + repos[x].orgidentifier +'\", ' + '\"#repositoriesDetails\")')
+.append($('<td/>').text(repos[x].lastUpdate)).attr('onmouseover','showDets(\"' + apiprefix + '/repositories/\",\"' + repos[x].orgidentifier +'\", ' + '\"#repositoriesDetails\")')
 );
 }
 
 }
 
 function loadRequests(stage, desired, anchor) {
-$(anchor + '>div>table>tbody').empty();
+map={};
+$(anchor + '>div>div>table>tbody').empty();
 $.ajax({
 		type : "GET",
-		url : "./api/researchobjects",
+		url : apiprefix + "/researchobjects",
 		dataType : "json",
 		success : function (response) {
 		         updateRequests(response, stage, desired, anchor)},
@@ -132,41 +134,88 @@ statusArray.sort(function(a,b){
 
   return new Date(a.date) - new Date(b.date);
 });
+
+
 if((statusArray[statusArray.length-1].stage==stage)==desired) {
-$(anchor + '>div>table').append($('<tr/>').append($('<td/>')
+
+var rowId = makeCSSName(requests[x].Aggregation.Identifier);
+
+$(anchor + '>div>div>table').append($('<tr/>').append($('<td/>')
 	.append($('<div/>').text(requests[x].Aggregation.Title))).append($('<td/>').append($('<div/>').text(statusArray[0].date)))
 .append($('<td/>').append($('<div/>').text(statusArray[statusArray.length-1].date)))
-	.append($('<td/>').append($('<div/>').text(requests[x].Repository))).attr('onmouseover','showDets(\"./api/researchobjects/' + requests[x].Aggregation.Identifier +'\", ' + '\"' + anchor + 'Details\")'));
+	.append($('<td/>').append($('<div/>').text(requests[x].Repository))).attr('onmouseover','showDets(\"' + apiprefix + '/researchobjects/\",\"' + requests[x].Aggregation.Identifier +'\", ' + '\"' + anchor + 'Details\")').attr("id",rowId));
 }
 
 }
 }
+
 }
 var map={};
+var lastfunc={};
 
-function showDets(item, anchor) {
-if(map[anchor]==item) {
+function showDets(prefix, item, anchor) {
+var currentROFunc = $('input[name=' + anchor.substring(1) + 'funcs]:checked').val();
+if((map[anchor]==item)&&(currentROFunc==lastfunc[anchor])) {
 return;
 } else {
+if((map[anchor]!=null)&&(map[anchor]!=item)) {
+$('#' + makeCSSName(map[anchor])).removeClass('selecteditem');
+}
+
+$('#' + makeCSSName(item)).addClass('selecteditem');
+
+if(currentROFunc=="Details") {
 
 $.ajax({
 		type : "GET",
-		url : item,
+		url : prefix+item,
 		dataType : "json",
 		success : function (response) {
 		         showRequest(response, anchor)},
 		error : errorAlert
 	});
-map[anchor] = item;
+}else if (currentROFunc=="Status") {
+$.ajax({
+		type : "GET",
+		url : prefix+item + '/status',
+		dataType : "json",
+		success : function (response) {
+		         showRequest(response, anchor)},
+		error : errorAlert
+	});
+} else if (currentROFunc=="Matches") {
+$.ajax({
+		type : "GET",
+		url : prefix+item ,
+		dataType : "json",
+		success : function (response) {
+$.ajax({
+		type : "POST",
+		url : prefix+ 'matchingrepositories',
+	     contentType: "application/json; charset=utf-8",
+		dataType : "json",
+		data:  JSON.stringify(response),
+		success : function (matchresponse) {
+		         showRequest(matchresponse, anchor)},
+		error : errorAlert
+	});
+},
+		error : errorAlert
+	});
+
 }
+map[anchor] = item;
+lastfunc[anchor]=currentROFunc;
+} 
+
 
 }
 
 
 
 function showRequest(item, anchor) {
-item = whap(item);
 
+item = whap(item);
 if(!($(anchor + ' .jqtree-tree').length)) {
     $(anchor).tree({
         data: item,
@@ -182,7 +231,6 @@ if(!($(anchor + ' .jqtree-tree').length)) {
 
 });
 } else {
-
     $(anchor).tree('loadData', item);
 }
 }
@@ -192,7 +240,7 @@ function whap(rawtree) {
 var tree = [];
 if(rawtree instanceof Array) {
 	for(var i in rawtree) {
-		addNodes(tree, i, rawtree[i]);
+		addNode(tree, i, rawtree[i]);
 	}
 } else {
 	for(var i in rawtree) {
@@ -202,11 +250,12 @@ if (typeof rawtree[i] === 'object') {
 		addNode(tree, i, rawtree[i]);
 	} else {
 	      var child = {};
-		child['label'] = i + " " + rawtree[i];
+		child['label'] = i + ": " + rawtree[i];
+
 		tree.push(child);
 	}
 
-}
+} 
 }
 }
 return tree;
@@ -240,4 +289,12 @@ node['children']=children;
 }
 	tree.push(node);
 }
- 
+
+function makeCSSName(id) {
+return id.replace(/[~!@\$%\^&\*\(\)\+=,\.\/';:"\?><\[\]\\\{}\|`#]/g, "_");
+} 
+
+function check(rofuncs) {
+
+$('.searchable .selecteditem').trigger('mouseover');
+} 
