@@ -20,6 +20,7 @@ package org.sead.workflow.activity.impl;
 
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
+import com.sun.jersey.api.client.GenericType;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.multipart.FormDataMultiPart;
 import org.apache.commons.io.IOUtils;
@@ -31,6 +32,7 @@ import org.sead.workflow.exception.SeadWorkflowException;
 import org.sead.workflow.util.Constants;
 import org.seadva.services.statusTracker.SeadStatusTracker;
 import org.seadva.services.statusTracker.enums.SeadStatus;
+import sun.security.provider.certpath.OCSPResponse;
 
 import javax.ws.rs.core.MediaType;
 import java.io.IOException;
@@ -72,6 +74,9 @@ public class PersistROActivity extends AbstractWorkflowActivity {
 
         if(response.getStatus() == 200 || response.getStatus() == 201){
             System.out.println(PersistROActivity.class.getName() + " : Successfully registered in PDT");
+        } else if(response.getStatus() == 400) {
+            throw new SeadWorkflowException("Error occurred while persisting collection " + context.getCollectionId()
+                    + " - " + response.getEntity(new GenericType<String>() {}));
         } else {
             throw new SeadWorkflowException("Error occurred while persisting collection " + context.getCollectionId());
         }

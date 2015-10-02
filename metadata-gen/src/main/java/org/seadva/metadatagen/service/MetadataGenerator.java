@@ -139,14 +139,14 @@ public class MetadataGenerator {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Response putOreMap(String publicationRequestString, @QueryParam("requestUrl") String requestURL) {
-        String messageString = null;
+        String messageString = "";
         Document request = Document.parse(publicationRequestString);
         Document content = (Document) request.get("Aggregation");
         if (content == null) {
             messageString += "Missing Aggregation";
         }
 
-        if (messageString == null) {
+        if (messageString.equals("")) {
             // Get organization from profile(s)
             // Add to base document
             String ID = (String) content.get("Identifier");
@@ -194,7 +194,7 @@ public class MetadataGenerator {
             return Response.ok().build();
         } else {
             return Response.status(ClientResponse.Status.BAD_REQUEST)
-                    .entity(new BasicDBObject("Failure", messageString))
+                    .entity(messageString)
                     .build();
         }
     }

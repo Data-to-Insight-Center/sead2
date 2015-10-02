@@ -20,6 +20,7 @@ package org.sead.workflow.activity.impl;
 
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
+import com.sun.jersey.api.client.GenericType;
 import com.sun.jersey.api.client.WebResource;
 import org.sead.workflow.activity.AbstractWorkflowActivity;
 import org.sead.workflow.activity.SeadWorkflowActivity;
@@ -66,6 +67,9 @@ public class PersistOREActivity extends AbstractWorkflowActivity {
 
         if(response.getStatus() == 200 || response.getStatus() == 201){
             System.out.println(PersistOREActivity.class.getName() + " : ORE successfully saved in DB");
+        } else if(response.getStatus() == 400) {
+            throw new SeadWorkflowException("Error occurred while persisting ORE " + context.getCollectionId()
+                    + " - " + response.getEntity(new GenericType<String>() {}).toString());
         } else {
             throw new SeadWorkflowException("Error occurred while persisting ORE " + context.getCollectionId());
         }
