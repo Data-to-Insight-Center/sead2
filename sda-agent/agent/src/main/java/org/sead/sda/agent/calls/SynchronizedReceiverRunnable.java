@@ -15,24 +15,15 @@ import org.sead.sda.agent.engine.PropertiesReader;
 import org.sead.sda.agent.engine.SFTP;
 
 public class SynchronizedReceiverRunnable implements Runnable{
-	private String propertyPath; 
 	private ArrayList<String> errorLinks;
 
-	public SynchronizedReceiverRunnable(String propertyPath){
-		this.propertyPath = propertyPath;
-	}
-	
-	
-	
 	public void run() throws IllegalMonitorStateException{
 		boolean runInfinite = true;
-		
-		PropertiesReader property = new PropertiesReader(this.propertyPath);
 		
 		//while(runInfinite){
 			
 			
-			Shimcalls call = new Shimcalls(property);
+			Shimcalls call = new Shimcalls();
 			JSONArray allResearchObjects = call.getResearchObjectsList_repo();
 			
 			
@@ -68,7 +59,7 @@ public class SynchronizedReceiverRunnable implements Runnable{
 								JSONObject newOREmap = oreMap.getNewOREmap();
 								
 								try{
-									DummySDA dummySDA = new DummySDA(property, newOREmap, ore);
+									DummySDA dummySDA = new DummySDA(newOREmap, ore);
 									errorLinks = dummySDA.getErrorLinks();
 									rootPath = dummySDA.getRootPath();
 									
@@ -77,9 +68,9 @@ public class SynchronizedReceiverRunnable implements Runnable{
 										
 										try{
 											
-											SFTP sftp = new SFTP(this.propertyPath, rootPath+".tar");
+											SFTP sftp = new SFTP(rootPath+".tar");
 											try{
-												String target = property.getProperties().get("LandingPage") + "?tag="+identifiter;
+												String target = PropertiesReader.landingPage + "?tag="+identifiter;
 												System.out.println(target);
 												DOI doi = new DOI(target, ore);
 												doi_url = doi.getDoi();

@@ -9,7 +9,7 @@ public class CallDaemons {
 	private Logger log;
 	
 	
-	public CallDaemons(String propertiesPath, CallConfig callConfig){
+	public CallDaemons(CallConfig callConfig){
 		
 		this.numberofcallDaemons = callConfig.getDaemon();
 		
@@ -18,7 +18,7 @@ public class CallDaemons {
 		SynchronizedReceiverRunnable srr;
 		
 		try {
-			srr = new SynchronizedReceiverRunnable(propertiesPath);
+			srr = new SynchronizedReceiverRunnable();
 			for (int i = 0; i < this.numberofcallDaemons; i++){
 				this.callDaemons[i] = new Thread(srr);
 			}
