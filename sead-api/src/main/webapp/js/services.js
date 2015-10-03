@@ -236,6 +236,10 @@ var lastfunc = {};
 function showDets(prefix, item, anchor) {
 	var currentROFunc = $(
 			'input[name=' + anchor.substring(1) + 'funcs]:checked').val();
+	// For repository display where ther eare not radio buttons
+	if (currentROFunc == null) {
+		currentROFunc = "Details";
+	}
 	if ((map[anchor] == item) && (currentROFunc == lastfunc[anchor])) {
 		return;
 	} else {
@@ -245,16 +249,20 @@ function showDets(prefix, item, anchor) {
 
 		$('#' + makeCSSName(item)).addClass('selecteditem');
 
-		if (currentROFunc == "Details") {
+		if ((item == null) || (currentROFunc == "Details")) {
 
 			$.ajax({
 				type : "GET",
 				url : prefix + item,
 				dataType : "json",
 				success : function(response) {
-					showRequest(response, anchor)
+					checkCanBeDeleted(item, response);
+					showRequest(response, item, anchor)
 				},
-				error : errorAlert
+				error : function(response) {
+					$(anchor).tree('loadData', {});
+					errorAlert(response);
+				}
 			});
 		} else if (currentROFunc == "Status") {
 			$.ajax({
@@ -262,9 +270,12 @@ function showDets(prefix, item, anchor) {
 				url : prefix + item + '/status',
 				dataType : "json",
 				success : function(response) {
-					showRequest(response, anchor)
+					showRequest(response, item, anchor)
 				},
-				error : errorAlert
+				error : function(response) {
+					$(anchor).tree('loadData', {});
+					errorAlert(response);
+				}
 			});
 		} else if (currentROFunc == "Matches") {
 			$.ajax({
@@ -279,12 +290,18 @@ function showDets(prefix, item, anchor) {
 						dataType : "json",
 						data : JSON.stringify(response),
 						success : function(matchresponse) {
-							showRequest(matchresponse, anchor)
+							showRequest(matchresponse, item, anchor)
 						},
-						error : errorAlert
+						error : function(matchingresponse) {
+							$(anchor).tree('loadData', {});
+							errorAlert(matchingresponse);
+						}
 					});
 				},
-				error : errorAlert
+				error : function(response) {
+					$(anchor).tree('loadData', {});
+					errorAlert(response);
+				}
 			});
 
 		}
@@ -294,13 +311,26 @@ function showDets(prefix, item, anchor) {
 
 }
 
-function showRequest(item, anchor) {
+function showRequest(response, item, anchor) {
 
-	item = whap(item);
+	// Only do this once if we are flipping to matches/status...
+
+	if (delMap[item] == true) {
+		$('#deleteme').text("Delete This Request");
+		$('#deleteme').click(function() {
+			deleteRequest(item);
+		});
+
+		$('#deleteme').show();
+	} else {
+		$('#deleteme').hide();
+		$('#deleteme').prop('onclick', null).off('click');
+	}
+	response = whap(response);
 	if (!($(anchor + ' .jqtree-tree').length)) {
 		$(anchor).tree(
 				{
-					data : item,
+					data : response,
 					autoOpen : 1,
 					onCreateLi : function(node, $li) {
 						// Append a link to the jqtree-element div.
@@ -316,7 +346,7 @@ function showRequest(item, anchor) {
 
 				});
 	} else {
-		$(anchor).tree('loadData', item);
+		$(anchor).tree('loadData', response);
 	}
 }
 
@@ -382,4 +412,68 @@ function makeCSSName(id) {
 function check(rofuncs) {
 
 	$('.searchable .selecteditem').trigger('mouseover');
+}
+
+var delMap = {};
+function canBeDeleted(id) {
+	var canbe = delMap[id];
+	if (canbe == null) {
+		checkCanBeDeleted(item, null);
+		canbe = delMap[id];
+	}
+	return canbe;
+}
+
+function checkCanBeDeleted(id, json) {
+	// return true or false in map (don't leave null to avoid repeated requests
+	// after a failure
+	if (delMap[id] == null) {
+		delMap[id] = false;
+		if (json == null) {
+			// go check now
+			var json = $.ajax({
+				type : "GET",
+				async : false,
+				url : apiprefix + '/researchobjects/' + id + '/status',
+				dataType : "json",
+			}).responseText();
+
+		}
+		// Parse json to find Preferences value
+		if (json['Aggregation'] != null) {
+			// We're working on a request not a repo profile
+			var del = json['Preferences']['Purpose'];
+			if (del == 'Testing-Only') {
+				delMap[id] = true;
+			}
+		}
+	}
+}
+function deleteRequest(id) {
+	$.ajax({
+		type : "DELETE",
+		url : apiprefix + '/researchobjects/' + id,
+		success : function(response) {
+
+			$('#deleteme').prop('onclick', null).off('click');
+			$('#deleteme').hide();
+			var row = makeCSSName(id);
+			$('#' + row).remove();
+			map[row] = null;
+			$('#requestsDetails').tree('loadData', {});
+
+		},
+		error : function() {
+			alert('Bad');
+		}
+	});
+
+}
+function showInstance() {
+
+	$('.article').append(
+			$('<p/>').html(
+					'Monitoring SEAD 2.0 C3PR Publication Services at <a href=\''
+							+ apiprefix + '/../index.html\'>' + apiprefix
+							+ '</a>'));
 }

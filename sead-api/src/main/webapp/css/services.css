@@ -84,3 +84,12 @@ th {
 .rooptions input[type='radio'] {
 	margin: 10px 5px 10px 10px;
 }
+
+.rooptions {
+	display: inline;
+}
+
+#deleteme {
+	display: inline;
+	margin-left: 10px;
+}

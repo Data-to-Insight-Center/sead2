@@ -118,7 +118,7 @@
 										href="https://sead.ncsa.illinois.edu/projects/">Project
 											Spaces</a></li>
 									<li class="menu-item "><a
-										href="/sead-c3pr/SEADServices.html">Pubilshing Services</a></li>
+										href="/sead-cp/SEADServices.html">Pubilshing Services</a></li>
 									<li class="menu-item menu-item-has-children"><a
 										href="http://sead-vivo.d2i.indiana.edu:8080/sead-vivo/">Research
 											Network</a>
@@ -164,9 +164,8 @@
 			<article>
 				<div class="article entry-content clearfix">
 					<h1>
-						<span>Publication Services</span>
+						<span>Publication Services Management Console</span>
 					</h1>
-					<p>SEAD 2.0 Publication Services - Demo Implementation.</p>
 
 				</div>
 
@@ -260,6 +259,7 @@
 									type="radio" name="requestsDetailsfuncs"
 									onclick="check(this.value)" value="Status">Status
 							</form>
+							<div id="deleteme" class='btn btn-primary' style='display: none'></div>
 
 							<div id="requestsDetails"></div>
 						</div>
@@ -322,6 +322,7 @@
 		</div>
 		<script>
 $(document).ready(function(){
+	showInstance();
     $(".nav-tabs a").click(function(){
         $(this).tab('show');
     });
