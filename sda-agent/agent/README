@@ -16,13 +16,6 @@ if you don't want to use SDA, you can create a local SDA folder and change ‘SD
 
 Step 2:
 
-modify src/main/java/org/sead/SDA_Agent/Service/ServiceLauncher.java
-
-make correct 'propertyPath' to sead2/sda-agent/config/config.properties
-
-
-Step 3:
-
 run build-standalone.sh.
 
 ./build-standalone.sh.
@@ -30,9 +23,9 @@ run build-standalone.sh.
 It will help user build project and create a shell script bin/SDA_Agent.sh
 
 
-Step 4:
+Step 3:
 
-run bin/SDA_Agent.sh to start SDA Agent
+Run bin/SDA_Agent.sh to start SDA Agent. You have to provide the 'config.properties' file path as a parameter.
 
-nohup ./bin/SDA_Agent.sh > log.txt &
+nohup ./bin/SDA_Agent.sh config/config.properties > log.txt &
 

@@ -51,7 +51,9 @@ public class MinimalMetadataMatcher implements Matcher {
                     .listIterator();
             while (docIter.hasNext()) {
                 Object next = docIter.next();
-                if (next != null) {
+                //context entries are either objects(Documents) with key/values that ew should parse, or
+                //single URL values (String) that point to an external vocab which we're ignoring for now
+                if ((next != null)&&(!(next instanceof String))) {
                     Document doc = (Document) next;
                     for (String k : doc.keySet()) {
                         labelsByPred.put(doc.getString(k), k);

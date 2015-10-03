@@ -118,7 +118,7 @@
 										href="https://sead.ncsa.illinois.edu/projects/">Project
 											Spaces</a></li>
 									<li class="menu-item "><a
-										href="/sead-c3pr/SEADServices.html">Pubilshing Services</a></li>
+										href="/sead-cp/SEADServices.html">Pubilshing Services</a></li>
 									<li class="menu-item menu-item-has-children"><a
 										href="http://sead-vivo.d2i.indiana.edu:8080/sead-vivo/">Research
 											Network</a>
@@ -164,9 +164,8 @@
 			<article>
 				<div class="article entry-content clearfix">
 					<h1>
-						<span>Publication Services</span>
+						<span>Publication Services Management Console</span>
 					</h1>
-					<p>SEAD 2.0 Publication Services - Demo Implementation.</p>
 
 				</div>
 
@@ -181,94 +180,123 @@
 				</ul>
 				<div class="tab-content">
 					<div id="repositories" class="tab-pane fade in active">
-						<div class="span5">
+						<div class="span7">
 							<div class="input-group">
 								<span class="input-group-addon">Filter</span><input
 									id="repositoriesfilter" type="text" class="form-control"
 									placeholder="Type here...">
 							</div>
-							<table class="table table-hover">
-								<thead>
-									<tr>
-										<th>Repository Name</th>
-										<th>Home URL</th>
-										<th>Last Updated</th>
-									</tr>
-								</thead>
-								<tbody class="searchable" />
-							</table>
+
+							<div class="itemlist">
+								<table class="table table-hover">
+									<thead>
+										<tr>
+											<th>Repository Name</th>
+											<th>Home URL</th>
+											<th>Last Updated</th>
+										</tr>
+									</thead>
+									<tbody class="searchable" />
+								</table>
+							</div>
 						</div>
-						<div class="span7">
+						<div class="span7 details">
 							Profile Details
 							<div id="repositoriesDetails"></div>
 						</div>
 					</div>
 
 					<div id="people" class="tab-pane fade">
-<div class="span10">
+						<div class="span10">
 							<div class="input-group">
 								<span class="input-group-addon">Filter</span><input
 									id="peoplefilter" type="text" class="form-control"
 									placeholder="Type here...">
 							</div>
-							<table class="table table-hover">
-								<thead>
-									<tr>
-										<th>Name</th>
-										<th>eMail</th>
-										<th>Profile</th><th>Affiliations</th>
-									</tr>
-								</thead>
-								<tbody class="searchable" />
-							</table>
-</div>						</div>
+							<div class="itemlist">
+								<table class="table table-hover">
+									<thead>
+										<tr>
+											<th>Name</th>
+											<th>eMail</th>
+											<th>Profile</th>
+											<th>Affiliations</th>
+										</tr>
+									</thead>
+									<tbody class="searchable" />
+								</table>
+							</div>
+						</div>
+					</div>
 
 					<div id="requests" class="tab-pane fade">
-						<div class="span5">
+						<div class="span7">
 							<div class="input-group">
 								<span class="input-group-addon">Filter</span><input
 									id="requestsfilter" type="text" class="form-control"
 									placeholder="Type here...">
 							</div>
-							<table class="table table-hover">
-								<thead>
-									<tr>
-										<th>Name</th>
-										<th>Creation Date</th>
-										<th>Latest Status</th>
-										<th>Repository</th>
-									</tr>
-								</thead>
-								<tbody class="searchable" />
-							</table>
+							<div class="itemlist">
+								<table class="table table-hover">
+									<thead>
+										<tr>
+											<th>Name</th>
+											<th>Creation Date</th>
+											<th>Latest Status</th>
+											<th>Repository</th>
+										</tr>
+									</thead>
+									<tbody class="searchable" />
+								</table>
+							</div>
 						</div>
-						<div class="span7">
-							Request Details
+						<div class="span7 details">
+							<form class="rooptions">
+								<input type="radio" name="requestsDetailsfuncs"
+									onclick="check(this.value)" value="Details" checked="">Request
+								Details <input type="radio" name="requestsDetailsfuncs"
+									onclick="check(this.value)" value="Matches">Matches <input
+									type="radio" name="requestsDetailsfuncs"
+									onclick="check(this.value)" value="Status">Status
+							</form>
+							<div id="deleteme" class='btn btn-primary' style='display: none'></div>
+
 							<div id="requestsDetails"></div>
 						</div>
 
 					</div>
 					<div id="ROs" class="tab-pane fade">
-						<div class="span5">
+						<div class="span7">
 							<div class="input-group">
 								<span class="input-group-addon">Filter</span><input
 									id="ROsfilter" type="text" class="form-control"
 									placeholder="Type here...">
 							</div>
-							<table class="table table-hover">
-								<thead>
-									<tr>
-										<th>Name</th>
-										<th>Creation Date</th>
-										<th>Latest Status</th>
-										<th>Repository</th>
-									</tr>
-								</thead>
-								<tbody class="searchable" />
-							</table>
+							<div class="itemlist">
+								<table class="table table-hover">
+									<thead>
+										<tr>
+											<th>Name</th>
+											<th>Creation Date</th>
+											<th>Latest Status</th>
+											<th>Repository</th>
+										</tr>
+									</thead>
+									<tbody class="searchable" />
+								</table>
+							</div>
 						</div>
-						<div class="span7">
-							RO Details
+						<div class="span7 details">
+
+							<form class="rooptions">
+								<input type="radio" name="ROsDetailsfuncs"
+									onclick="check(this.value)" value="Details" checked="">RO
+								Details <input type="radio" name="ROsDetailsfuncs"
+									onclick="check(this.value)" value="Matches">Matches <input
+									type="radio" name="ROsDetailsfuncs" onclick="check(this.value)"
+									value="Status">Status
+							</form>
+
 							<div id="ROsDetails"></div>
 						</div>
 					</div>
@@ -277,22 +305,24 @@
 		</section>
 	</div>
 
-<hr>
+	<hr>
 
 	<div id="servicesfooter">
-			<div class="copyright">
-				<img id="nsf" src="images/nsf2.png" alt="NSF">
-			</div>
-			<div id="nsf-text">
-				<a>SEAD is funded by the National Science Foundation under
-					cooperative agreement #OCI0940824.</a>
-			</div>
-			<div id="contact" style="float: right">
-				<a href="http://sead-data.net/">SEAD ACR</a>: v1.5.2 | Powered by <a href="http://medici.ncsa.illinois.edu">NCSA Medici</a>: v1.3.1 |
-				Build: @VERSION@ | <a href="#feedback"> Contact SEAD </a>
-			</div>
-	<script>
+		<div class="copyright">
+			<img id="nsf" src="images/nsf2.png" alt="NSF">
+		</div>
+		<div id="nsf-text">
+			<a>SEAD is funded by the National Science Foundation under
+				cooperative agreement #OCI0940824.</a>
+		</div>
+		<div id="contact" style="float: right">
+			<a href="http://sead-data.net/">SEAD ACR</a>: v1.5.2 | Powered by <a
+				href="http://medici.ncsa.illinois.edu">NCSA Medici</a>: v1.3.1 |
+			Build: @VERSION@ | <a href="#feedback"> Contact SEAD </a>
+		</div>
+		<script>
 $(document).ready(function(){
+	showInstance();
     $(".nav-tabs a").click(function(){
         $(this).tab('show');
     });
@@ -318,6 +348,5 @@ loadRepos();
     
 });
 </script>
-
 </body>
 </html>
