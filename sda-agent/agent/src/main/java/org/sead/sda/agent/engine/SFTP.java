@@ -81,7 +81,7 @@ public class SFTP {
     }
 
     public String createDirectory(String zipPath) {
-        String dirName = zipPath.substring(zipPath.lastIndexOf("/") + 1, zipPath.indexOf(".tar"));
+        String dirName = zipPath.substring(zipPath.lastIndexOf("/") + 1, zipPath.indexOf(".zip"));
         String sourceDir = PropertiesReader.sdaPath + dirName;
         while (true) {
             try {

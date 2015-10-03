@@ -34,8 +34,6 @@ done
 
 
 echo
-echo "SDA_Agent server started..."
-echo "Polling request from Shim API ......"
 echo
 
 CP=:$CLASSPATH:$CLASSES:.
