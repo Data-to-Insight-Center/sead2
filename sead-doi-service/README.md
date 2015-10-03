@@ -34,13 +34,15 @@ Create DOI using REST Service:
 
 To create a DOI, a POST request should be sent to http://host:port/sead-doi-service/doi endpoint with the following request body;
 
-{
-	"target":"http://localhost:8080/landing-page/foo.html",  // required
-	"metadata":  // optional
-		{
-			"title":"<title>", 
-			"creator":"<creator>", 
-			"pubDate":"<publication date>"
-		},
-	"permanent":"false"  // optional - set this value to true only if you need to create a permanent DOI
-}
+{  
+	"target":"http://localhost:8080/landing-page/foo.html",  // required  
+	"metadata":  // optional  
+		{   
+			"title":"<title>",   
+			"creator":"<creator>",   
+			"pubDate":"<publication date>"  
+		},  
+	"permanent":"false"  // optional - set this value to true only if you need to create a permanent DOI  
+}  
+
+
