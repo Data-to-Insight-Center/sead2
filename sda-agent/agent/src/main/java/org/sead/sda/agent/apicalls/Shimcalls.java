@@ -3,10 +3,12 @@ package org.sead.sda.agent.apicalls;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.Set;
+import com.sun.jersey.api.client.Client;
+import com.sun.jersey.api.client.ClientResponse;
+import com.sun.jersey.api.client.WebResource;
 
 import javax.ws.rs.core.MediaType;
 
@@ -28,7 +30,6 @@ public class Shimcalls {
 	}
 
 	public StringBuilder getCalls(String url_string){
-		
 		StringBuilder sb = new StringBuilder();
 		
 		try{
@@ -60,56 +61,50 @@ public class Shimcalls {
 		
 		return sb;
 	}
-	
-	
-	public JSONArray getResearchObjectsList_repo(){
-		
-		JSONArray object = new JSONArray();
-		JSONParser parser = new JSONParser();
-		
-		StringBuilder new_sb = getCalls(this.sda_researchobjects);
-		
-		try {
-			Object obj = parser.parse(new_sb.toString());
-			object = (JSONArray) obj;
-		}catch(Exception e){
-			e.printStackTrace();
-		}
-			
-		return object;
-	}
-	
-	
-	public JSONObject getResearchObject_cp(String id){
-		
-		JSONObject object = new JSONObject();
-		JSONParser parser = new JSONParser();
-		
-		StringBuilder new_sb = getCalls(this.cp_researchobject+File.separator+id);
-		try {
-			Object obj = parser.parse(new_sb.toString());
-			object = (JSONObject) obj;
-		}catch(Exception e){
-			e.printStackTrace();
-		}
-		
-		return object;
-	}
-	
-	
 
-	public JSONObject getResearchObjectORE(String ore_url){
+
+    public JSONArray getResearchObjectsList() {
+
+        JSONArray object = new JSONArray();
+        JSONParser parser = new JSONParser();
+
+        StringBuilder new_sb = getCalls(sda_researchobjects);
+
+        try {
+            Object obj = parser.parse(new_sb.toString());
+            object = (JSONArray) obj;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return object;
+    }
+
+
+    public JSONObject getResearchObject(String id) {
+
+        JSONObject object = new JSONObject();
+        JSONParser parser = new JSONParser();
+
+        StringBuilder new_sb = getCalls(this.cp_researchobject + File.separator + id);
+        try {
+            Object obj = parser.parse(new_sb.toString());
+            object = (JSONObject) obj;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return object;
+    }
+
+
+    public JSONObject getResearchObjectORE(String ore_url){
 		
 		JSONObject object = new JSONObject();
 		JSONParser parser = new JSONParser();
 		
 
 		StringBuilder new_sb = getCalls(ore_url);
-//		if (ore_url.startsWith("https")){
-//			new_sb = getCalls(ore_url);
-//		}else{
-//			new_sb = getCalls("https"+ore_url.substring(ore_url.indexOf(":")));
-//		}
 		try {
 			Object obj = parser.parse(new_sb.toString());
 			object = (JSONObject) obj;
@@ -134,53 +129,31 @@ public class Shimcalls {
 				getObjectID((JSONObject) obj.get(key), keyword);
 			} else if (obj.get(key) instanceof JSONArray){
 				JSONArray insideArray = (JSONArray) obj.get(key);
-				for (int i = 0 ; i< insideArray.size(); i++){
-					if (insideArray.get(i) instanceof JSONObject){
-						getObjectID((JSONObject) insideArray.get(i), keyword);
-					}
-				}
+                for (Object anInsideArray : insideArray) {
+                    if (anInsideArray instanceof JSONObject) {
+                        getObjectID((JSONObject) anInsideArray, keyword);
+                    }
+                }
 			}
 		}
 	}
-	
-	
-	public void updateStatus(String doi_url, String id){
-		try{
-			URL url = new URL(this.cp_researchobject+File.separator+id+File.separator+"status");
-			HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-			conn.setDoOutput(true);
-			conn.setRequestMethod("POST");
-			conn.setRequestProperty("Content-Type", MediaType.APPLICATION_JSON);
-			
-			if (conn.getResponseCode() != 200) {
-				throw new RuntimeException("Failed : HTTP error code : "
-						+ conn.getResponseCode());
-			}
-			
-			
-			OutputStreamWriter out = new OutputStreamWriter(conn.getOutputStream());
-			out.write(doi_url);
-			out.close();
-			
-			
-			BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-			 
-			while (in.readLine() != null) {
-				System.out.println(in.readLine());
-			}
-			System.out.println("\nCrunchify REST Service Invoked Successfully..");
-			
-			in.close();
-			
-			conn.disconnect();
-			
-		}catch(Exception e){
-			e.printStackTrace();
-		}
-	}
-	
 
-	public String getID(){
+    public void updateStatus(String doiUrl, String id) {
+        WebResource webResource = Client.create().resource(this.cp_researchobject);
+        String status = "{\"reporter\":\"sda\", \"stage\":\"Success\", \"message\":\"" +
+                doiUrl + "\"}";
+        System.out.println("Status update JSON: " + status);
+        ClientResponse response = webResource.path(id)
+                .path("status")
+                .accept("application/json")
+                .type("application/json")
+                .post(ClientResponse.class, status);
+        if (response.getStatus() != 200) {
+            System.out.println("ERROR: Status update in C3P-R services filed.");
+        }
+    }
+
+    public String getID(){
 		return this.output;
 	}
 	

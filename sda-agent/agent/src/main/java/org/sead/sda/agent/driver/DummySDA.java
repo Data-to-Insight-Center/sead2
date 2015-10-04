@@ -54,23 +54,21 @@ public class DummySDA {
 
     public void download(JSONArray object, String downloadPath) {
         for (Object item : object.toArray()) {
-            JSONObject item_new = (JSONObject) item;
-            if (item_new.containsKey("Folder")) {
-                String newFolderName = item_new.get("Folder").toString();
+            JSONObject itemNew = (JSONObject) item;
+            if (itemNew.containsKey("Folder")) {
+                String newFolderName = itemNew.get("Folder").toString();
                 String newDownloadPath = downloadPath + File.separator + newFolderName;
                 createDirectory(newDownloadPath);
-                download((JSONArray) item_new.get("content"), newDownloadPath);
+                download((JSONArray) itemNew.get("content"), newDownloadPath);
             } else {
                 HttpDownload httpDownload = new HttpDownload();
-                String label = item_new.get("Label").toString();
-                String fileUrl = item_new.get("Link").toString();
-                //System.out.println(fileUrl);
+                String label = itemNew.get("Label").toString();
+                String fileUrl = itemNew.get("Link").toString();
                 String downloadPath_new = downloadPath + File.separator + label;
                 httpDownload.connection(fileUrl, this.userAndpass, label);
                 httpDownload.downloadFile(downloadPath_new);
                 errorLinks.addAll(httpDownload.gerErrorLinks());
                 httpDownload.disconnect();
-
             }
         }
     }
@@ -102,31 +100,5 @@ public class DummySDA {
             e.printStackTrace();
         }
     }
-
-
-    public static void main(String[] args) {
-        /*
-		JSONParser parser = new JSONParser();
-		JSONObject jsonObject = null;
-        try {
- 
-            Object obj = parser.parse(new FileReader(
-            		"/Users/yuluo/Desktop/ORE.txt"));
- 
-             jsonObject = (JSONObject) obj;
-        }catch(Exception e){
-        	e.printStackTrace();
-        }
-        
-        NewOREmap oreMap = new NewOREmap(jsonObject);
-		JSONObject newOREmap = oreMap.getNewOREmap();
-		
-        PropertiesReader read = new PropertiesReader("/Users/yuluo/Documents/workspace/New_Agent/config/config.properties");
-        
-        DummySDA sda = new DummySDA(read,newOREmap);
-        */
-
-    }
-
 
 }

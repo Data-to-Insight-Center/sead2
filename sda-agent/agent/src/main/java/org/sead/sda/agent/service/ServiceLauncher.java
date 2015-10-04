@@ -42,10 +42,11 @@ public class ServiceLauncher {
             PropertiesReader.init(args[0]);
             ServiceLauncher.start();
             if (!ServiceLauncher.startShimCalls()) {
-                System.out.println("Shutdown");
+                System.out.println("Agent Server shutting down...");
                 shutDown();
             } else {
-                System.out.println("[Agent Server working]");
+                System.out.println("\nAgent Server started...");
+                System.out.println("Polling C3P-R services...\n");
             }
         } catch (Exception e) {
             log.fatal("Unable to launch service", e);

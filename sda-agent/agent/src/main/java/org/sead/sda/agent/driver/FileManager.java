@@ -16,7 +16,6 @@ public class FileManager {
 		try{
 			if (temp.exists()){
 				FileUtils.deleteDirectory(temp);
-				System.out.println("Folder Deleted");
 			}
 		}catch(IOException e){
 			System.err.println(e);
@@ -29,7 +28,6 @@ public class FileManager {
 		try{
 			if (temp.exists()){
 				temp.delete();
-				System.out.println("Temporary File Deleted");
 			}
 		}catch(Exception e){
 			System.err.println(e);
