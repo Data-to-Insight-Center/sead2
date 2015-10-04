@@ -6,7 +6,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 
-import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -34,11 +33,9 @@ public class LandingPage extends HttpServlet {
 	 * @see HttpServlet#doGet(HttpServletRequest request, HttpServletResponse response)
 	 */
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		// TODO Auto-generated method stub
-		String propertiesPath = "/Users/yuluo/Documents/workspace/Landing_Page/src/org/sead/config.properties";
 		if (request.getParameter("tag") != null){
 			String tag = request.getParameter("tag");
-			Shimcalls shim = new Shimcalls(propertiesPath);
+			Shimcalls shim = new Shimcalls();
 			
 			JSONObject cp = shim.getResearchObject_cp(tag);
 			shim.getObjectID(cp, "@id");
@@ -100,7 +97,7 @@ public class LandingPage extends HttpServlet {
 	                );      
 		}else{
 			
-			SFTP sftp = new SFTP(propertiesPath);
+			SFTP sftp = new SFTP();
 			String target = "/cos1/hpss/s/e/seadva/"+title+File.separator+title+".tar";
 			System.out.println(target);
 	        InputStream inStream = sftp.downloadFile(target);
