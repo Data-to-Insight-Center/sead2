@@ -85,7 +85,7 @@ public class DummySDA {
 
     public void writeOREmap(String rootPath, JSONObject oldore) {
         try {
-            FileWriter outFile = new FileWriter(rootPath + File.separator + "OREmap.txt", true);
+            FileWriter outFile = new FileWriter(rootPath + File.separator + "OREmap.json", true);
             try {
                 PrintWriter out1 = new PrintWriter(outFile);
                 try {
