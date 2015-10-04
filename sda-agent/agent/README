@@ -1,5 +1,5 @@
 Please build LandingPage first. 
-(Also the Agent only run once for depositing right now. Later I will develop it)
+
 
 Step 1:
 
@@ -8,11 +8,12 @@ Modify sead2/sda-agent/config/config.properties file
 need to get correct information for sftp.host, sftp.user, sftp.pass, collection.user and
 collection.pass
 
-write a proper path for 'dummySDA' that could save the temporary RO files
+write a proper path for 'dummy.sda' that could save the temporary RO files
 
-change 'LandingPage' to the correct http address
+change 'landing.page.url' to the correct http address
 
 if you don't want to use SDA, you can create a local SDA folder and change ‘SDA’ path.
+
 
 Step 2:
 

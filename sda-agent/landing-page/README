@@ -1,29 +1,21 @@
 Step 1:
 
-Modify config/config.properties file
+Build the landing-page webapp
 
-need to get correct information for sftp.host, sftp.user and sftp.pass
+mvn clean install
 
 
 Step 2:
 
-modify src/main/java/org/sead/Landing_Page/LandingPage.java
-
-make correct 'propertiesPath' to config/config.propertie
+copy target/landing-page.war file into tomcat/webapps directory.
 
 
 Step 3:
 
-Build the Landing-Page  
-
-mvn clean install -DskipTests
+Set configuration parameters in landing-page/WEB-INF/classes/org/sead/sda/config.properties file
 
 
 Step 4:
 
-copy target/Landing_Page.war file into tomcat/webapp/
-
-
-Step 5:
-
 start Tomcat
+
