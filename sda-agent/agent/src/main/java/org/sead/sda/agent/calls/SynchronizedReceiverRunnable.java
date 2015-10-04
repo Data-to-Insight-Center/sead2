@@ -24,97 +24,67 @@ public class SynchronizedReceiverRunnable implements Runnable {
             JSONArray allResearchObjects = call.getResearchObjectsList();
 
             for (Object item : allResearchObjects.toArray()) {
-                //JSONObject researchObject = (JSONObject) allResearchObjects.get(0);
+                try {
+                    JSONObject researchObject = (JSONObject) item;
+                    call.getObjectID(researchObject, "Identifier");
+                    String identifier = call.getID();
 
-                JSONObject researchObject = (JSONObject) item;
-                call.getObjectID(researchObject, "Identifier");
-                String identifier = call.getID();
-
-                if (identifier == null) {
-                    System.err.println("[SDA Agent : Cannot get Identifier of RO]");
-                } else {
-
+                    if (identifier == null) {
+                        throw new Exception("SDA Agent : Cannot get Identifier of RO");
+                    }
                     System.out.println("\nResearch Object found, ID: " + identifier);
+
                     if (isAlreadyPublished(researchObject)) {
                         System.out.println("Research Object has already been published, skipping...\n");
-                        continue;
-                    }
-                    System.out.println("Starting to publish Research Object...");
+                    } else {
+                        System.out.println("Starting to publish Research Object...");
 
-                    this.errorLinks = new ArrayList<String>();
-                    String rootPath;
-                    try {
+                        this.errorLinks = new ArrayList<String>();
                         JSONObject pulishObject = call.getResearchObject(identifier);
                         call.getObjectID(pulishObject, "@id");
                         String oreUrl = call.getID();
 
                         if (oreUrl == null) {
-                            System.err.println("[SDA Agent : Cannot get ORE map file of RO");
-                        } else {
-                            System.out.println("Fetching ORE from: " + oreUrl);
-                            try {
-                                JSONObject ore = call.getResearchObjectORE(oreUrl);
-                                NewOREmap oreMap = new NewOREmap(ore);
-                                JSONObject newOREmap = oreMap.getNewOREmap();
-
-                                try {
-                                    System.out.println("Downloading data files...");
-                                    DummySDA dummySDA = new DummySDA(newOREmap, ore);
-                                    errorLinks = dummySDA.getErrorLinks();
-                                    rootPath = dummySDA.getRootPath();
-
-                                    try {
-                                        new ZipDirectory(rootPath);
-
-                                        try {
-                                            System.out.println("Depositing RO into SDA as a tar archive...");
-                                            new SFTP(rootPath + ".zip");
-                                            String doiUrl = null;
-                                            try {
-                                                System.out.println("Generating DOI...");
-                                                String target = PropertiesReader.landingPage + "?tag=" + identifier;
-                                                DOI doi = new DOI(target, ore);
-                                                doiUrl = doi.getDoi();
-                                                System.out.println("DOI: " + doiUrl);
-                                            } catch (Exception e) {
-                                                e.printStackTrace();
-                                                System.err.println("[SDA Agent : Cannot generate DOI]");
-                                            }
-
-                                            System.out.println("Updating status in C3P-R with the DOI...");
-                                            call.updateStatus(doiUrl, identifier);
-                                            FileManager manager = new FileManager();
-                                            manager.removeTempFile(rootPath + ".zip");
-                                            manager.removeTempFolder(rootPath);
-                                            System.out.println("Successfully published Research Object: " + identifier + "\n");
-                                        } catch (Exception e) {
-                                            e.printStackTrace();
-                                            System.err.println("[SDA Agent: Cannot deposit RO zip file into SDA]");
-                                        }
-                                    } catch (Exception e) {
-                                        e.printStackTrace();
-                                        System.err.println("[SDA Agent : Cannot compress downloaded RO folder]");
-                                    }
-                                } catch (Exception e) {
-                                    e.printStackTrace();
-                                    System.err.println("[SDA Agent : Cannot download RO into local server]");
-                                }
-                            } catch (Exception e) {
-                                e.printStackTrace();
-                                System.err.println("[SDA Agent : Cannot access ORE link]");
-                            }
+                            throw new Exception("SDA Agent : Cannot get ORE map file of RO");
                         }
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                        System.err.println("[SDA Agent: Cannot access RO link]");
-                    }
-                }
-            }
+                        System.out.println("Fetching ORE from: " + oreUrl);
+                        JSONObject ore = call.getResearchObjectORE(oreUrl);
+                        NewOREmap oreMap = new NewOREmap(ore);
+                        JSONObject newOREmap = oreMap.getNewOREmap();
 
-            try {
-                Thread.sleep(5000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+                        System.out.println("Downloading data files...");
+                        DummySDA dummySDA = new DummySDA(newOREmap, ore);
+                        errorLinks = dummySDA.getErrorLinks();
+
+                        String rootPath = dummySDA.getRootPath();
+                        new ZipDirectory(rootPath);
+
+                        System.out.println("Depositing RO into SDA as a tar archive...");
+                        new SFTP(rootPath + ".tar");
+
+                        System.out.println("Generating DOI...");
+                        String target = PropertiesReader.landingPage + "?tag=" + identifier;
+                        DOI doi = new DOI(target, ore);
+                        String doiUrl = doi.getDoi();
+                        System.out.println("DOI: " + doiUrl);
+
+                        System.out.println("Updating status in C3P-R with the DOI...");
+                        call.updateStatus(doiUrl, identifier);
+
+                        FileManager manager = new FileManager();
+                        manager.removeTempFile(rootPath + ".tar");
+                        manager.removeTempFolder(rootPath);
+                        System.out.println("Successfully published Research Object: " + identifier + "\n");
+                    }
+                } catch (Exception e) {
+                    System.out.println("ERROR: Error while publishing Research Object...");
+                    e.printStackTrace();
+                }
+                try {
+                    Thread.sleep(5000);
+                } catch (InterruptedException e) {
+                    // ignore
+                }
             }
         }
     }
