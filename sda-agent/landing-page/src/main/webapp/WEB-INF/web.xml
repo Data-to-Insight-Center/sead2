@@ -3,23 +3,21 @@
          xmlns="http://java.sun.com/xml/ns/javaee"
          xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd"
          id="WebApp_ID" version="2.5">
-    <display-name>Landing_Page</display-name>
+
+    <display-name>SDA Research Object Information</display-name>
+
     <welcome-file-list>
-        <welcome-file>index.html</welcome-file>
-        <welcome-file>index.htm</welcome-file>
-        <welcome-file>index.jsp</welcome-file>
-        <welcome-file>default.html</welcome-file>
-        <welcome-file>default.htm</welcome-file>
-        <welcome-file>default.jsp</welcome-file>
+        <welcome-file>ro.jsp</welcome-file>
     </welcome-file-list>
+
     <servlet>
-        <description></description>
-        <display-name>LandingPage</display-name>
-        <servlet-name>LandingPage</servlet-name>
-        <servlet-class>LandingPage</servlet-class>
+        <servlet-name>sda-landing</servlet-name>
+        <servlet-class>org.sead.sda.LandingPage</servlet-class>
     </servlet>
+
     <servlet-mapping>
-        <servlet-name>LandingPage</servlet-name>
-        <url-pattern>/LandingPage</url-pattern>
+        <servlet-name>sda-landing</servlet-name>
+        <url-pattern>/sda</url-pattern>
     </servlet-mapping>
+
 </web-app>

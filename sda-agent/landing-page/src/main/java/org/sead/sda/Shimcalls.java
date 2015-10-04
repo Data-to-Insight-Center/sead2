@@ -52,7 +52,7 @@ public class Shimcalls {
         return sb;
     }
 
-    public JSONObject getResearchObject_cp(String id) {
+    public JSONObject getResearchObject(String id) {
 
         JSONObject object = new JSONObject();
         JSONParser parser = new JSONParser();
