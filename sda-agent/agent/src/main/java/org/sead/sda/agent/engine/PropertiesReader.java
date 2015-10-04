@@ -19,6 +19,9 @@ public class PropertiesReader {
     public static String clowderPassword;
     public static String sdaPath;
 
+    public static String doiEndpoint;
+    public static String isDoiPermanent;
+
     public static void init(String configPath) {
         try {
             loadConfigurations(configPath);
@@ -43,6 +46,8 @@ public class PropertiesReader {
         clowderUser = properties.getProperty("clowder.user");
         clowderPassword = properties.getProperty("clowder.pass");
         sdaPath = properties.getProperty("sda.path");
+        doiEndpoint = properties.getProperty("doi.service.url");
+        isDoiPermanent = properties.getProperty("doi.permanent");
     }
 
 }
