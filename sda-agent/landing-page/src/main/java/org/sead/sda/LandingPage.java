@@ -50,8 +50,6 @@ public class LandingPage extends HttpServlet {
             addROProperty("Abstract", describes, roProperties);
 
             title = roProperties.get("Title");
-            request.setAttribute("title", title);
-            request.getSession().setAttribute("title", title);
 
             // set properties as an attribute
             request.setAttribute("roProperties", roProperties);
@@ -60,9 +58,6 @@ public class LandingPage extends HttpServlet {
             dispatcher.forward(request, response);
 
         } else {
-
-            System.out.println("Request title = " + request.getAttribute("title"));
-            System.out.println("Session title = " + request.getSession().getAttribute("title"));
 
             SFTP sftp = new SFTP();
             String target = "/cos1/hpss/s/e/seadva/" + title + File.separator + title + ".tar";
