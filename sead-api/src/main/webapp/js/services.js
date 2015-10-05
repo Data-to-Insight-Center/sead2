@@ -1,4 +1,4 @@
-var apiprefix = "./cp";
+var apiprefix = "./api";
 
 function loadPeople() {
 	$('#people>div>div>table>tbody').empty();
