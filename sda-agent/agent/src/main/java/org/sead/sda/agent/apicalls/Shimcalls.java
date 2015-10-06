@@ -117,19 +117,13 @@ public class Shimcalls {
     }
 
 
-    public JSONObject getResearchObjectORE(String ore_url){
+    public JSONObject getResearchObjectORE(String ore_url) throws Exception {
 
-		JSONObject object = new JSONObject();
 		JSONParser parser = new JSONParser();
 
-
-		StringBuilder new_sb = getCalls(ore_url);
-		try {
-			Object obj = parser.parse(new_sb.toString());
-			object = (JSONObject) obj;
-		}catch(Exception e){
-			e.printStackTrace();
-		}
+        StringBuilder newSb = getCalls(ore_url);
+        Object obj = parser.parse(newSb.toString());
+        JSONObject object = (JSONObject) obj;
 
 		return object;
 	}
@@ -167,7 +161,7 @@ public class Shimcalls {
     public void updateStatus(String doiUrl, String id) {
         WebResource webResource = Client.create().resource(this.cp_researchobject);
         String status = "{\"reporter\":\"sda\", \"stage\":\"Success\", \"message\":\"" +
-                doiUrl + "\"}";
+                doiUrl.trim() + "\"}";
         System.out.println("Status update JSON: " + status);
         ClientResponse response = webResource.path(id)
                 .path("status")
