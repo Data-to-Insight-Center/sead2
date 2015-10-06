@@ -72,7 +72,7 @@ public class SynchronizedReceiverRunnable implements Runnable {
                         JSONObject newOREmap = oreMap.getNewOREmap();
 
                         System.out.println("Downloading data files...");
-                        DummySDA dummySDA = new DummySDA(newOREmap, ore);
+                        DummySDA dummySDA = new DummySDA(newOREmap, call.getJsonORE(oreUrl));
                         errorLinks = dummySDA.getErrorLinks();
 
                         String rootPath = dummySDA.getRootPath();
