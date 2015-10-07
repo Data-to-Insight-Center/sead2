@@ -30,6 +30,8 @@ import com.sun.jersey.api.client.*;
 import com.sun.jersey.api.client.filter.ClientFilter;
 import org.bson.Document;
 import org.bson.types.ObjectId;
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.seadva.metadatagen.metagen.impl.FGDCMetadataGen;
 import org.seadva.metadatagen.util.Constants;
 
@@ -50,12 +52,14 @@ public class MetadataGenerator {
     static MongoCollection<Document> fgdcCollection;
     static MongoClient mongoClient;
     static MongoDatabase db;
+    static WebResource pdtWebService;
 
     static {
         mongoClient = new MongoClient();
         db = mongoClient.getDatabase(Constants.metagenDbName);
         oreMapCollection = db.getCollection(Constants.dbOreCollection);
         fgdcCollection = db.getCollection(Constants.dbFgdcCollection);
+        pdtWebService = Client.create().resource(Constants.pdtURL);
     }
 
     @POST
@@ -138,7 +142,7 @@ public class MetadataGenerator {
     @Path("/putoremap")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public Response putOreMap(String publicationRequestString, @QueryParam("requestUrl") String requestURL) {
+    public Response putOreMap(String publicationRequestString, @QueryParam("requestUrl") String requestURL) throws JSONException {
         String messageString = "";
         Document request = Document.parse(publicationRequestString);
         Document content = (Document) request.get("Aggregation");
@@ -191,7 +195,7 @@ public class MetadataGenerator {
                 // Should not happen given simple ids
                 e.printStackTrace();
             }
-            return Response.ok().build();
+            return Response.ok(new JSONObject().put("id", mapId).toString()).build();
         } else {
             return Response.status(ClientResponse.Status.BAD_REQUEST)
                     .entity(messageString)
@@ -202,24 +206,46 @@ public class MetadataGenerator {
     @GET
     @Path("/{id}/oremap")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response getROOREMap(@PathParam("id") String id) {
+    public Response getROOREMap(@PathParam("id") String id) throws JSONException {
 
-        FindIterable<Document> iter = oreMapCollection.find(new Document(
-                "describes.Identifier", id));
-        //iter.projection(new Document("describes", 1).append("_id", 0));
+        ClientResponse roResponse = pdtWebService.path("researchobjects")
+                .path(id + "/authoratativeMap")
+                .accept("application/json")
+                .type("application/json")
+                .get(ClientResponse.class);
 
-        Document document = iter.first();
+        if(roResponse.getStatus() != 200) {
+            return Response
+                    .status(javax.ws.rs.core.Response.Status.NOT_FOUND)
+                    .entity(new JSONObject().put("Error", "Cannot find RO with id " + id))
+                    .build();
+        }
+
+        Document roDoc = Document.parse(roResponse.getEntity(String.class));
+
+
+        //FindIterable<Document> iter = oreMapCollection.find(new Document("describes.Identifier", id));
+
+        /*Document document = iter.first();
         if(document==null) {
             return Response.status(javax.ws.rs.core.Response.Status.NOT_FOUND).build();
-        }
-        //ObjectId mapId = (ObjectId) ((Document)document.get("Aggregation")).get("authoratativeMap");
+        }*/
+        ObjectId mapId = new ObjectId(roDoc.get("mapId").toString());
 
-        //iter = oreMapCollection.find(new Document("_id", mapId));
-        //Document map = iter.first();
+        FindIterable<Document> iter = oreMapCollection.find(new Document("_id", mapId));
+        Document map = iter.first();
+
+        if(iter.first()==null) {
+            return Response
+                    .status(javax.ws.rs.core.Response.Status.NOT_FOUND)
+                    .entity(new JSONObject().put("Error", "Cannot find ORE with id " + id))
+                    .build();
+        }
+
         //Internal meaning only
-        //map.remove("_id");
-        document.remove("_id");
-        return Response.ok(document.toJson()).build();
+        map.remove("_id");
+        //document.remove("_id");
+        return Response.ok(map.toJson()).build();
     }
 
 

@@ -68,6 +68,7 @@ public class PersistROActivity extends AbstractWorkflowActivity {
         WebResource webResource = Client.create().resource(pdtUrl);
         ClientResponse response = webResource
                 .queryParam("requestUrl", URLEncoder.encode(context.getProperty(Constants.REQUEST_URL)))
+                .queryParam("oreId", context.getProperty(Constants.ORE_ID))
                 .accept("application/json")
                 .type("application/json")
                 .post(ClientResponse.class, ro);

@@ -23,6 +23,7 @@
     <activities>
         <!--activity to validate the RO-->
         <activity name="validate_ro" class="org.sead.workflow.activity.impl.ValidateROActivity">
+            <parameter name="pdtUrl">http://localhost:8180/sead-pdt/researchobjects</parameter>
         </activity>
         <!--activity to persist the ORE Map-->
         <activity name="persist_ore" class="org.sead.workflow.activity.impl.PersistOREActivity">
