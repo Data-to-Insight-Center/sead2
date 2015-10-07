@@ -196,44 +196,68 @@ public class PeopleServices {
 
     static protected Document getPersonInfo(Document next) {
         Document standardForm = new Document();
-        standardForm.put("@id",	((Document) ((Document) next.get("orcid-profile"))
-                .get("orcid-identifier")).get("path"));
-        Document detailsDocument = (Document) ((Document) ((Document) next
-                .get("orcid-profile")).get("orcid-bio"))
-                .get("personal-details");
-        standardForm.put("givenName",
-                ((Document) detailsDocument.get("given-names")).get("value"));
-        standardForm.put("familyName",
-                ((Document) detailsDocument.get("family-name")).get("value"));
-        ArrayList emails = ((ArrayList<?>) ((Document) ((Document) ((Document) next
-                .get("orcid-profile")).get("orcid-bio"))
-                .get("contact-details")).get("email"));
-        if(!emails.isEmpty()) {
-            standardForm
-                    .put("email",
-                            ((Document) emails.get(0))
-                                    .get("value"));
-        }
-        standardForm.put("PersonalProfileDocument",
-                ((Document) ((Document) next.get("orcid-profile"))
-                        .get("orcid-identifier")).get("uri"));
-        @SuppressWarnings("unchecked")
-        ArrayList<Document> affiliationsList = (ArrayList<Document>) ((Document) ((Document) ((Document) next
-                .get("orcid-profile")).get("orcid-activities"))
-                .get("affiliations")).get("affiliation");
-        StringBuffer affs = new StringBuffer();
-        for (Document affiliationDocument : affiliationsList) {
-            if (affiliationDocument.getString("type").equals("EMPLOYMENT")
-                    && (affiliationDocument.get("end-date") == null)) {
-                if(affs.length()!=0) {
-                    affs.append(", ");
-                }
-                affs.append(((Document) affiliationDocument.get("organization"))
-                        .getString("name"));
 
-            }
-            standardForm.append("affiliation",affs.toString());
+        String id = next.get("orcid-profile") != null
+                && ((Document) next.get("orcid-profile")).get("orcid-identifier") != null
+                && ((Document) ((Document) next.get("orcid-profile")).get("orcid-identifier")).get("path") != null
+                ? ((Document) ((Document) next.get("orcid-profile")).get("orcid-identifier")).get("path").toString() : "";
+        standardForm.put("@id", id);
+
+        Document detailsDocument = next.get("orcid-profile") != null
+                && ((Document) next.get("orcid-profile")).get("orcid-bio") != null
+                && ((Document) ((Document) next.get("orcid-profile")).get("orcid-bio")).get("personal-details") != null
+                ? ((Document) ((Document) ((Document) next.get("orcid-profile")).get("orcid-bio")).get("personal-details")) : null;
+        if (detailsDocument != null) {
+            String givenName = detailsDocument.get("given-names") != null
+                    && ((Document) detailsDocument.get("given-names")).get("value") != null
+                    ? ((Document) detailsDocument.get("given-names")).get("value").toString() : "";
+            String familyName = detailsDocument.get("family-name") != null
+                    && ((Document) detailsDocument.get("family-name")).get("value") != null
+                    ? ((Document) detailsDocument.get("family-name")).get("value").toString() : "";
+
+            standardForm.put("givenName", givenName);
+            standardForm.put("familyName", familyName);
         }
+
+        ArrayList emails = next.get("orcid-profile") != null
+                && ((Document) next.get("orcid-profile")).get("orcid-bio") != null
+                && ((Document) ((Document) next.get("orcid-profile")).get("orcid-bio")).get("contact-details") != null
+                && ((Document) ((Document) ((Document) next.get("orcid-profile")).get("orcid-bio")).get("contact-details")).get("email") != null
+                ? ((ArrayList<?>) ((Document) ((Document) ((Document) next.get("orcid-profile")).get("orcid-bio")).get("contact-details")).get("email"))
+                : new ArrayList();
+
+        if (!emails.isEmpty()) {
+            standardForm.put("email", ((Document) emails.get(0)).get("value"));
+        }
+
+        String uri = next.get("orcid-profile") != null
+                && ((Document) next.get("orcid-profile")).get("orcid-identifier") != null
+                && ((Document) ((Document) next.get("orcid-profile")).get("orcid-identifier")).get("uri") != null
+                ? ((Document) ((Document) next.get("orcid-profile")).get("orcid-identifier")).get("uri").toString() : "";
+        standardForm.put("PersonalProfileDocument", uri);
+
+        try {
+            ArrayList<Document> affiliationsList = (ArrayList<Document>) ((Document) ((Document) ((Document) next
+                    .get("orcid-profile")).get("orcid-activities"))
+                    .get("affiliations")).get("affiliation");
+            StringBuffer affs = new StringBuffer();
+            for (Document affiliationDocument : affiliationsList) {
+                if (affiliationDocument.getString("type").equals("EMPLOYMENT")
+                        && (affiliationDocument.get("end-date") == null)) {
+                    if (affs.length() != 0) {
+                        affs.append(", ");
+                    }
+                    affs.append(((Document) affiliationDocument.get("organization"))
+                            .getString("name"));
+
+                }
+                standardForm.append("affiliation", affs.toString());
+            }
+        } catch (NullPointerException e) {
+            System.out.println("Exception while retrieving Affiliations from ORCID profile");
+            e.printStackTrace();
+        }
+
         return standardForm;
     }
 
