@@ -22,6 +22,7 @@ package org.sead.sda;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.URLDecoder;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -77,6 +78,7 @@ public class LandingPage extends HttpServlet {
             // collection title is the last part of the request URI
             String requestURI = request.getRequestURI();
             String title = requestURI.substring(requestURI.lastIndexOf('/') + 1);
+            title = URLDecoder.decode(title, "UTF-8");
 
             SFTP sftp = new SFTP();
             String target = "/cos1/hpss/s/e/seadva/" + title + "/" + title + ".tar";
