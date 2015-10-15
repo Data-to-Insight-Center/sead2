@@ -32,16 +32,19 @@ import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
 import com.mongodb.util.JSON;
 import com.sun.jersey.api.client.ClientResponse;
+
 import org.bson.Document;
 import org.bson.types.BasicBSONList;
-import org.bson.types.ObjectId;
 import org.json.JSONArray;
+import org.seadpdt.people.Profile;
+import org.seadpdt.people.Provider;
 import org.seadpdt.util.MongoDB;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.CacheControl;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.sql.Date;
@@ -54,7 +57,6 @@ public class ROServices {
 	private MongoDatabase db = null;
 	private MongoDatabase metaDb = null;
 	private MongoCollection<Document> publicationsCollection = null;
-	private MongoCollection<Document> peopleCollection = null;
 	private MongoCollection<Document> repositoriesCollection = null;
 	private MongoCollection<Document> oreMapCollection = null;
 	private CacheControl control = new CacheControl();
@@ -63,7 +65,7 @@ public class ROServices {
 		db = MongoDB.getServicesDB();
 		metaDb = MongoDB.geMetaGenDB();
 		publicationsCollection = db.getCollection(MongoDB.researchObjects);
-		peopleCollection = db.getCollection(MongoDB.people);
+		db.getCollection(MongoDB.people);
 		repositoriesCollection = db.getCollection(MongoDB.repositories);
 		oreMapCollection = metaDb.getCollection(MongoDB.oreMap);
 		control.setNoCache(true);
@@ -161,8 +163,7 @@ public class ROServices {
 					.entity(new Document("identifier", ID)).build();
 		} else {
 			return Response.status(ClientResponse.Status.BAD_REQUEST)
-					.entity(messageString)
-					.build();
+					.entity(messageString).build();
 		}
 	}
 
@@ -198,7 +199,7 @@ public class ROServices {
 		}
 		// Internal meaning only - strip from exported doc
 		document.remove("_id");
-		Document aggDocument = (Document) document.get("Aggregation");
+		document.get("Aggregation");
 		// aggDocument.remove("authoratativeMap");
 		return Response.ok(document.toJson()).cacheControl(control).build();
 	}
@@ -278,47 +279,29 @@ public class ROServices {
 
 		List<String> orgs = new ArrayList<String>();
 
-		String personID = getInternalId(pID);
-		//If null, no chance that we have a profile...
-		if (personID != null) {
-			FindIterable<Document> iter = peopleCollection.find(new Document(
-					"orcid-profile.orcid-identifier.path", personID));
+		Profile profile = Provider.findCanonicalId(pID);
+		// If null, no chance that we have a profile...
+		if (profile != null) {
+			Document profileDoc = PeopleServices.retrieveProfile(profile
+					.getId());
 
 			// NeverFail
-			if (iter.first() == null) {
-				//Handle per provider - ORCID only at present
-				if (pID.startsWith("orcid.org/")) {
-					new PeopleServices()
-							.registerPerson("{\"provider\": \"ORCID\", \"identifier\":\""
-									+ personID + "\" }");
-				}
-				iter = peopleCollection.find(new Document(
-						"orcid-profile.orcid-identifier.path", personID));
+			if (profileDoc == null) {
+				// Handle per provider
+				PeopleServices.registerPerson("{\"provider\": \""
+						+ profile.getProvider() + "\", \"identifier\":\""
+						+ profile.getId() + "\" }");
 			}
+			profileDoc = PeopleServices.retrieveProfile(profile.getId());
 
-			if (iter.first() != null) {
-				iter.projection(PeopleServices.getOrcidPersonProjection());
-				Document document = PeopleServices.getPersonInfo(iter.first());
-				String currentAffiliations = document.getString("affiliation");
+			if (profileDoc != null) {
+				String currentAffiliations = profileDoc
+						.getString("affiliation");
 				orgs = Arrays.asList(currentAffiliations.split("\\s*,\\s*"));
 			}
 		}
 
 		return orgs;
-	}
-
-	//Parse the string to get the internal ID that the profile would have been stored under. 
-	//If the value is a plain string name, or a 1.5 style name:VIVO URL, return null since we
-	//have no profiles
-	private String getInternalId(String personID) {
-		// ORCID
-		if (personID.startsWith("orcid.org/")) {
-			return personID.substring("orcid.org/".length());
-		} else {
-			// Add other providers here
-			return null; // Unrecognized/no id/profile in system
-		}
-
 	}
 
 }

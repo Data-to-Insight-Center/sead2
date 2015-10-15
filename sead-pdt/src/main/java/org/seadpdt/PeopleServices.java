@@ -31,252 +31,222 @@ import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.ClientResponse.Status;
 import com.sun.jersey.api.client.WebResource;
+import com.sun.research.ws.wadl.Resource;
+import com.sun.xml.bind.v2.runtime.unmarshaller.XsiNilLoader.Array;
+
 import org.bson.Document;
 import org.json.JSONObject;
+import org.seadpdt.people.GooglePlusProvider;
+import org.seadpdt.people.LinkedInProvider;
+import org.seadpdt.people.OrcidProvider;
+import org.seadpdt.people.Profile;
+import org.seadpdt.people.Provider;
 import org.seadpdt.util.MongoDB;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.CacheControl;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.ext.Providers;
+
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.HashSet;
 
 @Path("/people")
-
 public class PeopleServices {
 
-    private MongoDatabase db = null;
-    private MongoCollection<Document> peopleCollection = null;
-    private CacheControl control = new CacheControl();
+	public static final String identifier = "identifier";
+	public static final String provider = "provider";
+	private static MongoDatabase db = MongoDB.getServicesDB();
+	private static MongoCollection<Document> peopleCollection = db.getCollection(MongoDB.people);
+	private CacheControl control = new CacheControl();
 
-    public PeopleServices() {
-        db = MongoDB.getServicesDB();
-        peopleCollection = db.getCollection(MongoDB.people);
-        control.setNoCache(true);
-    }
+	public PeopleServices() {
+		control.setNoCache(true);
 
-    @POST
-    @Path("/")
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    public Response registerPerson(String personString) {
+		// Register Providers
+		Provider.registerProvider(new OrcidProvider());
+		Provider.registerProvider(new GooglePlusProvider());
+		Provider.registerProvider(new LinkedInProvider());
+		// Clowder/SEAD2
+	}
 
-        JSONObject person = new JSONObject(personString);
+	@POST
+	@Path("/")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	public static Response registerPerson(String personString) {
 
-        if (!person.has("identifier") || !person.has("provider")) {
-            return Response.status(Status.BAD_REQUEST).entity(new BasicDBObject("Failure", "Invalid request format")).build();
-        }
+		JSONObject person = new JSONObject(personString);
+		Provider p = null;
 
-        String newID = (String) person.get("identifier");
-        FindIterable<Document> iter = peopleCollection.find(new Document(
-                "orcid-profile.orcid-identifier.path", newID));
-        if (iter.iterator().hasNext()) {
-            return Response.status(Status.CONFLICT).entity(new BasicDBObject("Failure", "Person with ORCID Identifier " + newID + " already exists")).build();
-        } else {
-            if (person.get("provider").equals("ORCID")) {
-                String orcidID = (String) person.get("identifier");
-                String profile = null;
-                try {
-                    profile = getOrcidProfile(orcidID);
-                } catch (RuntimeException r) {
-                    return Response
-                            .serverError()
-                            .entity(new BasicDBObject("failure",
-                                    "Provider call failed with status: "
-                                            + r.getMessage())).build();
-                }
-                peopleCollection.insertOne(Document.parse(profile));
-                URI resource = null;
-                try {
-                    resource = new URI("./" + newID);
-                } catch (URISyntaxException e) {
-                    // Should not happen given simple ids
-                    e.printStackTrace();
-                }
-                return Response.created(resource)
-                        .entity(new Document("identifier", newID)).build();
-            } else {
-                return Response.status(Status.BAD_REQUEST).entity(new BasicDBObject("Failure", "Provider " + person.get("provider") + " not supported")).build();
-            }
-        }
-    }
+		if (person.has(provider)) {
+			p = Provider.getProvider((String) person.get(provider));
 
-    @GET
-    @Path("/")
-    @Produces(MediaType.APPLICATION_JSON)
-    public Response getPeopleList() {
-        FindIterable<Document> iter = peopleCollection.find();
-        iter.projection(getOrcidPersonProjection());
+		}
+		if (!person.has(identifier) || p == null) {
+			return Response
+					.status(Status.BAD_REQUEST)
+					.entity(new BasicDBObject("Failure",
+							"Invalid request format")).build();
+		}
 
-        MongoCursor<Document> cursor = iter.iterator();
-        ArrayList<Object> array = new ArrayList<Object>();
-        while (cursor.hasNext()) {
-            Document next = cursor.next();
-            array.add(getPersonInfo(next));
-        }
-        Document peopleDocument = new Document();
-        peopleDocument.put("persons", array);
-        peopleDocument.put("@context", getPersonContext());
-        return Response.ok(peopleDocument.toJson()).cacheControl(control)
-                .build();
-    }
+		String newID = p.getCanonicalId((String) person.get(identifier));
+		person.put(identifier,newID);
+		
+		FindIterable<Document> iter = peopleCollection.find(new Document("@id",
+				newID));
+		if (iter.iterator().hasNext()) {
+			return Response
+					.status(Status.CONFLICT)
+					.entity(new BasicDBObject("Failure",
+							"Person with Identifier " + newID
+									+ " already exists")).build();
+		} else {
+			URI resource = null;
+			try {
+				
+				Document profileDocument = p.getExternalProfile(person);
+				peopleCollection.insertOne(profileDocument);
+				resource = new URI("./"
+						+ profileDocument.getString("@id"));
+			} catch (Exception r) {
+				return Response
+						.serverError()
+						.entity(new BasicDBObject("failure",
+								"Provider call failed with status: "
+										+ r.getMessage())).build();
+			}
 
-    @GET
-    @Path("/{id}")
-    @Produces(MediaType.APPLICATION_JSON)
-    public Response getPersonProfile(@PathParam("id") String id) {
-        FindIterable<Document> iter = peopleCollection.find(new Document(
-                "orcid-profile.orcid-identifier.path", id));
-        if(iter.first() != null) {
-            iter.projection(getOrcidPersonProjection());
-            Document document = getPersonInfo(iter.first());
-            document.put("@context", getPersonContext());
-            return Response.ok(document.toJson()).cacheControl(control).build();
-        } else {
-            return Response.status(Status.NOT_FOUND).build();
-        }
-    }
+			try {
+				resource = new URI("./" + newID);
+			} catch (URISyntaxException e) {
+				// Should not happen given simple ids
+				e.printStackTrace();
+			}
+			return Response.created(resource)
+					.entity(new Document("identifier", newID)).build();
+		}
+	}
 
-    @GET
-    @Path("/{id}/raw")
-    @Produces(MediaType.APPLICATION_JSON)
-    public Response getRawPersonProfile(@PathParam("id") String id) {
-        FindIterable<Document> iter = peopleCollection.find(new Document(
-                "orcid-profile.orcid-identifier.path", id));
+	@GET
+	@Path("/")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response getPeopleList() {
+		FindIterable<Document> iter = peopleCollection.find();
+		iter.projection(getBasicPersonProjection());
 
-        if(iter.first() != null) {
-            Document document = iter.first();
-            return Response.ok(document.toJson()).cacheControl(control).build();
-        } else {
-            return Response.status(Status.NOT_FOUND).build();
-        }
-    }
+		MongoCursor<Document> cursor = iter.iterator();
+		ArrayList<Object> array = new ArrayList<Object>();
+		while (cursor.hasNext()) {
+			Document next = cursor.next();
+			array.add(next);
+		}
+		Document peopleDocument = new Document();
+		peopleDocument.put("persons", array);
+		peopleDocument.put("@context", getPersonContext());
+		return Response.ok(peopleDocument.toJson()).cacheControl(control)
+				.build();
+	}
 
-    @PUT
-    @Path("/{id}")
-    @Consumes(MediaType.APPLICATION_JSON)
-    public Response updatePersonProfile(@PathParam("id") String id) {
-        FindIterable<Document> iter = peopleCollection.find(new Document(
-                "orcid-profile.orcid-identifier.path", id));
+	@GET
+	@Path("/{id}")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response getPersonProfile(@PathParam("id") String id) {
+		Document document = retrieveProfile(id);
+		if (document != null) {
+			return Response.ok(document.toJson()).cacheControl(control).build();
+		} else {
+			return Response.status(Status.NOT_FOUND).build();
+		}
+	}
 
-        if (iter.iterator().hasNext()) {
-            String profile = null;
-            try {
-                profile = getOrcidProfile(id);
-            } catch (RuntimeException r) {
-                return Response
-                        .serverError()
-                        .entity(new BasicDBObject("failure",
-                                "Provider call failed with status: "
-                                        + r.getMessage())).build();
-            }
+	@PUT
+	@Path("/{id}")
+	@Consumes(MediaType.APPLICATION_JSON)
+	public Response updatePersonProfile(@PathParam("id") String id) {
+		Profile profile = null;
+		try {
+			profile = Provider.findCanonicalId(id);
+		} catch (Exception e) {
+			return Response
+					.status(javax.ws.rs.core.Response.Status.CONFLICT)
+					.entity(new BasicDBObject("failure",
+							"Ambiguous identifier")).build();
+		}
+		if(profile==null) {
+			return Response
+					.status(javax.ws.rs.core.Response.Status.NOT_FOUND)
+					.build();
+		}
+		id = profile.getIdentifier();
+		Document profileDoc = retrieveProfile(id);
+		if (profileDoc != null) {
+			String providerName = profileDoc.getString(provider);
+			try {
+				profileDoc = Provider.getProvider(providerName).getExternalProfile(profile.asJson());
+			} catch (RuntimeException r) {
+				return Response
+						.serverError()
+						.entity(new BasicDBObject("failure",
+								"Provider call failed with status: "
+										+ r.getMessage())).build();
+			}
 
-            peopleCollection.replaceOne(new Document(
-                    "orcid-profile.orcid-identifier.path", id), Document.parse(profile));
-            return Response.status(Status.OK).build();
+			peopleCollection.replaceOne(new Document(
+					"@id", id), profileDoc);
+			return Response.status(Status.OK).build();
 
-        } else {
-            return Response.status(Status.NOT_FOUND).build();
+		} else {
+			return Response.status(Status.NOT_FOUND).build();
 
-        }
-    }
+		}
+	}
 
-    @DELETE
-    @Path("/{id}")
-    public Response unregisterPerson(@PathParam("id") String id) {
-        DeleteResult result = peopleCollection.deleteOne(new Document("orcid-profile.orcid-identifier.path", id));
-        if(result.getDeletedCount() == 0 ){
-            return Response.status(Status.NOT_FOUND).build();
-        } else {
-            return Response.status(Status.OK).build();
-        }
-    }
+	@DELETE
+	@Path("/{id}")
+	public Response unregisterPerson(@PathParam("id") String id) {
+		DeleteResult result = peopleCollection.deleteOne(new Document(
+				"@id", id));
+		if (result.getDeletedCount() == 0) {
+			return Response.status(Status.NOT_FOUND).build();
+		} else {
+			return Response.status(Status.OK).build();
+		}
+	}
 
-    static protected Document getPersonInfo(Document next) {
-        Document standardForm = new Document();
-        standardForm.put("@id",	((Document) ((Document) next.get("orcid-profile"))
-                .get("orcid-identifier")).get("path"));
-        Document detailsDocument = (Document) ((Document) ((Document) next
-                .get("orcid-profile")).get("orcid-bio"))
-                .get("personal-details");
-        standardForm.put("givenName",
-                ((Document) detailsDocument.get("given-names")).get("value"));
-        standardForm.put("familyName",
-                ((Document) detailsDocument.get("family-name")).get("value"));
-        ArrayList emails = ((ArrayList<?>) ((Document) ((Document) ((Document) next
-                .get("orcid-profile")).get("orcid-bio"))
-                .get("contact-details")).get("email"));
-        if(!emails.isEmpty()) {
-            standardForm
-                    .put("email",
-                            ((Document) emails.get(0))
-                                    .get("value"));
-        }
-        standardForm.put("PersonalProfileDocument",
-                ((Document) ((Document) next.get("orcid-profile"))
-                        .get("orcid-identifier")).get("uri"));
-        @SuppressWarnings("unchecked")
-        ArrayList<Document> affiliationsList = (ArrayList<Document>) ((Document) ((Document) ((Document) next
-                .get("orcid-profile")).get("orcid-activities"))
-                .get("affiliations")).get("affiliation");
-        StringBuffer affs = new StringBuffer();
-        for (Document affiliationDocument : affiliationsList) {
-            if (affiliationDocument.getString("type").equals("EMPLOYMENT")
-                    && (affiliationDocument.get("end-date") == null)) {
-                if(affs.length()!=0) {
-                    affs.append(", ");
-                }
-                affs.append(((Document) affiliationDocument.get("organization"))
-                        .getString("name"));
+	static private Document getPersonContext() {
+		Document contextDocument = new Document();
+		contextDocument.put("givenName", "http://schema.org/Person/givenName");
+		contextDocument
+				.put("familyName", "http://schema.org/Person/familyName");
+		contextDocument.put("email", "http://schema.org/Person/email");
+		contextDocument.put("affiliation",
+				"http://schema.org/Person/affiliation");
+		contextDocument.put("PersonalProfileDocument",
+				"http://schema.org/Thing/mainEntityOfPage");
+		return contextDocument;
+	}
 
-            }
-            standardForm.append("affiliation",affs.toString());
-        }
-        return standardForm;
-    }
-
-    static protected Document getOrcidPersonProjection() {
-        return new Document("orcid-profile.orcid-identifier.uri", 1)
-                .append("orcid-profile.orcid-identifier.path", 1)
-                .append("orcid-profile.orcid-bio.personal-details.given-names",
-                        1)
-                .append("orcid-profile.orcid-bio.personal-details.family-name",
-                        1)
-                .append("orcid-profile.orcid-bio.contact-details.email", 1)
-                .append("orcid-profile.orcid-activities.affiliations.affiliation",
-                        1).append("_id", 0);
-    }
-
-    static private Document getPersonContext() {
-        Document contextDocument = new Document();
-        contextDocument.put("givenName", "http://schema.org/Person/givenName");
-        contextDocument
-                .put("familyName", "http://schema.org/Person/familyName");
-        contextDocument.put("email", "http://schema.org/Person/email");
-        contextDocument.put("affiliation",
-                "http://schema.org/Person/affiliation");
-        contextDocument.put("PersonalProfileDocument",
-                "http://schema.org/Thing/mainEntityOfPage");
-        return contextDocument;
-    }
-
-    private String getOrcidProfile(String id) {
-
-        Client client = Client.create();
-        WebResource webResource = client.resource("http://pub.orcid.org/v1.2/"
-                + id + "/orcid-profile");
-
-        ClientResponse response = webResource.accept("application/orcid+json")
-                .get(ClientResponse.class);
-
-        if (response.getStatus() != 200) {
-            throw new RuntimeException("" + response.getStatus());
-        }
-
-        return response.getEntity(String.class);
-    }
+	static protected Document getBasicPersonProjection() {
+		return new Document("givenName", 1).append("familyName", 1)
+				.append("@id", 1).append("email", 1).append("affiliation", 1)
+				.append("PersonalProfileDocument", 1).append("_id", 0);
+	}
 
 
+	static Document retrieveProfile(String id) {
+		Document document = null;
+		FindIterable<Document> iter = peopleCollection.find(new Document(
+				"@id", id));
+		iter.projection(getBasicPersonProjection());
+		if (iter.first() != null) {
+			document = iter.first();
+			document.put("@context", getPersonContext());
+		}
+		return document;
+	}
+	
 }
