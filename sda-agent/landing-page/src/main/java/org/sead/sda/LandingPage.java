@@ -19,10 +19,10 @@
 
 package org.sead.sda;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.URLDecoder;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -41,7 +41,6 @@ import org.json.simple.JSONObject;
 public class LandingPage extends HttpServlet {
 
     private static final long serialVersionUID = 1L;
-    private String title;
 
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 
@@ -68,8 +67,6 @@ public class LandingPage extends HttpServlet {
             addROProperty("Uploaded By", describes, roProperties);
             addROProperty("Abstract", describes, roProperties);
 
-            title = roProperties.get("Title");
-
             // set properties as an attribute
             request.setAttribute("roProperties", roProperties);
             // forward the user to get_id UI
@@ -78,8 +75,13 @@ public class LandingPage extends HttpServlet {
 
         } else {
 
+            // collection title is the last part of the request URI
+            String requestURI = request.getRequestURI();
+            String title = requestURI.substring(requestURI.lastIndexOf('/') + 1);
+            title = URLDecoder.decode(title, "UTF-8");
+
             SFTP sftp = new SFTP();
-            String target = "/cos1/hpss/s/e/seadva/" + title + File.separator + title + ".tar";
+            String target = "/cos1/hpss/s/e/seadva/" + title + "/" + title + ".tar";
             System.out.println("SDA download path: " + target);
             InputStream inStream = sftp.downloadFile(target);
 

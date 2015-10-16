@@ -28,7 +28,6 @@ import org.sead.matchmaker.RuleResult;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 
 public class MinimalMetadataMatcher implements Matcher {
@@ -47,16 +46,18 @@ public class MinimalMetadataMatcher implements Matcher {
             return result;
         }
         if (context instanceof List) {
-            Iterator<Document> docIter = (Iterator<Document>) ((List) context)
-                    .listIterator();
-            while (docIter.hasNext()) {
-                Object next = docIter.next();
+            for (Object next : ((List) context)) {
                 //context entries are either objects(Documents) with key/values that ew should parse, or
                 //single URL values (String) that point to an external vocab which we're ignoring for now
-                if ((next != null)&&(!(next instanceof String))) {
+                if ((next != null) && (next instanceof Document)) {
                     Document doc = (Document) next;
                     for (String k : doc.keySet()) {
-                        labelsByPred.put(doc.getString(k), k);
+                        Object val = doc.get(k);
+                        if (val instanceof String) {
+                            labelsByPred.put((String) val, k);
+                        } else if (val instanceof Document) {
+                            labelsByPred.put(((Document) val).getString("@id"), k);
+                        }
                     }
                 }
             }

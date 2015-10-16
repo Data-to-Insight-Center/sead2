@@ -48,7 +48,7 @@ abstract public class Provider {
 			 if(newID!=null) {
 				 if(profile==null) {
 					 profile = new Profile();
-					 profile.setId(newID);
+					 profile.setIdentifier(newID);
 					 profile.setProvider(p.getProviderName());
 				 } else {
 					 throw new RuntimeException("Ambiguous id");

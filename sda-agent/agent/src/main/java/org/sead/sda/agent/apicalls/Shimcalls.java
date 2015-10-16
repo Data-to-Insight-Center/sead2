@@ -20,7 +20,6 @@
 package org.sead.sda.agent.apicalls;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -31,6 +30,7 @@ import com.sun.jersey.api.client.WebResource;
 
 import javax.ws.rs.core.MediaType;
 
+import org.json.JSONException;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -105,7 +105,7 @@ public class Shimcalls {
         JSONObject object = new JSONObject();
         JSONParser parser = new JSONParser();
 
-        StringBuilder new_sb = getCalls(this.cp_researchobject + File.separator + id);
+        StringBuilder new_sb = getCalls(this.cp_researchobject + "/" + id);
         try {
             Object obj = parser.parse(new_sb.toString());
             object = (JSONObject) obj;
@@ -117,23 +117,24 @@ public class Shimcalls {
     }
 
 
-    public JSONObject getResearchObjectORE(String ore_url){
-		
-		JSONObject object = new JSONObject();
-		JSONParser parser = new JSONParser();
-		
+    public JSONObject getResearchObjectORE(String ore_url) throws Exception {
 
-		StringBuilder new_sb = getCalls(ore_url);
-		try {
-			Object obj = parser.parse(new_sb.toString());
-			object = (JSONObject) obj;
-		}catch(Exception e){
-			e.printStackTrace();
-		}
-		
+		JSONParser parser = new JSONParser();
+
+        StringBuilder newSb = getCalls(ore_url);
+        Object obj = parser.parse(newSb.toString());
+        JSONObject object = (JSONObject) obj;
+
 		return object;
 	}
-	
+
+    // TODO:
+    // Using org.json library to pretty print the JSON. It's good to convert the entire SDA agent
+    // code to org.json as all other SEAD components are using that library.
+    public org.json.JSONObject getJsonORE(String oreUrl) throws JSONException {
+        StringBuilder oreBuffer = getCalls(oreUrl);
+        return new org.json.JSONObject(oreBuffer.toString());
+    }
 	
 	public void getObjectID(JSONObject obj, String keyword){ //Identifier or @id
 		Set keys = obj.keySet();
@@ -160,7 +161,7 @@ public class Shimcalls {
     public void updateStatus(String doiUrl, String id) {
         WebResource webResource = Client.create().resource(this.cp_researchobject);
         String status = "{\"reporter\":\"sda\", \"stage\":\"Success\", \"message\":\"" +
-                doiUrl + "\"}";
+                doiUrl.trim() + "\"}";
         System.out.println("Status update JSON: " + status);
         ClientResponse response = webResource.path(id)
                 .path("status")

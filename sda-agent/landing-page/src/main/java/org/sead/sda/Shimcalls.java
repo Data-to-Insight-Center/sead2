@@ -76,7 +76,7 @@ public class Shimcalls {
         JSONObject object = new JSONObject();
         JSONParser parser = new JSONParser();
 
-        StringBuilder new_sb = getCalls(Constants.allResearchObjects + File.separator + id);
+        StringBuilder new_sb = getCalls(Constants.allResearchObjects + "/" + id);
         try {
             Object obj = parser.parse(new_sb.toString());
             object = (JSONObject) obj;

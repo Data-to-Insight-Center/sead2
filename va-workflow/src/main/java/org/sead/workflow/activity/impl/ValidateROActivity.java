@@ -18,16 +18,22 @@
 
 package org.sead.workflow.activity.impl;
 
+import com.sun.jersey.api.client.Client;
+import com.sun.jersey.api.client.ClientResponse;
+import com.sun.jersey.api.client.WebResource;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.sead.workflow.activity.AbstractWorkflowActivity;
+import org.sead.workflow.activity.SeadWorkflowActivity;
 import org.sead.workflow.config.SeadWorkflowConfig;
 import org.sead.workflow.context.SeadWorkflowContext;
 import org.sead.workflow.exception.SeadWorkflowException;
 import org.sead.workflow.util.Constants;
 
+import java.net.URLEncoder;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 /**
  * Responsible for validating the RO.
@@ -43,6 +49,32 @@ public class ValidateROActivity extends AbstractWorkflowActivity {
         System.out.println("\n=====================================");
         System.out.println("Executing MicroService : " + activityName);
         System.out.println("-----------------------------------\n");
+
+        HashMap<String, String> activityParams = new HashMap<String, String>();
+        for(SeadWorkflowActivity activity : config.getActivities()){
+            AbstractWorkflowActivity abstractActivity = (AbstractWorkflowActivity)activity;
+            if(abstractActivity.activityName.equals(activityName)){
+                activityParams = abstractActivity.params;
+                break;
+            }
+        }
+
+        String pdtUrl = activityParams.get("pdtUrl");
+
+        // Call RO Info System to find whether RO already exists
+        WebResource webResource = Client.create().resource(pdtUrl);
+        ClientResponse response = webResource
+                .path(context.getCollectionId())
+                .accept("application/json")
+                .type("application/json")
+                .get(ClientResponse.class);
+
+        if(response.getStatus() == 200){
+            System.out.println(PersistROActivity.class.getName() + " : RO Validation Failed");
+            throw new SeadWorkflowException("Error occurred while validating collection " + context.getCollectionId() +
+             " - RO with same ID already exists in C3PR");
+        }
+
 
         boolean validated = true;
         String roString = context.getProperty(Constants.JSON_RO);

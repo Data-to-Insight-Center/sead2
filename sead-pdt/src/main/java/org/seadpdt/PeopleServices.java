@@ -229,7 +229,6 @@ public class PeopleServices {
 				"http://schema.org/Thing/mainEntityOfPage");
 		return contextDocument;
 	}
-
 	static protected Document getBasicPersonProjection() {
 		return new Document("givenName", 1).append("familyName", 1)
 				.append("@id", 1).append("email", 1).append("affiliation", 1)

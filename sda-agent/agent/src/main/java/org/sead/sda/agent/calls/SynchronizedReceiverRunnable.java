@@ -19,8 +19,6 @@
 
 package org.sead.sda.agent.calls;
 
-import java.util.ArrayList;
-
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
@@ -34,7 +32,6 @@ import org.sead.sda.agent.engine.PropertiesReader;
 import org.sead.sda.agent.engine.SFTP;
 
 public class SynchronizedReceiverRunnable implements Runnable {
-    private ArrayList<String> errorLinks;
 
     public void run() {
 
@@ -58,7 +55,6 @@ public class SynchronizedReceiverRunnable implements Runnable {
                     } else {
                         System.out.println("Starting to publish Research Object...");
 
-                        this.errorLinks = new ArrayList<String>();
                         JSONObject pulishObject = call.getResearchObject(identifier);
                         call.getObjectID(pulishObject, "@id");
                         String oreUrl = call.getID();
@@ -72,8 +68,10 @@ public class SynchronizedReceiverRunnable implements Runnable {
                         JSONObject newOREmap = oreMap.getNewOREmap();
 
                         System.out.println("Downloading data files...");
-                        DummySDA dummySDA = new DummySDA(newOREmap, ore);
-                        errorLinks = dummySDA.getErrorLinks();
+                        DummySDA dummySDA = new DummySDA(newOREmap, call.getJsonORE(oreUrl));
+                        if (dummySDA.getErrorLinks().size() > 0) {
+                            throw new Exception("Error while downloading some/all files");
+                        }
 
                         String rootPath = dummySDA.getRootPath();
                         new ZipDirectory(rootPath);

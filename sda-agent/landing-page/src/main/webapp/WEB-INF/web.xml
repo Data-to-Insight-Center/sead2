@@ -17,7 +17,7 @@
 
     <servlet-mapping>
         <servlet-name>sda-landing</servlet-name>
-        <url-pattern>/sda</url-pattern>
+        <url-pattern>/sda/*</url-pattern>
     </servlet-mapping>
 
 </web-app>

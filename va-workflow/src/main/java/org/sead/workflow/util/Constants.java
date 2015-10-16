@@ -38,6 +38,7 @@ public class Constants {
     public static final String JSON_RO = "jsonRO"; // JSONLD format of RO metadata
     public static final String REQUEST_URL = "requestUrl"; // JSONLD format of RO metadata
     public static final String VALIDATED = "validated";
+    public static final String ORE_ID = "oreId";
 
     // constants in JSONLD of RO
     public static String AGGREGATION = "Aggregation";

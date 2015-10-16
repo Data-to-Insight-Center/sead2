@@ -25,7 +25,7 @@
         <div class="container">
             <h3>Research Object Metadata</h3>
 
-            <form role='form' action="sda" method="get">
+            <form role='form' action="sda/<%= properties.get("Title")%>" method="get">
                 <table class='table' style="width: 90%">
                     <%
                         for (String key : properties.keySet()) {

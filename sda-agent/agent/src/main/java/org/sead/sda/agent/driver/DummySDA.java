@@ -34,13 +34,13 @@ public class DummySDA {
     private ArrayList<String> errorLinks;
     private String rootPath = null;
 
-    public DummySDA(JSONObject ore, JSONObject oldore) {
+    public DummySDA(JSONObject ore, org.json.JSONObject prettyOre) {
         this.userAndpass = PropertiesReader.clowderUser + ":" + PropertiesReader.clowderPassword;
 
         this.errorLinks = new ArrayList<String>();
         this.rootPath = createRootFolder(ore, PropertiesReader.dummySDA);
 
-        writeOREmap(this.rootPath, oldore);
+        writeOREmap(this.rootPath, prettyOre);
 
         JSONArray aggre = (JSONArray) ore.get("aggregates");
 
@@ -102,13 +102,13 @@ public class DummySDA {
     }
 
 
-    public void writeOREmap(String rootPath, JSONObject oldore) {
+    public void writeOREmap(String rootPath, org.json.JSONObject ore) {
         try {
             FileWriter outFile = new FileWriter(rootPath + File.separator + "OREmap.json", true);
             try {
                 PrintWriter out1 = new PrintWriter(outFile);
                 try {
-                    out1.append(oldore.toJSONString());
+                    out1.append(ore.toString(2));
                 } finally {
                     out1.close();
                 }

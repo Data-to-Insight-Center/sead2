@@ -35,9 +35,12 @@ import com.sun.jersey.api.client.ClientResponse;
 
 import org.bson.Document;
 import org.bson.types.BasicBSONList;
+import org.bson.types.ObjectId;
 import org.json.JSONArray;
+
 import org.seadpdt.people.Profile;
 import org.seadpdt.people.Provider;
+import org.json.JSONObject;
 import org.seadpdt.util.MongoDB;
 
 import javax.ws.rs.*;
@@ -76,7 +79,8 @@ public class ROServices {
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response startROPublicationProcess(String publicationRequestString,
-			@QueryParam("requestUrl") String requestURL) {
+			@QueryParam("requestUrl") String requestURL,
+            @QueryParam("oreId") String oreId) {
 		String messageString = "";
 		Document request = Document.parse(publicationRequestString);
 		Document content = (Document) request.get("Aggregation");
@@ -150,6 +154,7 @@ public class ROServices {
 
 			String newMapURL = requestURL + "/" + ID + "/oremap";
 			content.put("@id", newMapURL + "#aggregation");
+            content.put("authoratativeMap", oreId);
 
 			publicationsCollection.insertOne(request);
 			URI resource = null;
@@ -199,10 +204,30 @@ public class ROServices {
 		}
 		// Internal meaning only - strip from exported doc
 		document.remove("_id");
-		document.get("Aggregation");
-		// aggDocument.remove("authoratativeMap");
+
+		Document aggDocument = (Document) document.get("Aggregation");
+		aggDocument.remove("authoratativeMap");
 		return Response.ok(document.toJson()).cacheControl(control).build();
 	}
+
+    @GET
+    @Path("/{id}/authoratativeMap")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getAuthoratativeMap(@PathParam("id") String id) {
+
+        FindIterable<Document> iter = publicationsCollection.find(new Document(
+                "Aggregation.Identifier", id));
+        if (iter == null) {
+            return Response.status(ClientResponse.Status.NOT_FOUND).build();
+        }
+        Document document = iter.first();
+        if (document == null) {
+            return Response.status(ClientResponse.Status.NOT_FOUND).build();
+        }
+        // Internal meaning only - strip from exported doc
+        String mapId = (String) ((Document)document.get("Aggregation")).get("authoratativeMap");
+        return Response.ok(new JSONObject().put("mapId", mapId).toString()).cacheControl(control).build();
+    }
 
 	@POST
 	@Path("/{id}/status")
@@ -259,8 +284,10 @@ public class ROServices {
 					.build();
 		}
 
-		DeleteResult mapDeleteResult = oreMapCollection.deleteOne(new Document(
-				"describes.Identifier", id));
+        ObjectId mapId =  new ObjectId(((Document)document.get("Aggregation")).get("authoratativeMap").toString());
+        DeleteResult mapDeleteResult = oreMapCollection.deleteOne(new Document("_id", mapId));
+		/*DeleteResult mapDeleteResult = oreMapCollection.deleteOne(new Document(
+				"describes.Identifier", id));*/
 		if (mapDeleteResult.getDeletedCount() != 1) {
 			// Report error
 			System.out.println("Could not find map corresponding to " + id);
@@ -283,16 +310,16 @@ public class ROServices {
 		// If null, no chance that we have a profile...
 		if (profile != null) {
 			Document profileDoc = PeopleServices.retrieveProfile(profile
-					.getId());
+					.getIdentifier());
 
 			// NeverFail
 			if (profileDoc == null) {
 				// Handle per provider
 				PeopleServices.registerPerson("{\"provider\": \""
 						+ profile.getProvider() + "\", \"identifier\":\""
-						+ profile.getId() + "\" }");
+						+ profile.getIdentifier() + "\" }");
 			}
-			profileDoc = PeopleServices.retrieveProfile(profile.getId());
+			profileDoc = PeopleServices.retrieveProfile(profile.getIdentifier());
 
 			if (profileDoc != null) {
 				String currentAffiliations = profileDoc
