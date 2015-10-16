@@ -266,12 +266,24 @@ public class ROServices {
 	@DELETE
 	@Path("/{id}")
 	public Response rescindROPublicationRequest(@PathParam("id") String id) {
-		// Is there ever a reason to preserve the map and not the pub request?
-		// FixMe: Don't allow a delete after the request is complete?
 
 		// First remove map
 		FindIterable<Document> iter = publicationsCollection.find(new Document(
 				"Aggregation.Identifier", id));
+
+        if(iter.first() != null) {
+            ArrayList Statuses = (ArrayList)iter.first().get("Status");
+            for(Object status : Statuses){
+                Document statusObj = (Document)status;
+                String stage = statusObj.get("stage").toString();
+                if (stage.equalsIgnoreCase("Success") || stage.equalsIgnoreCase("Pending")){
+                    return Response.status(ClientResponse.Status.BAD_REQUEST)
+                            .entity("Cannot revoke the request since the repository is either processing or has deposited the requested RO")
+                            .build();
+                }
+            }
+        }
+
 		iter.projection(new Document("Aggregation", 1).append("_id", 0));
 
 		Document document = iter.first();
