@@ -136,4 +136,8 @@ public class ValidateROActivity extends AbstractWorkflowActivity {
 
         return isNotNull;
     }
+
+    @Override
+    public void rollback() {
+    }
 }

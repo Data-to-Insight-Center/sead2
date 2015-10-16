@@ -22,15 +22,15 @@
     <!--list of activities to be executed in SEAD workflow-->
     <activities>
         <!--activity to validate the RO-->
-        <activity name="validate_ro" class="org.sead.workflow.activity.impl.ValidateROActivity">
+        <activity name="validate_ro" class="org.sead.workflow.activity.impl.ValidateROActivity" transactional="false">
             <parameter name="pdtUrl">http://localhost:8180/sead-pdt/researchobjects</parameter>
         </activity>
         <!--activity to persist the ORE Map-->
-        <activity name="persist_ore" class="org.sead.workflow.activity.impl.PersistOREActivity">
+        <activity name="persist_ore" class="org.sead.workflow.activity.impl.PersistOREActivity" transactional="true">
             <parameter name="metadatagenUrl">http://localhost:8180/metadata-gen</parameter>
         </activity>
         <!--activity to persist RO in PDT -->
-        <activity name="persist_ro" class="org.sead.workflow.activity.impl.PersistROActivity">
+        <activity name="persist_ro" class="org.sead.workflow.activity.impl.PersistROActivity" transactional="true">
             <parameter name="pdtUrl">http://localhost:8180/sead-pdt/researchobjects</parameter>
         </activity>
     </activities>

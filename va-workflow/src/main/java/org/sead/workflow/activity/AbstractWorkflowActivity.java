@@ -29,6 +29,8 @@ public abstract class AbstractWorkflowActivity implements SeadWorkflowActivity {
     public String activityName = null;
     // parameter map for the activity
     public HashMap<String, String> params = new HashMap<String, String>();
+    // whether the activity is transactional or not
+    public boolean transactional = false;
 
     @Override
     public abstract void execute(SeadWorkflowContext context, SeadWorkflowConfig config);
@@ -40,4 +42,15 @@ public abstract class AbstractWorkflowActivity implements SeadWorkflowActivity {
     public void setName(String name) {
         activityName = name;
     }
+
+    public void setTransactional(boolean flag) {
+        transactional = flag;
+    }
+
+    public boolean getTransactional() {
+        return transactional;
+    }
+
+    @Override
+    public abstract void rollback();
 }

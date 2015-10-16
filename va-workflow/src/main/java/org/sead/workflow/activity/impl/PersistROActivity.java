@@ -86,4 +86,9 @@ public class PersistROActivity extends AbstractWorkflowActivity {
 
     }
 
+    @Override
+    public void rollback() {
+
+    }
+
 }
