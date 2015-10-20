@@ -36,6 +36,7 @@ import org.bson.Document;
 import org.bson.types.BasicBSONList;
 import org.bson.types.ObjectId;
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 import org.seadpdt.util.MongoDB;
 
@@ -58,6 +59,7 @@ public class ROServices {
 	private MongoCollection<Document> peopleCollection = null;
 	private MongoCollection<Document> repositoriesCollection = null;
 	private MongoCollection<Document> oreMapCollection = null;
+	private MongoCollection<Document> fgdcCollection = null;
 	private CacheControl control = new CacheControl();
 
 	public ROServices() {
@@ -67,6 +69,7 @@ public class ROServices {
 		peopleCollection = db.getCollection(MongoDB.people);
 		repositoriesCollection = db.getCollection(MongoDB.repositories);
 		oreMapCollection = metaDb.getCollection(MongoDB.oreMap);
+        fgdcCollection = metaDb.getCollection(MongoDB.fgdc);
 		control.setNoCache(true);
 	}
 
@@ -206,25 +209,6 @@ public class ROServices {
 		return Response.ok(document.toJson()).cacheControl(control).build();
 	}
 
-    @GET
-    @Path("/{id}/authoratativeMap")
-    @Produces(MediaType.APPLICATION_JSON)
-    public Response getAuthoratativeMap(@PathParam("id") String id) {
-
-        FindIterable<Document> iter = publicationsCollection.find(new Document(
-                "Aggregation.Identifier", id));
-        if (iter == null) {
-            return Response.status(ClientResponse.Status.NOT_FOUND).build();
-        }
-        Document document = iter.first();
-        if (document == null) {
-            return Response.status(ClientResponse.Status.NOT_FOUND).build();
-        }
-        // Internal meaning only - strip from exported doc
-        String mapId = (String) ((Document)document.get("Aggregation")).get("authoratativeMap");
-        return Response.ok(new JSONObject().put("mapId", mapId).toString()).cacheControl(control).build();
-    }
-
 	@POST
 	@Path("/{id}/status")
 	@Consumes(MediaType.APPLICATION_JSON)
@@ -310,7 +294,76 @@ public class ROServices {
 		}
 	}
 
-	private List<String> getOrganizationforPerson(String pID) {
+    @POST
+    @Path("/oremap")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response addOreMap(String oreMapString){
+        Document oreMap = Document.parse(oreMapString);
+        oreMapCollection.insertOne(oreMap);
+        return Response.ok().build();
+    }
+
+    @GET
+    @Path("/{id}/oremap")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getROOREMap(@PathParam("id") String id) throws JSONException {
+
+        FindIterable<Document> iter = publicationsCollection.find(new Document(
+                "Aggregation.Identifier", id));
+
+        if(iter == null || iter.first() == null) {
+            return Response
+                    .status(javax.ws.rs.core.Response.Status.NOT_FOUND)
+                    .entity(new JSONObject().put("Error", "Cannot find RO with id " + id))
+                    .build();
+        }
+
+        Document document = iter.first();
+        ObjectId mapId =  new ObjectId(((Document)document.get("Aggregation")).get("authoratativeMap").toString());
+
+        FindIterable<Document> oreIter = oreMapCollection.find(new Document("_id", mapId));
+        Document map = oreIter.first();
+
+        if(oreIter.first()==null) {
+            return Response
+                    .status(javax.ws.rs.core.Response.Status.NOT_FOUND)
+                    .entity(new JSONObject().put("Error", "Cannot find ORE with id " + id))
+                    .build();
+        }
+
+        //Internal meaning only
+        map.remove("_id");
+        //document.remove("_id");
+        return Response.ok(map.toJson()).build();
+    }
+
+    @POST
+    @Path("/{id}/fgdc")
+    @Consumes(MediaType.APPLICATION_XML)
+    @Produces(MediaType.APPLICATION_XML)
+    public Response addFgdc(String fgdcString, @PathParam("id") String id){
+        fgdcCollection.deleteMany(new Document("@id", id));
+        Document document = new Document();
+        document.put("@id", id);
+        document.put("metadata", fgdcString);
+        fgdcCollection.insertOne(document);
+        return Response.ok().build();
+    }
+
+    @GET
+    @Path("/{id}/fgdc")
+    @Produces(MediaType.APPLICATION_XML)
+    public Response getFgdc(@PathParam("id") String id) {
+        FindIterable<Document> iter = fgdcCollection.find(new Document("@id", id));
+        if(iter != null && iter.first() != null){
+            return Response.ok(iter.first().get("metadata").toString()).build();
+        } else {
+            return Response.status(ClientResponse.Status.NOT_FOUND).build();
+        }
+    }
+
+    private List<String> getOrganizationforPerson(String pID) {
 
 		List<String> orgs = new ArrayList<String>();
 

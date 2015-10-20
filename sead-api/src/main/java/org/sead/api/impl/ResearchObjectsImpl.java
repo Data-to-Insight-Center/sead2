@@ -134,7 +134,7 @@ public class ResearchObjectsImpl extends ResearchObjects {
         } else {
             // Calling MetadataGenerator to generate FGDC metadata for the RO
             ClientResponse metagenResponse = metadataGenWebService.path("rest")
-                    .path(id + "/metadata/fgdc")
+                    .path(id + "/fgdc")
                     .accept("application/xml")
                     .type("application/xml")
                     .post(ClientResponse.class, message);
@@ -257,7 +257,7 @@ public class ResearchObjectsImpl extends ResearchObjects {
         WebResource webResource = metadataGenWebService;
 
         ClientResponse response = webResource.path("rest")
-                .path(id + "/metadata/fgdc")
+                .path(id + "/fgdc")
                 .accept("application/xml")
                 .type("application/xml")
                 .get(ClientResponse.class);

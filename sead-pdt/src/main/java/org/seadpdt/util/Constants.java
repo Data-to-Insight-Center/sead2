@@ -57,7 +57,7 @@ public class Constants {
             if(name.equals("pdt.db.name")){
                 pdtDbName = value;
             }
-            if(name.equals("metagen.db.name")){
+            if(name.equals("metadata.db.name")){
                 metaDbName = value;
             }
         }

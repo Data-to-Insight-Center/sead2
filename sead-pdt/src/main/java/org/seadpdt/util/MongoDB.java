@@ -32,6 +32,7 @@ public class MongoDB {
 	public static String people="people";
 	public static String repositories = "repo";
     public static String oreMap = "oreMaps";
+    public static String fgdc = "fgdc";
 
 	public static synchronized MongoClient getMongoClientInstance() {
 	    if (mongoClientInstance == null) {
