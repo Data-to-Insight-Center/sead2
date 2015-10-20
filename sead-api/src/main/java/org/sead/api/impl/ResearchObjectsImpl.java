@@ -238,9 +238,9 @@ public class ResearchObjectsImpl extends ResearchObjects {
 	@Path("/{id}/oremap")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response getROOREMap(@PathParam("id") String id) {
-        WebResource webResource = metadataGenWebService;
+        WebResource webResource = pdtWebService;
 
-        ClientResponse response = webResource.path("rest")
+        ClientResponse response = webResource.path("researchobjects")
                 .path(id + "/oremap")
                 .accept("application/json")
                 .type("application/json")
@@ -254,9 +254,9 @@ public class ResearchObjectsImpl extends ResearchObjects {
     @Path("/{id}/fgdc")
     @Produces(MediaType.APPLICATION_XML)
     public Response getFgdc(@PathParam("id") String id) {
-        WebResource webResource = metadataGenWebService;
+        WebResource webResource = pdtWebService;
 
-        ClientResponse response = webResource.path("rest")
+        ClientResponse response = webResource.path("researchobjects")
                 .path(id + "/fgdc")
                 .accept("application/xml")
                 .type("application/xml")

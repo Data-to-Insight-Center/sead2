@@ -82,23 +82,6 @@ public class MetadataGenerator {
         }
     }
 
-    
-    @GET
-    @Path("/{id}/fgdc")
-    @Produces(MediaType.APPLICATION_XML)
-    public Response getFgdc(@PathParam("id") String id) throws URISyntaxException {
-        if(id == null){
-            return Response.status(Response.Status.BAD_REQUEST).type(MediaType.APPLICATION_XML).build();
-        }
-
-        ClientResponse response = pdtWebService.path("researchobjects")
-                .path(id + "/fgdc")
-                .accept("application/xml")
-                .type("application/xml")
-                .get(ClientResponse.class);
-        return Response.status(response.getStatus()).entity(response.getEntity(new GenericType<String>() {})).build();
-    }
-
     @POST
     @Path("/oremap")
     @Consumes(MediaType.APPLICATION_JSON)
@@ -161,20 +144,6 @@ public class MetadataGenerator {
                     .build();
         }
     }
-
-    @GET
-    @Path("/{id}/oremap")
-    @Produces(MediaType.APPLICATION_JSON)
-    public Response getROOREMap(@PathParam("id") String id) throws JSONException {
-
-        ClientResponse response = pdtWebService.path("researchobjects")
-                .path(id + "/oremap")
-                .accept("application/json")
-                .type("application/json")
-                .get(ClientResponse.class);
-        return Response.status(response.getStatus()).entity(response.getEntity(new GenericType<String>() {})).build();
-    }
-
 
     class RedirectFilter extends ClientFilter {
 
