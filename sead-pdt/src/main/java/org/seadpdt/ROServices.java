@@ -338,6 +338,13 @@ public class ROServices {
         return Response.ok(map.toJson()).build();
     }
 
+    @DELETE
+    @Path("/{id}/oremap")
+    public Response deleteOreByDocumentId(@PathParam("id") String id) {
+        DeleteResult mapDeleteResult = oreMapCollection.deleteOne(new Document("_id", new ObjectId(id)));
+        return Response.status(ClientResponse.Status.OK).build();
+    }
+
     @POST
     @Path("/{id}/fgdc")
     @Consumes(MediaType.APPLICATION_XML)

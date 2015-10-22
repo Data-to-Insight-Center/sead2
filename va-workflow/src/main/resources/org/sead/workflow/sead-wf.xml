@@ -28,6 +28,7 @@
         <!--activity to persist the ORE Map-->
         <activity name="persist_ore" class="org.sead.workflow.activity.impl.PersistOREActivity" transactional="true">
             <parameter name="metadatagenUrl">http://localhost:8180/metadata-gen</parameter>
+            <parameter name="pdtUrl">http://localhost:8180/sead-pdt/researchobjects</parameter>
         </activity>
         <!--activity to persist RO in PDT -->
         <activity name="persist_ro" class="org.sead.workflow.activity.impl.PersistROActivity" transactional="true">

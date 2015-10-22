@@ -39,6 +39,6 @@ public interface SeadWorkflowActivity {
 
     public boolean getTransactional();
 
-    public void rollback();
+    public void rollback(SeadWorkflowContext context, SeadWorkflowConfig config);
 
 }

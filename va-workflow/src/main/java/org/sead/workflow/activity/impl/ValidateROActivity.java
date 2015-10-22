@@ -138,6 +138,6 @@ public class ValidateROActivity extends AbstractWorkflowActivity {
     }
 
     @Override
-    public void rollback() {
+    public void rollback(SeadWorkflowContext context, SeadWorkflowConfig config) {
     }
 }

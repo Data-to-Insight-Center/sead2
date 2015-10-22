@@ -52,5 +52,5 @@ public abstract class AbstractWorkflowActivity implements SeadWorkflowActivity {
     }
 
     @Override
-    public abstract void rollback();
+    public abstract void rollback(SeadWorkflowContext context, SeadWorkflowConfig config);
 }

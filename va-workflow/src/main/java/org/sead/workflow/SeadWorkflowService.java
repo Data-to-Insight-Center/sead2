@@ -148,7 +148,7 @@ public class SeadWorkflowService {
                 for(int i = executedActivities - 1 ; i > -1 ; i--){
                     if(SeadWorkflowService.config.getActivities().get(i).getTransactional() == true) {
                         System.out.println("*** WorkflowThread : Rollback " + SeadWorkflowService.config.getActivities().get(i).getClass().getName());
-                        SeadWorkflowService.config.getActivities().get(i).rollback();
+                        SeadWorkflowService.config.getActivities().get(i).rollback(context, SeadWorkflowService.config);
                     }
                 }
 
