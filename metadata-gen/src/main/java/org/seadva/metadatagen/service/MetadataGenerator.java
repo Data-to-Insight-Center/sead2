@@ -73,12 +73,16 @@ public class MetadataGenerator {
         if (response.equals("")) {
             return Response.status(ClientResponse.Status.NOT_FOUND).build();
         } else {
-            pdtWebService.path("researchobjects")
+            ClientResponse postResponse = pdtWebService.path("researchobjects")
                     .path(id + "/fgdc")
                     .accept("application/xml")
                     .type("application/xml")
                     .post(ClientResponse.class, response);
-            return Response.ok(response).build();
+            if (postResponse.getStatus() == 200) {
+                return Response.ok(response).build();
+            } else {
+                return Response.serverError().build();
+            }
         }
     }
 
@@ -137,7 +141,11 @@ public class MetadataGenerator {
                     .type("application/json")
                     .post(ClientResponse.class, oreMapDocument.toJson().toString());
 
-            return Response.ok(new JSONObject().put("id", mapId).toString()).build();
+            if(postResponse.getStatus() == 200) {
+                return Response.ok(new JSONObject().put("id", mapId).toString()).build();
+            } else {
+                return Response.serverError().build();
+            }
         } else {
             return Response.status(ClientResponse.Status.BAD_REQUEST)
                     .entity(messageString)
