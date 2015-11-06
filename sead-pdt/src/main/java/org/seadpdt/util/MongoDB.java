@@ -22,12 +22,14 @@
 
 package org.seadpdt.util;
 
+import com.mongodb.DB;
 import com.mongodb.MongoClient;
 import com.mongodb.client.MongoDatabase;
 
 public class MongoDB {
 
 	static public MongoClient mongoClientInstance = null;
+	static public MongoClient mongoOREClientInstance = null;
 	public static String researchObjects = "ro";
 	public static String people="people";
 	public static String repositories = "repo";
@@ -37,7 +39,7 @@ public class MongoDB {
 	public static synchronized MongoClient getMongoClientInstance() {
 	    if (mongoClientInstance == null) {
 	        try {
-	            mongoClientInstance = new MongoClient();
+	            mongoClientInstance = new MongoClient(Constants.mongoHost, Constants.mongoPort);
 	        } catch (Exception e) {
 	            e.printStackTrace();
 	        }
@@ -45,13 +47,30 @@ public class MongoDB {
 	    return mongoClientInstance;
 	}
 
-	static public MongoDatabase getServicesDB() {
+    public static synchronized MongoClient getMongoOREClientInstance() {
+        if (mongoOREClientInstance == null) {
+            try {
+                mongoOREClientInstance = new MongoClient(Constants.mongoOreHost, Constants.mongoOrePort);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        return mongoOREClientInstance;
+    }
+
+
+    static public MongoDatabase getServicesDB() {
 		MongoDatabase db = getMongoClientInstance().getDatabase(Constants.pdtDbName);
 		return db;
 	}
 
     static public MongoDatabase geMetaGenDB() {
         MongoDatabase db = getMongoClientInstance().getDatabase(Constants.metaDbName);
+        return db;
+    }
+
+    static public DB geOreDB() {
+        DB db = getMongoOREClientInstance().getDB(Constants.oreDbName);
         return db;
     }
 }

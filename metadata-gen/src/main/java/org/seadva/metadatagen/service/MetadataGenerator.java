@@ -121,7 +121,7 @@ public class MetadataGenerator {
             Document oreMapDocument = Document.parse(response
                     .getEntity(String.class));
             ObjectId mapId = new ObjectId();
-            oreMapDocument.put("_id", mapId);
+            //oreMapDocument.put("_id", mapId);
 
             //Update 'actionable' identifiers for map and aggregation:
             //Note these changes retain the tag-style identifier for the aggregation created by the space
@@ -137,6 +137,7 @@ public class MetadataGenerator {
 
             ClientResponse postResponse = pdtWebService.path("researchobjects")
                     .path("/oremap")
+                    .queryParam("objectId", mapId.toString())
                     .accept("application/json")
                     .type("application/json")
                     .post(ClientResponse.class, oreMapDocument.toJson().toString());
