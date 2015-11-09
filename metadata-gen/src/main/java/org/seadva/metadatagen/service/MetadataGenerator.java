@@ -32,6 +32,7 @@ import org.bson.Document;
 import org.bson.types.ObjectId;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.seadva.metadatagen.metagen.MetadataGen;
 import org.seadva.metadatagen.metagen.impl.FGDCMetadataGen;
 import org.seadva.metadatagen.util.Constants;
 
@@ -115,6 +116,7 @@ public class MetadataGenerator {
                     .get(ClientResponse.class);
 
             if (response.getStatus() != 200) {
+                System.out.println(MetadataGen.class.getName() + ": Error while retrieving OREMap from Project Space - Response : " + response.getStatus());
                 throw new RuntimeException("" + response.getStatus());
             }
 
@@ -145,9 +147,11 @@ public class MetadataGenerator {
             if(postResponse.getStatus() == 200) {
                 return Response.ok(new JSONObject().put("id", mapId).toString()).build();
             } else {
+                System.out.println(MetadataGen.class.getName() + ": Error while persisting OREMap in PDT - Response : " + postResponse.getStatus());
                 return Response.serverError().build();
             }
         } else {
+            System.out.println(MetadataGen.class.getName() + ": Bad Request : " + messageString);
             return Response.status(ClientResponse.Status.BAD_REQUEST)
                     .entity(messageString)
                     .build();
