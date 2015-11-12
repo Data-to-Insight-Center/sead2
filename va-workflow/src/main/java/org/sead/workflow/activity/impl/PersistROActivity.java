@@ -86,4 +86,25 @@ public class PersistROActivity extends AbstractWorkflowActivity {
 
     }
 
+    @Override
+    public void rollback(SeadWorkflowContext context, SeadWorkflowConfig config) {
+
+        HashMap<String, String> activityParams = new HashMap<String, String>();
+        for(SeadWorkflowActivity activity : config.getActivities()){
+            AbstractWorkflowActivity abstractActivity = (AbstractWorkflowActivity)activity;
+            if(abstractActivity.activityName.equals(activityName)){
+                activityParams = abstractActivity.params;
+                break;
+            }
+        }
+
+        String pdtUrl = activityParams.get("pdtUrl");
+        WebResource webResource = Client.create().resource(pdtUrl);
+        ClientResponse response = webResource
+                .path(context.getCollectionId())
+                .accept("application/json")
+                .type("application/json")
+                .delete(ClientResponse.class);
+    }
+
 }

@@ -42,17 +42,11 @@ import java.util.*;
 public class FGDCMetadataGen extends BaseMetadataGen {
 
 
-    static MongoCollection<Document> fgdcCollection;
-    static MongoClient mongoClient;
-    static MongoDatabase db;
     static WebResource pdtWebService;
 
     private String doi;
 
     static {
-        mongoClient = new MongoClient();
-        db = mongoClient.getDatabase(Constants.metagenDbName);
-        fgdcCollection = db.getCollection(Constants.dbFgdcCollection);
         pdtWebService = Client.create().resource(Constants.pdtURL);
     }
 
@@ -73,8 +67,6 @@ public class FGDCMetadataGen extends BaseMetadataGen {
 
     @Override
     public String generateMetadata(String id){
-
-        fgdcCollection.deleteMany(new Document("@id", id));
 
         ClientResponse roResponse = pdtWebService.path("researchobjects")
                 .path(id)
@@ -131,11 +123,6 @@ public class FGDCMetadataGen extends BaseMetadataGen {
 
         fgdcXML = fgdcXML.replace("<metadata>","<metadata xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"" +
                 " xsi:noNamespaceSchemaLocation=\"http://www.fgdc.gov/metadata/fgdc-std-001-1998.xsd\">");
-
-        Document document = new Document();
-        document.put("@id", id);
-        document.put("metadata", fgdcXML);
-        fgdcCollection.insertOne(document);
 
         return fgdcXML;
 

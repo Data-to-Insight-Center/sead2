@@ -1,0 +1,184 @@
+blockquote {
+	border-left: 3px solid #f3882a;
+}
+
+.spacious-button, input[type="reset"], input[type="button"], input[type="submit"],
+	button {
+	background-color: #f3882a;
+}
+
+a {
+	color: #f3882a;
+}
+
+#site-title a:hover {
+	color: #f3882a;
+}
+
+/*change of um-style.css*/
+th, td {
+	border: 0px dashed #EAEAEA !important;
+	padding: 6px 10px;
+}
+
+/*Main Navigation*/
+.main-navigation ul li.current_page_item a, .main-navigation ul li:hover>a
+	{
+	color: #f3882a;
+}
+
+.main-navigation ul li ul {
+	border-top: 1px solid #f3882a;
+}
+
+.main-navigation ul li ul li a:hover, .main-navigation ul li ul li:hover>a,
+	.main-navigation ul li.current-menu-item ul li a:hover {
+	color: #f3882a;
+}
+
+.main-navigation a {
+	color: #ffffff;
+}
+
+.main-navigation ul li ul li a {
+	color: #ffffff;
+}
+
+.main-navigation li, .small-menu li {
+	font-family: "Raleway";
+}
+
+#site-title a {
+	font-size: 26px;
+}
+
+#site-description {
+	font-size: 18px;
+}
+
+.main-navigation ul li a {
+	font-size: 18px;
+}
+
+.main-navigation ul li ul li a {
+	font-size: 14px;
+}
+
+#featured-slider 
+.entry-title span {
+	font-size: 24px;
+}
+
+#featured-slider .entry-content p {
+	font-size: 14px;
+}
+
+#featured-slider  
+.header-post-title-class {
+	font-size: 18px;
+}
+
+.post .entry-title, .page .entry-title, .widget_featured_posts .tg-one-half .entry-title
+	{
+	font-size: 20px;
+}
+
+.site-header .menu-toggle:hover {
+	background: #f3882a;
+}
+
+.main-small-navigation li:hover {
+	background: #f3882a;
+}
+
+.main-small-navigation ul>.current_page_item, .main-small-navigation ul>.current-menu-item
+	{
+	background: #f3882a;
+}
+
+.main-navigation a:hover, .main-navigation ul li.current-menu-item a,
+	.main-navigation ul li.current_page_ancestor a, .main-navigation ul li.current-menu-ancestor a,
+	.main-navigation ul li.current_page_item a, .main-navigation ul li:hover>a
+	{
+	color: #f3882a;
+}
+
+.menu-item-has-children>a:after {
+	/* color: #FFFFFF; */
+	content: ' \25be' !important;
+}
+
+.entry-content a, .entry-content p a {
+	text-decoration: none !important;
+}
+
+/*Footer Area*/
+.footer-widgets-area a:hover {
+	color: #f3882a !important;
+}
+
+.footer-socket-wrapper .copyright a:hover {
+	color: #f3882a;
+}
+
+a#back-top:before {
+	background-color: #f3882a;
+}
+
+a#scroll-up {
+	background-color: #f3882a;
+}
+
+#search-form span {
+	background-color: #f3882a;
+}
+
+.entry-meta {
+	font-size: 12px;
+}
+
+.read-more, .more-link {
+	font-size: 12px;
+}
+
+#colophon, #colophon p {
+	font-size: 12px;
+}
+
+.footer-socket-wrapper .copyright, .footer-socket-wrapper .copyright a {
+	color: #ffffff;
+}
+
+#colophon .small-menu a {
+	color: #ffffff;
+}
+
+.footer-socket-wrapper {
+	background-color: #0b5ca3;
+}
+
+#connect-orcid-button{
+	border: 1px solid #D3D3D3;
+	padding: .3em;
+	background-color: #fff;
+	border-radius: 8px;
+	box-shadow: 1px 1px 3px #999;
+	cursor: pointer;
+	color: #999;
+	font-weight: bold;
+	font-size: .8em;
+	line-height: 24px;
+	vertical-align: middle;
+}
+
+#connect-orcid-button:hover{
+	border: 1px solid #338caf;
+	color: #338caf;
+}
+
+#orcid-id-logo{
+	display: block;
+	margin: 0 .5em 0 0;
+	padding: 0;
+	float: left;
+}

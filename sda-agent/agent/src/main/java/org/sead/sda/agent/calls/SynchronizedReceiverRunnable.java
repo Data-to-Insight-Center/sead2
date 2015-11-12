@@ -98,11 +98,20 @@ public class SynchronizedReceiverRunnable implements Runnable {
                     e.printStackTrace();
                 }
                 try {
-                    Thread.sleep(5000);
+                    // wait between 2 RO publishes
+                    Thread.sleep(PropertiesReader.roPublishInterval * 1000);
                 } catch (InterruptedException e) {
                     // ignore
                 }
             }
+
+            try {
+                // wait between 2 fetches from API
+                Thread.sleep(PropertiesReader.roFetchInterval * 1000);
+            } catch (InterruptedException e) {
+                // ignore
+            }
+
         }
     }
 

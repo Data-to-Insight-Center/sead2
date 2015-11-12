@@ -21,11 +21,6 @@
 
 package org.seadva.metadatagen.service;
 
-import com.mongodb.BasicDBObject;
-import com.mongodb.MongoClient;
-import com.mongodb.client.FindIterable;
-import com.mongodb.client.MongoCollection;
-import com.mongodb.client.MongoDatabase;
 import com.sun.jersey.api.client.*;
 import com.sun.jersey.api.client.filter.ClientFilter;
 import org.bson.Document;
@@ -39,7 +34,6 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
-import java.net.URI;
 import java.net.URISyntaxException;
 
 /**
@@ -48,98 +42,46 @@ import java.net.URISyntaxException;
 @Path("rest")
 public class MetadataGenerator {
 
-    static MongoCollection<Document> oreMapCollection;
-    static MongoCollection<Document> fgdcCollection;
-    static MongoClient mongoClient;
-    static MongoDatabase db;
     static WebResource pdtWebService;
 
     static {
-        mongoClient = new MongoClient();
-        db = mongoClient.getDatabase(Constants.metagenDbName);
-        oreMapCollection = db.getCollection(Constants.dbOreCollection);
-        fgdcCollection = db.getCollection(Constants.dbFgdcCollection);
         pdtWebService = Client.create().resource(Constants.pdtURL);
     }
 
     @POST
-    @Path("/{id}/metadata/{type}")
+    @Path("/{id}/fgdc")
     @Produces(MediaType.APPLICATION_XML)
-    public Response putMetadata(@PathParam("id") String entityId,
-                          @PathParam("type") String metadataType,
+    public Response addFgdc(@PathParam("id") String id,
                           String doi) throws URISyntaxException {
-
-        String errorMsg ="<error>\n" +
-                "<description>EntityId and type(ORE/SIP/FGDC) are required path parameters. Please specify.</description>\n" +
-                "<traceInformation>\n" +
-                "method: metadata-gen/rest/{id}/metadata/{type} \n" +
-                "</traceInformation>\n" +
-                "</error>";
-
-        if(entityId == null || metadataType == null){
+        if (id == null) {
+            return Response.status(Response.Status.BAD_REQUEST).type(MediaType.APPLICATION_XML).build();
+        }
+        if (doi == null || doi.equals("")) {
+            String errorMsg = "<error><description>DOI is needed to create FGDC metadata.</description></error>";
             return Response.status(Response.Status.BAD_REQUEST).entity(errorMsg).type(MediaType.APPLICATION_XML).build();
         }
 
-        if(metadataType.equalsIgnoreCase("FGDC")){
-            if(doi == null || doi.equals("")){
-                errorMsg ="<error><description>DOI is needed to create FGDC metadata.</description></error>";
-                return Response.status(Response.Status.BAD_REQUEST).entity(errorMsg).type(MediaType.APPLICATION_XML).build();
+        FGDCMetadataGen fgdcMetadataGen = new FGDCMetadataGen(doi);
+        String response = fgdcMetadataGen.generateMetadata(id);
+
+        if (response.equals("")) {
+            return Response.status(ClientResponse.Status.NOT_FOUND).build();
+        } else {
+            ClientResponse postResponse = pdtWebService.path("researchobjects")
+                    .path(id + "/fgdc")
+                    .accept("application/xml")
+                    .type("application/xml")
+                    .post(ClientResponse.class, response);
+            if (postResponse.getStatus() == 200) {
+                return Response.ok(response).build();
+            } else {
+                return Response.serverError().build();
             }
-        }
-
-        String response = null;
-
-        if(metadataType.equalsIgnoreCase("FGDC")){
-            FGDCMetadataGen fgdcMetadataGen = new FGDCMetadataGen(doi);
-            response = fgdcMetadataGen.generateMetadata(entityId);
-        }
-
-        if(response == null){
-            errorMsg ="<error><description>Metadata type " + metadataType + " is not supported.</description></error>";
-            return Response.status(Response.Status.BAD_REQUEST).entity(errorMsg).type(MediaType.APPLICATION_XML).build();
-        } else if(response.equals("")) {
-            return Response.status(ClientResponse.Status.NOT_FOUND).build();
-        } else {
-            return Response.ok(response).build();
-        }
-    }
-
-    
-    @GET
-    @Path("/{id}/metadata/{type}")
-    @Produces(MediaType.APPLICATION_XML)
-    public Response getMetadata(@PathParam("id") String entityId,
-                          @PathParam("type") String metadataType) throws URISyntaxException {
-
-        String errorMsg ="<error>\n" +
-                "<description>EntityId and type(ORE/SIP/FGDC) are required path parameters. Please specify.</description>\n" +
-                "<traceInformation>\n" +
-                "method: metadata-gen/rest/{id}/metadata/{type} \n" +
-                "</traceInformation>\n" +
-                "</error>";
-
-        if(entityId == null || metadataType == null){
-            return Response.status(Response.Status.BAD_REQUEST).entity(errorMsg).type(MediaType.APPLICATION_XML).build();
-        }
-
-        FindIterable<Document> iter = null;
-
-        if(metadataType.equalsIgnoreCase("FGDC")){
-            iter = fgdcCollection.find(new Document("@id", entityId));
-        }
-
-        if(iter == null){
-            errorMsg ="<error><description>Metadata type " + metadataType + " is not supported.</description></error>";
-            return Response.status(Response.Status.BAD_REQUEST).entity(errorMsg).type(MediaType.APPLICATION_XML).build();
-        } else if(iter.first() == null) {
-            return Response.status(ClientResponse.Status.NOT_FOUND).build();
-        } else {
-            return Response.ok(iter.first().get("metadata").toString()).build();
         }
     }
 
     @POST
-    @Path("/putoremap")
+    @Path("/oremap")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Response putOreMap(String publicationRequestString, @QueryParam("requestUrl") String requestURL) throws JSONException {
@@ -167,13 +109,14 @@ public class MetadataGenerator {
                     .get(ClientResponse.class);
 
             if (response.getStatus() != 200) {
+                System.out.println(MetadataGenerator.class.getName() + ": Error while retrieving OREMap from Project Space - Response : " + response.getStatus());
                 throw new RuntimeException("" + response.getStatus());
             }
 
             Document oreMapDocument = Document.parse(response
                     .getEntity(String.class));
             ObjectId mapId = new ObjectId();
-            oreMapDocument.put("_id", mapId);
+            //oreMapDocument.put("_id", mapId);
 
             //Update 'actionable' identifiers for map and aggregation:
             //Note these changes retain the tag-style identifier for the aggregation created by the space
@@ -186,68 +129,27 @@ public class MetadataGenerator {
 
             //@id of describes object (the aggregation)  in map
             ((Document)oreMapDocument.get("describes")).put("@id", newMapURL + "#aggregation");
-            oreMapCollection.insertOne(oreMapDocument);
 
-            URI resource = null;
-            try {
-                resource = new URI("./" + ID);
-            } catch (URISyntaxException e) {
-                // Should not happen given simple ids
-                e.printStackTrace();
+            ClientResponse postResponse = pdtWebService.path("researchobjects")
+                    .path("/oremap")
+                    .queryParam("objectId", mapId.toString())
+                    .accept("application/json")
+                    .type("application/json")
+                    .post(ClientResponse.class, oreMapDocument.toJson().toString());
+
+            if(postResponse.getStatus() == 200) {
+                return Response.ok(new JSONObject().put("id", mapId).toString()).build();
+            } else {
+                System.out.println(MetadataGenerator.class.getName() + ": Error while persisting OREMap in PDT - Response : " + postResponse.getStatus());
+                return Response.serverError().build();
             }
-            return Response.ok(new JSONObject().put("id", mapId).toString()).build();
         } else {
+            System.out.println(MetadataGenerator.class.getName() + ": Bad Request : " + messageString);
             return Response.status(ClientResponse.Status.BAD_REQUEST)
                     .entity(messageString)
                     .build();
         }
     }
-
-    @GET
-    @Path("/{id}/oremap")
-    @Produces(MediaType.APPLICATION_JSON)
-    public Response getROOREMap(@PathParam("id") String id) throws JSONException {
-
-        ClientResponse roResponse = pdtWebService.path("researchobjects")
-                .path(id + "/authoratativeMap")
-                .accept("application/json")
-                .type("application/json")
-                .get(ClientResponse.class);
-
-        if(roResponse.getStatus() != 200) {
-            return Response
-                    .status(javax.ws.rs.core.Response.Status.NOT_FOUND)
-                    .entity(new JSONObject().put("Error", "Cannot find RO with id " + id))
-                    .build();
-        }
-
-        Document roDoc = Document.parse(roResponse.getEntity(String.class));
-
-
-        //FindIterable<Document> iter = oreMapCollection.find(new Document("describes.Identifier", id));
-
-        /*Document document = iter.first();
-        if(document==null) {
-            return Response.status(javax.ws.rs.core.Response.Status.NOT_FOUND).build();
-        }*/
-        ObjectId mapId = new ObjectId(roDoc.get("mapId").toString());
-
-        FindIterable<Document> iter = oreMapCollection.find(new Document("_id", mapId));
-        Document map = iter.first();
-
-        if(iter.first()==null) {
-            return Response
-                    .status(javax.ws.rs.core.Response.Status.NOT_FOUND)
-                    .entity(new JSONObject().put("Error", "Cannot find ORE with id " + id))
-                    .build();
-        }
-
-        //Internal meaning only
-        map.remove("_id");
-        //document.remove("_id");
-        return Response.ok(map.toJson()).build();
-    }
-
 
     class RedirectFilter extends ClientFilter {
 

@@ -35,4 +35,10 @@ public interface SeadWorkflowActivity {
 
     public void setName(String name);
 
+    public void setTransactional(boolean flag);
+
+    public boolean getTransactional();
+
+    public void rollback(SeadWorkflowContext context, SeadWorkflowConfig config);
+
 }

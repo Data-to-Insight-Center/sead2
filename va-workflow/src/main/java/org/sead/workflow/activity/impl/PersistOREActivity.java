@@ -61,7 +61,7 @@ public class PersistOREActivity extends AbstractWorkflowActivity {
         // Call RO Info System to persist the JSONLD RO
         WebResource webResource = Client.create().resource(metadatagenUrl);
         ClientResponse response = webResource
-                .path("rest/putoremap")
+                .path("rest/oremap")
                 .queryParam("requestUrl", URLEncoder.encode(context.getProperty(Constants.REQUEST_URL)))
                 .accept("application/json")
                 .type("application/json")
@@ -85,6 +85,26 @@ public class PersistOREActivity extends AbstractWorkflowActivity {
 
         System.out.println("=====================================\n");
 
+    }
+
+    @Override
+    public void rollback(SeadWorkflowContext context, SeadWorkflowConfig config) {
+        HashMap<String, String> activityParams = new HashMap<String, String>();
+        for(SeadWorkflowActivity activity : config.getActivities()){
+            AbstractWorkflowActivity abstractActivity = (AbstractWorkflowActivity)activity;
+            if(abstractActivity.activityName.equals(activityName)){
+                activityParams = abstractActivity.params;
+                break;
+            }
+        }
+
+        String pdtUrl = activityParams.get("pdtUrl");
+        WebResource webResource = Client.create().resource(pdtUrl);
+        ClientResponse response = webResource
+                .path(context.getProperty(Constants.ORE_ID)+ "/oremap")
+                .accept("application/json")
+                .type("application/json")
+                .delete(ClientResponse.class);
     }
 
 }

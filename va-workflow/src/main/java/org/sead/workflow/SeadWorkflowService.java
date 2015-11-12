@@ -28,6 +28,8 @@ import org.json.JSONObject;
 import org.sead.workflow.activity.SeadWorkflowActivity;
 import org.sead.workflow.config.SeadWorkflowConfig;
 import org.sead.workflow.context.SeadWorkflowContext;
+import org.sead.workflow.exception.SeadWorkflowException;
+import org.sead.workflow.util.Constants;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
@@ -35,9 +37,6 @@ import javax.ws.rs.core.Response;
 import javax.xml.namespace.QName;
 import java.io.InputStream;
 import java.util.Iterator;
-
-import org.sead.workflow.exception.SeadWorkflowException;
-import org.sead.workflow.util.Constants;
 
 @Path("service")
 public class SeadWorkflowService {
@@ -75,6 +74,7 @@ public class SeadWorkflowService {
                 Class c = Thread.currentThread().getContextClassLoader().loadClass(className);
                 SeadWorkflowActivity wfActivity = (SeadWorkflowActivity) c.newInstance();
                 wfActivity.setName(activity.getAttributeValue(new QName("name")));
+                wfActivity.setTransactional(activity.getAttributeValue(new QName("transactional")).equalsIgnoreCase(Constants.TRUE) ? true : false);
                 // read activity parameters
                 paramItr = activity.getChildrenWithLocalName("parameter");
                 while (paramItr.hasNext()) {
@@ -133,15 +133,24 @@ public class SeadWorkflowService {
 
         String response = "";
 
+        int executedActivities = 0;
         for (SeadWorkflowActivity activity : SeadWorkflowService.config.getActivities()) {
             // execute activities
             try {
                 activity.execute(context, SeadWorkflowService.config);
+                executedActivities++;
             } catch (SeadWorkflowException e) {
                 System.out.println("*** WorkflowThread : exception... ***");
                 e.printStackTrace();
-                //TODO : add error handling
                 System.out.println("*** WorkflowThread : Breaking the MicroService loop ***");
+
+                System.out.println("*** WorkflowThread : Rollback previous activities ***");
+                for(int i = executedActivities - 1 ; i > -1 ; i--){
+                    if(SeadWorkflowService.config.getActivities().get(i).getTransactional() == true) {
+                        System.out.println("*** WorkflowThread : Rollback " + SeadWorkflowService.config.getActivities().get(i).getClass().getName());
+                        SeadWorkflowService.config.getActivities().get(i).rollback(context, SeadWorkflowService.config);
+                    }
+                }
 
                 response = "{\"response\": \"failure\", \"message\": \"" + e.getMessage() + "\"}";
                 System.out.println("-----------------------------------");

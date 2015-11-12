@@ -134,7 +134,7 @@ public class ResearchObjectsImpl extends ResearchObjects {
         } else {
             // Calling MetadataGenerator to generate FGDC metadata for the RO
             ClientResponse metagenResponse = metadataGenWebService.path("rest")
-                    .path(id + "/metadata/fgdc")
+                    .path(id + "/fgdc")
                     .accept("application/xml")
                     .type("application/xml")
                     .post(ClientResponse.class, message);
@@ -238,9 +238,9 @@ public class ResearchObjectsImpl extends ResearchObjects {
 	@Path("/{id}/oremap")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response getROOREMap(@PathParam("id") String id) {
-        WebResource webResource = metadataGenWebService;
+        WebResource webResource = pdtWebService;
 
-        ClientResponse response = webResource.path("rest")
+        ClientResponse response = webResource.path("researchobjects")
                 .path(id + "/oremap")
                 .accept("application/json")
                 .type("application/json")
@@ -254,10 +254,10 @@ public class ResearchObjectsImpl extends ResearchObjects {
     @Path("/{id}/fgdc")
     @Produces(MediaType.APPLICATION_XML)
     public Response getFgdc(@PathParam("id") String id) {
-        WebResource webResource = metadataGenWebService;
+        WebResource webResource = pdtWebService;
 
-        ClientResponse response = webResource.path("rest")
-                .path(id + "/metadata/fgdc")
+        ClientResponse response = webResource.path("researchobjects")
+                .path(id + "/fgdc")
                 .accept("application/xml")
                 .type("application/xml")
                 .get(ClientResponse.class);

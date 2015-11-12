@@ -40,6 +40,9 @@ public class PropertiesReader {
     public static String doiEndpoint;
     public static String isDoiPermanent;
 
+    public static int roPublishInterval;
+    public static int roFetchInterval;
+
     public static void init(String configPath) {
         try {
             loadConfigurations(configPath);
@@ -66,6 +69,8 @@ public class PropertiesReader {
         sdaPath = properties.getProperty("sda.path");
         doiEndpoint = properties.getProperty("doi.service.url");
         isDoiPermanent = properties.getProperty("doi.permanent");
+        roPublishInterval = Integer.parseInt(properties.getProperty("ro.publish.interval.secs"));
+        roFetchInterval = Integer.parseInt(properties.getProperty("ro.fetch.interval.secs"));
     }
 
 }

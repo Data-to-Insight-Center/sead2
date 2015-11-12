@@ -31,4 +31,8 @@ public class ErrRecoveryActivity extends AbstractWorkflowActivity {
         System.out.println("Executing activity : " + activityName);
     }
 
+    @Override
+    public void rollback(SeadWorkflowContext context, SeadWorkflowConfig config) {
+    }
+
 }

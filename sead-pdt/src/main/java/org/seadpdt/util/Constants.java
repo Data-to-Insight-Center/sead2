@@ -27,8 +27,14 @@ import org.apache.commons.io.IOUtils;
 
 public class Constants {
 
+    public static String mongoHost;
+    public static int mongoPort;
+    public static String mongoOreHost;
+    public static int mongoOrePort;
+
     public static String pdtDbName;
     public static String metaDbName;
+    public static String oreDbName;
 
     static {
         try {
@@ -54,11 +60,27 @@ public class Constants {
             String name = pairs[i++].trim();
             String value = pairs[i++].trim();
 
+            if(name.equals("mongo.host")){
+                mongoHost = value;
+            }
+            if(name.equals("mongo.port")){
+                mongoPort = Integer.parseInt(value);
+            }
             if(name.equals("pdt.db.name")){
                 pdtDbName = value;
             }
-            if(name.equals("metagen.db.name")){
+            if(name.equals("metadata.db.name")){
                 metaDbName = value;
+            }
+
+            if(name.equals("mongo.ore.host")){
+                mongoOreHost = value;
+            }
+            if(name.equals("mongo.ore.port")){
+                mongoOrePort = Integer.parseInt(value);
+            }
+            if(name.equals("ore.db.name")){
+                oreDbName = value;
             }
         }
     }
