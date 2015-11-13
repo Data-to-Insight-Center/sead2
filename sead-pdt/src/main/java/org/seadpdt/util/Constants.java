@@ -59,6 +59,5 @@ public class Constants {
 		mongoOrePort = Integer.parseInt(props.getProperty("mongo.ore.port",
 				"27018"));
 		oreDbName = props.getProperty("ore.db.name", "sead-ore");
-		props.list(System.out);
 	}
 }
