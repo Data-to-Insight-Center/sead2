@@ -1,10 +1,7 @@
 package org.seadva.services.util;
 
-import org.apache.commons.io.IOUtils;
-
 import java.io.IOException;
-import java.io.StringWriter;
-
+import java.util.Properties;
 
 public class Constants {
 
@@ -15,39 +12,17 @@ public class Constants {
     public static String doi_password;
 
     static {
-
-        try {
-            StringWriter writer = new StringWriter();
-            IOUtils.copy(Constants.class.getResourceAsStream("doi.properties")
-                     , writer);
-
-            String content = writer.toString();
-            String[] pairs = content.trim().split(
-                    "\n|\\=");
-
-            for (int i = 0; i + 1 < pairs.length;) {
-                String name = pairs[i++].trim();
-                String value = pairs[i++].trim();
-                if (name.equals("ezid.url")) {
-                    ezid_url = value;
-                }
-                if (name.equals("doi.shoulder.prod")) {
-                    doi_shoulder_prod = value;
-                }
-                if (name.equals("doi.shoulder.test")) {
-                    doi_shoulder_test = value;
-                }
-                if (name.equals("doi.user")) {
-                    doi_username = value;
-                }
-                if (name.equals("doi.pwd")) {
-                    doi_password = value;
-                }
-            }
-
-        } catch (IOException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-        }
-
+            Properties props= new Properties();
+            try {
+				props.load(Constants.class.getResourceAsStream("doi.properties"));
+			} catch (IOException e) {
+				System.err.println("Unable to load doi.properties");
+				e.printStackTrace();
+			}
+            ezid_url = props.getProperty("ezid.url", "http://ezid.lib.purdue.edu"); 
+            doi_shoulder_prod=props.getProperty("doi.shoulder.prod","doi:10.5967/M0" );
+            doi_shoulder_test=props.getProperty("doi.shoulder.test","doi:10.5072/FK2" );
+            doi_username=props.getProperty("doi.user", "apitest");
+            doi_password=props.getProperty("doi.pwd", "apitest");
     }
 }
