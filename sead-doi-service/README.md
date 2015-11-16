@@ -1,7 +1,7 @@
 SEAD DOI Service
 ================
 
-SEAD DOI Service is created as a wrapper for the EZID REST service which can be used to create and update DOIs. 
+SEAD DOI Service is created as a wrapper for the EZID REST service which can be used to create and update DOIs. Uses the DataOne EZID library (https://github.com/NCEAS/ezid) with an update to a newer http client library required to use ezid.lib.purdue.edu. (No longer requires CURL).
 
 Steps to build:
 ---------------
@@ -27,6 +27,8 @@ Steps to deploy on Tomcat:
 * Now the DOI Service API should be accessible through the following URL.
 
 	http://host:port/sead-doi-service/..
+
+* Also proxied through sead-c3pr at /api/doi if sead-c3pr is deployed.
 
 
 Create DOI using REST Service:

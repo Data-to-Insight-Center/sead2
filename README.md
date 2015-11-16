@@ -16,6 +16,8 @@ This should build all micro services.
 Steps to deploy on Tomcat:
 --------------------------
 
+The services require two running instances of mongoDB, on hosts/ports defined in the sead-pdt default.properties file.
+
 * Copy the following .war files from relevant target directories into TOMCAT_HOME/webapps.
 
 sead-c3pr.war
@@ -23,7 +25,7 @@ sead-mm.war
 sead-pdt.war
 va-workflow.war
 metadata-gen.war
-sead-doi-service.war
+
 
 * Fix the endpoint URL's in following configuration files under webapps.
 
