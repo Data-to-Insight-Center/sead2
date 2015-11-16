@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<metadata>
+  <groupId>edu.ucsb.nceas</groupId>
+  <artifactId>ezid</artifactId>
+  <versioning>
+    <versions>
+      <version>1.0.2-SNAPSHOT</version>
+    </versions>
+    <lastUpdated>20151116144831</lastUpdated>
+  </versioning>
+</metadata>
