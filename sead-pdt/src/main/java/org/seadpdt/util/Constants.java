@@ -22,10 +22,7 @@ package org.seadpdt.util;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.StringWriter;
 import java.util.Properties;
-
-import org.apache.commons.io.IOUtils;
 
 public class Constants {
 
@@ -37,6 +34,8 @@ public class Constants {
 	public static String pdtDbName;
 	public static String metaDbName;
 	public static String oreDbName;
+	
+	public static String serviceName = "SEAD-C3PR";
 
 	static {
 		try {

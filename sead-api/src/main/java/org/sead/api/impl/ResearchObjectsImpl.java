@@ -94,6 +94,21 @@ public class ResearchObjectsImpl extends ResearchObjects {
         return Response.status(response.getStatus()).entity(response
                 .getEntity(new GenericType<String>() {})).cacheControl(control).build();
     }
+    
+    @GET
+    @Path("/new/")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getNewROsList() {
+        WebResource webResource = pdtWebService;
+
+        ClientResponse response = webResource.path("researchobjects/new/")
+                .accept("application/json")
+                .type("application/json")
+                .get(ClientResponse.class);
+
+        return Response.status(response.getStatus()).entity(response
+                .getEntity(new GenericType<String>() {})).cacheControl(control).build();
+    }
 
     @GET
     @Path("/{id}")

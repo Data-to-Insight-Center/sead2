@@ -41,27 +41,16 @@ import org.bson.Document;
 import org.bson.types.BasicBSONList;
 import org.bson.types.ObjectId;
 import org.json.JSONArray;
-
 import org.seadpdt.people.Profile;
 import org.seadpdt.people.Provider;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.seadpdt.util.Constants;
 import org.seadpdt.util.MongoDB;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.CacheControl;
 import javax.ws.rs.core.MediaType;
-
-import javax.ws.rs.core.Response;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.sql.Date;
-import java.text.DateFormat;
-import java.util.*;
-
 import javax.ws.rs.core.Response;
 
 import java.io.ByteArrayInputStream;
@@ -80,7 +69,6 @@ public class ROServices {
 	private MongoDatabase metaDb = null;
 	private DB oreDb = null;
 	private MongoCollection<Document> publicationsCollection = null;
-	private MongoCollection<Document> peopleCollection = null;
 	private MongoCollection<Document> repositoriesCollection = null;
 	private MongoCollection<Document> oreMapCollection = null;
 	private GridFS oreMapBucket = null;
@@ -92,7 +80,7 @@ public class ROServices {
 		metaDb = MongoDB.geMetaGenDB();
 		oreDb = MongoDB.geOreDB();
 		publicationsCollection = db.getCollection(MongoDB.researchObjects);
-		peopleCollection = db.getCollection(MongoDB.people);
+
 		repositoriesCollection = db.getCollection(MongoDB.repositories);
 		oreMapCollection = metaDb.getCollection(MongoDB.oreMap);
 		oreMapBucket = new GridFS(oreDb, MongoDB.oreMap);
@@ -167,7 +155,7 @@ public class ROServices {
 					.add("date",
 							DateFormat.getDateTimeInstance().format(
 									new Date(System.currentTimeMillis())))
-					.add("reporter", "SEAD-CP")
+					.add("reporter", Constants.serviceName)
 					.add("stage", "Receipt Acknowledged")
 					.add("message",
 							"request recorded and processing will begin").get();
@@ -206,6 +194,29 @@ public class ROServices {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response getROsList() {
 		FindIterable<Document> iter = publicationsCollection.find();
+		iter.projection(new Document("Status", 1).append("Repository", 1)
+				.append("Aggregation.Identifier", 1)
+				.append("Aggregation.Title", 1).append("_id", 0));
+		MongoCursor<Document> cursor = iter.iterator();
+		JSONArray array = new JSONArray();
+		while (cursor.hasNext()) {
+			array.put(JSON.parse(cursor.next().toJson()));
+		}
+		return Response.ok(array.toString()).cacheControl(control).build();
+	}
+	
+	@GET
+	@Path("/new/")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response getNewROsList() {
+		//Find ROs that have a status not from the services and don't include them :-)
+		Document reporterRule = new Document("$ne", Constants.serviceName);
+		Document reporter = new Document("reporter", reporterRule);
+		Document elem = new Document("$elemMatch", reporter);
+		Document not = new Document("$not", elem);
+		Document match= new Document("Status", not);
+
+		FindIterable<Document> iter = publicationsCollection.find(match);
 		iter.projection(new Document("Status", 1).append("Repository", 1)
 				.append("Aggregation.Identifier", 1)
 				.append("Aggregation.Title", 1).append("_id", 0));
@@ -432,16 +443,19 @@ public class ROServices {
 	private List<String> getOrganizationforPerson(String pID) {
 
 		List<String> orgs = new ArrayList<String>();
-
+		
 		Profile profile = Provider.findCanonicalId(pID);
+		
 		// If null, no chance that we have a profile...
 		if (profile != null) {
+			
 			Document profileDoc = PeopleServices.retrieveProfile(profile
 					.getIdentifier());
 
 			// NeverFail
 			if (profileDoc == null) {
 				// Handle per provider
+			
 				PeopleServices.registerPerson("{\"provider\": \""
 						+ profile.getProvider() + "\", \"identifier\":\""
 						+ profile.getIdentifier() + "\" }");
