@@ -149,7 +149,20 @@ public class PeopleServices {
 	@Path("/{id}")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response getPersonProfile(@PathParam("id") String id) {
-		Document document = retrieveProfile(id);
+		Profile profile = null;
+		try {
+			profile = Provider.findCanonicalId(id);
+		} catch (Exception e) {
+			return Response
+					.status(javax.ws.rs.core.Response.Status.CONFLICT)
+					.entity(new BasicDBObject("failure", "Ambiguous identifier"))
+					.build();
+		}
+		if (profile == null) {
+			return Response.status(javax.ws.rs.core.Response.Status.NOT_FOUND)
+					.build();
+		}
+		Document document = retrieveProfile(profile.getIdentifier());
 		if (document != null) {
 			return Response.ok(document.toJson()).cacheControl(control).build();
 		} else {
@@ -201,6 +214,20 @@ public class PeopleServices {
 	@DELETE
 	@Path("/{id}")
 	public Response unregisterPerson(@PathParam("id") String id) {
+		Profile profile = null;
+		try {
+			profile = Provider.findCanonicalId(id);
+		} catch (Exception e) {
+			return Response
+					.status(javax.ws.rs.core.Response.Status.CONFLICT)
+					.entity(new BasicDBObject("failure", "Ambiguous identifier"))
+					.build();
+		}
+		if (profile == null) {
+			return Response.status(javax.ws.rs.core.Response.Status.NOT_FOUND)
+					.build();
+		}
+		id = profile.getIdentifier();
 		DeleteResult result = peopleCollection
 				.deleteOne(new Document("@id", id));
 		if (result.getDeletedCount() == 0) {
@@ -229,20 +256,17 @@ public class PeopleServices {
 				.append("PersonalProfileDocument", 1).append("_id", 0);
 	}
 
-	static Document retrieveProfile(String id) {
-		System.out.println("Retrieving profile for: " + id);
+	private static Document retrieveProfile(String canonicalID) {
+
 		Document document = null;
-		Profile p = Provider.findCanonicalId(id);
-		if (p != null) {
-			id = p.getIdentifier();
 			FindIterable<Document> iter = peopleCollection.find(new Document(
-					"@id", id));
+					"@id", canonicalID));
 			iter.projection(getBasicPersonProjection());
 			if (iter.first() != null) {
 				document = iter.first();
 				document.put("@context", getPersonContext());
 			}
-		}
+		
 		return document;
 	}
 
