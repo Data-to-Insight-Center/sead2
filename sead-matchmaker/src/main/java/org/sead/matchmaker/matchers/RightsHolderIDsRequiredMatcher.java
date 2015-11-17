@@ -24,22 +24,30 @@ package org.sead.matchmaker.matchers;
 import org.bson.Document;
 import org.bson.types.BasicBSONList;
 import org.sead.matchmaker.Matcher;
+import org.sead.matchmaker.MatchmakerConstants;
 import org.sead.matchmaker.RuleResult;
+
+import com.sun.jersey.api.client.Client;
+import com.sun.jersey.api.client.ClientResponse;
+import com.sun.jersey.api.client.WebResource;
 
 import java.util.ArrayList;
 import java.util.Iterator;
 
-public class CreatorIDsRequiredMatcher implements Matcher {
+import javax.ws.rs.core.MediaType;
 
-	public RuleResult runRule(Document aggregation, BasicBSONList affiliations,
-			Document preferences, Document statsDocument, Document profile,
-			Object context) {
+public class RightsHolderIDsRequiredMatcher implements Matcher {
+
+	public RuleResult runRule(Document aggregation, Document rightsHolders,
+			BasicBSONList affiliations, Document preferences,
+			Document statsDocument, Document profile, Object context) {
 		RuleResult result = new RuleResult();
-		boolean idsRequired = profile.getBoolean("Creator IDs Required", false);
+		boolean idsRequired = profile.getBoolean("Rights Holder IDs Required",
+				false);
 		if (!idsRequired) {
 			return result;
 		}
-		Object creatorObject = aggregation.get("Creator");
+		Object creatorObject = aggregation.get("Rights Holder");
 		boolean atleastonecreator = false;
 		BasicBSONList nonIDscreators = new BasicBSONList();
 		if (creatorObject != null) {
@@ -67,7 +75,7 @@ public class CreatorIDsRequiredMatcher implements Matcher {
 		}
 
 		if (!atleastonecreator) {
-			result.setResult(-1, "No Creators found");
+			result.setResult(-1, "No Rights Holders found");
 			return result;
 		} else {
 			if (nonIDscreators.size() > 0) {
@@ -79,18 +87,19 @@ public class CreatorIDsRequiredMatcher implements Matcher {
 					missingIDs.append(name);
 				}
 
-				result.setResult(-1,
-						"Creators listed that do not have global identifiers (e.g. orcid.org/<id#>: "
+				result.setResult(
+						-1,
+						"Rights Holders listed that do not have global identifiers (e.g. orcid.org/<id#>: "
 								+ missingIDs.toString());
 			} else {
-				result.setResult(1, "All Creators have global IDs");
+				result.setResult(1, "All Rights Holders have global IDs");
 			}
 		}
 		return result;
 	}
 
 	public String getName() {
-		return "Creator IDs Required";
+		return "Rights Holder IDs Required";
 	}
 
 	public Document getDescription() {
@@ -108,12 +117,15 @@ public class CreatorIDsRequiredMatcher implements Matcher {
 	// null since we
 	// have no profiles
 	private String getInternalId(String personID) {
-		// ORCID
-		if (personID.startsWith("orcid.org/")) {
-			return personID.substring("orcid.org/".length());
+		WebResource pdtResource = Client.create().resource(
+				MatchmakerConstants.pdtUrl);
+		ClientResponse response = pdtResource
+				.path(MatchmakerConstants.PDT_PEOPLE + "/canonical/" + personID)
+				.accept(MediaType.TEXT_PLAIN).get(ClientResponse.class);
+		if (response.getStatus() == 200) {
+			return response.getEntity(String.class);
 		} else {
-			// Add other providers here
-			return null; // Unrecognized/no id/profile in system
+			return null;
 		}
 
 	}

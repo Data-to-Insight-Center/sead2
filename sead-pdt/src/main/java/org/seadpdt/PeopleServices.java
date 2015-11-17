@@ -237,6 +237,38 @@ public class PeopleServices {
 		}
 	}
 
+	/*
+	 * Convenience method to get the canonical ID associated with the given id
+	 * string
+	 * 
+	 * @result canonical form or 404 if not a recognized identifier, CONFLICT if
+	 * ambiguous
+	 * 
+	 * Note: does not imply that a profile has been retrieved for the ID Note:
+	 * not exposed via the sead-c3pr api / for internal use, e.g. by matchmaker
+	 * rightsholder rule
+	 */
+
+	@GET
+	@Path("/canonical/{id}")
+	@Produces(MediaType.TEXT_PLAIN)
+	public Response getCanonicalID(@PathParam("id") String id) {
+		Profile profile = null;
+		try {
+			profile = Provider.findCanonicalId(id);
+		} catch (Exception e) {
+			return Response
+					.status(javax.ws.rs.core.Response.Status.CONFLICT)
+					.entity(new BasicDBObject("failure", "Ambiguous identifier"))
+					.build();
+		}
+		if (profile == null) {
+			return Response.status(javax.ws.rs.core.Response.Status.NOT_FOUND)
+					.build();
+		}
+		return Response.ok(profile.getIdentifier()).build();
+	}
+
 	static private Document getPersonContext() {
 		Document contextDocument = new Document();
 		contextDocument.put("givenName", "http://schema.org/Person/givenName");
@@ -256,17 +288,17 @@ public class PeopleServices {
 				.append("PersonalProfileDocument", 1).append("_id", 0);
 	}
 
-	private static Document retrieveProfile(String canonicalID) {
+	static Document retrieveProfile(String canonicalID) {
 
 		Document document = null;
-			FindIterable<Document> iter = peopleCollection.find(new Document(
-					"@id", canonicalID));
-			iter.projection(getBasicPersonProjection());
-			if (iter.first() != null) {
-				document = iter.first();
-				document.put("@context", getPersonContext());
-			}
-		
+		FindIterable<Document> iter = peopleCollection.find(new Document("@id",
+				canonicalID));
+		iter.projection(getBasicPersonProjection());
+		if (iter.first() != null) {
+			document = iter.first();
+			document.put("@context", getPersonContext());
+		}
+
 		return document;
 	}
 

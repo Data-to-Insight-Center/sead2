@@ -26,7 +26,7 @@ import org.bson.types.BasicBSONList;
 
 public interface Matcher {
 
-    public RuleResult runRule(Document aggregation, BasicBSONList affiliations,
+    public RuleResult runRule(Document aggregation, Document rightsHolders, BasicBSONList affiliations,
                               Document preferences, Document stats, Document profile, Object context);
 
     public String getName();
