@@ -32,7 +32,15 @@ abstract public class Provider {
 
 	static private Map<String, Provider>providers = new HashMap<String, Provider>();
 	
-	public static void registerProvider(Provider p) {
+	static {
+	// Register Providers
+	Provider.registerProvider(new OrcidProvider());
+	Provider.registerProvider(new GooglePlusProvider());
+	Provider.registerProvider(new LinkedInProvider());
+	// Clowder/SEAD2
+	}
+	
+	static void registerProvider(Provider p) {
 		providers.put(p.getProviderName(), p);
 	}
 	

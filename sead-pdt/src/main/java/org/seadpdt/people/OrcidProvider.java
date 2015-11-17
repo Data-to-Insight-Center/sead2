@@ -102,9 +102,9 @@ public class OrcidProvider extends Provider {
 
 	};
 
-	public static Document getRawProfile(String id) {
+	public static Document getRawProfile(String rawID) {
 		Client client = Client.create();
-		String rawID = id.substring("http://orcid.org/".length());
+		
 		WebResource webResource = client.resource("http://pub.orcid.org/v1.2/"
 				+ rawID + "/orcid-profile");
 
@@ -143,6 +143,7 @@ public class OrcidProvider extends Provider {
 				return "http://orcid.org/" + personID;
 			}
 		}
+
 		return null; // Unrecognized/no id/profile in system
 
 	}
@@ -152,9 +153,10 @@ public class OrcidProvider extends Provider {
 	 * 
 	 */
 	public static boolean validCheckDigit(String id) {
+
 		String baseDigits = id.replaceAll("-", "");
 		String checkDigit = baseDigits.substring(baseDigits.length() - 1);
-		baseDigits = baseDigits.substring(0, baseDigits.length());
+		baseDigits = baseDigits.substring(0, baseDigits.length()-1);
 
 		int total = 0;
 		for (int i = 0; i < baseDigits.length(); i++) {

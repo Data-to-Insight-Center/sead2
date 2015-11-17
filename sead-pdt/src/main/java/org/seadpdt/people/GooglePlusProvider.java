@@ -29,6 +29,8 @@ import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.print.attribute.ResolutionSyntax;
+
 import org.bson.Document;
 import org.json.JSONObject;
 import org.seadpdt.PeopleServices;
@@ -45,8 +47,7 @@ public class GooglePlusProvider extends Provider {
 	public GooglePlusProvider() {
 		Properties props = new Properties();
 		String path = "/googleplusprovider.properties"; //$NON-NLS-1$
-		System.out.println("Loading Google+ Provider property file: " + path);
-
+		
 		// load properties
 		InputStream input = null;
 		try {
@@ -54,7 +55,7 @@ public class GooglePlusProvider extends Provider {
 			props.load(input);
 			SEADKey = (String) props.get("google.api_key");
 		} catch (IOException exc) {
-			System.out.println("Could not load googleplusprovider.properties:"
+			System.out.println("Could not load " + path + " : "
 					+ exc.getLocalizedMessage());
 		} finally {
 			try {
@@ -84,12 +85,12 @@ public class GooglePlusProvider extends Provider {
 
 		ClientResponse response = webResource.accept("application/json").get(
 				ClientResponse.class);
-
 		if (response.getStatus() != 200) {
 			throw new RuntimeException("" + response.getStatus());
 		}
+		String profile = response.getEntity(String.class);
 
-		Document rawProfile = Document.parse(response.getEntity(String.class));
+		Document rawProfile = Document.parse(profile);
 		Document personDocument = new Document();
 		personDocument.put(PeopleServices.provider, getProviderName());
 		personDocument.put("@id", rawProfile.getString("id"));
@@ -99,7 +100,7 @@ public class GooglePlusProvider extends Provider {
 		ArrayList<Document> emails = ((ArrayList<Document>) rawProfile
 				.get("emails"));
 		String emailString = null;
-		if (!emails.isEmpty()) {
+		if ((emails != null) &&(!emails.isEmpty())) {
 			for (Document email : emails) {
 				if (emailString == null) {
 					emailString = email.getString("value");
@@ -116,7 +117,7 @@ public class GooglePlusProvider extends Provider {
 		ArrayList<Document> organizations = (ArrayList<Document>) rawProfile
 				.get("organizations");
 		StringBuffer affs = new StringBuffer();
-		if (!organizations.isEmpty()) {
+		if ((organizations!=null) && (!organizations.isEmpty())) {
 			for (Document org : organizations) {
 				if (org.getString("endDate") == null) {
 					if (affs.length() != 0) {

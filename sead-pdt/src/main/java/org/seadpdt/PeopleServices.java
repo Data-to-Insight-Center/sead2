@@ -60,17 +60,12 @@ public class PeopleServices {
 	public static final String identifier = "identifier";
 	public static final String provider = "provider";
 	private static MongoDatabase db = MongoDB.getServicesDB();
-	private static MongoCollection<Document> peopleCollection = db.getCollection(MongoDB.people);
+	private static MongoCollection<Document> peopleCollection = db
+			.getCollection(MongoDB.people);
 	private CacheControl control = new CacheControl();
 
 	public PeopleServices() {
 		control.setNoCache(true);
-
-		// Register Providers
-		Provider.registerProvider(new OrcidProvider());
-		Provider.registerProvider(new GooglePlusProvider());
-		Provider.registerProvider(new LinkedInProvider());
-		// Clowder/SEAD2
 	}
 
 	@POST
@@ -94,8 +89,8 @@ public class PeopleServices {
 		}
 
 		String newID = p.getCanonicalId((String) person.get(identifier));
-		person.put(identifier,newID);
-		
+		person.put(identifier, newID);
+
 		FindIterable<Document> iter = peopleCollection.find(new Document("@id",
 				newID));
 		if (iter.iterator().hasNext()) {
@@ -107,11 +102,10 @@ public class PeopleServices {
 		} else {
 			URI resource = null;
 			try {
-				
+
 				Document profileDocument = p.getExternalProfile(person);
 				peopleCollection.insertOne(profileDocument);
-				resource = new URI("./"
-						+ profileDocument.getString("@id"));
+				resource = new URI("./" + profileDocument.getString("@id"));
 			} catch (Exception r) {
 				return Response
 						.serverError()
@@ -173,12 +167,11 @@ public class PeopleServices {
 		} catch (Exception e) {
 			return Response
 					.status(javax.ws.rs.core.Response.Status.CONFLICT)
-					.entity(new BasicDBObject("failure",
-							"Ambiguous identifier")).build();
+					.entity(new BasicDBObject("failure", "Ambiguous identifier"))
+					.build();
 		}
-		if(profile==null) {
-			return Response
-					.status(javax.ws.rs.core.Response.Status.NOT_FOUND)
+		if (profile == null) {
+			return Response.status(javax.ws.rs.core.Response.Status.NOT_FOUND)
 					.build();
 		}
 		id = profile.getIdentifier();
@@ -186,7 +179,8 @@ public class PeopleServices {
 		if (profileDoc != null) {
 			String providerName = profileDoc.getString(provider);
 			try {
-				profileDoc = Provider.getProvider(providerName).getExternalProfile(profile.asJson());
+				profileDoc = Provider.getProvider(providerName)
+						.getExternalProfile(profile.asJson());
 			} catch (RuntimeException r) {
 				return Response
 						.serverError()
@@ -195,8 +189,7 @@ public class PeopleServices {
 										+ r.getMessage())).build();
 			}
 
-			peopleCollection.replaceOne(new Document(
-					"@id", id), profileDoc);
+			peopleCollection.replaceOne(new Document("@id", id), profileDoc);
 			return Response.status(Status.OK).build();
 
 		} else {
@@ -208,8 +201,8 @@ public class PeopleServices {
 	@DELETE
 	@Path("/{id}")
 	public Response unregisterPerson(@PathParam("id") String id) {
-		DeleteResult result = peopleCollection.deleteOne(new Document(
-				"@id", id));
+		DeleteResult result = peopleCollection
+				.deleteOne(new Document("@id", id));
 		if (result.getDeletedCount() == 0) {
 			return Response.status(Status.NOT_FOUND).build();
 		} else {
@@ -229,17 +222,17 @@ public class PeopleServices {
 				"http://schema.org/Thing/mainEntityOfPage");
 		return contextDocument;
 	}
+
 	static protected Document getBasicPersonProjection() {
 		return new Document("givenName", 1).append("familyName", 1)
 				.append("@id", 1).append("email", 1).append("affiliation", 1)
 				.append("PersonalProfileDocument", 1).append("_id", 0);
 	}
 
-
 	static Document retrieveProfile(String id) {
 		Document document = null;
-		FindIterable<Document> iter = peopleCollection.find(new Document(
-				"@id", id));
+		FindIterable<Document> iter = peopleCollection.find(new Document("@id",
+				id));
 		iter.projection(getBasicPersonProjection());
 		if (iter.first() != null) {
 			document = iter.first();
@@ -247,5 +240,5 @@ public class PeopleServices {
 		}
 		return document;
 	}
-	
+
 }
