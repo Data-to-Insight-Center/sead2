@@ -93,7 +93,8 @@ public class GooglePlusProvider extends Provider {
 		Document rawProfile = Document.parse(profile);
 		Document personDocument = new Document();
 		personDocument.put(PeopleServices.provider, getProviderName());
-		personDocument.put("@id", rawProfile.getString("id"));
+		//assert(rawProfile.getString("url").equals(id));
+		personDocument.put("@id", rawProfile.getString("url"));
 		Document nameDocument = (Document) rawProfile.get("name");
 		personDocument.put("givenName", nameDocument.getString("givenName"));
 		personDocument.put("familyName", nameDocument.getString("familyName"));
