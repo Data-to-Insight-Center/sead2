@@ -142,7 +142,7 @@ public class ResearchObjectsImpl extends ResearchObjects {
                 System.out.println("Failed to generate FGDC metadata for " + id);
             }
 
-            // if the status update in PDT is successful, we have to send to DOI to Clowder
+            // if the status update in PDT is successful, we have to send to DOI to project space/data source
             // first get the RO JSON to find the callback URL
             ClientResponse roResponse = pdtWebService.path("researchobjects")
                     .path(id)
@@ -167,7 +167,7 @@ public class ResearchObjectsImpl extends ResearchObjects {
                         .type("application/json")
                         .post(ClientResponse.class, body);
                 // TODO log
-                System.out.println("Clowder Updated, Response : " + pubRequestorResponse.getEntity(String.class));
+                System.out.println("Project Space/Data Source Updated, Response : " + pubRequestorResponse.getEntity(String.class));
             }
             return Response.status(ClientResponse.Status.OK).cacheControl(control).build();
         }
