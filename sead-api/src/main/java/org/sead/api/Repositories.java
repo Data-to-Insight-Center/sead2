@@ -114,18 +114,29 @@ public abstract class Repositories {
 	public abstract Response unregisterRepository(@PathParam("id") String id);
 
 	/**
-	 * Return the set or ROs for a given repository
+	 * Return the set of ROs for a given repository
 	 * 
 	 * @param  - filter by status?
 	 * 
-	 * @return :[ 
-	 * 				{"identifier":<id>, "latest status":status},
-	 * 				...
-	 * 		   	]
+	 * @return :array of JSON objects that include the Identifier and Title of the Aggregation, the Repository id, and the list of Status messages 
+	 * 
 	 */
 	@GET
 	@Path("/{id}/researchobjects")
 	@Produces(MediaType.APPLICATION_JSON)
 	public abstract Response getROsByRepository(@PathParam("id") String id);
+	
+	/**
+	 * Return the set of new ROs for a given repository (those that have no status messages from the repository
+	 * associated with them).
+	 * 
+	 * @return :array of JSON objects that include the Identifier and Title of the Aggregation, the Repository id, 
+	 * and the list of Status messages (e.g. those from sead-cpr itself)
+	 * 
+	 */
+	@GET
+	@Path("/{id}/researchobjects/new")
+	@Produces(MediaType.APPLICATION_JSON)
+	public abstract Response getNewROsByRepository(@PathParam("id") String id);
 	
 }

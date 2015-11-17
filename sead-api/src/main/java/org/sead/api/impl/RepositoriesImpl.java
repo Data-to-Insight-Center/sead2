@@ -150,5 +150,21 @@ public class RepositoriesImpl extends Repositories {
         return Response.status(response.getStatus()).entity(response
                 .getEntity(new GenericType<String>() {})).cacheControl(control).build();
 	}
+	
+	@GET
+	@Path("/{id}/researchobjects/new")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response getNewROsByRepository(@PathParam("id") String id) {
+        WebResource webResource = resource();
+
+        ClientResponse response = webResource.path("repositories")
+                .path(id + "/researchobjects/new")
+                .accept("application/json")
+                .type("application/json")
+                .get(ClientResponse.class);
+
+        return Response.status(response.getStatus()).entity(response
+                .getEntity(new GenericType<String>() {})).cacheControl(control).build();
+	}
 
 }

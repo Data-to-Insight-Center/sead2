@@ -167,5 +167,29 @@ public class RepoServices {
         }
         return Response.ok(array).cacheControl(control).build();
     }
+    
+    @GET
+    @Path("/{id}/researchobjects/new")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getNewROsByRepository(@PathParam("id") String id) {
+        MongoCollection<Document> publicationsCollection = null;
+        publicationsCollection = db.getCollection(MongoDB.researchObjects);
+        Document match = new Document(             "Repository", id);
+        Document reporter = new Document("reporter", id );
+        Document elem = new Document("$elemMatch", reporter );
+        Document not = new Document("$not", elem );
+        match.put("Status", not);
+
+        FindIterable<Document> iter = publicationsCollection.find(match);
+        iter.projection(new Document("Aggregation.Identifier", 1).append("Aggregation.Title", 1)
+                .append("Repository", 1).append("Status", 1).append("_id", 0));
+        MongoCursor<Document> cursor = iter.iterator();
+        Set<Document> array = new HashSet<Document>();
+        while (cursor.hasNext()) {
+        	Document nextDoc =cursor.next(); 
+            array.add(nextDoc);
+        }
+        return Response.ok(array).cacheControl(control).build();
+    }
 
 }
