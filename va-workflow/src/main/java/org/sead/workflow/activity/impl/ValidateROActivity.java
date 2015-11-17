@@ -37,8 +37,6 @@ import java.util.HashMap;
 
 /**
  * Responsible for validating the RO.
- * Checks the file size and verify that all the files in the main collection
- * and sub collections do exist in Project Space
  */
 public class ValidateROActivity extends AbstractWorkflowActivity {
 
@@ -79,7 +77,7 @@ public class ValidateROActivity extends AbstractWorkflowActivity {
         boolean validated = true;
         String roString = context.getProperty(Constants.JSON_RO);
         try {
-            validated = validateFilesInCollection(roString, context);
+            validated = hasMinimalMetadata(roString, context);
         } catch (JSONException e) {
             throw new SeadWorkflowException( "Error occurred while validating the collection "
                     + context.getCollectionId() + " , Caused by: "  + e.getMessage() , e);
@@ -97,7 +95,7 @@ public class ValidateROActivity extends AbstractWorkflowActivity {
         System.out.println("=====================================\n");
     }
 
-    private boolean validateFilesInCollection(String roString, SeadWorkflowContext context) throws JSONException{
+    private boolean hasMinimalMetadata(String roString, SeadWorkflowContext context) throws JSONException{
         boolean validated = true;
 
         // Checking whether RO metadata includes Creator, Title and Abstract
