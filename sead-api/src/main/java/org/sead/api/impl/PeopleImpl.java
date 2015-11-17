@@ -91,7 +91,7 @@ public class PeopleImpl extends People {
 	@GET
 	@Path("/{id}")
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response getPersonProfile(@PathParam("id") String id) {
+	public Response getPersonProfile(@Encoded @PathParam("id") String id) {
         WebResource webResource = resource();
 
         ClientResponse response = webResource.path("people")

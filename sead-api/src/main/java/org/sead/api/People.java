@@ -23,6 +23,7 @@ package org.sead.api;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
+import javax.ws.rs.Encoded;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
@@ -75,7 +76,7 @@ public abstract class People {
 	@GET
 	@Path("/{id}")
 	@Produces(MediaType.APPLICATION_JSON)
-	public abstract Response getPersonProfile(@PathParam("id") String id);
+	public abstract Response getPersonProfile(@Encoded @PathParam("id") String id);
 
     /**
      * Return the raw profile of a given person. For example, the complete
