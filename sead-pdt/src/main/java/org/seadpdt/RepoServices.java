@@ -186,16 +186,6 @@ public class RepoServices {
 		MongoCollection<Document> publicationsCollection = null;
 		publicationsCollection = db.getCollection(MongoDB.researchObjects);
 		
-		//Get list of repo IDs
-		FindIterable<Document> iter = repositoriesCollection.find();
-		iter.projection(new Document("orgidentifier", 1)
-				.append("repositoryURL", 1).append("repositoryName", 1)
-				.append("lastUpdate", 1).append("_id", 0));
-		MongoCursor<Document> cursor = iter.iterator();
-		JSONArray array = new JSONArray();
-		while (cursor.hasNext()) {
-			array.put(new JSONObject(cursor.next().toJson()));
-		}
 		//Match ROs with no status from any repo
 		Document match = new Document("Repository", id);
 		Document reporter = new Document("reporter", id);

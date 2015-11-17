@@ -89,7 +89,7 @@ public class PeopleServices {
 		}
 
 		String newID = p.getCanonicalId((String) person.get(identifier));
-		person.put(identifier, newID);
+		person.put("@id", newID);
 
 		FindIterable<Document> iter = peopleCollection.find(new Document("@id",
 				newID));
@@ -230,13 +230,18 @@ public class PeopleServices {
 	}
 
 	static Document retrieveProfile(String id) {
+		System.out.println("Retrieving profile for: " + id);
 		Document document = null;
-		FindIterable<Document> iter = peopleCollection.find(new Document("@id",
-				id));
-		iter.projection(getBasicPersonProjection());
-		if (iter.first() != null) {
-			document = iter.first();
-			document.put("@context", getPersonContext());
+		Profile p = Provider.findCanonicalId(id);
+		if (p != null) {
+			id = p.getIdentifier();
+			FindIterable<Document> iter = peopleCollection.find(new Document(
+					"@id", id));
+			iter.projection(getBasicPersonProjection());
+			if (iter.first() != null) {
+				document = iter.first();
+				document.put("@context", getPersonContext());
+			}
 		}
 		return document;
 	}
