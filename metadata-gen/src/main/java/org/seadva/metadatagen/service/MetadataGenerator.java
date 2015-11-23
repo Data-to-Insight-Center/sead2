@@ -43,9 +43,11 @@ import java.net.URISyntaxException;
 public class MetadataGenerator {
 
     static WebResource pdtWebService;
+    static WebResource dataoneWebService;
 
     static {
         pdtWebService = Client.create().resource(Constants.pdtURL);
+        dataoneWebService = Client.create().resource(Constants.dataoneURL);
     }
 
     @POST
@@ -67,8 +69,8 @@ public class MetadataGenerator {
         if (response.equals("")) {
             return Response.status(ClientResponse.Status.NOT_FOUND).build();
         } else {
-            ClientResponse postResponse = pdtWebService.path("researchobjects")
-                    .path(id + "/fgdc")
+            ClientResponse postResponse = dataoneWebService
+                    .path(id)
                     .accept("application/xml")
                     .type("application/xml")
                     .post(ClientResponse.class, response);

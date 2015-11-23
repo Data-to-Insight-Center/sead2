@@ -15,6 +15,7 @@ public class Constants {
     public static String dcsBaseURL;
     public static String bagPath;
     public static String pdtURL;
+    public static String dataoneURL;
 
     public static String FORMAT_IANA_SCHEME = "http://www.iana.org/assignments/media-types/";
     public static String titleTerm = "http://purl.org/dc/terms/title";
@@ -61,6 +62,9 @@ public class Constants {
                 }
                 if (name.equals("pdt.url")) {
                     pdtURL = value;
+                }
+                if (name.equals("dataone.url")) {
+                    dataoneURL = value;
                 }
             }
 

@@ -31,6 +31,17 @@ public class Constants {
     public static String mongoHost;
     public static int mongoPort;
 
+    public final static String META_INFO = "metaInfo";
+    public final static String META_FORMAT = "metaFormat";
+    public final static String METADATA = "metadata";
+    public final static String RO_ID = "@id";
+    public final static String FGDC_ID = "identifier";
+    public final static String SIZE = "size";
+    public final static String META_UPDATE_DATE = "metadataUpdateDate";
+    public final static String FIXITY_FORMAT = "fixityFormat";
+    public final static String FIXITY_VAL = "fixityValue";
+
+
     public static String dataonDbName;
 
     static {
