@@ -31,6 +31,10 @@ public class Constants {
     public static String mongoHost;
     public static int mongoPort;
 
+    public static String NODE_IDENTIFIER;
+    public static String SUBJECT;
+    public static String BASE_URL;
+
     public final static String META_INFO = "metaInfo";
     public final static String META_FORMAT = "metaFormat";
     public final static String METADATA = "metadata";
@@ -76,6 +80,15 @@ public class Constants {
             }
             if(name.equals("dataone.db.name")){
                 dataonDbName = value;
+            }
+            if (name.equals("node.identifier")) {
+                NODE_IDENTIFIER = value;
+            }
+            if (name.equals("contact.subject")) {
+                SUBJECT = value.replace("-", "=");
+            }
+            if (name.equals("base.url")) {
+                BASE_URL = value;
             }
         }
     }

@@ -83,7 +83,7 @@ public class Object {
                               @PathParam("objectId") String objectId) throws IOException {
 
 
-        String test ="<error name=\"NotFound\" errorCode=\"404\" detailCode=\"1020\" pid=\""+URLEncoder.encode(objectId)+"\" nodeId=\""+"TODO-NodeIdentifier"+"\">\n" +
+        String test ="<error name=\"NotFound\" errorCode=\"404\" detailCode=\"1020\" pid=\""+URLEncoder.encode(objectId)+"\" nodeId=\""+Constants.NODE_IDENTIFIER+"\">\n" +
                 "<description>The specified object does not exist on this node.</description>\n" +
                 "<traceInformation>\n" +
                 "method: mn.get hint: http://cn.dataone.org/cn/resolve/"+URLEncoder.encode(objectId)+"\n" +
@@ -233,18 +233,17 @@ public class Object {
             checksum.setAlgorithm("MD5");
             checksum.setValue("testChecksum");
 
-            if (size > 0) {
-                String fixityFormat = (String) metaInfo.get(Constants.FIXITY_FORMAT);
-                String fixityValue = (String) metaInfo.get(Constants.FIXITY_VAL);
-                if (fixityFormat.equalsIgnoreCase("MD-5")) {
-                    checksum.setAlgorithm("MD5");
-                    checksum.setValue(fixityValue);
-                }
-                if (fixityFormat.equalsIgnoreCase("SHA-1")) {
-                    checksum.setAlgorithm("SHA-1");
-                    checksum.setValue(fixityValue);
-                }
+            String fixityFormat = (String) metaInfo.get(Constants.FIXITY_FORMAT);
+            String fixityValue = (String) metaInfo.get(Constants.FIXITY_VAL);
+            if (fixityFormat.equalsIgnoreCase("MD-5")) {
+                checksum.setAlgorithm("MD5");
+                checksum.setValue(fixityValue);
             }
+            if (fixityFormat.equalsIgnoreCase("SHA-1")) {
+                checksum.setAlgorithm("SHA-1");
+                checksum.setValue(fixityValue);
+            }
+
             objectInfo.setChecksum(checksum);
             objectList.getObjectInfoList().add(objectInfo);
             totalResutls++;
