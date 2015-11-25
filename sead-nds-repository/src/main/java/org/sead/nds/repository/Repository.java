@@ -18,54 +18,16 @@
 
 package org.sead.nds.repository;
 
-import java.io.ByteArrayInputStream;
-import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
-import java.net.MalformedURLException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.net.URLEncoder;
-import java.nio.file.Paths;
-import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.Map.Entry;
 import java.util.Properties;
-import java.util.concurrent.ExecutionException;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipException;
 
-import javax.activation.MimeType;
-import javax.ws.rs.core.MediaType;
-
-import org.apache.commons.codec.digest.DigestUtils;
-import org.apache.commons.compress.archivers.zip.ParallelScatterZipCreator;
-import org.apache.commons.compress.archivers.zip.ScatterZipOutputStream;
-import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
-import org.apache.commons.compress.archivers.zip.ZipArchiveEntryRequest;
-import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
-import org.apache.commons.compress.archivers.zip.ZipFile;
-import org.apache.commons.compress.parallel.InputStreamSupplier;
-import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.BasicCookieStore;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.http.impl.cookie.BasicClientCookie;
-import org.apache.http.util.EntityUtils;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
-import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 import org.sead.nds.repository.util.ConsoleStatusReceiver;
-import org.sead.nds.repository.util.StatusReceiver;
 
 import edu.ucsb.nceas.ezid.EZIDException;
 import edu.ucsb.nceas.ezid.EZIDService;
@@ -83,7 +45,7 @@ public class Repository {
 		try {
 			props.load(Repository.class
 					.getResourceAsStream("repository.properties"));
-			System.out.println(props.toString());
+			log.trace(props.toString());
 		} catch (IOException e) {
 			log.warn("Could not read repositories.properties file");
 		}
@@ -99,8 +61,9 @@ public class Repository {
 		PropertyConfigurator.configure("./log4j.properties");
 		
 		if (args.length == 1) {
+			
 			BagGenerator bg;
-			bg = new BagGenerator(args[0]);
+			bg = new BagGenerator(new C3PRPubRequestFacade(args[0], props));
 			//FixMe - use repo.ID from properties file (possibly in repo class
 			bg.generateBag(new ConsoleStatusReceiver(repoID));
 		} else {
@@ -115,6 +78,46 @@ public class Repository {
 	}
 	static public String getDataPath() {
 		return dataPath;
+	}
+
+	public static String createDOIForRO(String bagName, C3PRPubRequestFacade RO) throws EZIDException {
+		String target = Repository.getLandingPage(bagName);
+		log.debug("DOI Landing Page: " + target);
+		String creators = RO.getCreatorsString(RO.normalizeValues(RO.getOREMap().get(
+				"Creator")));
+
+		HashMap<String, String> metadata = new LinkedHashMap<String, String>();
+		metadata.put(InternalProfile.TARGET.toString(), target);
+		metadata.put(DataCiteProfile.TITLE.toString(),
+				((JSONObject) RO.getOREMap().get("describes")).getString("Title"));
+		metadata.put(DataCiteProfile.CREATOR.toString(), creators);
+		String rightsholderString = "SEAD (http://sead-data.net";
+		if (RO.getPublicationRequest().has("Rights Holder")) {
+			rightsholderString = RO.getPublicationRequest().getString("Rights Holder") + ", "
+					+ rightsholderString;
+		} else {
+			log.warn("Request has no Rights Holder");
+		}
+		metadata.put(DataCiteProfile.PUBLISHER.toString(), rightsholderString);
+		metadata.put(DataCiteProfile.PUBLICATION_YEAR.toString(),
+				String.valueOf(Calendar.getInstance().get(Calendar.YEAR)));
+
+		EZIDService ezid = new EZIDService(props.getProperty("ezid.url"));
+
+		boolean permanent = props.get("doi.default").equals("temporary") ? false
+				: true;
+		if (((JSONObject) RO.getPublicationRequest().get("Preferences")).has("Purpose")) {
+			String purpose = ((JSONObject) RO.getPublicationRequest().get("Preferences"))
+					.getString("Purpose");
+			if (purpose.equalsIgnoreCase("Testing-Only")) {
+				permanent = false;
+			}
+		}
+		ezid.login(props.getProperty("doi.user"), props.getProperty("doi.pwd"));
+		String shoulder = (permanent) ? props.getProperty("doi.shoulder.prod")
+				: props.getProperty("doi.shoulder.test");
+		String doi = ezid.mintIdentifier(shoulder, metadata);
+		return "http://dx.doi.org/" + doi;
 	}
 
 }
