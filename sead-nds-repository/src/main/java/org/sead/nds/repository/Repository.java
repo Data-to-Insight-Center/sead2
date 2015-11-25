@@ -27,7 +27,6 @@ import java.util.Properties;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
 import org.json.JSONObject;
-import org.sead.nds.repository.util.ConsoleStatusReceiver;
 
 import edu.ucsb.nceas.ezid.EZIDException;
 import edu.ucsb.nceas.ezid.EZIDService;
@@ -63,9 +62,14 @@ public class Repository {
 		if (args.length == 1) {
 			
 			BagGenerator bg;
-			bg = new BagGenerator(new C3PRPubRequestFacade(args[0], props));
+			C3PRPubRequestFacade RO = new C3PRPubRequestFacade(args[0], props); 
+			bg = new BagGenerator(RO);
 			//FixMe - use repo.ID from properties file (possibly in repo class
-			bg.generateBag(new ConsoleStatusReceiver(repoID));
+			if(bg.generateBag()) {
+				RO.sendStatus(C3PRPubRequestFacade.SUCCESS_STAGE, RO.getOREMap().getJSONObject("describes").getString("External Identifier"));
+			} else {
+				RO.sendStatus(C3PRPubRequestFacade.FAILURE_STAGE, "Processing of this request has failed and no further attempts to process this request will be made. Please contact the repository for further information.");
+			}
 		} else {
 			System.out.println("Usage: <oremap URL>");
 		}
@@ -118,6 +122,10 @@ public class Repository {
 				: props.getProperty("doi.shoulder.test");
 		String doi = ezid.mintIdentifier(shoulder, metadata);
 		return "http://dx.doi.org/" + doi;
+	}
+
+	public static String getID() {
+		return repoID;
 	}
 
 }

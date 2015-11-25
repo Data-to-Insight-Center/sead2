@@ -48,7 +48,6 @@ import org.apache.log4j.Logger;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.sead.nds.repository.util.FileUtils;
-import org.sead.nds.repository.util.StatusReceiver;
 
 public class BagGenerator {
 
@@ -77,7 +76,7 @@ public class BagGenerator {
 	 * 
 	 * @return success true/false
 	 */
-	public boolean generateBag(StatusReceiver sr) {
+	public boolean generateBag() {
 		log.debug("Generating: Bag to the Future!");
 		log.debug("BagPath: " + getBagPath());
 		JSONObject pubRequest = RO.getPublicationRequest();
@@ -193,10 +192,10 @@ public class BagGenerator {
 			for (int i = 0; i < resourceUsed.length; i++) {
 				Boolean b = resourceUsed[i];
 				if (b == null) {
-					sr.sendStatusMessage("Problem",
+					RO.sendStatus("Problem",
 							pidMap.get(resourceIndex.get(i)) + " was not used");
 				} else if (b == false) {
-					sr.sendStatusMessage("Problem",
+					RO.sendStatus("Problem",
 							pidMap.get(resourceIndex.get(i))
 									+ " was not included successfully");
 				} else {
@@ -218,14 +217,14 @@ public class BagGenerator {
 			}
 
 			// Run a confirmation test - should verify all files and sha1s
-			checkFiles(sha1Map, zf, sr);
+			checkFiles(sha1Map, zf);
 			zf.close();
 			return true;
 
 		} catch (Exception e) {
 			log.error(e.getLocalizedMessage());
 			e.printStackTrace();
-			sr.sendStatusMessage("Failure",
+			RO.sendStatus("Failure",
 					"Processing failure during Bagit file creation");
 			return false;
 		}
@@ -350,11 +349,10 @@ public class BagGenerator {
 		addEntry(archiveEntry, supp);
 	}
 
-	private void checkFiles(HashMap<String, String> sha1Map2, ZipFile zf,
-			StatusReceiver sr) {
+	private void checkFiles(HashMap<String, String> sha1Map2, ZipFile zf) {
 		for (Entry<String, String> entry : sha1Map2.entrySet()) {
 			if (!hasValidFileHash(entry.getKey(), entry.getValue(), zf)) {
-				sr.sendStatusMessage("Problem", "Hash for " + entry.getValue()
+				RO.sendStatus("Problem", "Hash for " + entry.getValue()
 						+ " is incorrect.");
 			}
 		}

@@ -28,12 +28,15 @@ import java.net.URL;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Properties;
+
 import javax.ws.rs.core.MediaType;
 
 import org.apache.commons.compress.parallel.InputStreamSupplier;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.BasicCookieStore;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
@@ -54,6 +57,11 @@ public class C3PRPubRequestFacade {
 	Properties props = null;
 	String RO_ID = null;
 	String bearerToken = null;
+	
+	public static final String SUCCESS_STAGE = "Success";
+	public static final String FAILURE_STAGE = "Failure";
+	public static final String PENDING_STAGE = "Pending";
+	public static final String PROBLEM_STAGE = "Problem";
 
 	private JSONObject request = null;
 	private JSONObject oremap = null;
@@ -76,7 +84,8 @@ public class C3PRPubRequestFacade {
 	// Logic to decide if this is a container -
 	// first check for children, then check for source-specific type indicators
 	boolean childIsContainer(int index) {
-		JSONObject item = getOREMap().getJSONObject("describes").getJSONArray("aggregates").getJSONObject(index);
+		JSONObject item = getOREMap().getJSONObject("describes")
+				.getJSONArray("aggregates").getJSONObject(index);
 		if (getChildren(item).length() != 0) {
 			return true;
 		}
@@ -274,7 +283,6 @@ public class C3PRPubRequestFacade {
 		};
 	}
 
-	
 	String getCreatorsString(String[] creators) {
 		StringBuffer sBuffer = new StringBuffer();
 		if ((creators != null) && (creators.length != 0)) {
@@ -345,5 +353,73 @@ public class C3PRPubRequestFacade {
 			}
 		}
 		return peopleArray;
+	}
+
+	boolean echoToConsole = false;
+
+	public void setEchoStatusToConsole(boolean val) {
+		echoToConsole = val;
+	}
+
+	public void sendStatus(String stage, String message) {
+
+		String c3prServer = props.getProperty("c3pr.address");
+		try {
+			String statusUrl = c3prServer + "api/researchobjects/"
+					+ URLEncoder.encode(RO_ID, "UTF-8") + "/status";
+
+			log.debug("Posting status to: " + statusUrl);
+			HttpPost postStatus = new HttpPost(statusUrl);
+			if (props.containsKey("JSESSIONID")) {
+				// Proxy Mode
+				log.debug("Adding: " + props.getProperty("JSESSIONID"));
+
+				BasicClientCookie cookie = new BasicClientCookie("JSESSIONID",
+						props.getProperty("JSESSIONID"));
+				URL c3pr = new URL(c3prServer);
+
+				cookie.setDomain(c3pr.getHost());
+				cookie.setPath("/");
+				cookie.setSecure(c3pr.getProtocol().equalsIgnoreCase("https") ? true
+						: false);
+				cookieStore.addCookie(cookie);
+			}
+			postStatus.addHeader("accept", "application/json");
+			StringEntity status = new StringEntity("{\"reporter\":\""
+					+ Repository.getID() + "\", \"stage\":\"" + stage
+					+ "\", \"message\":\"" + message + "\"}");
+			log.trace("Status: " + status);
+			postStatus.addHeader("content-type",
+					"application/x-www-form-urlencoded");
+			postStatus.setEntity(status);
+
+			CloseableHttpResponse response = client.execute(postStatus);
+
+			if (response.getStatusLine().getStatusCode() == 200) {
+				log.debug("Status Successfully posted");
+			} else {
+				log.warn("Failed to post status, response code: "
+						+ response.getStatusLine().getStatusCode());
+			}
+		} catch (UnsupportedEncodingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (ClientProtocolException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			log.error("Error posting status.", e);
+			e.printStackTrace();
+		}
+
+		if (echoToConsole == true) {
+			System.out
+					.println("*********************Status Message******************************");
+			System.out.println("Reporter: " + Repository.getID() + ", Stage: "
+					+ stage);
+			System.out.println("Message Text: " + message);
+			System.out
+					.println("*****************************************************************");
+		}
 	}
 }
