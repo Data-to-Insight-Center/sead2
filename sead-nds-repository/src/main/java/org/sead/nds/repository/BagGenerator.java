@@ -80,6 +80,7 @@ public class BagGenerator {
 		log.debug("Generating: Bag to the Future!");
 		log.debug("BagPath: " + getBagPath());
 		JSONObject pubRequest = RO.getPublicationRequest();
+		RO.sendStatus(C3PRPubRequestFacade.PENDING_STAGE, Repository.getID() + " is now processing this request");
 		try {
 
 			File tmp = File.createTempFile("sead-scatter-dirs", "tmp");
