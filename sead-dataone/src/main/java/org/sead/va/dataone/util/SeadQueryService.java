@@ -32,8 +32,8 @@ public class SeadQueryService {
     public static String NODE_IDENTIFIER;
     public static String SUBJECT;
     public static String BASE_URL;
-    static Map<String, String> d1toSeadfixity;
-    static Map<String, String> sead2d1fixity;
+    public static Map<String, String> d1toSeadfixity;
+    public static Map<String, String> sead2d1fixity;
     static Map<String, String> d1toSeadEventTypes;
     static Map<String, String> sead2d1EventTypes;
 
