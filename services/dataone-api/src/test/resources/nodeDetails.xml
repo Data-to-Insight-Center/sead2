@@ -1,0 +1,22 @@
+<ns2:node xmlns:ns2="http://ns.dataone.org/service/types/v1" state="up" replicate="false" synchronize="true" type="mn">
+    <identifier>urn:node:SEAD</identifier>
+    <name>SEAD Virtual Archive</name>
+    <description>
+        SEAD Virtual Archive is part of the SEAD DataNet project [http://sead-data.net/]. SEAD Virtual Archive is a thin virtualization layer on top of multiple university Institutional Repositories focusing on preservation of long-tail scientific data.
+    </description>
+    <baseURL>http://seadva.d2i.indiana.edu:8081/sead/rest/mn</baseURL>
+    <services>
+        <service name="MNRead" version="v1" available="true"/>
+        <service name="MNCore" version="v1" available="true"/>
+        <service name="MNAuthorization" version="v1" available="false"/>
+        <service name="MNStorage" version="v1" available="false"/>
+        <service name="MNReplication" version="v1" available="false"/>
+    </services>
+    <synchronization>
+        <schedule hour="*" mday="*" min="*" mon="*" sec="*" wday="3" year="*"/>
+    </synchronization>
+    <subject>CN=urn:node:SEAD, DC=dataone, DC=org</subject>
+    <contactSubject>
+        CN=Kavitha Chandrasekar A7270,O=Indiana University,C=US,DC=cilogon,DC=org
+    </contactSubject>
+</ns2:node>
