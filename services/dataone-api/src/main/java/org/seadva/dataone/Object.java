@@ -16,6 +16,10 @@
 
 package org.seadva.dataone;
 
+import com.sun.jersey.api.client.Client;
+import com.sun.jersey.api.client.ClientResponse;
+import com.sun.jersey.api.client.GenericType;
+import com.sun.jersey.api.client.WebResource;
 import org.dataconservancy.dcs.index.dcpsolr.DcsSolrField;
 import org.dataconservancy.dcs.index.dcpsolr.DcsSolrField.EntityTypeValue;
 import org.dataconservancy.dcs.index.dcpsolr.SeadSolrField;
@@ -29,6 +33,8 @@ import org.jibx.runtime.JiBXException;
 import org.seadva.model.SeadEvent;
 import org.seadva.model.SeadFile;
 import org.seadva.model.pack.ResearchObject;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 import org.xml.sax.SAXException;
 
 import javax.servlet.ServletContext;
@@ -37,21 +43,22 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import javax.xml.datatype.DatatypeConfigurationException;
-import javax.xml.datatype.DatatypeFactory;
-import javax.xml.datatype.XMLGregorianCalendar;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
+import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigInteger;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.net.URLEncoder;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /*
  * Returns list of objects and also datastream for individual objects
@@ -68,21 +75,20 @@ public class Object{
 
     @GET
     @Path("{objectId}")
-    @Produces("*/*")
+    @Produces(MediaType.APPLICATION_XML)
     public Response getObject(@Context HttpServletRequest request,
                               @HeaderParam("user-agent") String userAgent,
                               @PathParam("objectId") String objectId) throws IOException {
 
 
-        String test ="<error name=\"NotFound\" errorCode=\"404\" detailCode=\"1020\" pid=\""+URLEncoder.encode(objectId)+"\" nodeId=\""+SeadQueryService.NODE_IDENTIFIER+"\">\n" +
+        String test = "<error name=\"NotFound\" errorCode=\"404\" detailCode=\"1020\" pid=\"" + URLEncoder.encode(objectId) + "\" nodeId=\"" + SeadQueryService.NODE_IDENTIFIER + "\">\n" +
                 "<description>The specified object does not exist on this node.</description>\n" +
                 "<traceInformation>\n" +
-                "method: mn.get hint: http://cn.dataone.org/cn/resolve/"+URLEncoder.encode(objectId)+"\n" +
+                "method: mn.get hint: http://cn.dataone.org/cn/resolve/" + URLEncoder.encode(objectId) + "\n" +
                 "</traceInformation>\n" +
                 "</error>";
 
         String id = objectId;
-
 
 
         QueryResult<DcsEntity> result = null;
@@ -95,61 +101,78 @@ public class Object{
         }
 
         List<QueryMatch<DcsEntity>> matches = result.getMatches();
-        for(QueryMatch<DcsEntity> entity: matches){
-            DcsFile dcsFile = (DcsFile)entity.getObject();
-            String filePath = dcsFile.getSource().replace("file://","").replace("file:","").replace(":/","://").replace(":///","://");
+        InputStream is = null;
+        String lastFormat = null;
+
+        for (QueryMatch<DcsEntity> entity : matches) {
+            DcsFile dcsFile = (DcsFile) entity.getObject();
+            String filePath = dcsFile.getSource().replace("file://", "").replace("file:", "").replace(":/", "://").replace(":///", "://");
             //String filePath = SeadQueryService.datastreamURL +  URLEncoder.encode(dcsFile.getId());
 
 
             //URL url = new URL(filePath);
             //HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
             //InputStream is = urlConnection.getInputStream();
-            InputStream is = new FileInputStream(filePath);
+            is = new FileInputStream(filePath);
 
-            String lastFormat = null;
-            if(dcsFile.getFormats().size()>0){
-                for(DcsFormat format:dcsFile.getFormats()){
-                    if(SeadQueryService.sead2d1Format.get(format.getFormat())!=null) {
+
+            if (dcsFile.getFormats().size() > 0) {
+                for (DcsFormat format : dcsFile.getFormats()) {
+                    if (SeadQueryService.sead2d1Format.get(format.getFormat()) != null) {
                         lastFormat = SeadQueryService.mimeMapping.get(SeadQueryService.sead2d1Format.get(format.getFormat()));
                         break;
                     }
                     lastFormat = SeadQueryService.mimeMapping.get(format.getFormat());
                 }
             }
-            Response.ResponseBuilder responseBuilder = Response.ok(is);
-
-            responseBuilder.header("DataONE-SerialVersion","1");
-
-            if(lastFormat!=null){
-                String[] format = lastFormat.split(",");
-                if(format.length>0)
-                {
-                    responseBuilder.header("Content-Type", format[0]);
-                    responseBuilder.header("Content-Disposition",
-                            "inline; filename=" + id+format[1]);
-                }
-                else{
-                    responseBuilder.header("Content-Disposition",
-                            "inline; filename=" + id);
-                }
-            }
-            else{
-                responseBuilder.header("Content-Disposition",
-                        "inline; filename=" + id);
-            }
 
             String ip = null;
-            if(request!=null)
+            if (request != null)
                 ip = request.getRemoteAddr();
-            SeadEvent readEvent  = SeadQueryService.dataOneLogService.creatEvent(SeadQueryService.d1toSeadEventTypes.get(Event.READ.xmlValue()), userAgent, ip, entity.getObject());
+            SeadEvent readEvent = SeadQueryService.dataOneLogService.creatEvent(SeadQueryService.d1toSeadEventTypes.get(Event.READ.xmlValue()), userAgent, ip, entity.getObject());
 
             ResearchObject eventsSip = new ResearchObject();
             eventsSip.addEvent(readEvent);
             SeadQueryService.dataOneLogService.indexLog(eventsSip);
 
-            return responseBuilder.build();
+            break;
         }
-        throw new NotFoundException(test);
+        if (matches.size() < 1) {
+            WebResource webResource = Client.create().resource(SeadQueryService.SEAD_DATAONE_URL);
+            ClientResponse response = webResource.path(id)
+                    .accept("application/xml")
+                    .type("application/xml")
+                    .get(ClientResponse.class);
+            if (response.getStatus() == 200) {
+                if(response.getHeaders().get("Content-Type") != null && response.getHeaders().get("Content-Disposition") != null) {
+                    lastFormat = response.getHeaders().get("Content-Type").get(0) + ",";
+                    lastFormat += response.getHeaders().get("Content-Disposition").get(0).split(id)[1];
+                }
+                is = new ByteArrayInputStream(response.getEntity(new GenericType<String>() {}).getBytes());
+            } else {
+                throw new NotFoundException(test);
+            }
+        }
+
+        Response.ResponseBuilder responseBuilder = Response.ok(is);
+        responseBuilder.header("DataONE-SerialVersion", "1");
+
+        if (lastFormat != null) {
+            String[] format = lastFormat.split(",");
+            if (format.length > 0) {
+                responseBuilder.header("Content-Type", format[0]);
+                responseBuilder.header("Content-Disposition",
+                        "inline; filename=" + id + format[1]);
+            } else {
+                responseBuilder.header("Content-Disposition",
+                        "inline; filename=" + id);
+            }
+        } else {
+            responseBuilder.header("Content-Disposition",
+                    "inline; filename=" + id);
+        }
+
+        return responseBuilder.build();
     }
 
 
@@ -194,6 +217,7 @@ public class Object{
             queryStr+= " AND "+ SeadSolrField.EntityField.MDUPDATE_DATE.solrName() + ":" + "[ NOW-365DAY TO " + toDate + "]";
         }
 
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
         int count = 0;
         boolean countZero = false;
         if(countStr!=null){
@@ -270,7 +294,6 @@ public class Object{
                 objectInfo.setFormatId(formatIdentifier);
             }
 
-            SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
             objectInfo.setDateSysMetadataModified(simpleDateFormat.parse(date));
 
             Checksum checksum = new Checksum();
@@ -298,9 +321,81 @@ public class Object{
             objectList.getObjectInfoList().add(objectInfo);
 
         }
-            objectList.setCount(result.getMatches().size());
+
+        appendMongoNodes(objectList);
+
+        objectList.setCount(result.getMatches().size());
         objectList.setTotal((int)result.getTotal());
         objectList.setStart(start);
         return SeadQueryService.marshal(objectList);
     }
+
+    private void appendMongoNodes(ObjectList objectList) throws ParseException {
+
+        WebResource webResource = Client.create().resource(SeadQueryService.SEAD_DATAONE_URL);
+        ClientResponse response = webResource
+                .accept("application/xml")
+                .type("application/xml")
+                .get(ClientResponse.class);
+        String mongoResults = response.getEntity(new GenericType<String>() {});
+
+        Document doc = null;
+        try {
+            DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+            DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
+            doc = dBuilder.parse(new ByteArrayInputStream(mongoResults.getBytes()));
+        }catch(ParserConfigurationException e){
+            System.out.println(e.getMessage());
+        }catch(SAXException e){
+            System.out.println(e.getMessage());
+        }catch(IOException e){
+            System.out.println(e.getMessage());
+        }
+
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
+        org.w3c.dom.NodeList mongoNodes = doc.getElementsByTagName("objectInfo");
+
+        if(mongoNodes == null){
+            return;
+        }
+
+        for (int i = 0; i < mongoNodes.getLength(); i++) {
+            org.w3c.dom.Node node = mongoNodes.item(i);
+
+            if (node.getNodeType() == org.w3c.dom.Node.ELEMENT_NODE) {
+                Element element = (Element) node;
+                ObjectInfo objectInfo =  new ObjectInfo();
+                Identifier identifier = new Identifier();
+                identifier.setValue(getValue("identifier", element));
+                objectInfo.setIdentifier(identifier);
+
+                objectInfo.setSize(BigInteger.valueOf(Long.parseLong(getValue("size", element))));
+
+                ObjectFormatIdentifier formatIdentifier = new ObjectFormatIdentifier();
+                formatIdentifier.setValue(getValue("formatId", element));
+                objectInfo.setFormatId(formatIdentifier);
+
+                objectInfo.setDateSysMetadataModified(simpleDateFormat.parse(getValue("dateSysMetadataModified", element)));
+
+                Checksum checksum = new Checksum();
+                checksum.setAlgorithm(getAttributeValue("checksum", "algorithm", element));
+                checksum.setValue(getValue("checksum", element));
+                objectInfo.setChecksum(checksum);
+                objectList.getObjectInfoList().add(objectInfo);
+            }
+        }
+    }
+
+    private static String getValue(String tag, Element element) {
+        org.w3c.dom.NodeList nodes = element.getElementsByTagName(tag).item(0).getChildNodes();
+        org.w3c.dom.Node node = nodes.item(0);
+        return node.getNodeValue();
+    }
+
+    private static String getAttributeValue(String tag, String attribute, Element element) {
+        org.w3c.dom.NodeList nodes = element.getElementsByTagName(tag);
+        org.w3c.dom.Node node = nodes.item(0);
+        return node.getAttributes().getNamedItem(attribute).getNodeValue();
+    }
+
 }

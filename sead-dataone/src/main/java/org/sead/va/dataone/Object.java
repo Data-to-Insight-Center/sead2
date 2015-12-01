@@ -94,9 +94,40 @@ public class Object {
 
         FindIterable<Document> iter = fgdcCollection.find(new Document(Constants.META_INFO + "." + Constants.FGDC_ID, id));
         if(iter != null && iter.first() != null){
-            return Response.ok(iter.first().get(Constants.METADATA).toString()).build();
+            JSONObject object = new JSONObject(iter.first());
+            JSONObject metaInfo = (JSONObject) object.get(Constants.META_INFO);
+            String fgdcMetadata = object.get(Constants.METADATA).toString();
+            String metadataFormat = (String) metaInfo.get(Constants.META_FORMAT);
+
+            String lastFormat = null;
+
+            if (SeadQueryService.sead2d1Format.get(metadataFormat) != null) {
+                lastFormat = SeadQueryService.mimeMapping.get(SeadQueryService.sead2d1Format.get(metadataFormat));
+            } else {
+                lastFormat = SeadQueryService.mimeMapping.get(metadataFormat);
+            }
+
+            Response.ResponseBuilder responseBuilder = Response.ok(new ByteArrayInputStream(fgdcMetadata.getBytes()));
+            responseBuilder.header("DataONE-SerialVersion", "1");
+
+            if (lastFormat != null) {
+                String[] format = lastFormat.split(",");
+                if (format.length > 1) {
+                    responseBuilder.header("Content-Type", format[0]);
+                    responseBuilder.header("Content-Disposition",
+                            "inline; filename=" + id + format[1]);
+                } else {
+                    responseBuilder.header("Content-Disposition",
+                            "inline; filename=" + id);
+                }
+            } else {
+                responseBuilder.header("Content-Disposition",
+                        "inline; filename=" + id);
+            }
+
+            return responseBuilder.build();
         } else {
-            return Response.status(ClientResponse.Status.NOT_FOUND).build();
+            return Response.status(ClientResponse.Status.NOT_FOUND).entity(test).build();
         }
     }
 
