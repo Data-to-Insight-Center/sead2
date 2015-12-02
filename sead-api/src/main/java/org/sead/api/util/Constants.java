@@ -31,6 +31,7 @@ public class Constants {
     public static String matchmakerUrl;
     public static String metadataGenUrl;
     public static String doiServiceUrl;
+    public static String seadDataOneUrl;
     public static String clowderUser;
     public static String clowderPassword;
 
@@ -55,6 +56,7 @@ public class Constants {
         matchmakerUrl = properties.getProperty("matchmaker.url");
         metadataGenUrl = properties.getProperty("metadatagen.url");
         doiServiceUrl = properties.getProperty("doi.service.url");
+        seadDataOneUrl = properties.getProperty("sead.dataone.url");
         clowderUser = properties.getProperty("clowder.user");
         clowderPassword = properties.getProperty("clowder.pw");
     }

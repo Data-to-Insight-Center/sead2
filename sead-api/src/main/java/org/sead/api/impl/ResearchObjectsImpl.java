@@ -51,6 +51,7 @@ public class ResearchObjectsImpl extends ResearchObjects {
     private WebResource curBeeWebService;
     private WebResource mmWebService;
     private WebResource metadataGenWebService;
+    private WebResource seadDataoneService;
     private CacheControl control = new CacheControl();
 
 	public ResearchObjectsImpl() {
@@ -58,6 +59,7 @@ public class ResearchObjectsImpl extends ResearchObjects {
         curBeeWebService = Client.create().resource(Constants.curBeeUrl);
         mmWebService = Client.create().resource(Constants.matchmakerUrl);
         metadataGenWebService = Client.create().resource(Constants.metadataGenUrl);
+        seadDataoneService = Client.create().resource(Constants.seadDataOneUrl);
         control.setNoCache(true);
 	}
 
@@ -254,7 +256,7 @@ public class ResearchObjectsImpl extends ResearchObjects {
     @Path("/{id}/fgdc")
     @Produces(MediaType.APPLICATION_XML)
     public Response getFgdc(@PathParam("id") String id) {
-        WebResource webResource = pdtWebService;
+        WebResource webResource = seadDataoneService;
 
         ClientResponse response = webResource.path("researchobjects")
                 .path(id + "/fgdc")
