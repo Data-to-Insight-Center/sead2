@@ -18,7 +18,7 @@
 <%
     Map<String, String> properties = (Map<String, String>) request.getAttribute("roProperties");
 	Map<String, String> downloadList = (Map<String, String>) request.getAttribute("downloadList");
-	
+	String tag = (String) request.getAttribute("obTag");	
 %>
 
 
@@ -67,7 +67,7 @@
 			</form>
 			</div>
 			<div style="float: right; width: 225px"> 
-			    <form method="get" action="sda/list">
+			    <form method="get" action="sda/list=<%= tag%>">
 				<button type="submit" class="btn btn-primary">Files in this dataset</button>
 			    </form>
 			</div>

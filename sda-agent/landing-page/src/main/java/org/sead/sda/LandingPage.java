@@ -44,13 +44,18 @@ import org.json.simple.JSONObject;
 public class LandingPage extends HttpServlet {
 
     private static final long serialVersionUID = 1L;
-    private String tag;
-    private Map<String, String> downloadList = new HashMap<String, String>();
+    
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        if (request.getParameter("tag") != null || request.getRequestURI().contains("/sda/list")) {
+        if (request.getParameter("tag") != null || request.getRequestURI().contains("/sda/list")) {       	
+        	String tag = "";
+        	
         	if (request.getParameter("tag") != null){
         		tag = request.getParameter("tag");
+        	}else{
+        		tag = request.getRequestURI().split("/sda/list=")[1];
         	}
+        	
+        	request.setAttribute("obTag", tag);
         	
             Shimcalls shim = new Shimcalls();
             JSONObject cp = shim.getResearchObject(tag);
@@ -60,7 +65,7 @@ public class LandingPage extends HttpServlet {
             JSONObject oreFile = shim.getResearchObjectORE(oreUrl);
             JSONObject describes = (JSONObject) oreFile.get("describes");
             Map<String, String> roProperties = new HashMap<String, String>();
-            
+            Map<String, String> downloadList = new HashMap<String, String>();
 
             // extract properties from ORE
             JSONArray status = (JSONArray) cp.get("Status");
@@ -79,45 +84,8 @@ public class LandingPage extends HttpServlet {
             
             // extract file names from tar archive in SDA
             String requestURI = request.getRequestURI();
-            if (requestURI.equals("/landing-page/sda/list")){
-            	downloadList = new HashMap<String, String>();
-	            SFTP sftp = new SFTP();
-	            String target = "/cos1/hpss/s/e/seadva/" + title + "/" + title + ".tar";
-	            
-	            InputStream inStream = sftp.downloadFile(target);
-	            
-	            TarArchiveInputStream myTarFile = new TarArchiveInputStream(inStream);
-		        TarArchiveEntry entry = null;
-	            String individualFiles;
-	            
-	            while ((entry = myTarFile.getNextTarEntry()) != null) {
-	                
-	                individualFiles = entry.getName();
-	                byte[] content = new byte[(int) entry.getSize()];
-	                String size = null;
-	                                
-	                int bytes = content.length;
-	                int kb = bytes / 1024;
-	                int mb = kb / 1024;
-	                int gb = mb /1024;
-	                if (bytes <= 1024){
-	                	size = bytes + " Bytes";
-	                }else if (kb <= 1024){
-	                	size = kb + " KB";
-	                }else if (mb <= 1024){
-	                	size = mb + " MB";
-	                }else{
-	                	size = gb + " GB";
-	                }
-	                
-	                downloadList.put(individualFiles, size);
-	                
-	            }
-	            myTarFile.close();
-	            sftp.disConnectSessionAndChannel();           
-            }
-            // set download list as an attribute
-            if (requestURI.contains("list")){
+            
+            if (requestURI.contains("/sda/list")){
             	int c = 0;
             	String[] requestURIsda = requestURI.split("/");
             	for (String item : requestURIsda){
@@ -125,14 +93,48 @@ public class LandingPage extends HttpServlet {
             			c++;
             		}
             	}
-            	if (c % 2 == 0){
-            		request.setAttribute("downloadList", new HashMap<String, String>());
-            	}else{
-            		request.setAttribute("downloadList", downloadList);
-            	}
-            }else{
-            	request.setAttribute("downloadList", new HashMap<String, String>());
+	            if (c % 2 != 0){
+	            	downloadList = new HashMap<String, String>();
+		            SFTP sftp = new SFTP();
+		            String target = "/cos1/hpss/s/e/seadva/" + title + "/" + title + ".tar";
+		            
+		            InputStream inStream = sftp.downloadFile(target);
+		            
+		            TarArchiveInputStream myTarFile = new TarArchiveInputStream(inStream);
+			        TarArchiveEntry entry = null;
+		            String individualFiles;
+		            
+		            while ((entry = myTarFile.getNextTarEntry()) != null) {
+		                
+		                individualFiles = entry.getName();
+		                byte[] content = new byte[(int) entry.getSize()];
+		                String size = null;
+		                                
+		                int bytes = content.length;
+		                int kb = bytes / 1024;
+		                int mb = kb / 1024;
+		                int gb = mb /1024;
+		                if (bytes <= 1024){
+		                	size = bytes + " Bytes";
+		                }else if (kb <= 1024){
+		                	size = kb + " KB";
+		                }else if (mb <= 1024){
+		                	size = mb + " MB";
+		                }else{
+		                	size = gb + " GB";
+		                }
+		                
+		                downloadList.put(individualFiles, size);
+		                
+		            }
+		            myTarFile.close();
+		            sftp.disConnectSessionAndChannel();  
+		            
+		            
+	            }
+            // set download list as an attribute
             }
+            request.setAttribute("downloadList", downloadList);
             // forward the user to get_id UI
             RequestDispatcher dispatcher = request.getRequestDispatcher("/ro.jsp");
             dispatcher.forward(request, response);
@@ -152,13 +154,13 @@ public class LandingPage extends HttpServlet {
             	filename = newURL.substring(newURL.indexOf("/")+1);
             }         
             title = URLDecoder.decode(title, "UTF-8");
-            
+            newURL = URLDecoder.decode(newURL, "UTF-8");            
             
             SFTP sftp = new SFTP();
             String target = "/cos1/hpss/s/e/seadva/" + title + "/" + title + ".tar";
                     
-            System.out.println("title"+title);
-            System.out.println("filename"+filename);
+            System.out.println("title "+title);
+            System.out.println("filename "+filename);
             
             if (!title.equals("*")){
             	InputStream inStream = sftp.downloadFile(target);
