@@ -21,6 +21,8 @@ import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoDatabase;
+import com.sun.jersey.api.client.ClientResponse;
+import org.apache.commons.codec.binary.Hex;
 import org.bson.Document;
 import org.dataone.service.types.v1.*;
 import org.jibx.runtime.JiBXException;
@@ -29,8 +31,6 @@ import org.sead.va.dataone.util.Constants;
 import org.sead.va.dataone.util.MongoDB;
 import org.sead.va.dataone.util.SeadQueryService;
 import org.xml.sax.SAXException;
-import org.apache.commons.codec.binary.Hex;
-
 
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
@@ -52,8 +52,6 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.UUID;
-
-import com.sun.jersey.api.client.ClientResponse;
 
 
 /*
@@ -148,7 +146,7 @@ public class Object {
         //String fgdcId = "seadva-"+creator.replace(" ","").replace(",","")+ UUID.randomUUID().toString();
         metaInfo.put(Constants.FGDC_ID, fgdcId);
 
-        final byte[] utf8Bytes = fgdcString.getBytes("UTF-8");//TODO check correctness
+        final byte[] utf8Bytes = fgdcString.getBytes("UTF-8");
         metaInfo.put(Constants.SIZE, utf8Bytes.length);
 
         SimpleDateFormat sdfDate = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
@@ -156,7 +154,7 @@ public class Object {
         String strDate = sdfDate.format(now);
         metaInfo.put(Constants.META_UPDATE_DATE, strDate);
 
-        try {//TODO  check correctness
+        try {
             DigestInputStream digestStream =
                     new DigestInputStream(new ByteArrayInputStream(fgdcString.getBytes()), MessageDigest.getInstance("SHA-1"));
             if (digestStream.read() != -1) {
