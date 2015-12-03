@@ -31,7 +31,12 @@ import org.sead.sda.agent.engine.DOI;
 import org.sead.sda.agent.engine.PropertiesReader;
 import org.sead.sda.agent.engine.SFTP;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 public class SynchronizedReceiverRunnable implements Runnable {
+
+    SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy.MM.dd hh:mm:ss a zzz");
 
     public void run() {
 
@@ -48,11 +53,11 @@ public class SynchronizedReceiverRunnable implements Runnable {
                     if (identifier == null) {
                         throw new Exception("SDA Agent : Cannot get Identifier of RO");
                     }
-                    System.out.println("\nResearch Object found, ID: " + identifier);
+                    // System.out.println("\nResearch Object found, ID: " + identifier);
 
-                    if (isAlreadyPublished(researchObject)) {
-                        System.out.println("Research Object has already been published, skipping...\n");
-                    } else {
+                    if (!isAlreadyPublished(researchObject)) {
+                        System.out.println("\n" + dateFormat.format(new Date()));
+                        System.out.println("New Research Object found, ID: " + identifier);
                         System.out.println("Starting to publish Research Object...");
 
                         JSONObject pulishObject = call.getResearchObject(identifier);

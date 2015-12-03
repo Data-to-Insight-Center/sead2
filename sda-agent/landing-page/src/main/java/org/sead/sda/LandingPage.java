@@ -96,7 +96,7 @@ public class LandingPage extends HttpServlet {
 	            if (c % 2 != 0){
 	            	downloadList = new HashMap<String, String>();
 		            SFTP sftp = new SFTP();
-		            String target = "/cos1/hpss/s/e/seadva/" + title + "/" + title + ".tar";
+		            String target = Constants.sdaPath + title + "/" + title + ".tar";
 		            
 		            InputStream inStream = sftp.downloadFile(target);
 		            
@@ -157,7 +157,7 @@ public class LandingPage extends HttpServlet {
             newURL = URLDecoder.decode(newURL, "UTF-8");            
             
             SFTP sftp = new SFTP();
-            String target = "/cos1/hpss/s/e/seadva/" + title + "/" + title + ".tar";
+            String target = Constants.sdaPath + title + "/" + title + ".tar";
                     
             System.out.println("title "+title);
             System.out.println("filename "+filename);
@@ -194,7 +194,7 @@ public class LandingPage extends HttpServlet {
 		            }
 	            }else{
 	            	//download individual files
-	            	System.out.println("SDA download path: " + "/cos1/hpss/s/e/seadva/" + newURL);
+	            	System.out.println("SDA download path: " + Constants.sdaPath + newURL);
 	            	TarArchiveInputStream myTarFile = new TarArchiveInputStream(inStream);
 	    	        
 	    	        TarArchiveEntry entry = null;
