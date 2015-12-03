@@ -38,179 +38,194 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
 
 @Path("/ro")
 public class MatchMaker {
-    // set of matchers
-    Set<Matcher> matchers = new HashSet<Matcher>();
-    // common resource for all PDT calls
-    WebResource pdtResource;
+	// set of matchers
+	Set<Matcher> matchers = new HashSet<Matcher>();
+	// common resource for all PDT calls
+	WebResource pdtResource;
 
-    public MatchMaker() {
-        // Build list of Matchers
-        matchers.add(new MaxDatasetSizeMatcher());
-        matchers.add(new MaxTotalSizeMatcher());
-        matchers.add(new DataTypeMatcher());
-        matchers.add(new OrganizationMatcher());
-        matchers.add(new DepthMatcher());
-        matchers.add(new MinimalMetadataMatcher());
-        matchers.add(new CreatorIDsRequiredMatcher());
+	public MatchMaker() {
+		// Build list of Matchers
+		matchers.add(new MaxDatasetSizeMatcher());
+		matchers.add(new MaxTotalSizeMatcher());
+		matchers.add(new DataTypeMatcher());
+		matchers.add(new OrganizationMatcher());
+		matchers.add(new DepthMatcher());
+		matchers.add(new MinimalMetadataMatcher());
+		matchers.add(new RightsHolderIDsRequiredMatcher());
 
-        pdtResource = Client.create().resource(MatchmakerConstants.pdtUrl);
-    }
+		pdtResource = Client.create().resource(MatchmakerConstants.pdtUrl);
+	}
 
-    @POST
-    @Path("/matchingrepositories")
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    public Response makeMatches(String matchRequest) {
-        String messageString = null;
-        Document request = Document.parse(matchRequest);
-        Document content = (Document) request.get("Aggregation");
-        if (content == null) {
-            messageString += "Missing Aggregation";
-        }
-        Document preferences = (Document) request.get("Preferences");
-        if (preferences == null) {
-            messageString += "Missing Preferences";
-        }
-        Document stats = (Document) request.get("Aggregation Statistics");
-        if (stats == null) {
-            messageString += "Missing Statistics";
-        }
-        Object context = request.get("@context");
-        if (context == null) {
-            messageString += "Missing @context";
-        }
+	@POST
+	@Path("/matchingrepositories")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response makeMatches(String matchRequest) {
+		String messageString = null;
+		Document request = Document.parse(matchRequest);
+		Document content = (Document) request.get("Aggregation");
+		if (content == null) {
+			messageString += "Missing Aggregation";
+		}
+		Document preferences = (Document) request.get("Preferences");
+		if (preferences == null) {
+			messageString += "Missing Preferences";
+		}
+		Document stats = (Document) request.get("Aggregation Statistics");
+		if (stats == null) {
+			messageString += "Missing Statistics";
+		}
+		Document rightsHolders = (Document) request.get("Rights Holder");
+		if (rightsHolders == null) {
+			messageString += "Missing Rights Holder(s)";
+		}
+		Object context = request.get("@context");
+		if (context == null) {
+			messageString += "Missing @context";
+		}
 
-        if (messageString == null) {
-            // Get organization from profile(s)
-            // Add to base document
-            Object creatorObject = content.get("Creator");
+		if (messageString == null) {
+			// Get organization from profile(s)
+			// Add to base document
+			Object creatorObject = content.get("Creator");
 
-            BasicBSONList affiliations = new BasicBSONList();
-            if (creatorObject instanceof ArrayList) {
-                for (String creator : ((ArrayList<String>) creatorObject)) {
-                    Set<String> orgs = getOrganizationforPerson(creator);
-                    if (!orgs.isEmpty()) {
-                        affiliations.addAll(orgs);
-                    }
-                }
-            } else {
-                // BasicDBObject - single value
-                Set<String> orgs = getOrganizationforPerson((String) creatorObject);
-                if (!orgs.isEmpty()) {
-                    affiliations.addAll(orgs);
-                }
-            }
+			BasicBSONList affiliations = new BasicBSONList();
+			if (creatorObject instanceof ArrayList) {
+				for (String creator : ((ArrayList<String>) creatorObject)) {
+					Set<String> orgs = getOrganizationforPerson(creator);
+					if (!orgs.isEmpty()) {
+						affiliations.addAll(orgs);
+					}
+				}
+			} else {
+				// BasicDBObject - single value
+				Set<String> orgs = getOrganizationforPerson((String) creatorObject);
+				if (!orgs.isEmpty()) {
+					affiliations.addAll(orgs);
+				}
+			}
 
-            // Get repository profiles
-            JSONArray reposJson = new JSONArray(pdtGET(MatchmakerConstants.PDT_REPOSITORIES));
-            BasicBSONList matches = new BasicBSONList();
+			// Get repository profiles
+			JSONArray reposJson = new JSONArray(
+					pdtGET(MatchmakerConstants.PDT_REPOSITORIES));
+			BasicBSONList matches = new BasicBSONList();
 
-            for (int j = 0; j < reposJson.length(); j++) {
-                JSONObject repoJson = reposJson.getJSONObject(j);
-                String orgId = repoJson.get("orgidentifier").toString();
-                // call PDT to get profile
-                Document profile = Document.parse(pdtGET(MatchmakerConstants.PDT_REPOSITORIES +
-                        "/" + orgId));
+			for (int j = 0; j < reposJson.length(); j++) {
+				JSONObject repoJson = reposJson.getJSONObject(j);
+				String orgId = repoJson.get("orgidentifier").toString();
+				// call PDT to get profile
+				Document profile = Document
+						.parse(pdtGET(MatchmakerConstants.PDT_REPOSITORIES
+								+ "/" + orgId));
 
-                BasicBSONObject repoMatch = new BasicBSONObject();
-                repoMatch.put("orgidentifier", profile.get("orgidentifier"));
-                repoMatch.put("repositoryName", profile.get("repositoryName"));
+				BasicBSONObject repoMatch = new BasicBSONObject();
+				repoMatch.put("orgidentifier", profile.get("orgidentifier"));
+				repoMatch.put("repositoryName", profile.get("repositoryName"));
 
-                BasicBSONList scores = new BasicBSONList();
-                int total = 0;
-                int i = 0;
-                for (Matcher m : matchers) {
-                    BasicBSONObject individualScore = new BasicBSONObject();
+				BasicBSONList scores = new BasicBSONList();
+				int total = 0;
+				int i = 0;
+				for (Matcher m : matchers) {
+					BasicBSONObject individualScore = new BasicBSONObject();
 
-                    RuleResult result = m.runRule(content, affiliations,
-                            preferences, stats, profile, context);
+					RuleResult result = m.runRule(content, rightsHolders,
+							affiliations, preferences, stats, profile, context);
 
-                    individualScore.put("Rule Name", m.getName());
-                    if (result.wasTriggered()) {
-                        individualScore.put("Score", result.getScore());
-                        total += result.getScore();
-                        individualScore.put("Message", result.getMessage());
-                    } else {
-                        individualScore.put("Score", 0);
-                        individualScore.put("Message", "Not Used");
-                    }
-                    scores.put(i, individualScore);
-                    i++;
-                }
-                repoMatch.put("Per Rule Scores", scores);
-                repoMatch.put("Total Score", total);
-                matches.put(j, repoMatch);
-            }
-            // Assemble and send
-            return Response.ok().entity(matches).build();
-        } else {
-            return Response.status(ClientResponse.Status.BAD_REQUEST)
-                    .entity(new BasicDBObject("Failure", messageString))
-                    .build();
-        }
-    }
+					individualScore.put("Rule Name", m.getName());
+					if (result.wasTriggered()) {
+						individualScore.put("Score", result.getScore());
+						total += result.getScore();
+						individualScore.put("Message", result.getMessage());
+					} else {
+						individualScore.put("Score", 0);
+						individualScore.put("Message", "Not Used");
+					}
+					scores.put(i, individualScore);
+					i++;
+				}
+				repoMatch.put("Per Rule Scores", scores);
+				repoMatch.put("Total Score", total);
+				matches.put(j, repoMatch);
+			}
+			// Assemble and send
+			return Response.ok().entity(matches).build();
+		} else {
+			return Response.status(ClientResponse.Status.BAD_REQUEST)
+					.entity(new BasicDBObject("Failure", messageString))
+					.build();
+		}
+	}
 
-    @GET
-    @Path("/matchingrepositories/rules")
-    @Produces(MediaType.APPLICATION_JSON)
-    public Response getRulesList() {
-        ArrayList<Document> rulesArrayList = new ArrayList<Document>();
-        for (Matcher m : matchers) {
-            rulesArrayList.add(m.getDescription());
-        }
-        return Response.ok().entity(rulesArrayList).build();
-    }
+	@GET
+	@Path("/matchingrepositories/rules")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response getRulesList() {
+		ArrayList<Document> rulesArrayList = new ArrayList<Document>();
+		for (Matcher m : matchers) {
+			rulesArrayList.add(m.getDescription());
+		}
+		return Response.ok().entity(rulesArrayList).build();
+	}
 
-    private Set<String> getOrganizationforPerson(String personID) {
-        Set<String> orgs = new HashSet<String>();
-        if (personID.startsWith("orcid.org/")) {
-            personID = personID.substring("orcid.org/".length());
-            // call PDT to get the profile using the ID
-            String personProfile = pdtGET(MatchmakerConstants.PDT_PEOPLE + "/" + personID);
-            if (personProfile == null) {
-                // if the person doesn't exist, add
-                pdtPOST(MatchmakerConstants.PDT_PEOPLE, "{\"provider\": \"ORCID\", \"identifier\":\"" +
-                        personID + "\"}");
-                // now try to get the profile
-                personProfile = pdtGET(MatchmakerConstants.PDT_PEOPLE + "/" + personID);
-            }
+	private Set<String> getOrganizationforPerson(String personID) {
+		Set<String> orgs = new HashSet<String>();
+		String encodedID;
+		String personProfile = null;
+		try {
+			encodedID = URLEncoder.encode(personID, "UTF-8");
 
-            if (personProfile == null) {
-                throw new RuntimeException("Can't identify the person: " + personID);
-            }
-            // find organization names of the person
-            Document profileDocument = Document.parse(personProfile);
-            orgs.add(profileDocument.getString("affiliation"));
-        }
-        return orgs;
-    }
+			// call PDT to get the profile using the ID
+			personProfile = pdtGET(MatchmakerConstants.PDT_PEOPLE + "/"
+					+ encodedID);
+			if (personProfile == null) {
+				// if the person doesn't exist, add
+				pdtPOST(MatchmakerConstants.PDT_PEOPLE, "{\"identifier\":\""
+						+ encodedID + "\"}");
+				// now try to get the profile
+				personProfile = pdtGET(MatchmakerConstants.PDT_PEOPLE + "/"
+						+ encodedID);
+			}
+		} catch (UnsupportedEncodingException e) {
+			e.printStackTrace();
+		}
+		if (personProfile == null) {
+			System.out.println("Can't identify the person: " + personID);
+		}
+		// find organization names of the person
+		Document profileDocument = Document.parse(personProfile);
+		orgs.add(profileDocument.getString("affiliation"));
 
-    private String pdtGET(String path) {
-        ClientResponse response = pdtResource.path(path)
-                .accept(MatchmakerConstants.JSON_CONTENT_TYPE)
-                .type(MatchmakerConstants.JSON_CONTENT_TYPE)
-                .get(ClientResponse.class);
-        if (response.getStatus() == 200) {
-            return response.getEntity(String.class);
-        } else {
-            return null;
-        }
-    }
+		return orgs;
+	}
 
-    private void pdtPOST(String path, String message) {
-        ClientResponse response = pdtResource.path(path)
-                .accept(MatchmakerConstants.JSON_CONTENT_TYPE)
-                .type(MatchmakerConstants.JSON_CONTENT_TYPE)
-                .post(ClientResponse.class, message);
-        if (response.getStatus() == 500) {
-            throw new RuntimeException("Error while POSTing profile");
-        }
-    }
+	private String pdtGET(String path) {
+		ClientResponse response = pdtResource.path(path)
+				.accept(MediaType.APPLICATION_JSON)
+				.type(MediaType.APPLICATION_JSON)
+				.get(ClientResponse.class);
+		if (response.getStatus() == 200) {
+			return response.getEntity(String.class);
+		} else {
+			return null;
+		}
+	}
+
+	private void pdtPOST(String path, String message) {
+		ClientResponse response = pdtResource.path(path)
+				.accept(MediaType.APPLICATION_JSON)
+				.type(MediaType.APPLICATION_JSON)
+				.post(ClientResponse.class, message);
+		if (response.getStatus() == 500) {
+			throw new RuntimeException("Error while POSTing profile");
+		}
+	}
 
 }

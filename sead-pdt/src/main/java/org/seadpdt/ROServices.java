@@ -36,18 +36,23 @@ import com.mongodb.gridfs.GridFSDBFile;
 import com.mongodb.gridfs.GridFSInputFile;
 import com.mongodb.util.JSON;
 import com.sun.jersey.api.client.ClientResponse;
+
 import org.bson.Document;
 import org.bson.types.BasicBSONList;
 import org.bson.types.ObjectId;
 import org.json.JSONArray;
+import org.seadpdt.people.Profile;
+import org.seadpdt.people.Provider;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.seadpdt.util.Constants;
 import org.seadpdt.util.MongoDB;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.CacheControl;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -64,7 +69,6 @@ public class ROServices {
 	private MongoDatabase metaDb = null;
 	private DB oreDb = null;
 	private MongoCollection<Document> publicationsCollection = null;
-	private MongoCollection<Document> peopleCollection = null;
 	private MongoCollection<Document> repositoriesCollection = null;
 	private MongoCollection<Document> oreMapCollection = null;
 	private GridFS oreMapBucket = null;
@@ -76,7 +80,7 @@ public class ROServices {
 		metaDb = MongoDB.geMetaGenDB();
 		oreDb = MongoDB.geOreDB();
 		publicationsCollection = db.getCollection(MongoDB.researchObjects);
-		peopleCollection = db.getCollection(MongoDB.people);
+
 		repositoriesCollection = db.getCollection(MongoDB.repositories);
 		oreMapCollection = metaDb.getCollection(MongoDB.oreMap);
 		oreMapBucket = new GridFS(oreDb, MongoDB.oreMap);
@@ -151,7 +155,7 @@ public class ROServices {
 					.add("date",
 							DateFormat.getDateTimeInstance().format(
 									new Date(System.currentTimeMillis())))
-					.add("reporter", "SEAD-CP")
+					.add("reporter", Constants.serviceName)
 					.add("stage", "Receipt Acknowledged")
 					.add("message",
 							"request recorded and processing will begin").get();
@@ -200,6 +204,29 @@ public class ROServices {
 		}
 		return Response.ok(array.toString()).cacheControl(control).build();
 	}
+	
+	@GET
+	@Path("/new/")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response getNewROsList() {
+		//Find ROs that have a status not from the services and don't include them :-)
+		Document reporterRule = new Document("$ne", Constants.serviceName);
+		Document reporter = new Document("reporter", reporterRule);
+		Document elem = new Document("$elemMatch", reporter);
+		Document not = new Document("$not", elem);
+		Document match= new Document("Status", not);
+
+		FindIterable<Document> iter = publicationsCollection.find(match);
+		iter.projection(new Document("Status", 1).append("Repository", 1)
+				.append("Aggregation.Identifier", 1)
+				.append("Aggregation.Title", 1).append("_id", 0));
+		MongoCursor<Document> cursor = iter.iterator();
+		JSONArray array = new JSONArray();
+		while (cursor.hasNext()) {
+			array.put(JSON.parse(cursor.next().toJson()));
+		}
+		return Response.ok(array.toString()).cacheControl(control).build();
+	}
 
 	@GET
 	@Path("/{id}")
@@ -217,6 +244,7 @@ public class ROServices {
 		}
 		// Internal meaning only - strip from exported doc
 		document.remove("_id");
+
 		Document aggDocument = (Document) document.get("Aggregation");
 		aggDocument.remove("authoratativeMap");
 		return Response.ok(document.toJson()).cacheControl(control).build();
@@ -412,51 +440,36 @@ public class ROServices {
     }
 
 
-    private List<String> getOrganizationforPerson(String pID) {
+	private List<String> getOrganizationforPerson(String pID) {
 
 		List<String> orgs = new ArrayList<String>();
-
-		String personID = getInternalId(pID);
-		//If null, no chance that we have a profile...
-		if (personID != null) {
-			FindIterable<Document> iter = peopleCollection.find(new Document(
-					"orcid-profile.orcid-identifier.path", personID));
+		
+		Profile profile = Provider.findCanonicalId(pID);
+		
+		// If null, no chance that we have a profile...
+		if (profile != null) {
+			
+			Document profileDoc = PeopleServices.retrieveProfile(profile
+					.getIdentifier());
 
 			// NeverFail
-			if (iter.first() == null) {
-				//Handle per provider - ORCID only at present
-				if (pID.startsWith("orcid.org/")) {
-					new PeopleServices()
-							.registerPerson("{\"provider\": \"ORCID\", \"identifier\":\""
-									+ personID + "\" }");
-				}
-				iter = peopleCollection.find(new Document(
-						"orcid-profile.orcid-identifier.path", personID));
+			if (profileDoc == null) {
+				// Handle per provider
+			
+				PeopleServices.registerPerson("{\"provider\": \""
+						+ profile.getProvider() + "\", \"identifier\":\""
+						+ profile.getIdentifier() + "\" }");
 			}
+			profileDoc = PeopleServices.retrieveProfile(profile.getIdentifier());
 
-			if (iter.first() != null) {
-				iter.projection(PeopleServices.getOrcidPersonProjection());
-				Document document = PeopleServices.getPersonInfo(iter.first());
-				String currentAffiliations = document.getString("affiliation");
+			if (profileDoc != null) {
+				String currentAffiliations = profileDoc
+						.getString("affiliation");
 				orgs = Arrays.asList(currentAffiliations.split("\\s*,\\s*"));
 			}
 		}
 
 		return orgs;
-	}
-
-	//Parse the string to get the internal ID that the profile would have been stored under. 
-	//If the value is a plain string name, or a 1.5 style name:VIVO URL, return null since we
-	//have no profiles
-	private String getInternalId(String personID) {
-		// ORCID
-		if (personID.startsWith("orcid.org/")) {
-			return personID.substring("orcid.org/".length());
-		} else {
-			// Add other providers here
-			return null; // Unrecognized/no id/profile in system
-		}
-
 	}
 
 }

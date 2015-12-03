@@ -28,7 +28,7 @@ import org.sead.matchmaker.RuleResult;
 
 public class MaxTotalSizeMatcher implements Matcher {
 
-	public RuleResult runRule(Document aggregation, BasicBSONList affiliations,
+	public RuleResult runRule(Document aggregation, Document rightsHolders, BasicBSONList affiliations,
 			Document preferences, Document statsDocument, Document profile, Object context) {
 		RuleResult result = new RuleResult();
 

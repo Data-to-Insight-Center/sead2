@@ -119,12 +119,24 @@ public abstract class ResearchObjects {
 	 * 
 	 * @param - optional param to filter by status?
 	 * 
-	 * @return [ {"identifier":<id>, "latest status":status}, ... ]
+	 * @return Aggegation (Title, Identifier), Repository, and Status array
 	 */
 	@GET
 	@Path("/")
 	@Produces(MediaType.APPLICATION_JSON)
 	public abstract Response getROsList();
+
+	/**
+	 * Return the list of new requests (no status from repository)
+	 * 
+	 * @param - optional param to filter by status?
+	 * 
+	 * @return Aggegation (Title, Identifier), Repository, and Status array
+	 */
+	@GET
+	@Path("/new/")
+	@Produces(MediaType.APPLICATION_JSON)
+	public abstract Response getNewROsList();
 
 	/**
 	 * Return the profile and status for a given publication

@@ -1,243 +1,450 @@
+/*
+ *
+ * Copyright 2015 The Trustees of Indiana University, 2015 University of Michigan
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ *
+ * @author myersjd@umich.edu
+ * 
+ * 
+ * Ezid ID Management service - now using the https://github.com/NCEAS/ezid (DataOne) ezid library,
+ *  with an apache http client update, rather than exec'ing a script.
+ *  
+ * derived from IU version - implements legacy interface, along with a minor update that provides 
+ * a command line client (as before) and service/method interfaces that don't require use of the
+ * Datacite terms. Update makes it possible to add more (arbitrary) metadata. 
+ * New code may want to use the DataOne library directly.  
+ */
+
 package org.seadva.services;
 
 import com.sun.jersey.api.client.ClientResponse;
-import org.seadva.services.util.Constants;
-import org.seadva.services.util.IdMetadata;
 
+import edu.ucsb.nceas.ezid.EZIDException;
+import edu.ucsb.nceas.ezid.EZIDService;
+import edu.ucsb.nceas.ezid.profile.DataCiteProfile;
+import edu.ucsb.nceas.ezid.profile.DataCiteProfileResourceTypeValues;
+import edu.ucsb.nceas.ezid.profile.ErcMissingValueCode;
+import edu.ucsb.nceas.ezid.profile.InternalProfile;
+import edu.ucsb.nceas.ezid.profile.InternalProfileValues;
+
+import org.seadva.services.util.Constants;
 import org.json.*;
 
 import java.io.*;
-import java.sql.Date;
-import java.text.DateFormat;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
+
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 /**
- * EzidService is a helper class that enables to create and update DOIs using the
- * EZID service.
+ * EzidService is a helper class that enables to create and update DOIs using
+ * the EZID service.
  *
  */
 
 @Path("/doi")
 public class EzidService {
 
-    private DataciteIdService dataciteIdService;
-    private Map<IdMetadata.Metadata, String> metadata;
-    private boolean permanentDOI;
+	private boolean permanentDOI;
 
-    public EzidService() {
-        dataciteIdService = new DataciteIdService();
-        metadata = new HashMap<IdMetadata.Metadata, String>();
-        dataciteIdService.setCredentials(Constants.doi_username, Constants.doi_password);
-        permanentDOI = false;
-    }
+	public EzidService() {
 
-    public static void main(String[] args){
+		permanentDOI = false;
+	}
 
-        EzidService ezidService = new EzidService();
+	public static void main(String[] args) {
 
-        Console c = System.console();
-        if (c == null) {
-            System.err.println("No console.");
-            System.exit(1);
-        }
+		EZIDService ezid = new EZIDService(Constants.ezid_url);
+		Console c = System.console();
+		if (c == null) {
+			System.err.println("No console.");
+			System.exit(1);
+		}
 
-        String login = c.readLine("EZID DOI Mode - Create(C) or Update(U) : ");
+		try {
+			String u = c.readLine("Username : ");
+			char[] p = c.readPassword("Password:", null);
 
-        if (login.equalsIgnoreCase("U") || login.equalsIgnoreCase("update")) {
+			ezid.login(u, new String(p));
 
-            String target = c.readLine("New Target : ");
-            if (target == null || target.equals("")) {
-                System.out.println("Error : Input target should not be empty");
-                return;
-            }
-            String doi = c.readLine("DOI(ex: 10.5072/FK2S46KQ67) : ");
-            if (doi == null || doi.equals("")) {
-                System.out.println("Error : Input DOI should not be empty");
-                return;
-            }
+			String login = c
+					.readLine("EZID DOI Mode - Create(C) or Update(U) : ");
 
-            String doi_url = ezidService.updateDOI(doi, target);
-            if (doi_url == null) {
-                System.out.println("Error Updating DOI");
-                return;
-            } else {
-                System.out.println("DOI Updated Successfully !");
-                System.out.println("DOI : " + doi_url);
-            }
-        } else if (login.equalsIgnoreCase("C") || login.equalsIgnoreCase("create")) {
+			if (login.equalsIgnoreCase("U") || login.equalsIgnoreCase("update")) {
 
-            String target = c.readLine("Target : ");
-            if (target == null || target.equals("")) {
-                System.out.println("Error : Input target should not be empty");
-                return;
-            }
-            String metadata = c.readLine("Metadata(ex: {title : test_title, creator : test_creator, pubDate : test_pubDate}) : ");
-            if (metadata == null || metadata.equals("")) {
-                metadata = "{}";
-            }
+				String doi = c.readLine("DOI(ex: 10.5072/FK2S46KQ67) : ");
+				if (doi == null || doi.equals("")) {
+					System.out.println("Error : Input DOI should not be empty");
+					return;
+				}
 
-            String doi = ezidService.createDOI(metadata, target);
-            if (doi == null) {
-                System.out.println("Error Creating DOI");
-                return;
-            } else {
-                System.out.println("DOI Created Successfully !");
-                System.out.println("DOI : " + doi);
-            }
-        } else {
-            System.out.println("Invalid Mode");
-        }
+				String target = c.readLine("New Target : ");
+				if (target == null || target.equals("")) {
+					System.out
+							.println("Error : Input target should not be empty");
+					return;
+				}
+				HashMap<String, String> metadataMap = new HashMap<String, String>();
+				metadataMap.put("_target", target);
+				try {
+					ezid.setMetadata(doi, metadataMap);
+				} catch (EZIDException e) {
+					System.out.println("Error Updating DOI");
+					return;
+				}
+				System.out
+						.println("DOI Updated Successfully : http://dx.doi.org/"
+								+ doi);
+				System.out.println("DOI : " + Constants.ezid_url + "id/" + doi);
 
-        //System.out.println(System.getProperty("java.io.tmpdir"));
-    }
+			} else if (login.equalsIgnoreCase("C")
+					|| login.equalsIgnoreCase("create")) {
+				HashMap<String, String> metadataMap = new HashMap<String, String>();
 
-    /**
-     * Create a new DOI using EZID service
-     *
-     * @param metadata_json Metadata in JSON format, ex : {title : test_title, creator : test_creator, pubDate : test_pubDate}
-     * @param target        Target URL, ex: http://dummyUrl
-     * @return              DOI ULR, ex: http://dx.doi.org/10.5072/FK2S46KQ67
-     */
-    public String createDOI(String metadata_json, String target){
-        if(!permanentDOI) {
-            dataciteIdService.setService(Constants.ezid_url + "shoulder/" + Constants.doi_shoulder_test);
-        } else {
-            dataciteIdService.setService(Constants.ezid_url + "shoulder/" + Constants.doi_shoulder_prod);
-        }
-        metadata.put(IdMetadata.Metadata.TARGET, target);
+				String target = c.readLine("Target : ");
+				if (target == null || target.equals("")) {
+					System.out
+							.println("Error : Input target should not be empty");
+					return;
+				}
+				metadataMap.put("_target", target);
 
-        JSONObject metadata_object = null;
-        try {
-            metadata_object = new JSONObject(metadata_json);
-            if (metadata_object.has("title") && metadata_object.getString("title") != null) {
-                metadata.put(IdMetadata.Metadata.TITLE, metadata_object.getString("title"));
-            }
-            if (metadata_object.has("creator") && metadata_object.getString("creator") != null) {
-                metadata.put(IdMetadata.Metadata.CREATOR, metadata_object.getString("creator"));
-            }
-            if (metadata_object.has("pubDate") && metadata_object.getString("pubDate") != null) {
-                metadata.put(IdMetadata.Metadata.PUBDATE, metadata_object.getString("pubDate"));
-            }
-        } catch (JSONException e) {
-            System.out.println("Error extracting metadata from input. Invalid JSON string.");
-        }
-        String result = null;
-        try {
-            result = dataciteIdService.createwithMd(metadata, false);
-        } catch (IOException e) {
-            e.printStackTrace();
-            return null;
-        }
-        String doi_url = "http://dx.doi.org/" + result.substring(result.indexOf("doi:") + 4, result.indexOf("|"));
-        return doi_url;
-    }
+				String title = c.readLine(DataCiteProfile.TITLE.toString()
+						+ " : ");
+				setEntry(metadataMap, DataCiteProfile.TITLE.toString(), title);
 
-    /**
-     * Update a new target to existing DOI
-     *
-     * @param doi       DOI to be updated, ex: 10.5072/FK2S46KQ67)
-     * @param target    New target URL, ex: http://dummyUrl
-     * @return          Updated URL of DOI, ex: http://dx.doi.org/10.5072/FK2S46KQ67
-     */
-    public String updateDOI(String doi, String target){
+				String creator = c.readLine(DataCiteProfile.CREATOR.toString()
+						+ " : ");
+				setEntry(metadataMap, DataCiteProfile.CREATOR.toString(),
+						creator);
 
-        dataciteIdService.setService(Constants.ezid_url + "id/doi:" + doi);
-        metadata.put(IdMetadata.Metadata.TARGET, target);
-        String result = null;
-        try {
-            result = dataciteIdService.createwithMd(metadata, true);
-        } catch (IOException e) {
-            e.printStackTrace();
-            return null;
-        }
-        if (result == null) {
-            return result;
-        }
-        String doi_url = "http://dx.doi.org/" + result.split(":")[result.split(":").length - 1];
-        return doi_url;
-    }
+				String publisher = c.readLine(DataCiteProfile.PUBLISHER
+						.toString() + " : ");
+				setEntry(metadataMap, DataCiteProfile.PUBLISHER.toString(),
+						publisher);
 
-    public boolean setDOIUnavailable(String doi) throws IOException {
+				String year = c.readLine(DataCiteProfile.PUBLICATION_YEAR
+						.toString() + " : ");
+				if ((year == null) || (year.length() == 0)) {
+					year = String.valueOf(Calendar.getInstance().get(
+							Calendar.YEAR));
+				}
+				metadataMap.put(DataCiteProfile.PUBLICATION_YEAR.toString(),
+						year);
 
-        String serviceURL = Constants.ezid_url + "id/" + doi;
-        String command = "curl -u "+ Constants.doi_username +":"+ Constants.doi_password +" -X POST -H \"Content-Type:text/plain\" " +
-                "--data-binary " + "'_status:unavailable'" + " "+ serviceURL;
+				// Provide a type
+				metadataMap
+						.put(DataCiteProfile.RESOURCE_TYPE.toString(),
+								DataCiteProfileResourceTypeValues.COLLECTION
+										.toString());
 
-        ByteArrayOutputStream stdout = dataciteIdService.executeCommand(command);
-        BufferedReader br = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(stdout.toByteArray())));
+				String doi = null;
+				try {
+					doi = ezid.mintIdentifier(Constants.doi_shoulder_test,
+							metadataMap);
+				} catch (EZIDException e) {
+					System.out.println("Error Creating DOI");
+					System.out.println("Metadata was: "
+							+ metadataMap.toString());
+					return;
+				}
+				System.out
+						.println("DOI Created Successfully : http://dx.doi.org/"
+								+ doi);
+				System.out.println("DOI : " + Constants.ezid_url + "id/" + doi);
+				System.out.println("Retrieved Metadata for " + doi);
+				Map<String, String> map = ezid.getMetadata(doi);
+				for (Entry<String, String> e : map.entrySet()) {
+					System.out.println(e.getKey() + " : " + e.getValue());
+				}
 
-        String output_line = null;
-        String doiUrl = null;
-        while((output_line = br.readLine()) != null)
-        {
-            if(output_line.contains("doi"))
-                doiUrl = output_line;
-        }
+			} else {
+				System.out.println("Invalid Mode");
+			}
+		} catch (EZIDException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
 
-        System.out.println(doiUrl);
-        if(doiUrl.split(":")[0].equals("success")){
-            return true;
-        } else {
-            return false;
-        }
+	/**
+	 * Create a new DOI
+	 * 
+	 * Target is used to set the landing page
+	 * 
+	 * @param target
+	 *            Target URL, ex: http://dummyUrl - required These are required
+	 *            fields in the datacite profile
+	 * @param title
+	 * @param creator
+	 *            creator or creators separated by ';'
+	 * @param publisher
+	 *            publisher or publishers separated by ';'
+	 * @param pubyear
+	 *            null = set to current year Additional key/value pairs can be
+	 *            sent and will be returned
+	 * @param other
+	 * 
+	 * @return DOI URL, ex: http://dx.doi.org/10.5072/FK2S46KQ67
+	 * @throws EZIDException
+	 */
+	public String createDOIForRO(String target, String title, String creator,
+			String publisher, String pubyear, Map<String, String> other,
+			boolean requestPermanent) throws EZIDException {
 
-    }
+		HashMap<String, String> metadata = new HashMap<String, String>();
+		// An RO is generically a datacite collection - allow default to be
+		// overwritten by other
+		metadata.put(DataCiteProfile.RESOURCE_TYPE.toString(),
+				DataCiteProfileResourceTypeValues.COLLECTION.toString());
 
+		if (other != null) {
+			// FixMe - test that datacite terms aren't used? For now, they will
+			// be overwritten if they exist
+			metadata.putAll(other);
+		}
+		// API will default to an internal landing page at the provider
+		if ((target == null) || (target.length() == 0)) {
 
-    public boolean isPermanentDOI() {
-        return permanentDOI;
-    }
+			metadata.put(InternalProfile.TARGET.toString(), target);
+		}
+		// Set entries with a default of ErcMissingValueCode.UNAVAILABLE if
+		// null/o length
+		setEntry(metadata, DataCiteProfile.TITLE.toString(), title);
+		setEntry(metadata, DataCiteProfile.CREATOR.toString(), creator);
+		setEntry(metadata, DataCiteProfile.PUBLISHER.toString(), publisher);
+		String realyear = String.valueOf(Calendar.getInstance().get(
+				Calendar.YEAR));
+		if ((pubyear != null) && (pubyear.length() != 0)) {
+			realyear = pubyear;
+		}
+		metadata.put(DataCiteProfile.PUBLICATION_YEAR.toString(), realyear);
 
-    /**
-     * Set the permanentDOI check in EzidService
-     *
-     * @param permanentDOI  If this is set to true, EzidService create permanent DOIs
-     *                      If this is set to false, EzidService create temporary DOIs
-     */
-    public void setPermanentDOI(boolean permanentDOI) {
-        this.permanentDOI = permanentDOI;
-    }
+		EZIDService ezid = new EZIDService(Constants.ezid_url);
 
+		ezid.login(Constants.doi_username, Constants.doi_password);
+		String shoulder = (requestPermanent) ? Constants.doi_shoulder_prod
+				: Constants.doi_shoulder_test;
+		String doi = ezid.mintIdentifier(shoulder, metadata);
+		return "http://dx.doi.org/" + doi;
+	}
 
-    @POST
-    @Path("/")
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    public Response setROStatus(String doiInfo) {
-        try {
-            EzidService ezidService = new EzidService();
+	private static void setEntry(Map<String, String> map, String term,
+			String value) {
 
-            JSONObject doiInfoObj = new JSONObject(doiInfo);
-            if(!doiInfoObj.has("target")){
-                return Response.status(ClientResponse.Status.BAD_REQUEST)
-                        .entity(new JSONObject().put("Failure", "target not specified").toString())
-                        .build();
-            }
+		if (value == null || value.length() == 0) {
+			map.put(term, ErcMissingValueCode.UNAVAILABLE.toString());
+		} else {
+			map.put(term, value);
+		}
 
-            String targetUrl = doiInfoObj.get("target").toString();
-            String metadata = doiInfoObj.has("metadata") ? doiInfoObj.get("metadata").toString() : "";
+	}
 
-            if(doiInfoObj.has("permanent") && doiInfoObj.get("permanent").toString().equals("true")){
-                ezidService.setPermanentDOI(true);
-            }
+	/**
+	 * Create a new DOI using EZID service
+	 * 
+	 * @Deprecated - use createDOI(target, title, creator, publisher, pubdate,
+	 *             othermetadata) which uses the real/final key values rather
+	 *             than being translated within the service
+	 *
+	 * @param metadata_json
+	 *            Metadata in JSON format, ex : {title : test_title, creator :
+	 *            test_creator, pubDate : test_pubDate}
+	 * @param target
+	 *            Target URL, ex: http://dummyUrl
+	 * @return DOI URL, ex: http://dx.doi.org/10.5072/FK2S46KQ67
+	 */
+	@Deprecated
+	public String createDOI(String metadata_json, String target) {
 
-            String doi_url = ezidService.createDOI(metadata, targetUrl);
-            if(doi_url != null) {
-                System.out.println(EzidService.class.getName() + " : DOI created Successfully - " + doi_url);
-                return Response.ok(new JSONObject().put("doi", doi_url).toString()).build();
-            } else {
-                System.out.println(EzidService.class.getName() + " : Error creating DOI ");
-                return Response.status(ClientResponse.Status.INTERNAL_SERVER_ERROR)
-                        .entity(new JSONObject().put("Failure", "Error occurred while generating DOI").toString())
-                        .build();
-            }
-        } catch (JSONException e) {
-            e.printStackTrace();
-            return Response.status(ClientResponse.Status.BAD_REQUEST).build();
-        }
-    }
+		HashMap<String, String> metadata = new HashMap<String, String>();
+		metadata.put(InternalProfile.TARGET.toString(), target);
+		String doi = null;
+		try {
+			JSONObject metadata_object = null;
+
+			metadata_object = new JSONObject(metadata_json);
+			metadata.putAll(getTranslatedTerms(metadata_object));
+			// An RO is generically a datacite collection
+			metadata.put(DataCiteProfile.RESOURCE_TYPE.toString(),
+					DataCiteProfileResourceTypeValues.COLLECTION.toString());
+
+			EZIDService ezid = new EZIDService(Constants.ezid_url);
+
+			ezid.login(Constants.doi_username, Constants.doi_password);
+
+			String shoulder = (isPermanentDOI()) ? Constants.doi_shoulder_prod
+					: Constants.doi_shoulder_test;
+			doi = ezid.mintIdentifier(shoulder, metadata);
+		} catch (JSONException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (EZIDException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return null;
+		}
+		return "http://dx.doi.org/" + doi;
+	}
+
+	private Map<? extends String, ? extends String> getTranslatedTerms(
+			JSONObject metadata_object) throws JSONException {
+		HashMap<String, String> metadata = new HashMap<String, String>();
+		setEntry(metadata, DataCiteProfile.TITLE.toString(),
+				metadata_object.getString("title"));
+		setEntry(metadata, DataCiteProfile.CREATOR.toString(),
+				metadata_object.getString("creator"));
+		setEntry(metadata, DataCiteProfile.PUBLISHER.toString(),
+				metadata_object.getString("publisher"));
+		String realyear = String.valueOf(Calendar.getInstance().get(
+				Calendar.YEAR));
+		String pubyear = metadata_object.getString("pubDate");
+		if ((pubyear != null) && (pubyear.length() != 0)) {
+			realyear = pubyear;
+		}
+		metadata.put(DataCiteProfile.PUBLICATION_YEAR.toString(), realyear);
+		return metadata;
+
+	}
+
+	/**
+	 * Update a new target to existing DOI
+	 *
+	 * @param doi
+	 *            DOI to be updated, ex: 10.5072/FK2S46KQ67)
+	 * @param target
+	 *            New target URL, ex: http://dummyUrl
+	 * @return Updated URL of DOI, ex: http://dx.doi.org/10.5072/FK2S46KQ67
+	 * @throws EZIDException
+	 */
+	public String updateDOI(String doi, String target) {
+		EZIDService ezid = new EZIDService(Constants.ezid_url);
+		try {
+			ezid.login(Constants.doi_username, Constants.doi_password);
+
+			HashMap<String, String> metadataMap = new HashMap<String, String>();
+			metadataMap.put("_target", target);
+
+			ezid.setMetadata(doi, metadataMap);
+		} catch (EZIDException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return null;
+		}
+		return "http://dx.doi.org/" + doi;
+	}
+
+	public boolean setDOIUnavailable(String doi) throws IOException {
+		EZIDService ezid = new EZIDService(Constants.ezid_url);
+		try {
+			ezid.login(Constants.doi_username, Constants.doi_password);
+
+			HashMap<String, String> metadataMap = new HashMap<String, String>();
+			metadataMap.put(InternalProfile.STATUS.toString(),
+					InternalProfileValues.UNAVAILABLE.toString());
+
+			ezid.setMetadata(doi, metadataMap);
+		} catch (EZIDException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return false;
+		}
+		return true;
+	}
+
+	public boolean isPermanentDOI() {
+		return permanentDOI;
+	}
+
+	/**
+	 * Set the permanentDOI check in EzidService
+	 *
+	 * @param permanentDOI
+	 *            If this is set to true, EzidService create permanent DOIs If
+	 *            this is set to false, EzidService create temporary DOIs
+	 */
+	public void setPermanentDOI(boolean permanentDOI) {
+		this.permanentDOI = permanentDOI;
+	}
+
+	@POST
+	@Path("/")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response setROStatus(String doiInfo) {
+		boolean permanent = false;
+		HashMap<String, String> metadataMap = new HashMap<String, String>();
+		try {
+
+			JSONObject doiInfoObj = new JSONObject(doiInfo);
+			if (!doiInfoObj.has("target")) {
+				return Response
+						.status(ClientResponse.Status.BAD_REQUEST)
+						.entity(new JSONObject().put("Failure",
+								"target not specified").toString()).build();
+			}
+
+			String targetUrl = doiInfoObj.get("target").toString();
+			metadataMap.put(InternalProfile.TARGET.toString(), targetUrl);
+
+			if (doiInfoObj.has("permanent")
+					&& doiInfoObj.get("permanent").toString().equals("true")) {
+				permanent = true;
+			}
+			String metadata = doiInfoObj.has("metadata") ? doiInfoObj.get(
+					"metadata").toString() : "";
+			metadataMap.putAll(getTranslatedTerms(new JSONObject(metadata)));
+			// An RO is generically a datacite collection
+			metadataMap.put(DataCiteProfile.RESOURCE_TYPE.toString(),
+					DataCiteProfileResourceTypeValues.COLLECTION.toString());
+
+			EZIDService ezid = new EZIDService(Constants.ezid_url);
+
+			String shoulder = (permanent) ? Constants.doi_shoulder_prod
+					: Constants.doi_shoulder_test;
+			String doi_url = null;
+			try {
+				ezid.login(Constants.doi_username, Constants.doi_password);
+
+				doi_url = ezid.mintIdentifier(shoulder, metadataMap);
+			} catch (EZIDException e) {
+				// null value will trigger error message
+				e.printStackTrace();
+			}
+			if (doi_url != null) {
+				System.out.println(EzidService.class.getName()
+						+ " : DOI created Successfully - " + doi_url);
+				return Response.ok(
+						new JSONObject().put("doi", doi_url).toString())
+						.build();
+			} else {
+				System.out.println(EzidService.class.getName()
+						+ " : Error creating DOI ");
+				return Response
+						.status(ClientResponse.Status.INTERNAL_SERVER_ERROR)
+						.entity(new JSONObject().put("Failure",
+								"Error occurred while generating DOI")
+								.toString()).build();
+			}
+		} catch (JSONException e) {
+			e.printStackTrace();
+			return Response.status(ClientResponse.Status.BAD_REQUEST).build();
+		}
+	}
 }

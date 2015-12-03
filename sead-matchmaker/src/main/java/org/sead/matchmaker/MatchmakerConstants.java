@@ -23,7 +23,6 @@ import java.util.Properties;
 
 public class MatchmakerConstants {
 
-    public static final String JSON_CONTENT_TYPE = "application/json";
     public static final String PDT_REPOSITORIES = "repositories";
     public static final String PDT_PEOPLE = "people";
 

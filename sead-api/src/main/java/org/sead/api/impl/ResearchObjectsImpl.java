@@ -96,6 +96,21 @@ public class ResearchObjectsImpl extends ResearchObjects {
         return Response.status(response.getStatus()).entity(response
                 .getEntity(new GenericType<String>() {})).cacheControl(control).build();
     }
+    
+    @GET
+    @Path("/new/")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getNewROsList() {
+        WebResource webResource = pdtWebService;
+
+        ClientResponse response = webResource.path("researchobjects/new/")
+                .accept("application/json")
+                .type("application/json")
+                .get(ClientResponse.class);
+
+        return Response.status(response.getStatus()).entity(response
+                .getEntity(new GenericType<String>() {})).cacheControl(control).build();
+    }
 
     @GET
     @Path("/{id}")
@@ -144,7 +159,7 @@ public class ResearchObjectsImpl extends ResearchObjects {
                 System.out.println("Failed to generate FGDC metadata for " + id);
             }
 
-            // if the status update in PDT is successful, we have to send to DOI to Clowder
+            // if the status update in PDT is successful, we have to send to DOI to project space/data source
             // first get the RO JSON to find the callback URL
             ClientResponse roResponse = pdtWebService.path("researchobjects")
                     .path(id)
@@ -169,7 +184,7 @@ public class ResearchObjectsImpl extends ResearchObjects {
                         .type("application/json")
                         .post(ClientResponse.class, body);
                 // TODO log
-                System.out.println("Clowder Updated, Response : " + pubRequestorResponse.getEntity(String.class));
+                System.out.println("Project Space/Data Source Updated, Response : " + pubRequestorResponse.getEntity(String.class));
             }
             return Response.status(ClientResponse.Status.OK).cacheControl(control).build();
         }
