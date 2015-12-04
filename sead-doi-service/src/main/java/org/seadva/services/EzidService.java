@@ -39,6 +39,7 @@ import edu.ucsb.nceas.ezid.profile.ErcMissingValueCode;
 import edu.ucsb.nceas.ezid.profile.InternalProfile;
 import edu.ucsb.nceas.ezid.profile.InternalProfileValues;
 
+import org.omg.CORBA.PRIVATE_MEMBER;
 import org.seadva.services.util.Constants;
 import org.json.*;
 
@@ -246,8 +247,21 @@ public class EzidService {
 	}
 
 	private static void setEntry(Map<String, String> map, String term,
-			String value) {
+			JSONObject metadata_object, String key) {
+		String value = null;
+		if (metadata_object.has(key) && !metadata_object.isNull(key)) {
+			try {
+				value = metadata_object.getString(key);
+			} catch (JSONException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		setEntry(map, term, value);
+	}
 
+	private static void setEntry(Map<String, String> map, String term,
+			String value) {
 		if (value == null || value.length() == 0) {
 			map.put(term, ErcMissingValueCode.UNAVAILABLE.toString());
 		} else {
@@ -306,19 +320,21 @@ public class EzidService {
 	private Map<? extends String, ? extends String> getTranslatedTerms(
 			JSONObject metadata_object) throws JSONException {
 		HashMap<String, String> metadata = new HashMap<String, String>();
-		setEntry(metadata, DataCiteProfile.TITLE.toString(),
-				metadata_object.getString("title"));
-		setEntry(metadata, DataCiteProfile.CREATOR.toString(),
-				metadata_object.getString("creator"));
+		setEntry(metadata, DataCiteProfile.TITLE.toString(), metadata_object,
+				"title");
+		setEntry(metadata, DataCiteProfile.CREATOR.toString(), metadata_object,
+				"creator");
 		setEntry(metadata, DataCiteProfile.PUBLISHER.toString(),
-				metadata_object.getString("publisher"));
+				metadata_object, "publisher");
 		String realyear = String.valueOf(Calendar.getInstance().get(
 				Calendar.YEAR));
-		String pubyear = metadata_object.getString("pubDate");
-		if ((pubyear != null) && (pubyear.length() != 0)) {
-			realyear = pubyear;
+		if (metadata_object.has("pubDate")) {
+			String pubyear = metadata_object.getString("pubDate");
+			if ((pubyear != null) && (pubyear.length() != 0)) {
+				realyear = pubyear;
+			}
+			metadata.put(DataCiteProfile.PUBLICATION_YEAR.toString(), realyear);
 		}
-		metadata.put(DataCiteProfile.PUBLICATION_YEAR.toString(), realyear);
 		return metadata;
 
 	}
