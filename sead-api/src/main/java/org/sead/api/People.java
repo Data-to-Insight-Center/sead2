@@ -90,7 +90,7 @@ public abstract class People {
     @GET
     @Path("/{id}/raw")
     @Produces(MediaType.APPLICATION_JSON)
-    public abstract Response getRawPersonProfile(@PathParam("id") String id);
+    public abstract Response getRawPersonProfile(@Encoded @PathParam("id") String id);
 
 	/**
 	 * Request to update the profile for a given person
@@ -104,7 +104,7 @@ public abstract class People {
 	@PUT
 	@Path("/{id}")
 	@Consumes(MediaType.APPLICATION_JSON)
-	public abstract Response updatePersonProfile(@PathParam("id") String id);
+	public abstract Response updatePersonProfile(@Encoded @PathParam("id") String id);
 
 	/**
 	 * Unregister a person and remove their profile
@@ -117,6 +117,6 @@ public abstract class People {
 	 */
 	@DELETE
 	@Path("/{id}")
-	public abstract Response unregisterPerson(@PathParam("id") String id);
+	public abstract Response unregisterPerson(@Encoded @PathParam("id") String id);
 
 }
