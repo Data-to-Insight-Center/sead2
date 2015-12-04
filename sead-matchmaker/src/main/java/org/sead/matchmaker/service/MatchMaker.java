@@ -83,7 +83,8 @@ public class MatchMaker {
 		if (stats == null) {
 			messageString += "Missing Statistics";
 		}
-		Document rightsHolders = (Document) request.get("Rights Holder");
+		//May be a string or array, not necessarily a document like the other elements
+		Object rightsHolders = request.get("Rights Holder");
 		if (rightsHolders == null) {
 			messageString += "Missing Rights Holder(s)";
 		}

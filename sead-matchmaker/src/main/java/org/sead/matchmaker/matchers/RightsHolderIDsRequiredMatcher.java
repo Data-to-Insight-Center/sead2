@@ -38,7 +38,7 @@ import javax.ws.rs.core.MediaType;
 
 public class RightsHolderIDsRequiredMatcher implements Matcher {
 
-	public RuleResult runRule(Document aggregation, Document rightsHolders,
+	public RuleResult runRule(Document aggregation, Object rightsHolders,
 			BasicBSONList affiliations, Document preferences,
 			Document statsDocument, Document profile, Object context) {
 		RuleResult result = new RuleResult();
@@ -47,12 +47,12 @@ public class RightsHolderIDsRequiredMatcher implements Matcher {
 		if (!idsRequired) {
 			return result;
 		}
-		Object creatorObject = aggregation.get("Rights Holder");
+		
 		boolean atleastonecreator = false;
 		BasicBSONList nonIDscreators = new BasicBSONList();
-		if (creatorObject != null) {
-			if (creatorObject instanceof ArrayList) {
-				Iterator<String> iter = ((ArrayList<String>) creatorObject)
+		if (rightsHolders != null) {
+			if (rightsHolders instanceof ArrayList) {
+				Iterator<String> iter = ((ArrayList<String>) rightsHolders)
 						.iterator();
 
 				while (iter.hasNext()) {
@@ -67,9 +67,9 @@ public class RightsHolderIDsRequiredMatcher implements Matcher {
 			} else {
 				// BasicDBObject - single value
 				atleastonecreator = true;
-				String idString = getInternalId(((String) creatorObject));
+				String idString = getInternalId(((String) rightsHolders));
 				if (idString == null) {
-					nonIDscreators.add((String) creatorObject);
+					nonIDscreators.add((String) rightsHolders);
 				}
 			}
 		}
