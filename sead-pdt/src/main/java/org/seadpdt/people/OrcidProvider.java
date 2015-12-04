@@ -32,6 +32,7 @@ import org.seadpdt.PeopleServices;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.client.MongoCollection;
+import com.mongodb.diagnostics.logging.Logger;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
@@ -39,7 +40,8 @@ import com.sun.jersey.api.client.WebResource;
 public class OrcidProvider extends Provider {
 
 	@Override
-	public Document getExternalProfile(JSONObject person) throws RuntimeException {
+	public Document getExternalProfile(JSONObject person)
+			throws RuntimeException {
 		String id = person.getString(PeopleServices.identifier);
 		Document profile = null;
 		if (id != null) {
@@ -70,32 +72,39 @@ public class OrcidProvider extends Provider {
 				((Document) detailsDocument.get("given-names")).get("value"));
 		personDocument.put("familyName",
 				((Document) detailsDocument.get("family-name")).get("value"));
-		ArrayList emails = ((ArrayList<?>) ((Document) ((Document) ((Document) rawDocument
-				.get("orcid-profile")).get("orcid-bio")).get("contact-details"))
-				.get("email"));
-		if (!emails.isEmpty()) {
-			personDocument
-					.put("email", ((Document) emails.get(0)).get("value"));
+		Document contactDetails = ((Document) ((Document) ((Document) rawDocument
+				.get("orcid-profile")).get("orcid-bio")).get("contact-details"));
+		if (contactDetails != null) {
+			ArrayList emails = ((ArrayList<?>) contactDetails.get("email"));
+			if (!emails.isEmpty()) {
+				personDocument.put("email",
+						((Document) emails.get(0)).get("value"));
+			}
 		}
 		personDocument.put("PersonalProfileDocument",
 				((Document) ((Document) rawDocument.get("orcid-profile"))
 						.get("orcid-identifier")).get("uri"));
-		@SuppressWarnings("unchecked")
-		ArrayList<Document> affiliationsList = (ArrayList<Document>) ((Document) ((Document) ((Document) rawDocument
-				.get("orcid-profile")).get("orcid-activities"))
-				.get("affiliations")).get("affiliation");
-		StringBuffer affs = new StringBuffer();
-		for (Document affiliationDocument : affiliationsList) {
-			if (affiliationDocument.getString("type").equals("EMPLOYMENT")
-					&& (affiliationDocument.get("end-date") == null)) {
-				if (affs.length() != 0) {
-					affs.append(", ");
-				}
-				affs.append(((Document) affiliationDocument.get("organization"))
-						.getString("name"));
+		try {
+			@SuppressWarnings("unchecked")
+			ArrayList<Document> affiliationsList = (ArrayList<Document>) ((Document) ((Document) ((Document) rawDocument
+					.get("orcid-profile")).get("orcid-activities"))
+					.get("affiliations")).get("affiliation");
+			StringBuffer affs = new StringBuffer();
+			for (Document affiliationDocument : affiliationsList) {
+				if (affiliationDocument.getString("type").equals("EMPLOYMENT")
+						&& (affiliationDocument.get("end-date") == null)) {
+					if (affs.length() != 0) {
+						affs.append(", ");
+					}
+					affs.append(((Document) affiliationDocument
+							.get("organization")).getString("name"));
 
+				}
+				personDocument.append("affiliation", affs.toString());
 			}
-			personDocument.append("affiliation", affs.toString());
+		} catch (Exception e) {
+			// Info not available
+
 		}
 
 		return personDocument;
@@ -104,7 +113,7 @@ public class OrcidProvider extends Provider {
 
 	public static Document getRawProfile(String rawID) {
 		Client client = Client.create();
-		
+
 		WebResource webResource = client.resource("http://pub.orcid.org/v1.2/"
 				+ rawID + "/orcid-profile");
 
@@ -156,7 +165,7 @@ public class OrcidProvider extends Provider {
 
 		String baseDigits = id.replaceAll("-", "");
 		String checkDigit = baseDigits.substring(baseDigits.length() - 1);
-		baseDigits = baseDigits.substring(0, baseDigits.length()-1);
+		baseDigits = baseDigits.substring(0, baseDigits.length() - 1);
 
 		int total = 0;
 		for (int i = 0; i < baseDigits.length(); i++) {

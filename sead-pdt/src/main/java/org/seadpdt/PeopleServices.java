@@ -89,7 +89,7 @@ public class PeopleServices {
 		}
 
 		String newID = p.getCanonicalId((String) person.get(identifier));
-		person.put("@id", newID);
+		person.put(identifier, newID);
 
 		FindIterable<Document> iter = peopleCollection.find(new Document("@id",
 				newID));
