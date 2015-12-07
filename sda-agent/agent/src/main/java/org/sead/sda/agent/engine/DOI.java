@@ -26,6 +26,9 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 public class DOI {
 
     private String target;
@@ -78,6 +81,10 @@ public class DOI {
             // get publication date
             if (describes.get("Publication Date") != null) {
                 newData.put("pubDate", describes.get("Publication Date").toString());
+            } else {
+                SimpleDateFormat simpleDateFormat = new SimpleDateFormat("MMM dd, yyyy hh:mm:ss a");
+                String date = simpleDateFormat.format(new Date());
+                newData.put("pubDate", date);
             }
         }
         return newData.toJSONString();
