@@ -93,10 +93,15 @@ public class PeopleServices {
 
 		String newID;
 		if (p != null) {
+			//Know which provider the ID is from (as claimed by the client) so go direct to get its canonical form
 			newID = p.getCanonicalId(rawID);
 		} else {
+			//Don't know the provider, so find it and the canonical ID together
 			Profile profile = Provider.findCanonicalId(rawID);
+			if(profile!=null) {
+				 
 			p = Provider.getProvider(profile.getProvider());
+			} //else no provider recognized the id (e.g. it's a string), so we'll just fail with a null Provier
 			if (p == null) {
 				return Response
 						.status(Status.BAD_REQUEST)
