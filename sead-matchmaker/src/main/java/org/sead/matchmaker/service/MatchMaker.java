@@ -83,7 +83,8 @@ public class MatchMaker {
 		if (stats == null) {
 			messageString += "Missing Statistics";
 		}
-		//May be a string or array, not necessarily a document like the other elements
+		// May be a string or array, not necessarily a document like the other
+		// elements
 		Object rightsHolders = request.get("Rights Holder");
 		if (rightsHolders == null) {
 			messageString += "Missing Rights Holder(s)";
@@ -199,19 +200,18 @@ public class MatchMaker {
 		}
 		if (personProfile == null) {
 			System.out.println("Can't identify the person: " + personID);
+		} else {
+			// find organization names of the person
+			Document profileDocument = Document.parse(personProfile);
+			orgs.add(profileDocument.getString("affiliation"));
 		}
-		// find organization names of the person
-		Document profileDocument = Document.parse(personProfile);
-		orgs.add(profileDocument.getString("affiliation"));
-
 		return orgs;
 	}
 
 	private String pdtGET(String path) {
 		ClientResponse response = pdtResource.path(path)
 				.accept(MediaType.APPLICATION_JSON)
-				.type(MediaType.APPLICATION_JSON)
-				.get(ClientResponse.class);
+				.type(MediaType.APPLICATION_JSON).get(ClientResponse.class);
 		if (response.getStatus() == 200) {
 			return response.getEntity(String.class);
 		} else {
