@@ -81,14 +81,32 @@ public class PeopleServices {
 			p = Provider.getProvider((String) person.get(provider));
 
 		}
-		if (!person.has(identifier) || p == null) {
+
+		if (!person.has(identifier)) {
 			return Response
 					.status(Status.BAD_REQUEST)
 					.entity(new BasicDBObject("Failure",
-							"Invalid request format")).build();
+							"Invalid request format: missing identifier"))
+					.build();
+		}
+		String rawID = (String) person.get(identifier);
+
+		String newID;
+		if (p != null) {
+			newID = p.getCanonicalId(rawID);
+		} else {
+			Profile profile = Provider.findCanonicalId(rawID);
+			p = Provider.getProvider(profile.getProvider());
+			if (p == null) {
+				return Response
+						.status(Status.BAD_REQUEST)
+						.entity(new BasicDBObject("Failure",
+								"Invalid request format:identifier not recognized"))
+						.build();
+			}
+			newID = profile.getIdentifier();
 		}
 
-		String newID = p.getCanonicalId((String) person.get(identifier));
 		person.put(identifier, newID);
 
 		FindIterable<Document> iter = peopleCollection.find(new Document("@id",

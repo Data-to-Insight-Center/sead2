@@ -48,7 +48,7 @@ public class VersionInfoImpl extends VersionInfo {
 	@Path("/")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response getVersionInfo() {
-		Document verDocument = new Document("version", "0.9.2");
+		Document verDocument = new Document("version", "0.9.3beta1");
 		return Response.ok(verDocument.toJson()).cacheControl(control).build();
 
 	}
