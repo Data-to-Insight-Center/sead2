@@ -93,6 +93,9 @@ public class MatchMaker {
 		if (context == null) {
 			messageString += "Missing @context";
 		}
+        if(content.get("Creator") == null) {
+            messageString += "Missing Creator";
+        }
 
 		if (messageString == null) {
 			// Get organization from profile(s)
