@@ -19,24 +19,22 @@
 
 package org.sead.sda;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.net.URLDecoder;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
+import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
+import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
 
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-
-import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
-import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.URLDecoder;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * SDA LandingPage
@@ -71,7 +69,7 @@ public class LandingPage extends HttpServlet {
             JSONArray status = (JSONArray) cp.get("Status");
             String doi = ((JSONObject) status.get(1)).get("message").toString();
             roProperties.put("DOI", doi);
-            roProperties.put("Full Metadata", oreUrl);
+            roProperties.put("Full Metadata", Constants.landingPage + "/" + tag + "/oremap");
             addROProperty("Creator", describes, roProperties);
             addROProperty("Publication Date", describes, roProperties);
             addROProperty("Label", describes, roProperties);

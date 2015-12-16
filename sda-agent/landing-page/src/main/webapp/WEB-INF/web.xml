@@ -14,10 +14,23 @@
         <servlet-name>sda-landing</servlet-name>
         <servlet-class>org.sead.sda.LandingPage</servlet-class>
     </servlet>
+    <servlet>
+        <servlet-name>sda-metadata</servlet-name>
+        <servlet-class>org.glassfish.jersey.servlet.ServletContainer</servlet-class>
+        <init-param>
+            <param-name>jersey.config.server.provider.packages</param-name>
+            <param-value>org.sead.sda</param-value>
+        </init-param>
+        <load-on-startup>1</load-on-startup>
+    </servlet>
 
     <servlet-mapping>
         <servlet-name>sda-landing</servlet-name>
         <url-pattern>/sda/*</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>sda-metadata</servlet-name>
+        <url-pattern>/metadata/*</url-pattern>
     </servlet-mapping>
 
 </web-app>
