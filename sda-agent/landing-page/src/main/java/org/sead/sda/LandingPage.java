@@ -33,8 +33,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URLDecoder;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 /**
  * SDA LandingPage
@@ -54,7 +53,8 @@ public class LandingPage extends HttpServlet {
         	}
         	
         	request.setAttribute("obTag", tag);
-        	
+        	request.setAttribute("landingPageUrl", Constants.landingPage);
+
             Shimcalls shim = new Shimcalls();
             JSONObject cp = shim.getResearchObject(tag);
             
@@ -62,18 +62,21 @@ public class LandingPage extends HttpServlet {
             String oreUrl = shim.getID();
             JSONObject oreFile = shim.getResearchObjectORE(oreUrl);
             JSONObject describes = (JSONObject) oreFile.get("describes");
-            Map<String, String> roProperties = new HashMap<String, String>();
+            Map<String, List<String>> roProperties = new HashMap<String, List<String>>();
             Map<String, String> downloadList = new HashMap<String, String>();
 
             // extract properties from ORE
             JSONArray status = (JSONArray) cp.get("Status");
             String doi = ((JSONObject) status.get(1)).get("message").toString();
-            roProperties.put("DOI", doi);
-            roProperties.put("Full Metadata", Constants.landingPage + "/" + tag + "/oremap");
+            roProperties.put("DOI", Arrays.asList(doi));
+            roProperties.put("Full Metadata", Arrays.asList(Constants.landingPage + "/metadata/" + tag + "/oremap"));
             addROProperty("Creator", describes, roProperties);
             addROProperty("Publication Date", describes, roProperties);
             addROProperty("Label", describes, roProperties);
             addROProperty("Abstract", describes, roProperties);
+
+            Map<String, String> properties = new HashMap<String, String>();
+            String Label = properties.get("Label");
            
             // set properties as an attribute
             request.setAttribute("roProperties", roProperties);
@@ -225,14 +228,19 @@ public class LandingPage extends HttpServlet {
     }
 
     private void addROProperty(String propertyName, JSONObject describes,
-                               Map<String, String> properties) {
+                               Map<String, List<String>> properties) {
     	Object valJSON = describes.get(propertyName);
         if (valJSON != null) {
             // some properties my come as arrays
+            List<String> list = new ArrayList<String>();
             if (valJSON instanceof JSONArray) {
-                properties.put(propertyName, ((JSONArray) valJSON).get(0).toString());
+                for(int i=0; i < ((JSONArray) valJSON).size() ; i++) {
+                    list.add(((JSONArray) valJSON).get(i).toString());
+                }
+                properties.put(propertyName,list);
             } else {
-                properties.put(propertyName, valJSON.toString());
+                list.add(valJSON.toString());
+                properties.put(propertyName, list);
             }
         }    
     }
