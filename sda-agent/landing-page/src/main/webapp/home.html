@@ -2,36 +2,20 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>IU SEAD Cloud - Home Page</title>
+    <title>IU SEAD Cloud</title>
     <meta name="description" content="A description of your website">
     <meta name="keywords" content="keyword1, keyword2, keyword3">
     <link href="css/style.css" rel="stylesheet" type="text/css">
     <script src="js/jquery.min.js"></script>
-    <script>
-        $(document).ready(function(){
-            $(".show-more a").on("click", function() {
-            var $this = $(this);
-            var $content = $this.parent().prev("div#formats");
-            var linkText = $this.text().toUpperCase();
-
-            if(linkText.toLowerCase() == "more.."){
-                linkText = "Less..";
-                $content.attr("class","showContent");
-            } else {
-                linkText = "More..";
-                $content.attr("class","hideContent");
-            };
-
-            $this.text(linkText);
-            });
-        });
-
-
-    </script>
 </head>
 <body>
 
 <div id="wrapper">
+
+    <div style="display : inline-block; padding: 15px 45px 15px 45px;">
+        <img align="left" src="http://brand.iu.edu/img/signatures/indiana-university/indiana-university" style="width: 30%;height: 30%;">
+        <img align="right" src="http://sead-data.net/wp-content/uploads/2014/06/logo.png" style="width: 40%;height: 40%;">
+    </div>
 
     <div id="header">
         <h1>IU SEAD Cloud</h1>
@@ -41,127 +25,30 @@
 
         <div class="left_section">
             <div class="common_content">
-                <h2>About</h2>
-                <hr>
-                <p>IU SEAD Cloud provides a default publication solution for SEAD-affiliated users. It relies on the
-                    Indiana University Scholarly Data Archive (SDA) infrastructure, a distributed storage service
-                    co-located at IU data centers in Bloomington and Indianapolis, arranged in large files, with two
-                    copies of data made by default.</p>
+                <p>IU SEAD Cloud is a default publication solution for the users of <a href="http://sead-data.net/">SEAD</a>, a collaborative NSF-funded project to create tools and services in support of data publication needs of sustainability science research. It relies on the Indiana University <a href="https://kb.iu.edu/d/aiyi">Scholarly Data Archive (SDA)</a> infrastructure, a distributed storage service co-located at IU data centers in Bloomington and Indianapolis, arranged in large files, with two copies of data made by default.</p>
+                <p>IU SEAD Cloud is supported by the team from the IU <a href="http://d2i.indiana.edu">Data to Insight Center</a>. It accepts data from any SEAD-affiliated user. To become SEAD user, you will need to create an account and set up a project space. Visit <a href="http://sead-data.net/help/">SEAD help pages</a> to learn how to do that.</p>
                 <br>
             </div>
 
-            <div class="top_content border_none">
-                <div class="column_one">
-                    <h2>Licence</h2>
-
-                    <p>Creative Commons Family
-                        </br><a href="https://creativecommons.org/licenses/">https://creativecommons.org/licenses/</a>
-                    </p>
-                    <br>
-
-                    <p></p>
-
-                    <h2>Metadata Format</h2>
-
-                    <p>Dublin Core
-                        </br><a href="http://www.dcc.ac.uk/resources/metadata-standards/dublin-core">
-                            http://www.dcc.ac.uk/resources/metadata-standards/dublin-core</a></p>
-                    <br>
-
-                    <p></p>
-
-                    <h2>Maximum Data Size</h2>
-
-                    <p>200 GB</p>
-                    <br>
-                </div>
-                <div class="column_two border_left">
-                    <h2>File Formats</h2>
-
-                    <div id="formats" class="hideContent">
-                        application/pdf</br>
-                        application/rdf+xml; charset=utf-8</br>
-                        text/xml</br>
-                        text/plain</br>
-                        text/html</br>
-                        text/css</br>
-                        application/msword</br>
-                        application/vnd.openxmlformats-officedocument.wordprocessingml.document</br>
-                        application/vnd.ms-powerpoint</br>
-                        application/vnd.openxmlformats-officedocument.presentationml.presentation</br>
-                        application/vnd.ms-excel</br>
-                        application/vnd.openxmlformats-officedocument.spreadsheetml.sheet</br>
-                        application/marc</br>
-                        image/jpeg</br>
-                        image/gif</br>
-                        image/png</br>
-                        image/tiff</br>
-                        audio/x-aiff</br>
-                        audio/basic</br>
-                        audio/x-wav</br>
-                        video/mpeg</br>
-                        text/richtext</br>
-                        application/vnd.visio</br>
-                        application/x-filemaker</br>
-                        image/x-ms-bmp</br>
-                        application/x-photoshop</br>
-                        application/postscript</br>
-                        video/quicktime</br>
-                        audio/x-mpeg</br>
-                        application/vnd.ms-project</br>
-                        application/mathematica</br>
-                        application/x-latex</br>
-                        application/x-tex</br>
-                        application/x-dvi</br>
-                        application/sgml</br>
-                        application/wordperfect5.1</br>
-                        audio/x-pn-realaudio</br>
-                        image/x-photo-cd</br>
-                        application/vnd.oasis.opendocument.text</br>
-                        application/vnd.oasis.opendocument.text-template</br>
-                        application/vnd.oasis.opendocument.text-web</br>
-                        application/vnd.oasis.opendocument.text-master</br>
-                        application/vnd.oasis.opendocument.graphics</br>
-                        application/vnd.oasis.opendocument.graphics-template</br>
-                        application/vnd.oasis.opendocument.presentation</br>
-                        application/vnd.oasis.opendocument.presentation-template</br>
-                        application/vnd.oasis.opendocument.spreadsheet</br>
-                        application/vnd.oasis.opendocument.spreadsheet-template</br>
-                        application/vnd.oasis.opendocument.chart</br>
-                        application/vnd.oasis.opendocument.formula</br>
-                        application/vnd.oasis.opendocument.database</br>
-                        application/vnd.oasis.opendocument.image</br>
-                        application/vnd.openofficeorg.extension</br>
-                        application/vnd.sun.xml.writer</br>
-                        application/vnd.sun.xml.writer.template</br>
-                        application/vnd.sun.xml.calc</br>
-                        application/vnd.sun.xml.calc.template</br>
-                        application/vnd.sun.xml.draw</br>
-                        application/vnd.sun.xml.draw.template</br>
-                        application/vnd.sun.xml.impress</br>
-                        application/vnd.sun.xml.impress.template</br>
-                        application/vnd.sun.xml.writer.global</br>
-                        application/vnd.sun.xml.math</br>
-                        application/vnd.stardivision.writer</br>
-                        application/vnd.stardivision.writer-global</br>
-                        application/vnd.stardivision.calc</br>
-                        application/vnd.stardivision.draw</br>
-                        application/vnd.stardivision.impress</br>
-                        application/vnd.stardivision.impress-packed</br>
-                        application/vnd.stardivision.math</br>
-                        application/vnd.stardivision.chart</br>
-                        application/vnd.stardivision.mail</br>
-                    </div>
-                    <div class="show-more">
-                        <a href="#">More..</a>
-                    </div>
+            <div class="common_content">
+                <div>
+                    <h2>What kinds of data does IU SEAD Cloud accept?</h2>
+                    <p> IU SEAD Cloud accepts research data from researchers and professionals who are working in the broad, multidisciplinary area of sustainability science and who do not have another place for publishing their data, for example, an institutional or a disciplinary repository. To be accepted into IU SEAD Cloud, your data must satisfy the following criteria:
+                    </p></br>
+                    <ul>
+                        <li>Dataset  cannot exceed 200 GB. If you have data that exceeds 200 GB, it needs to be split into several smaller datasets.</li>
+                        <li>Most types of files can be submitted for publication (e.g., text, spreadsheets, images, videos, software code). Compressed archives of multiple files (e.g., zip) are accepted too.</li>
+                        <li>Datasets must be released under one of the <a href="https://creativecommons.org/licenses/">Creative Commons Family</a> licenses.</li>
+                        <li>Currently, IU SEAD Cloud does not accept submissions that contain sensitive or personally identifiable information, since all data is publicly available. Human subject or sensitive ecological data must  be anonymized.</li>
+                        <li>IU SEAD Cloud supports a variety of metadata formats, including <a href="http://www.dcc.ac.uk/resources/metadata-standards/dublin-core">Dublin Core</p> and <a href="https://www.fgdc.gov/metadata/geospatial-metadata-standards#csdgm">the Content Standard for Digital Geospatial Metadata (CSDGM)</a>. Metadata needs to be serialized in an XML file or in the <a href="https://www.openarchives.org/ore/">OAI ORE map</a>.</li>
+                    </ul>
                 </div>
             </div>
         </div>
 
 
         <div class="clear"></div>
-        <div id="footer">Contributed by "SEAD - Indiana University Bloomington"<br>
+        <div id="footer">IU SEAD Cloud is supported by the SEAD project and the IU Data to Insight Center under the National Science Foundation under cooperative agreement #OCI0940824.<br>
         </div>
 
     </div>

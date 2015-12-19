@@ -26,7 +26,7 @@
 
 <div id="wrapper" align = "center">
 	<div style = "display : inline-block">
-        <h1>IU SEAD Cloud</h1>
+        <h1 style="cursor: pointer;"><a style="color: #333; text-decoration: none;" href="<%= sdaUrl%>">IU SEAD Cloud</a></h1>
 	</div>
     
     <div id="page-wrapper" align = "center">
@@ -114,7 +114,7 @@
                     <a href="<%= sdaUrl%>">IU SEAD Cloud</a>
                 </div>
                 <div style="float: right; font-size:11px">
-                    <a href="http://seadva.d2i.indiana.edu:8181/sead-access/">SEAD</a>
+                    <a href="http://sead-data.net/">SEAD</a>
                 </div>
             </div>
         </div>

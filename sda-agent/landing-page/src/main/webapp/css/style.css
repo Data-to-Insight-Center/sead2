@@ -145,16 +145,16 @@ h6 {
 	/*----background:url(../images/header.jpg) no-repeat left top;
 	height:177px;
 	padding:90px 95px 0 95px;----*/
-	padding: 15px 95px 15px 95px;
-    background-color: rgb(204, 222, 232);
+	padding: 10px 95px 0px 95px;
+    background-color: #FFFFFF;
 /*	-webkit-border-radius: 5px 5px 0px 0px;-moz-border-radius: 5px 5px 0px 0px;border-radius: 5px 5px 0px 0px;
 */}
 
 #header h1{
-	font-size:32px;
+	font-size:40px;
 	color:#24162f;
 	margin:0px;
-	padding:0px 0px 10px;
+	padding:0px 0px 0px;
 }
 
 #header h1 a {
@@ -177,7 +177,7 @@ h6 {
 
 /*----start page content----*/
 #page_content{
-	background-color:#F1F1F2;
+	background-color:#FFFFFF;
 	padding:10px;
 }
 
@@ -255,7 +255,7 @@ a.btn:hover{
 }
 
 .common_content{
-	padding:0 0 20px 0;
+	padding:0 0 10px 0;
 }
 
 .border_left{
@@ -322,15 +322,15 @@ a.btn:hover{
 /*----start footer content----*/
 #footer{
 	clear:both;
-	margin-top:18px;
-	padding:12px 0 12px 0;
+	/*----margin-top:18px;----*/
+	padding:5px 0 12px 0;
 	color:#000000;
 	height:20px;
 	text-align:center;
 	font-family:Verdana, Geneva, sans-serif;
-	font-size:12px;
+	font-size:11px;
 	line-height:20px;
-	background-color:#E1EBF1;
+	background-color:#FFFFFF;
 }
 
 .hideContent {
