@@ -17,6 +17,7 @@
 package org.sead.va.dataone;
 
 
+import com.mongodb.BasicDBObject;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
@@ -50,7 +51,9 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.UUID;
 
 
@@ -199,7 +202,32 @@ public class Object {
                 countZero = true;
         }
 
-        FindIterable<Document> iter = fgdcCollection.find();
+        BasicDBObject andQuery = new BasicDBObject();
+        List<BasicDBObject> obj = new ArrayList<BasicDBObject>();
+        if(formatId!=null) {
+            String tempFormat = SeadQueryService.d12seadFormat.get(formatId);
+            if(tempFormat ==null)
+                tempFormat = formatId;
+            obj.add(new BasicDBObject(Constants.META_INFO + "." + Constants.META_FORMAT, tempFormat));
+        }
+
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
+        if(fromDate!=null) {
+            fromDate = fromDate.replace("+00:00","Z");
+            obj.add(new BasicDBObject(Constants.META_INFO + "." + Constants.META_UPDATE_DATE,
+                    new BasicDBObject("$gte", fromDate)));
+        }
+        if(toDate!=null) {
+            toDate = toDate.replace("+00:00","Z");
+            obj.add(new BasicDBObject(Constants.META_INFO + "." + Constants.META_UPDATE_DATE,
+                    new BasicDBObject("$lte", toDate)));
+        }
+
+        if(obj.size() != 0) {
+            andQuery.put("$and", obj);
+        }
+
+        FindIterable<Document> iter = fgdcCollection.find(andQuery);
         MongoCursor<Document> cursor = iter.iterator();
         int totalResutls = 0;
         ObjectList objectList = new ObjectList();
@@ -255,7 +283,6 @@ public class Object {
                 objectInfo.setFormatId(formatIdentifier);
             }
 
-            SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
             objectInfo.setDateSysMetadataModified(simpleDateFormat.parse(date));
 
             Checksum checksum = new Checksum();

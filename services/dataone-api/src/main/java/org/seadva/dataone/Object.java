@@ -33,8 +33,6 @@ import org.jibx.runtime.JiBXException;
 import org.seadva.model.SeadEvent;
 import org.seadva.model.SeadFile;
 import org.seadva.model.pack.ResearchObject;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
 import org.xml.sax.SAXException;
 
 import javax.servlet.ServletContext;
@@ -43,8 +41,6 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
 import java.io.ByteArrayInputStream;
@@ -191,11 +187,13 @@ public class Object{
 
 
         Map<String,Integer> doiCount = new HashMap<String, Integer>();
+        Map<String,String> queryParams = new HashMap<String, String>();
 
         String queryStr = SolrQueryUtil.createLiteralQuery("entityType", EntityTypeValue.FILE.solrValue())
                 +" AND "+SolrQueryUtil.createLiteralQuery("resourceType", "dataone");
 
         if(formatId!=null) {
+            queryParams.put("formatId", formatId);
             String tempFormat = SeadQueryService.d12seadFormat.get(formatId);
             if(tempFormat ==null)
                 tempFormat = formatId;
@@ -204,15 +202,19 @@ public class Object{
         }
 
         if(fromDate!=null&&toDate!=null) {
+            queryParams.put("fromDate", fromDate);
+            queryParams.put("toDate", toDate);
             fromDate = fromDate.replace("+00:00","Z");
             toDate = toDate.replace("+00:00","Z");
             queryStr+= " AND "+ SeadSolrField.EntityField.MDUPDATE_DATE.solrName() + ":" + "[" + fromDate+" TO " +toDate+ "]";
         }
         else if(fromDate!=null) {
+            queryParams.put("fromDate", fromDate);
             fromDate = fromDate.replace("+00:00","Z");
             queryStr+= " AND "+ SeadSolrField.EntityField.MDUPDATE_DATE.solrName() + ":" + "[" + fromDate+" TO NOW" + "]";
         }
         else if(toDate!=null) {
+            queryParams.put("toDate", toDate);
             toDate = toDate.replace("+00:00","Z");
             queryStr+= " AND "+ SeadSolrField.EntityField.MDUPDATE_DATE.solrName() + ":" + "[ NOW-365DAY TO " + toDate + "]";
         }
@@ -226,19 +228,20 @@ public class Object{
                 countZero = true;
         }
 
+
         QueryResult<DcsEntity> result = SeadQueryService.queryService.query(
                 queryStr
                 , start, count
         );    //add sort to the query by file name      + "&sort=fileName+asc"
 
         List<QueryMatch<DcsEntity>> matches = result.getMatches();
-
+        int solrCount = (int)result.getTotal();
 
         ObjectList objectList = new ObjectList();
 
         if(countZero){
             objectList.setCount(0);
-            objectList.setTotal((int)result.getTotal());
+            objectList.setTotal(solrCount);
             objectList.setStart(start);
             return SeadQueryService.marshal(objectList);
         }
@@ -322,7 +325,11 @@ public class Object{
 
         }
 
-        appendMongoNodes(objectList);
+        if(countStr!=null && solrCount < count) {
+            queryParams.put("start", "" + start);
+            queryParams.put("count", countStr);
+            appendMongoNodes(objectList, queryParams);
+        }
 
         objectList.setCount(result.getMatches().size());
         objectList.setTotal((int)result.getTotal());
@@ -330,72 +337,24 @@ public class Object{
         return SeadQueryService.marshal(objectList);
     }
 
-    private void appendMongoNodes(ObjectList objectList) throws ParseException {
+    private void appendMongoNodes(ObjectList objectList, Map<String, String> queryParams) throws ParseException, JiBXException {
 
         WebResource webResource = Client.create().resource(SeadQueryService.SEAD_DATAONE_URL);
-        ClientResponse response = webResource
-                .accept("application/xml")
-                .type("application/xml")
-                .get(ClientResponse.class);
-        String mongoResults = response.getEntity(new GenericType<String>() {});
-
-        Document doc = null;
-        try {
-            DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
-            DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
-            doc = dBuilder.parse(new ByteArrayInputStream(mongoResults.getBytes()));
-        }catch(ParserConfigurationException e){
-            System.out.println(e.getMessage());
-        }catch(SAXException e){
-            System.out.println(e.getMessage());
-        }catch(IOException e){
-            System.out.println(e.getMessage());
+        webResource.accept("application/xml").type("application/xml");
+        for(String param :queryParams.keySet()){
+            webResource = webResource.queryParam(param, queryParams.get(param));
         }
+        ClientResponse response = webResource.get(ClientResponse.class);
+        ObjectList mongoResults = (ObjectList) SeadQueryService.unmarshal(response.getEntityInputStream(), ObjectList.class);
 
-        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
-        org.w3c.dom.NodeList mongoNodes = doc.getElementsByTagName("objectInfo");
-
-        if(mongoNodes == null){
+        if(mongoResults.getObjectInfoList() == null){
             return;
         }
 
-        for (int i = 0; i < mongoNodes.getLength(); i++) {
-            org.w3c.dom.Node node = mongoNodes.item(i);
-
-            if (node.getNodeType() == org.w3c.dom.Node.ELEMENT_NODE) {
-                Element element = (Element) node;
-                ObjectInfo objectInfo =  new ObjectInfo();
-                Identifier identifier = new Identifier();
-                identifier.setValue(getValue("identifier", element));
-                objectInfo.setIdentifier(identifier);
-
-                objectInfo.setSize(BigInteger.valueOf(Long.parseLong(getValue("size", element))));
-
-                ObjectFormatIdentifier formatIdentifier = new ObjectFormatIdentifier();
-                formatIdentifier.setValue(getValue("formatId", element));
-                objectInfo.setFormatId(formatIdentifier);
-
-                objectInfo.setDateSysMetadataModified(simpleDateFormat.parse(getValue("dateSysMetadataModified", element)));
-
-                Checksum checksum = new Checksum();
-                checksum.setAlgorithm(getAttributeValue("checksum", "algorithm", element));
-                checksum.setValue(getValue("checksum", element));
-                objectInfo.setChecksum(checksum);
-                objectList.getObjectInfoList().add(objectInfo);
-            }
+        for(ObjectInfo objectInfo : mongoResults.getObjectInfoList()) {
+            objectList.getObjectInfoList().add(objectInfo);
         }
     }
 
-    private static String getValue(String tag, Element element) {
-        org.w3c.dom.NodeList nodes = element.getElementsByTagName(tag).item(0).getChildNodes();
-        org.w3c.dom.Node node = nodes.item(0);
-        return node.getNodeValue();
-    }
-
-    private static String getAttributeValue(String tag, String attribute, Element element) {
-        org.w3c.dom.NodeList nodes = element.getElementsByTagName(tag);
-        org.w3c.dom.Node node = nodes.item(0);
-        return node.getAttributes().getNamedItem(attribute).getNodeValue();
-    }
 
 }

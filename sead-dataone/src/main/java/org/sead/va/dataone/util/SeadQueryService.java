@@ -38,7 +38,7 @@ public class SeadQueryService {
     static Map<String, String> sead2d1EventTypes;
 
     public static Map<String, String> sead2d1Format;
-    static Map<String, String> d12seadFormat;
+    public static Map<String, String> d12seadFormat;
     public static String solrPath;
     public static String datastreamURL;
 
