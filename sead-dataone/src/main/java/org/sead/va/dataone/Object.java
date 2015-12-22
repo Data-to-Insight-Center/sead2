@@ -39,6 +39,8 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
 import java.io.ByteArrayInputStream;
@@ -92,7 +94,7 @@ public class Object {
                 "</traceInformation>\n" +
                 "</error>";
 
-        String id = objectId;
+        String id = URLEncoder.encode(objectId);
 
         FindIterable<Document> iter = fgdcCollection.find(new Document(Constants.META_INFO + "." + Constants.FGDC_ID, id));
         if(iter != null && iter.first() != null){
@@ -146,8 +148,28 @@ public class Object {
         metaInfo.put(Constants.META_FORMAT, "http://www.fgdc.gov/schemas/metadata/fgdc-std-001-1998.xsd");
         metaInfo.put(Constants.RO_ID, id);
 
-        String fgdcId = "seadva-"+ UUID.randomUUID().toString();//TODO add creator
-        //String fgdcId = "seadva-"+creator.replace(" ","").replace(",","")+ UUID.randomUUID().toString();
+        org.w3c.dom.Document doc = null;
+        try {
+            DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+            DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
+            doc = dBuilder.parse(new ByteArrayInputStream(fgdcString.getBytes()));
+        } catch (ParserConfigurationException e) {
+            System.out.println(e.getMessage());
+        } catch (SAXException e) {
+            System.out.println(e.getMessage());
+        } catch (IOException e) {
+            System.out.println(e.getMessage());
+        }
+
+        org.w3c.dom.NodeList origins = doc.getElementsByTagName("origin");
+        String creator = "";
+        for (int i = 0; i < origins.getLength(); i++) {
+            org.w3c.dom.Node origin = origins.item(i);
+            creator = origin.getChildNodes().item(0).getNodeValue();
+            break;
+        }
+        creator = URLEncoder.encode(creator.split(":")[0].replace(" ","").replace(",",""));
+        String fgdcId = "seadva-" + creator + "-" + UUID.randomUUID().toString();
         metaInfo.put(Constants.FGDC_ID, fgdcId);
 
         final byte[] utf8Bytes = fgdcString.getBytes("UTF-8");
@@ -254,27 +276,7 @@ public class Object {
             ObjectInfo objectInfo =  new ObjectInfo();
             Identifier identifier = new Identifier();
 
-            String id = (String) metaInfo.get(Constants.FGDC_ID);//TODO get DOI
-            /*String id = null;
-            Collection<DcsResourceIdentifier> altIds = dcsFile.getAlternateIds();
-            for(DcsResourceIdentifier altId: altIds){
-                if(altId.getTypeId().equalsIgnoreCase("dataone")){
-                    id = altId.getIdValue().replace("http://dx.doi.org/","doi-");
-                    int index;
-                    if(doiCount.containsKey(id)){
-                        index = doiCount.get(id);
-                        index ++;
-                    }
-                    else
-                        index = 1;
-
-                    doiCount.put(id, index);
-                    //  id += "_" + index;
-                    break;
-                }
-            }
-            if(id==null)
-                id = dcsFile.getId();*/
+            String id = (String) metaInfo.get(Constants.FGDC_ID);
             identifier.setValue(id);//URLEncoder.encode(id));
             objectInfo.setIdentifier(identifier);
 
