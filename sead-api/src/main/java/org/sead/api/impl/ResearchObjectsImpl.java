@@ -137,6 +137,10 @@ public class ResearchObjectsImpl extends ResearchObjects {
         String stage = stateJson.get("stage").toString();
         String message = stateJson.get("message").toString();
 
+        if(message.startsWith("doi:")){
+            message = message.replace("doi:", "http://dx.doi.org/");
+        }
+
         // update PDT with the status
         ClientResponse response = pdtWebService.path("researchobjects")
                 .path(id + "/status")
