@@ -63,6 +63,8 @@ import java.util.Map;
 @Path("/mn/v1/object")
 public class Object{
 
+    private final static int MAX_MATCHES = 10000;
+
     public Object() throws IOException, SAXException, ParserConfigurationException {
     }
 
@@ -220,7 +222,7 @@ public class Object{
         }
 
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
-        int count = 0;
+        int count = MAX_MATCHES;
         boolean countZero = false;
         if(countStr!=null){
             count = Integer.parseInt(countStr);
@@ -228,111 +230,128 @@ public class Object{
                 countZero = true;
         }
 
+        int solrCount = 0, mongoCount = 0, solrStart = 0, mongoStart = 0;
+        int total = (int) SeadQueryService.queryService.size();
+        if(start < total){
+            solrStart = start;
+            if(count + start - 1 < total){
+                solrCount = count;
+            } else {
+                solrCount = total - start;
+                mongoCount = count - solrCount;
+            }
+        } else {
+            mongoStart = start - total;
+            mongoCount = count;
+        }
 
         QueryResult<DcsEntity> result = SeadQueryService.queryService.query(
                 queryStr
-                , start, count
+                , solrStart, solrCount
         );    //add sort to the query by file name      + "&sort=fileName+asc"
 
         List<QueryMatch<DcsEntity>> matches = result.getMatches();
-        int solrCount = (int)result.getTotal();
+        int solrTotalCount = (int)result.getTotal();
+        int mongoTotalCount = getMongoTotal();
 
         ObjectList objectList = new ObjectList();
 
         if(countZero){
             objectList.setCount(0);
-            objectList.setTotal(solrCount);
+            objectList.setTotal(solrTotalCount+mongoTotalCount);
             objectList.setStart(start);
             return SeadQueryService.marshal(objectList);
         }
 
-        for(QueryMatch<DcsEntity> entity: matches){
-            SeadFile dcsFile = (SeadFile)entity.getObject();
+        if (solrCount > 0) {
+            for(QueryMatch<DcsEntity> entity: matches){
+                SeadFile dcsFile = (SeadFile)entity.getObject();
 
 
 
-            String date =  dcsFile.getMetadataUpdateDate();
-            ObjectInfo objectInfo =  new ObjectInfo();
-            Identifier identifier = new Identifier();
-            String id = null;
-            Collection<DcsResourceIdentifier> altIds = dcsFile.getAlternateIds();
-            for(DcsResourceIdentifier altId: altIds){
-                if(altId.getTypeId().equalsIgnoreCase("dataone")){
-                    id = altId.getIdValue().replace("http://dx.doi.org/","doi-");
-                    int index;
-                    if(doiCount.containsKey(id)){
-                        index = doiCount.get(id);
-                        index ++;
-                    }
-                    else
-                        index = 1;
+                String date =  dcsFile.getMetadataUpdateDate();
+                ObjectInfo objectInfo =  new ObjectInfo();
+                Identifier identifier = new Identifier();
+                String id = null;
+                Collection<DcsResourceIdentifier> altIds = dcsFile.getAlternateIds();
+                for(DcsResourceIdentifier altId: altIds){
+                    if(altId.getTypeId().equalsIgnoreCase("dataone")){
+                        id = altId.getIdValue().replace("http://dx.doi.org/","doi-");
+                        int index;
+                        if(doiCount.containsKey(id)){
+                            index = doiCount.get(id);
+                            index ++;
+                        }
+                        else
+                            index = 1;
 
-                    doiCount.put(id, index);
-                    //  id += "_" + index;
-                    break;
-                }
-            }
-            if(id==null)
-                id = dcsFile.getId();
-            identifier.setValue(id);//URLEncoder.encode(id));
-            objectInfo.setIdentifier(identifier);
-            objectInfo.setSize(BigInteger.valueOf(dcsFile.getSizeBytes() < 0 ? 10 : dcsFile.getSizeBytes()));
-
-            String lastFormat = "TestFormatId";
-            if(dcsFile.getFormats().size()>0){
-                for(DcsFormat format:dcsFile.getFormats()){
-                    if(SeadQueryService.sead2d1Format.get(format.getFormat())!=null) {
-                        ObjectFormatIdentifier formatIdentifier = new ObjectFormatIdentifier();
-                        formatIdentifier.setValue(SeadQueryService.sead2d1Format.get(format.getFormat()));
-                        objectInfo.setFormatId(formatIdentifier);
-                        break;
-                    }
-                    lastFormat = format.getFormat();
-                }
-            }
-
-            if(objectInfo.getFormatId()==null) {
-                ObjectFormatIdentifier formatIdentifier = new ObjectFormatIdentifier();
-                formatIdentifier.setValue(lastFormat);
-                objectInfo.setFormatId(formatIdentifier);
-            }
-
-            objectInfo.setDateSysMetadataModified(simpleDateFormat.parse(date));
-
-            Checksum checksum = new Checksum();
-            checksum.setAlgorithm("MD5");
-            checksum.setValue("testChecksum");
-
-            if(dcsFile.getFixity().size()>0){
-                DcsFixity[] fileFixity = dcsFile.getFixity().toArray(new DcsFixity[dcsFile.getFixity().size()]);
-
-                for(int j=0;j<dcsFile.getFixity().size();j++){
-                    if(fileFixity[j].getAlgorithm().equalsIgnoreCase("MD-5"))
-                    {
-                        checksum.setAlgorithm("MD5");
-                        checksum.setValue(fileFixity[j].getValue());
-                    }
-                    if(fileFixity[j].getAlgorithm().equalsIgnoreCase("SHA-1"))
-                    {
-                        checksum.setAlgorithm("SHA-1");
-                        checksum.setValue(fileFixity[j].getValue());
+                        doiCount.put(id, index);
+                        //  id += "_" + index;
                         break;
                     }
                 }
-            }
-            objectInfo.setChecksum(checksum);
-            objectList.getObjectInfoList().add(objectInfo);
+                if(id==null)
+                    id = dcsFile.getId();
+                identifier.setValue(id);//URLEncoder.encode(id));
+                objectInfo.setIdentifier(identifier);
+                objectInfo.setSize(BigInteger.valueOf(dcsFile.getSizeBytes() < 0 ? 10 : dcsFile.getSizeBytes()));
 
+                String lastFormat = "TestFormatId";
+                if(dcsFile.getFormats().size()>0){
+                    for(DcsFormat format:dcsFile.getFormats()){
+                        if(SeadQueryService.sead2d1Format.get(format.getFormat())!=null) {
+                            ObjectFormatIdentifier formatIdentifier = new ObjectFormatIdentifier();
+                            formatIdentifier.setValue(SeadQueryService.sead2d1Format.get(format.getFormat()));
+                            objectInfo.setFormatId(formatIdentifier);
+                            break;
+                        }
+                        lastFormat = format.getFormat();
+                    }
+                }
+
+                if(objectInfo.getFormatId()==null) {
+                    ObjectFormatIdentifier formatIdentifier = new ObjectFormatIdentifier();
+                    formatIdentifier.setValue(lastFormat);
+                    objectInfo.setFormatId(formatIdentifier);
+                }
+
+                objectInfo.setDateSysMetadataModified(simpleDateFormat.parse(date));
+
+                Checksum checksum = new Checksum();
+                checksum.setAlgorithm("MD5");
+                checksum.setValue("testChecksum");
+
+                if(dcsFile.getFixity().size()>0){
+                    DcsFixity[] fileFixity = dcsFile.getFixity().toArray(new DcsFixity[dcsFile.getFixity().size()]);
+
+                    for(int j=0;j<dcsFile.getFixity().size();j++){
+                        if(fileFixity[j].getAlgorithm().equalsIgnoreCase("MD-5"))
+                        {
+                            checksum.setAlgorithm("MD5");
+                            checksum.setValue(fileFixity[j].getValue());
+                        }
+                        if(fileFixity[j].getAlgorithm().equalsIgnoreCase("SHA-1"))
+                        {
+                            checksum.setAlgorithm("SHA-1");
+                            checksum.setValue(fileFixity[j].getValue());
+                            break;
+                        }
+                    }
+                }
+                objectInfo.setChecksum(checksum);
+                objectList.getObjectInfoList().add(objectInfo);
+
+            }
         }
 
-        if(countStr!=null && solrCount < count) {
-            queryParams.put("start", "" + start);
-            queryParams.put("count", countStr);
+        if(mongoCount > 0) {
+            queryParams.put("start", mongoStart + "");
+            queryParams.put("count", mongoCount + "");
             appendMongoNodes(objectList, queryParams);
         }
 
-        objectList.setCount(result.getMatches().size());
-        objectList.setTotal((int)result.getTotal());
+        objectList.setCount(objectList.getObjectInfoList().size());
+        objectList.setTotal(solrTotalCount+mongoTotalCount);
         objectList.setStart(start);
         return SeadQueryService.marshal(objectList);
     }
@@ -356,5 +375,15 @@ public class Object{
         }
     }
 
+    private int getMongoTotal() {
+        WebResource webResource = Client.create().resource(SeadQueryService.SEAD_DATAONE_URL);
+        ClientResponse response = webResource
+                .path("/total")
+                .accept("application/xml")
+                .type("application/xml")
+                .get(ClientResponse.class);
+        String total = response.getEntity(new GenericType<String>() {});
+        return Integer.parseInt(total);
+    }
 
 }

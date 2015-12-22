@@ -64,6 +64,7 @@ import java.util.UUID;
 @Path("/mn/v1/object")
 public class Object {
 
+    private final static int MAX_MATCHES = 10000;
     private MongoCollection<Document> fgdcCollection = null;
     private MongoDatabase metaDb = null;
 
@@ -194,12 +195,21 @@ public class Object {
                                    @QueryParam("toDate") String toDate)
             throws ParseException, TransformerException, JiBXException {
 
-        int count = 0;
+        int count = MAX_MATCHES;
         boolean countZero = false;
         if(countStr!=null){
             count = Integer.parseInt(countStr);
             if(count <= 0)
                 countZero = true;
+        }
+
+        ObjectList objectList = new ObjectList();
+        int totalMongoCount = (int)fgdcCollection.count();
+        if(countZero){
+            objectList.setCount(0);
+            objectList.setTotal(totalMongoCount);
+            objectList.setStart(start);
+            return SeadQueryService.marshal(objectList);
         }
 
         BasicDBObject andQuery = new BasicDBObject();
@@ -227,10 +237,12 @@ public class Object {
             andQuery.put("$and", obj);
         }
 
-        FindIterable<Document> iter = fgdcCollection.find(andQuery);
+        FindIterable<Document> iter = fgdcCollection.find(andQuery)
+                .limit(count)
+                .skip(start)
+                .sort(new Document(Constants.META_INFO + "." + Constants.META_UPDATE_DATE , 1));
         MongoCursor<Document> cursor = iter.iterator();
         int totalResutls = 0;
-        ObjectList objectList = new ObjectList();
 
 
         while (cursor.hasNext()) {
@@ -305,17 +317,18 @@ public class Object {
             totalResutls++;
         }
 
-        if(countZero){
-            objectList.setCount(0);
-            objectList.setTotal(totalResutls);
-            objectList.setStart(start);
-            return SeadQueryService.marshal(objectList);
-        }
-
-        objectList.setCount(totalResutls);//TODO:check this count and total
-        objectList.setTotal((int)totalResutls);
+        objectList.setCount(totalResutls);
+        objectList.setTotal(totalMongoCount);
         objectList.setStart(start);
         return SeadQueryService.marshal(objectList);
+    }
 
+    @GET
+    @Path("/total")
+    @Produces(MediaType.APPLICATION_XML)
+    public String listObjects(@Context HttpServletRequest request,
+                              @HeaderParam("user-agent") String userAgent) {
+        Long total = fgdcCollection.count();
+        return String.format("%d", total);
     }
 }
