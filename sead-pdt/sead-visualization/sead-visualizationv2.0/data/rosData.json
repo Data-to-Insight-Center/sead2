@@ -1,0 +1,421 @@
+[{
+		"Publication Callback": "https://sead2.ncsa.illinois.edu/spaces/curations/56155632e4b04d1c08768e05/status",
+		"Aggregation Statistics": {
+			"Max Collection Depth": "1",
+			"Data Mimetypes": ["image/jpeg"],
+			"Max Dataset Size": "1772575",
+			"Total Size": "9776676"
+		},
+		"Aggregation": {
+			"Title": "Sample dataset v3",
+			"Creator": "0000-0003-2164-8132",
+			"Abstract": "[ \"Images from above the ALPs, heading towards Italy from France.\"]",
+			"Identifier": "56155632e4b04d1c08768e05",
+			"@id": "http://seadva-test.d2i.indiana.edu/sead-c3pr/api/researchobjects/56155632e4b04d1c08768e05/oremap#aggregation"
+		},
+		"Preferences": {
+			"license": [""],
+			"cost": ["$XX Fee"],
+			"Repository": "ideals",
+			"organizational_affiliation": ["UMich"],
+			"access": [""]
+		},
+		"Repository": "ideals",
+		"@context": ["https://w3id.org/ore/context", {
+			"Uploaded By": "http://purl.org/dc/elements/1.1/creator",
+			"Who": "http://sead-data.net/vocab/demo/creator",
+			"Is Version Of": "http://purl.org/dc/terms/isVersionOf",
+			"External Identifier": "http://purl.org/dc/terms/identifier",
+			"is derived from": "http://www.w3.org/ns/prov#wasDerivedFrom",
+			"is referenced by": "http://purl.org/dc/terms/isReferencedBy",
+			"Start/End Date": "http://purl.org/dc/terms/temporal",
+			"Title": "http://purl.org/dc/elements/1.1/title",
+			"Has Part": "http://purl.org/dc/terms/hasPart",
+			"License": "http://purl.org/dc/terms/license",
+			"Topic": "http://purl.org/dc/terms/subject",
+			"duplicates": "http://cet.ncsa.uiuc.edu/2007/mmdb/duplicates",
+			"Alternative title": "http://purl.org/dc/terms/alternative",
+			"Size": "tag:tupeloproject.org,2006:/2.0/files/length",
+			"Rights Holder": "http://purl.org/dc/terms/rightsHolder",
+			"Contact": "http://sead-data.net/terms/contact",
+			"Coverage": "http://purl.org/dc/terms/coverage",
+			"Description": "http://purl.org/dc/elements/1.1/description",
+			"Rights": "http://purl.org/dc/terms/rights",
+			"Aggregation Statistics": "http://purl.org/dc/terms/hasPart",
+			"Has Description": "http://purl.org/dc/terms/description",
+			"Proposed for Publication ": "http://sead-data.net/terms/ProposedForPublication",
+			"Creation Date": "http://purl.org/dc/terms/created",
+			"Quality Control Level": "http://sead-data.net/terms/odm/QualityControlLevel",
+			"keyword": "http://www.holygoat.co.uk/owl/redwood/0.1/tags/taggedWithTag",
+			"Audience": "http://purl.org/dc/terms/audience",
+			"Published In": "http://purl.org/dc/terms/isPartOf",
+			"Where": "http:/sead-data.net/vocab/demo/where",
+			"Creator": "http://purl.org/dc/terms/creator",
+			"Experiment Site": "http://sead-data.net/terms/odm/location",
+			"describes": "http://cet.ncsa.uiuc.edu/2007/mmdb/describes",
+			"references": "http://purl.org/dc/terms/references",
+			"Abstract": "http://purl.org/dc/terms/abstract",
+			"Publication Date": "http://purl.org/dc/terms/issued",
+			"Label": "http://www.w3.org/2000/01/rdf-schema#label",
+			"Aggregation": "http://purl.org/dc/terms/hasPart",
+			"Experimental Method": "http://sead-data.net/terms/odm/method",
+			"Bibliographic citation": "http://purl.org/dc/terms/bibliographicCitation",
+			"Preferences": "http://purl.org/dc/terms/hasPart",
+			"Repository": "http://purl.org/dc/terms/hasPart",
+			"GeoPoint": {
+				"@id": "tag:tupeloproject.org,2006:/2.0/gis/hasGeoPoint",
+				"long": "http://www.w3.org/2003/01/geo/wgs84_pos#long",
+				"lat": "http://www.w3.org/2003/01/geo/wgs84_pos#lat"
+			},
+			"Identifier": "http://purl.org/dc/elements/1.1/identifier",
+			"Date": "http://purl.org/dc/elements/1.1/date",
+			"relates to": "http://cet.ncsa.uiuc.edu/2007/mmdb/relatesTo",
+			"Primary Source": "http://www.w3.org/ns/prov#hadPrimarySource",
+			"Mimetype": "http://purl.org/dc/elements/1.1/format",
+			"has newer version": "http://www.w3.org/ns/prov/#hadRevision",
+			"Publisher": "http://purl.org/dc/terms/publisher",
+			"Comment": {
+				"comment_body": "http://purl.org/dc/elements/1.1/description",
+				"comment_date": "http://purl.org/dc/elements/1.1/date",
+				"@id": "http://cet.ncsa.uiuc.edu/2007/annotation/hasAnnotation",
+				"comment_author": "http://purl.org/dc/elements/1.1/creator"
+			},
+			"has derivative": "http://www.w3.org/ns/prov/#hadDerivation",
+			"has prior version": "http://www.w3.org/ns/prov#wasRevisionOf"
+		}],
+		"Affiliations": [],
+		"Status": [{
+			"date": "Oct 7, 2015 1:28:37 PM",
+			"reporter": "SEAD-CP",
+			"stage": "Receipt Acknowledged",
+			"message": "request recorded and processing will begin"
+		}, {
+			"reporter": "ideals",
+			"stage": "Pending",
+			"message": "Processing research object",
+			"date": "Oct 8, 2015 9:57:12 AM"
+		}, {
+			"reporter": "ideals",
+			"stage": "Success",
+			"message": "https://seadtest.ideals.illinois.edu/handle/123456789/5591",
+			"date": "Oct 8, 2015 9:57:13 AM"
+		}]
+	}, {
+		"@context": [{
+				"Repository": "http://sead-data.net/terms/requestedrepository",
+				"Max Dataset Size": "http://sead-data.net/terms/maxdatasetsize",
+				"Creator": "http://purl.org/dc/terms/creator",
+				"Contact": "http://sead-data.net/terms/contact",
+				"Total Size": "tag:tupeloproject.org,2006:/2.0/files/length",
+				"Aggregation Statistics": "http://sead-data.net/terms/publicationstatistics",
+				"Title": "http://purl.org/dc/elements/1.1/title",
+				"Number of Datasets": "http://sead-data.net/terms/datasetcount",
+				"Preferences": "http://sead-data.net/terms/publicationpreferences",
+				"Date": "http://purl.org/dc/terms/created",
+				"Publication Callback": "http://sead-data.net/terms/publicationcallback",
+				"Max Collection Depth": "http://sead-data.net/terms/maxcollectiondepth",
+				"Number of Collections": "http://sead-data.net/terms/collectioncount",
+				"Identifier": "http://purl.org/dc/elements/1.1/identifier",
+				"Data Mimetypes": "http://purl.org/dc/elements/1.1/format",
+				"Uploaded By": "http://purl.org/dc/elements/1.1/creator",
+				"Abstract": "http://purl.org/dc/terms/abstract"
+			},
+			"https://w3id.org/ore/context"
+		],
+		"Preferences": {
+			"Purpose": "Testing-Only",
+			"Affiliations": ["SEAD"],
+			"Delete Preference": "Delete from project space"
+		},
+		"Repository": "sda",
+		"Aggregation": {
+			"similarTo": "https://sead-test.ncsa.illinois.edu/acr/resteasy/collections/tag%3Acet.ncsa.uiuc.edu%2C2008%3A%2Fbean%2FCollection%2F616EA007-BFC6-4596-9FE3-5D9E30319CB3",
+			"Date": "2015-08-09T17:27:06.910Z",
+			"@type": "Aggregation",
+			"Creator": "0000-0001-8462-650X",
+			"@id": "http://seadva-test.d2i.indiana.edu/sead-c3pr/api/researchobjects/tag:sead-data.net,2015:RO_0RQCwC2wzaGlKuYZFkDEaw/oremap#aggregation",
+			"Identifier": "tag:sead-data.net,2015:RO_0RQCwC2wzaGlKuYZFkDEaw",
+			"Uploaded By": "http://cet.ncsa.uiuc.edu/2007/person/myersjd@umich.edu",
+			"Title": "2.0PubDemo1",
+			"Abstract": "The unused shoe - when my daughter had a cast in the summer of 2015"
+		},
+		"Publication Callback": "https://sead-test.ncsa.illinois.edu/acr/resteasy/researchobjects/tag:sead-data.net,2015:RO_0RQCwC2wzaGlKuYZFkDEaw/pid",
+		"Aggregation Statistics": {
+			"Number of Datasets": "3",
+			"Max Dataset Size": "3614615",
+			"Max Collection Depth": "1",
+			"Total Size": "7438815",
+			"Number of Collections": "2",
+			"Data Mimetypes": ["image/jpeg"]
+		},
+		"Affiliations": ["University of Michigan"],
+		"Status": [{
+			"date": "Oct 7, 2015 12:59:39 PM",
+			"reporter": "SEAD-CP",
+			"stage": "Receipt Acknowledged",
+			"message": "request recorded and processing will begin"
+		}, {
+			"reporter": "sda",
+			"stage": "Success",
+			"message": "http://dx.doi.org/10.5072/FK24B32N9K",
+			"date": "Oct 7, 2015 1:01:41 PM"
+		}]
+	}, {
+		"@context": [{
+				"Repository": "http://sead-data.net/terms/requestedrepository",
+				"Max Dataset Size": "http://sead-data.net/terms/maxdatasetsize",
+				"Creator": "http://purl.org/dc/terms/creator",
+				"Contact": "http://sead-data.net/terms/contact",
+				"Total Size": "tag:tupeloproject.org,2006:/2.0/files/length",
+				"Aggregation Statistics": "http://sead-data.net/terms/publicationstatistics",
+				"Title": "http://purl.org/dc/elements/1.1/title",
+				"Number of Datasets": "http://sead-data.net/terms/datasetcount",
+				"Preferences": "http://sead-data.net/terms/publicationpreferences",
+				"Date": "http://purl.org/dc/terms/created",
+				"Publication Callback": "http://sead-data.net/terms/publicationcallback",
+				"Max Collection Depth": "http://sead-data.net/terms/maxcollectiondepth",
+				"Number of Collections": "http://sead-data.net/terms/collectioncount",
+				"Identifier": "http://purl.org/dc/elements/1.1/identifier",
+				"Data Mimetypes": "http://purl.org/dc/elements/1.1/format",
+				"Uploaded By": "http://purl.org/dc/elements/1.1/creator",
+				"Abstract": "http://purl.org/dc/terms/abstract"
+			},
+			"https://w3id.org/ore/context"
+		],
+		"Preferences": {
+			"Purpose": "Testing-Only",
+			"Affiliations": ["SEAD"],
+			"Delete Preference": "Delete from project space"
+		},
+		"Repository": "openicpsr",
+		"Aggregation": {
+			"similarTo": "https://sead-test.ncsa.illinois.edu/acr/resteasy/collections/tag%3Acet.ncsa.uiuc.edu%2C2008%3A%2Fbean%2FCollection%2F72C9126E-7554-495D-BB1C-ECC179C4ED1F",
+			"Date": "2015-02-13T19:23:52.243Z",
+			"@type": "Aggregation",
+			"Creator": "0000-0001-7817-4375",
+			"@id": "http://seadva-test.d2i.indiana.edu/sead-c3pr/api/researchobjects/tag:sead-data.net,2015:RO_JfyCj4cHouRJRu0a1-CQBg/oremap#aggregation",
+			"Identifier": "tag:sead-data.net,2015:RO_JfyCj4cHouRJRu0a1-CQBg",
+			"Uploaded By": "http://cet.ncsa.uiuc.edu/2007/person/dharmrae@umich.edu",
+			"Title": "Demo Collection",
+			"Abstract": "Some demo files"
+		},
+		"Publication Callback": "https://sead-test.ncsa.illinois.edu/acr/resteasy/researchobjects/tag:sead-data.net,2015:RO_JfyCj4cHouRJRu0a1-CQBg/pid",
+		"Aggregation Statistics": {
+			"Number of Datasets": "8",
+			"Max Dataset Size": "11113230",
+			"Max Collection Depth": "0",
+			"Total Size": "17096680",
+			"Number of Collections": "1",
+			"Data Mimetypes": ["application/x-zip-compressed", "image/jpeg", "application/vnd.ms-excel", "application/vnd.openxmlformats-officedocument.presentationml.presentation", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "application/pdf"]
+		},
+		"Affiliations": ["University of Michigan"],
+		"Status": [{
+			"date": "Oct 8, 2015 11:09:25 AM",
+			"reporter": "SEAD-CP",
+			"stage": "Receipt Acknowledged",
+			"message": "request recorded and processing will begin"
+		}, {
+			"date": "Oct 8, 2015 11:11:49 AM",
+			"reporter": "ICPSR",
+			"message": "ICPSR received this deposit successfully. Please visit this URL https://staging.openicpsr.org/repoEntity/publishOptions/2347950 to complete the process.",
+			"stage": "Pending"
+		}, {
+			"date": "Oct 8, 2015 11:58:02 AM",
+			"reporter": "ICPSR",
+			"message": "http://doi.org/10.5072/E2347950V1",
+			"stage": "Success"
+		}]
+	},
+
+	{
+		"@context": [{
+				"Repository": "http://sead-data.net/terms/requestedrepository",
+				"Max Dataset Size": "http://sead-data.net/terms/maxdatasetsize",
+				"Creator": "http://purl.org/dc/terms/creator",
+				"Contact": "http://sead-data.net/terms/contact",
+				"Total Size": "tag:tupeloproject.org,2006:/2.0/files/length",
+				"Aggregation Statistics": "http://sead-data.net/terms/publicationstatistics",
+				"Title": "http://purl.org/dc/elements/1.1/title",
+				"Number of Datasets": "http://sead-data.net/terms/datasetcount",
+				"Preferences": "http://sead-data.net/terms/publicationpreferences",
+				"Date": "http://purl.org/dc/terms/created",
+				"Publication Callback": "http://sead-data.net/terms/publicationcallback",
+				"Max Collection Depth": "http://sead-data.net/terms/maxcollectiondepth",
+				"Number of Collections": "http://sead-data.net/terms/collectioncount",
+				"Identifier": "http://purl.org/dc/elements/1.1/identifier",
+				"Data Mimetypes": "http://purl.org/dc/elements/1.1/format",
+				"Uploaded By": "http://purl.org/dc/elements/1.1/creator",
+				"Abstract": "http://purl.org/dc/terms/abstract"
+			},
+			"https://w3id.org/ore/context"
+		],
+		"Preferences": {
+			"Purpose": "Testing-Only",
+			"Affiliations": ["SEAD"],
+			"Delete Preference": "Delete from project space"
+		},
+		"Repository": "ideals",
+		"Aggregation": {
+			"similarTo": "https://sead-test.ncsa.illinois.edu/acr/resteasy/collections/tag%3Acet.ncsa.uiuc.edu%2C2008%3A%2Fbean%2FCollection%2F72C9126E-7554-495D-BB1C-ECC179C4ED1F",
+			"Date": "2015-02-13T19:23:52.243Z",
+			"@type": "Aggregation",
+			"Creator": "0000-0001-8462-650X",
+			"@id": "http://seadva-test.d2i.indiana.edu/sead-c3pr/api/researchobjects/tag:sead-data.net,2015:RO_O66KuWjFzaozmERiEEH0hw/oremap#aggregation",
+			"Identifier": "tag:sead-data.net,2015:RO_O66KuWjFzaozmERiEEH0hw",
+			"Uploaded By": "http://cet.ncsa.uiuc.edu/2007/person/dharmrae@umich.edu",
+			"Title": "Demo Collection",
+			"Abstract": "Some demo files"
+		},
+		"Publication Callback": "https://sead-test.ncsa.illinois.edu/acr/resteasy/researchobjects/tag:sead-data.net,2015:RO_O66KuWjFzaozmERiEEH0hw/pid",
+		"Aggregation Statistics": {
+			"Number of Datasets": "8",
+			"Max Dataset Size": "11113230",
+			"Max Collection Depth": "0",
+			"Total Size": "17096680",
+			"Number of Collections": "1",
+			"Data Mimetypes": ["application/x-zip-compressed", "image/jpeg", "application/vnd.ms-excel", "application/vnd.openxmlformats-officedocument.presentationml.presentation", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "application/pdf"]
+		},
+		"Affiliations": ["University of Michigan"],
+		"Status": [{
+			"date": "Oct 8, 2015 12:02:49 PM",
+			"reporter": "SEAD-CP",
+			"stage": "Receipt Acknowledged",
+			"message": "request recorded and processing will begin"
+		}, {
+			"reporter": "ideals",
+			"stage": "Pending",
+			"message": "Processing research object",
+			"date": "Oct 8, 2015 12:02:58 PM"
+		}, {
+			"reporter": "ideals",
+			"stage": "Success",
+			"message": "https://seadtest.ideals.illinois.edu/handle/123456789/5607",
+			"date": "Oct 8, 2015 12:03:02 PM"
+		}]
+	},
+
+	{
+		"@context": [{
+				"Repository": "http://sead-data.net/terms/requestedrepository",
+				"Max Dataset Size": "http://sead-data.net/terms/maxdatasetsize",
+				"Creator": "http://purl.org/dc/terms/creator",
+				"Contact": "http://sead-data.net/terms/contact",
+				"Total Size": "tag:tupeloproject.org,2006:/2.0/files/length",
+				"Aggregation Statistics": "http://sead-data.net/terms/publicationstatistics",
+				"Title": "http://purl.org/dc/elements/1.1/title",
+				"Number of Datasets": "http://sead-data.net/terms/datasetcount",
+				"Preferences": "http://sead-data.net/terms/publicationpreferences",
+				"Date": "http://purl.org/dc/terms/created",
+				"Publication Callback": "http://sead-data.net/terms/publicationcallback",
+				"Max Collection Depth": "http://sead-data.net/terms/maxcollectiondepth",
+				"Number of Collections": "http://sead-data.net/terms/collectioncount",
+				"Identifier": "http://purl.org/dc/elements/1.1/identifier",
+				"Data Mimetypes": "http://purl.org/dc/elements/1.1/format",
+				"Uploaded By": "http://purl.org/dc/elements/1.1/creator",
+				"Abstract": "http://purl.org/dc/terms/abstract"
+			},
+			"https://w3id.org/ore/context"
+		],
+		"Preferences": {
+			"Purpose": "Testing-Only",
+			"Affiliations": ["SEAD"],
+			"Delete Preference": "Delete from project space"
+		},
+		"Repository": "sda",
+		"Aggregation": {
+			"similarTo": "https://sead-test.ncsa.illinois.edu/acr/resteasy/collections/tag%3Acet.ncsa.uiuc.edu%2C2008%3A%2Fbean%2FCollection%2F72C9126E-7554-495D-BB1C-ECC179C4ED1F",
+			"Date": "2015-02-13T19:23:52.243Z",
+			"@type": "Aggregation",
+			"Creator": "0000-0003-2164-8132",
+			"@id": "http://seadva-test.d2i.indiana.edu/sead-c3pr/api/researchobjects/tag:sead-data.net,2015:RO_sJbt-jWH5j-cIBo9mrzv7w/oremap#aggregation",
+			"Identifier": "tag:sead-data.net,2015:RO_sJbt-jWH5j-cIBo9mrzv7w",
+			"Uploaded By": "http://cet.ncsa.uiuc.edu/2007/person/dharmrae@umich.edu",
+			"Title": "Demo Collection",
+			"Abstract": "Some demo files"
+		},
+		"Publication Callback": "https://sead-test.ncsa.illinois.edu/acr/resteasy/researchobjects/tag:sead-data.net,2015:RO_sJbt-jWH5j-cIBo9mrzv7w/pid",
+		"Aggregation Statistics": {
+			"Number of Datasets": "8",
+			"Max Dataset Size": "11113230",
+			"Max Collection Depth": "0",
+			"Total Size": "17096680",
+			"Number of Collections": "1",
+			"Data Mimetypes": ["application/x-zip-compressed", "image/jpeg", "application/vnd.ms-excel", "application/vnd.openxmlformats-officedocument.presentationml.presentation", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "application/pdf"]
+		},
+		"Affiliations": [],
+		"Status": [{
+			"date": "Oct 7, 2015 1:05:08 PM",
+			"reporter": "SEAD-CP",
+			"stage": "Receipt Acknowledged",
+			"message": "request recorded and processing will begin"
+		}, {
+			"reporter": "sda",
+			"stage": "Success",
+			"message": "http://dx.doi.org/10.5072/FK2639QP2G",
+			"date": "Oct 7, 2015 1:12:56 PM"
+		}]
+	},
+
+	{
+		"@context": [{
+				"Repository": "http://sead-data.net/terms/requestedrepository",
+				"Max Dataset Size": "http://sead-data.net/terms/maxdatasetsize",
+				"Creator": "http://purl.org/dc/terms/creator",
+				"Contact": "http://sead-data.net/terms/contact",
+				"Total Size": "tag:tupeloproject.org,2006:/2.0/files/length",
+				"Aggregation Statistics": "http://sead-data.net/terms/publicationstatistics",
+				"Title": "http://purl.org/dc/elements/1.1/title",
+				"Number of Datasets": "http://sead-data.net/terms/datasetcount",
+				"Preferences": "http://sead-data.net/terms/publicationpreferences",
+				"Date": "http://purl.org/dc/terms/created",
+				"Publication Callback": "http://sead-data.net/terms/publicationcallback",
+				"Max Collection Depth": "http://sead-data.net/terms/maxcollectiondepth",
+				"Number of Collections": "http://sead-data.net/terms/collectioncount",
+				"Identifier": "http://purl.org/dc/elements/1.1/identifier",
+				"Data Mimetypes": "http://purl.org/dc/elements/1.1/format",
+				"Uploaded By": "http://purl.org/dc/elements/1.1/creator",
+				"Abstract": "http://purl.org/dc/terms/abstract"
+			},
+			"https://w3id.org/ore/context"
+		],
+		"Preferences": {
+			"Purpose": "Testing-Only",
+			"Affiliations": ["SEAD"],
+			"Delete Preference": "Delete from project space"
+		},
+		"Repository": "sda",
+		"Aggregation": {
+			"similarTo": "https://sead-test.ncsa.illinois.edu/acr/resteasy/collections/tag%3Amedici%40uiuc.edu%2C2009%3Acol_SqW5XUYSfhZ627ghxBfaMQ",
+			"Date": "2015-03-05T21:55:52.905Z",
+			"@type": "Aggregation",
+			"Creator": "0000-0001-8462-650X",
+			"@id": "http://seadva-test.d2i.indiana.edu/sead-c3pr/api/researchobjects/tag:sead-data.net,2015:RO_SYqtI6mQM7U36Q4sb9vu3A/oremap#aggregation",
+			"Identifier": "tag:sead-data.net,2015:RO_SYqtI6mQM7U36Q4sb9vu3A",
+			"Uploaded By": "http://cet.ncsa.uiuc.edu/2007/person/myersjd@umich.edu",
+			"Title": "demo1",
+			"Abstract": "our test collection"
+		},
+		"Publication Callback": "https://sead-test.ncsa.illinois.edu/acr/resteasy/researchobjects/tag:sead-data.net,2015:RO_SYqtI6mQM7U36Q4sb9vu3A/pid",
+		"Aggregation Statistics": {
+			"Number of Datasets": "16",
+			"Max Dataset Size": "34988738",
+			"Max Collection Depth": "1",
+			"Total Size": "77461889",
+			"Number of Collections": "3",
+			"Data Mimetypes": ["application/x-tgif", "image/jpeg", "text/csv", "image/tiff", "application/octet-stream", "application/pdf", "application/zip"]
+		},
+		"Affiliations": ["University of Michigan"],
+		"Status": [{
+			"date": "Oct 21, 2015 2:34:23 PM",
+			"reporter": "SEAD-CP",
+			"stage": "Receipt Acknowledged",
+			"message": "request recorded and processing will begin"
+		}, {
+			"reporter": "sda",
+			"stage": "Success",
+			"message": "http://dx.doi.org/10.5072/FK2CN73H9K",
+			"date": "Oct 21, 2015 3:14:12 PM"
+		}]
+	}
+
+]

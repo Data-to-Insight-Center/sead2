@@ -1,0 +1,67 @@
+#vizContainer{
+	height:550px;
+	width:90%;
+	
+}
+.node circle {
+  cursor: pointer;
+ /*  stroke: #3182bd;
+  stroke-width: 1.5px; */
+}
+/* .node:hover circle {
+  fill: #000;
+}
+
+.node:hover text {
+  display: inline;
+} */
+.node text {
+  font-size: 12px;
+  font-family: helvetica;
+  pointer-events: none;
+  text-anchor: middle;
+}
+
+.hoverTextNode{
+	  font-size: 16px;
+	  font-family: helvetica;
+	  
+	
+}
+.researchObject{
+	
+	display:none;
+	font-family: helvetica;
+}
+
+line.link {
+  fill: none;
+  stroke: #D4D4D4;
+  stroke-width: 1px;
+}
+.legend rect {
+  fill:white;
+  /* stroke:black; */
+  opacity:0.8;}
+
+  
+  .legend text{
+  	font-family: helvetica;
+    font-size: 16px;
+        text-transform: capitalize;
+  }
+  rect {
+    stroke-width: 2;
+  }
+  .toggleBtn{
+  
+  fill:blue;
+  }
+  .toggleBtnG text{
+  
+  fill:white;
+  }
+  
+  .toggleBtnG{
+      cursor: pointer;
+  }

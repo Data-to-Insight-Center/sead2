@@ -1,0 +1,32 @@
+{
+	"persons": [{
+		"@id": "0000-0003-2164-8132",
+		"givenName": "Beth",
+		"familyName": "Plale",
+		"PersonalProfileDocument": "http://orcid.org/0000-0003-2164-8132",
+		"affiliation": "Indiana University Bloomington"
+	}, {
+		"@id": "0000-0001-8462-650X",
+		"givenName": "James",
+		"familyName": "Myers",
+		"email": "jim.myers@computer.org",
+		"PersonalProfileDocument": "http://orcid.org/0000-0001-8462-650X",
+		"affiliation": "University of Michigan"
+	},
+	{
+		"@id": "0000-0001-7817-4375",
+		"givenName": "Luigi",
+		"familyName": "Marini",
+		"PersonalProfileDocument": "http://orcid.org/0000-0001-7817-4375",
+		"email": "Luigi.Marini@computer.org",
+		"affiliation": "University of Michigan Dummy Data"
+	}
+	],
+	"@context": {
+		"givenName": "http://schema.org/Person/givenName",
+		"familyName": "http://schema.org/Person/familyName",
+		"email": "http://schema.org/Person/email",
+		"affiliation": "http://schema.org/Person/affiliation",
+		"PersonalProfileDocument": "http://schema.org/Thing/mainEntityOfPage"
+	}
+}

@@ -1,0 +1,39 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Network Visualization</title>
+<link rel="stylesheet" type="text/css" href="css/networkViz.css" />
+
+<script type="text/javascript" src="js/jquery/jquery-1.11.3.js"></script>
+<script type="text/javascript" src="js/d3.js"></script>
+<script type="text/javascript" src="js/dataBuilder_V1.2.js"></script>
+<script type="text/javascript" src="js/networkViz_V1.2.js"></script>
+
+</head>
+
+<body>
+
+<div id="vizContainer"> 
+    
+</div>
+
+
+     <script type="text/javascript">
+         
+           
+      $("#vizContainer").createNetworkViz({
+    	
+      	rosFilePath:"data/webServices/researchobjects.json",
+      	peopleFilePath:"data/webServices/people.json",
+      	nodeSize:{"research object":7,"people":7,"repository":10},
+      	colorArray : {"research object":"#B1D9FA","people":"#EDDC7F","repository":"F3BAB3"}, //colors for line
+      
+
+      	
+      }); 
+      
+      </script>
+
+</body>
+</html>
