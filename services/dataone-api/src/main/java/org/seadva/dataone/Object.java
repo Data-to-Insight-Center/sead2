@@ -86,7 +86,7 @@ public class Object{
                 "</traceInformation>\n" +
                 "</error>";
 
-        String id = objectId;
+        String id = URLEncoder.encode(objectId);
 
 
         QueryResult<DcsEntity> result = null;
@@ -136,7 +136,7 @@ public class Object{
             break;
         }
         if (matches.size() < 1) {
-            WebResource webResource = Client.create().resource(SeadQueryService.SEAD_DATAONE_URL);
+            WebResource webResource = Client.create().resource(SeadQueryService.SEAD_DATAONE_URL + "/object");
             ClientResponse response = webResource.path(id)
                     .accept("application/xml")
                     .type("application/xml")
@@ -230,8 +230,21 @@ public class Object{
                 countZero = true;
         }
 
+        QueryResult<DcsEntity> tempResult = SeadQueryService.queryService.query(queryStr, 0, 0);
+        int total = (int)tempResult.getTotal();
+        int solrTotalCount = total;
+        int mongoTotalCount = getMongoTotal();
+
+        ObjectList objectList = new ObjectList();
+
+        if(countZero){
+            objectList.setCount(0);
+            objectList.setTotal(solrTotalCount+mongoTotalCount);
+            objectList.setStart(start);
+            return SeadQueryService.marshal(objectList);
+        }
+
         int solrCount = 0, mongoCount = 0, solrStart = 0, mongoStart = 0;
-        int total = (int) SeadQueryService.queryService.size();
         if(start < total){
             solrStart = start;
             if(count + start - 1 < total){
@@ -245,25 +258,13 @@ public class Object{
             mongoCount = count;
         }
 
-        QueryResult<DcsEntity> result = SeadQueryService.queryService.query(
-                queryStr
-                , solrStart, solrCount
-        );    //add sort to the query by file name      + "&sort=fileName+asc"
-
-        List<QueryMatch<DcsEntity>> matches = result.getMatches();
-        int solrTotalCount = (int)result.getTotal();
-        int mongoTotalCount = getMongoTotal();
-
-        ObjectList objectList = new ObjectList();
-
-        if(countZero){
-            objectList.setCount(0);
-            objectList.setTotal(solrTotalCount+mongoTotalCount);
-            objectList.setStart(start);
-            return SeadQueryService.marshal(objectList);
-        }
-
         if (solrCount > 0) {
+            QueryResult<DcsEntity> result = SeadQueryService.queryService.query(
+                    queryStr
+                    , solrStart, solrCount
+            );    //add sort to the query by file name      + "&sort=fileName+asc"
+
+            List<QueryMatch<DcsEntity>> matches = result.getMatches();
             for(QueryMatch<DcsEntity> entity: matches){
                 SeadFile dcsFile = (SeadFile)entity.getObject();
 
@@ -358,7 +359,7 @@ public class Object{
 
     private void appendMongoNodes(ObjectList objectList, Map<String, String> queryParams) throws ParseException, JiBXException {
 
-        WebResource webResource = Client.create().resource(SeadQueryService.SEAD_DATAONE_URL);
+        WebResource webResource = Client.create().resource(SeadQueryService.SEAD_DATAONE_URL + "/object");
         webResource.accept("application/xml").type("application/xml");
         for(String param :queryParams.keySet()){
             webResource = webResource.queryParam(param, queryParams.get(param));
@@ -376,7 +377,7 @@ public class Object{
     }
 
     private int getMongoTotal() {
-        WebResource webResource = Client.create().resource(SeadQueryService.SEAD_DATAONE_URL);
+        WebResource webResource = Client.create().resource(SeadQueryService.SEAD_DATAONE_URL + "/object");
         ClientResponse response = webResource
                 .path("/total")
                 .accept("application/xml")

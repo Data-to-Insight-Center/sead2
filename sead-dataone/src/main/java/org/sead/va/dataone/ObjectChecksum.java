@@ -16,13 +16,12 @@
 
 package org.sead.va.dataone;
 
+import com.mongodb.BasicDBObject;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
-import com.sun.jersey.api.client.ClientResponse;
 import org.bson.Document;
 import org.dataone.service.types.v1.Checksum;
-import org.dataone.service.types.v1.Event;
 import org.jibx.runtime.JiBXException;
 import org.json.JSONObject;
 import org.sead.va.dataone.util.Constants;
@@ -36,6 +35,8 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.xml.transform.TransformerException;
 import java.net.URLEncoder;
+import java.util.ArrayList;
+import java.util.List;
 
 
 /*
@@ -62,25 +63,31 @@ public class ObjectChecksum {
                                 @PathParam("objectId") String objectId,
                                 @QueryParam("checksumAlgorithm") String checksumAlgorithm) throws JiBXException, TransformerException {
 
-        String test = "<error name=\"NotFound\" errorCode=\"404\" detailCode=\"1060\" pid=\"" + URLEncoder.encode(objectId) + "\" nodeId=\"" + Constants.NODE_IDENTIFIER + "\">\n" +
+        String errorMsg = "<error name=\"NotFound\" errorCode=\"404\" detailCode=\"1060\" pid=\"" + URLEncoder.encode(objectId) + "\" nodeId=\"" + Constants.NODE_IDENTIFIER + "\">\n" +
                 "<description>The specified object does not exist on this node.</description>\n" +
                 "<traceInformation>\n" +
                 "method: mn.getChecksum hint: http://cn.dataone.org/cn/resolve/" + URLEncoder.encode(objectId) + "\n" +
                 "</traceInformation>\n" +
                 "</error>";
         if (objectId.contains("TestingNotFound") || objectId.contains("Test"))
-            throw new NotFoundException(test);
+            throw new NotFoundException(errorMsg);
 
-        objectId = objectId.replace("doi-", "http://dx.doi.org/");
+        objectId = URLEncoder.encode(objectId);
 
-        //if(checksumAlgorithm!=null)
-        //TODO ://queryStr+= " AND "+SolrQueryUtil.createLiteralQuery(DcsSolrField.FixityField.ALGORITHM.solrName(), checksumAlgorithm);
+        BasicDBObject andQuery = new BasicDBObject();
+        List<BasicDBObject> obj = new ArrayList<BasicDBObject>();
+        obj.add(new BasicDBObject(Constants.META_INFO + "." + Constants.FGDC_ID, objectId));
+
+        if(checksumAlgorithm!=null)
+            obj.add(new BasicDBObject(Constants.META_INFO + "." + Constants.FIXITY_FORMAT, checksumAlgorithm));
+
+        andQuery.put("$and", obj);
 
         String ip = null;
         if (request != null)
             ip = request.getRemoteAddr();
 
-        FindIterable<Document> iter = fgdcCollection.find(new Document(Constants.META_INFO + "." + Constants.FGDC_ID, objectId));
+        FindIterable<Document> iter = fgdcCollection.find(andQuery);
         if (iter != null && iter.first() != null) {
 
             JSONObject object = new JSONObject(iter.first().toJson().toString());
@@ -115,11 +122,9 @@ public class ObjectChecksum {
                 //SeadQueryService.dataOneLogService.indexLog(eventsSip);
                 return Response.ok(SeadQueryService.marshal(checksum)).build();
             }
-            return Response.ok(iter.first().get(Constants.METADATA).toString()).build();
+            return Response.ok(SeadQueryService.marshal(new Checksum())).build();
         } else {
-            return Response.status(ClientResponse.Status.NOT_FOUND).build();
-            //return Response.ok(SeadQueryService.marshal(new Checksum())).build();
-
+            throw new NotFoundException(errorMsg);
         }
 
     }

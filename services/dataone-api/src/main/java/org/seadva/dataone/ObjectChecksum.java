@@ -16,6 +16,9 @@
 
 package org.seadva.dataone;
 
+import com.sun.jersey.api.client.Client;
+import com.sun.jersey.api.client.ClientResponse;
+import com.sun.jersey.api.client.WebResource;
 import org.dataconservancy.dcs.index.dcpsolr.DcsSolrField;
 import org.dataconservancy.dcs.index.solr.support.SolrQueryUtil;
 import org.dataconservancy.dcs.query.api.QueryMatch;
@@ -75,7 +78,6 @@ public class ObjectChecksum {
         if(checksumAlgorithm!=null)
             queryStr+= " AND "+SolrQueryUtil.createLiteralQuery(DcsSolrField.FixityField.ALGORITHM.solrName(), checksumAlgorithm);
 
-
         QueryResult<DcsEntity> result = null;
         try {
             result = SeadQueryService.queryService.query(queryStr, 0, -1); //sort by filename
@@ -83,14 +85,28 @@ public class ObjectChecksum {
             e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
         }
 
-
-
         String ip = null;
         if(request!=null)
             ip = request.getRemoteAddr();
         List<QueryMatch<DcsEntity>> matches = result.getMatches();
-        if(matches.size()==0)
-            throw new NotFoundException(test);
+        if(matches.size()==0){
+            WebResource webResource = Client.create()
+                    .resource(SeadQueryService.SEAD_DATAONE_URL + "/checksum")
+                    .path(URLEncoder.encode(objectId));
+            if(checksumAlgorithm!=null) {
+                webResource = webResource.queryParam("checksumAlgorithm", checksumAlgorithm);
+            }
+            ClientResponse response = webResource
+                    .accept("application/xml")
+                    .type("application/xml")
+                    .get(ClientResponse.class);
+            if (response.getStatus() == 200) {
+                Checksum mongoChecksum = (Checksum) SeadQueryService.unmarshal(response.getEntityInputStream(), Checksum.class);
+                return SeadQueryService.marshal(mongoChecksum);
+            } else {
+                throw new NotFoundException(test);
+            }
+        }
         for(QueryMatch<DcsEntity> entity: matches){
             if(entity.getObject() instanceof DcsFile)  {
                 DcsFile file = (DcsFile)entity.getObject();

@@ -16,6 +16,9 @@
 
 package org.seadva.dataone;
 
+import com.sun.jersey.api.client.Client;
+import com.sun.jersey.api.client.ClientResponse;
+import com.sun.jersey.api.client.WebResource;
 import org.dataconservancy.dcs.index.solr.support.SolrQueryUtil;
 import org.dataconservancy.dcs.query.api.QueryMatch;
 import org.dataconservancy.dcs.query.api.QueryResult;
@@ -35,9 +38,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
-import javax.xml.datatype.DatatypeConfigurationException;
-import javax.xml.datatype.DatatypeFactory;
-import javax.xml.datatype.XMLGregorianCalendar;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
 import java.io.IOException;
@@ -46,7 +46,6 @@ import java.net.URLEncoder;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.List;
-import java.util.TimeZone;
 
 /*
  * List all system metadata and system metadata per object
@@ -74,7 +73,7 @@ public class Metadata{
                                       @PathParam("objectId") String objectId) throws JiBXException, ParseException, TransformerException {
 
 
-        String test ="<error name=\"NotFound\" errorCode=\"404\" detailCode=\"1060\" pid=\""+ URLEncoder.encode(objectId)+"\" nodeId=\""+SeadQueryService.NODE_IDENTIFIER+"\">\n" +
+        String errorMsg ="<error name=\"NotFound\" errorCode=\"404\" detailCode=\"1060\" pid=\""+ URLEncoder.encode(objectId)+"\" nodeId=\""+SeadQueryService.NODE_IDENTIFIER+"\">\n" +
                 "<description>The specified object does not exist on this node.</description>\n" +
                 "<traceInformation>\n" +
                 "method: mn.getSystemMetadata hint: http://cn.dataone.org/cn/resolve/"+URLEncoder.encode(objectId)+"\n" +
@@ -102,8 +101,20 @@ public class Metadata{
         SeadFile file = null;
         String depositDate = null;
         List<QueryMatch<DcsEntity>> matches = result.getMatches();
-        if(matches.size()==0)
-            throw new NotFoundException(test);
+        if(matches.size()==0) {
+            WebResource webResource = Client.create().resource(SeadQueryService.SEAD_DATAONE_URL + "/meta");
+            ClientResponse response = webResource.path(URLEncoder.encode(objectId))
+                    .accept("application/xml")
+                    .type("application/xml")
+                    .get(ClientResponse.class);
+            if (response.getStatus() == 200) {
+                SystemMetadata mongoMetadata = (SystemMetadata) SeadQueryService.unmarshal(response.getEntityInputStream(), SystemMetadata.class);
+                return SeadQueryService.marshal(mongoMetadata);
+            } else {
+                throw new NotFoundException(errorMsg);
+            }
+        }
+
         for(QueryMatch<DcsEntity> entity: matches){
             if(entity.getObject() instanceof SeadFile)  {
                 file = (SeadFile)entity.getObject();

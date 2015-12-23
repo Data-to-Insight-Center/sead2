@@ -22,7 +22,6 @@ import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoDatabase;
-import com.sun.jersey.api.client.ClientResponse;
 import org.apache.commons.codec.binary.Hex;
 import org.bson.Document;
 import org.dataone.service.types.v1.*;
@@ -87,7 +86,7 @@ public class Object {
                               @PathParam("objectId") String objectId) throws IOException {
 
 
-        String test ="<error name=\"NotFound\" errorCode=\"404\" detailCode=\"1020\" pid=\""+URLEncoder.encode(objectId)+"\" nodeId=\""+Constants.NODE_IDENTIFIER+"\">\n" +
+        String errorMsg ="<error name=\"NotFound\" errorCode=\"404\" detailCode=\"1020\" pid=\""+URLEncoder.encode(objectId)+"\" nodeId=\""+Constants.NODE_IDENTIFIER+"\">\n" +
                 "<description>The specified object does not exist on this node.</description>\n" +
                 "<traceInformation>\n" +
                 "method: mn.get hint: http://cn.dataone.org/cn/resolve/"+URLEncoder.encode(objectId)+"\n" +
@@ -131,7 +130,7 @@ public class Object {
 
             return responseBuilder.build();
         } else {
-            return Response.status(ClientResponse.Status.NOT_FOUND).entity(test).build();
+            throw new NotFoundException(errorMsg);
         }
     }
 
@@ -179,6 +178,7 @@ public class Object {
         Date now = new Date();
         String strDate = sdfDate.format(now);
         metaInfo.put(Constants.META_UPDATE_DATE, strDate);
+        metaInfo.put(Constants.DEPOSIT_DATE, strDate);
 
         try {
             DigestInputStream digestStream =

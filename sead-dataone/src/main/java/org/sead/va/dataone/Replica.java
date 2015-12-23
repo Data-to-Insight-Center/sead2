@@ -19,9 +19,7 @@ package org.sead.va.dataone;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
-import com.sun.jersey.api.client.ClientResponse;
 import org.bson.Document;
-import org.dataone.service.types.v1.Event;
 import org.json.JSONObject;
 import org.sead.va.dataone.util.Constants;
 import org.sead.va.dataone.util.MongoDB;
@@ -34,10 +32,8 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.ByteArrayInputStream;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.util.List;
+import java.net.URLEncoder;
 
 /**
  * Similar to returning object per id,  but used for replication
@@ -62,53 +58,41 @@ public class Replica {
                               @PathParam("objectId") String objectId) throws IOException {
 
 
-        String test ="<error name=\"NotFound\" errorCode=\"404\" detailCode=\"1020\" pid=\""+objectId+"\" nodeId=\""+ Constants.NODE_IDENTIFIER+"\">\n" +
+        String errorMsg ="<error name=\"NotFound\" errorCode=\"404\" detailCode=\"1020\" pid=\""+objectId+"\" nodeId=\""+ Constants.NODE_IDENTIFIER+"\">\n" +
                 "<description>The specified object does not exist on this node.</description>\n" +
                 "<traceInformation>\n" +
                 "method: mn.get hint: http://cn.dataone.org/cn/resolve/"+objectId+"\n" +
                 "</traceInformation>\n" +
                 "</error>";
 
-        String id = objectId;
+        String id = URLEncoder.encode(objectId);
         FindIterable<Document> iter = fgdcCollection.find(new Document(Constants.META_INFO + "." + Constants.FGDC_ID, id));
         if(iter != null && iter.first() != null){
 
-            JSONObject object = new JSONObject(iter.first().toJson().toString());
+            JSONObject object = new JSONObject(iter.first());
             JSONObject metaInfo = (JSONObject) object.get(Constants.META_INFO);
             String fgdcMetadata = object.get(Constants.METADATA).toString();
             String metadataFormat = (String) metaInfo.get(Constants.META_FORMAT);
 
-            //String filePath = "http://bluespruce.pti.indiana.edu:8080/dcs-nced/datastream/"+  URLEncoder.encode(dcsFile.getId());
-
-            //URL url = new URL(filePath);
-            //HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
-            //InputStream is = urlConnection.getInputStream();
-            InputStream is = new ByteArrayInputStream(fgdcMetadata.getBytes());
-
             String lastFormat = SeadQueryService.mimeMapping.get(metadataFormat);
-
             if (SeadQueryService.sead2d1Format.get(metadataFormat) != null) {
                 lastFormat = SeadQueryService.mimeMapping.get(SeadQueryService.sead2d1Format.get(metadataFormat));
             }
 
-            Response.ResponseBuilder responseBuilder = Response.ok(is);
+            Response.ResponseBuilder responseBuilder = Response.ok(new ByteArrayInputStream(fgdcMetadata.getBytes()));
+            responseBuilder.header("DataONE-SerialVersion", "1");
 
-            responseBuilder.header("DataONE-SerialVersion","1");
-
-            if(lastFormat!=null){
+            if (lastFormat != null) {
                 String[] format = lastFormat.split(",");
-                if(format.length>0)
-                {
+                if (format.length > 0) {
                     responseBuilder.header("Content-Type", format[0]);
                     responseBuilder.header("Content-Disposition",
-                            "inline; filename=" + id+format[1]);
-                }
-                else{
+                            "inline; filename=" + id + format[1]);
+                } else {
                     responseBuilder.header("Content-Disposition",
                             "inline; filename=" + id);
                 }
-            }
-            else{
+            } else {
                 responseBuilder.header("Content-Disposition",
                         "inline; filename=" + id);
             }
@@ -125,8 +109,8 @@ public class Replica {
             //SeadQueryService.dataOneLogService.indexLog(eventsSip);
 
             return responseBuilder.build();
-        } else {
-            return Response.status(ClientResponse.Status.NOT_FOUND).build();
+        }  else {
+            throw new NotFoundException(errorMsg);
         }
     }
 }

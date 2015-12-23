@@ -16,6 +16,10 @@
 
 package org.seadva.dataone;
 
+import com.sun.jersey.api.client.Client;
+import com.sun.jersey.api.client.ClientResponse;
+import com.sun.jersey.api.client.GenericType;
+import com.sun.jersey.api.client.WebResource;
 import org.dataconservancy.dcs.index.solr.support.SolrQueryUtil;
 import org.dataconservancy.dcs.query.api.QueryMatch;
 import org.dataconservancy.dcs.query.api.QueryResult;
@@ -33,11 +37,10 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import javax.xml.parsers.ParserConfigurationException;
+import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.net.URLEncoder;
 import java.util.List;
 
@@ -67,7 +70,7 @@ public class Replica {
                 "</traceInformation>\n" +
                 "</error>";
 
-        String id = objectId;
+        String id = URLEncoder.encode(objectId);
         QueryResult<DcsEntity> result = null;
         try {
             result = SeadQueryService.queryService.query(SolrQueryUtil
@@ -78,49 +81,29 @@ public class Replica {
         }
 
         List<QueryMatch<DcsEntity>> matches = result.getMatches();
-        for(QueryMatch<DcsEntity> entity: matches){
-            DcsFile dcsFile = (DcsFile)entity.getObject();
-            String filePath = dcsFile.getSource().replace("file://","").replace("file:","").replace(":/","://").replace(":///","://");
+        InputStream is = null;
+        String lastFormat = null;
+
+        for(QueryMatch<DcsEntity> entity: matches) {
+            DcsFile dcsFile = (DcsFile) entity.getObject();
+            String filePath = dcsFile.getSource().replace("file://", "").replace("file:", "").replace(":/", "://").replace(":///", "://");
             //String filePath = "http://bluespruce.pti.indiana.edu:8080/dcs-nced/datastream/"+  URLEncoder.encode(dcsFile.getId());
 
 
             //URL url = new URL(filePath);
             //HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
             //InputStream is = urlConnection.getInputStream();
-            InputStream is = new FileInputStream(filePath);
+            is = new FileInputStream(filePath);
 
-            String lastFormat = null;
-            if(dcsFile.getFormats().size()>0){
-                for(DcsFormat format:dcsFile.getFormats()){
-                    if(SeadQueryService.sead2d1Format.get(format.getFormat())!=null) {
+            if (dcsFile.getFormats().size() > 0) {
+                for (DcsFormat format : dcsFile.getFormats()) {
+                    if (SeadQueryService.sead2d1Format.get(format.getFormat()) != null) {
                         lastFormat = SeadQueryService.mimeMapping.get(SeadQueryService.sead2d1Format.get(format.getFormat()));
                         break;
                     }
                     lastFormat = SeadQueryService.mimeMapping.get(format.getFormat());
                 }
             }
-            Response.ResponseBuilder responseBuilder = Response.ok(is);
-
-            responseBuilder.header("DataONE-SerialVersion","1");
-
-            if(lastFormat!=null){
-                String[] format = lastFormat.split(",");
-                if(format.length>0)
-                {
-                    responseBuilder.header("Content-Type", format[0]);
-                    responseBuilder.header("Content-Disposition",
-                            "inline; filename=" + id+format[1]);
-                }
-                else{
-                    responseBuilder.header("Content-Disposition",
-                            "inline; filename=" + id);
-                }
-            }
-            else{
-                responseBuilder.header("Content-Disposition",
-                        "inline; filename=" + id);
-            }
-
 
             String ip = null;
             if(request!=null)
@@ -132,8 +115,43 @@ public class Replica {
 
             SeadQueryService.dataOneLogService.indexLog(eventsSip);
 
-            return responseBuilder.build();
+            break;
         }
-        throw new NotFoundException(test);
+        if (matches.size() < 1) {
+            WebResource webResource = Client.create().resource(SeadQueryService.SEAD_DATAONE_URL + "/replica");
+            ClientResponse response = webResource.path(id)
+                    .accept("application/xml")
+                    .type("application/xml")
+                    .get(ClientResponse.class);
+            if (response.getStatus() == 200) {
+                if(response.getHeaders().get("Content-Type") != null && response.getHeaders().get("Content-Disposition") != null) {
+                    lastFormat = response.getHeaders().get("Content-Type").get(0) + ",";
+                    lastFormat += response.getHeaders().get("Content-Disposition").get(0).split(id)[1];
+                }
+                is = new ByteArrayInputStream(response.getEntity(new GenericType<String>() {}).getBytes());
+            } else {
+                throw new NotFoundException(test);
+            }
+        }
+
+        Response.ResponseBuilder responseBuilder = Response.ok(is);
+        responseBuilder.header("DataONE-SerialVersion", "1");
+
+        if (lastFormat != null) {
+            String[] format = lastFormat.split(",");
+            if (format.length > 0) {
+                responseBuilder.header("Content-Type", format[0]);
+                responseBuilder.header("Content-Disposition",
+                        "inline; filename=" + id + format[1]);
+            } else {
+                responseBuilder.header("Content-Disposition",
+                        "inline; filename=" + id);
+            }
+        } else {
+            responseBuilder.header("Content-Disposition",
+                    "inline; filename=" + id);
+        }
+
+        return responseBuilder.build();
     }
 }
