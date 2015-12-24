@@ -45,6 +45,7 @@ public class Constants {
     public final static String DEPOSIT_DATE = "depositDate";
     public final static String FIXITY_FORMAT = "fixityFormat";
     public final static String FIXITY_VAL = "fixityValue";
+    public final static String INFINITE = "inf";
 
 
     public static String dataonDbName;

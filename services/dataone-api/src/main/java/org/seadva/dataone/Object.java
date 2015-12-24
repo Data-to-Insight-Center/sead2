@@ -101,6 +101,9 @@ public class Object{
         List<QueryMatch<DcsEntity>> matches = result.getMatches();
         InputStream is = null;
         String lastFormat = null;
+        String ip = null;
+        if (request != null)
+            ip = request.getRemoteAddr();
 
         for (QueryMatch<DcsEntity> entity : matches) {
             DcsFile dcsFile = (DcsFile) entity.getObject();
@@ -124,9 +127,6 @@ public class Object{
                 }
             }
 
-            String ip = null;
-            if (request != null)
-                ip = request.getRemoteAddr();
             SeadEvent readEvent = SeadQueryService.dataOneLogService.creatEvent(SeadQueryService.d1toSeadEventTypes.get(Event.READ.xmlValue()), userAgent, ip, entity.getObject());
 
             ResearchObject eventsSip = new ResearchObject();
@@ -137,7 +137,10 @@ public class Object{
         }
         if (matches.size() < 1) {
             WebResource webResource = Client.create().resource(SeadQueryService.SEAD_DATAONE_URL + "/object");
-            ClientResponse response = webResource.path(id)
+            ClientResponse response = webResource
+                    .path(id)
+                    .header("user-agent", userAgent)
+                    .header("remoteAddr", ip == null ? "" : ip)
                     .accept("application/xml")
                     .type("application/xml")
                     .get(ClientResponse.class);
@@ -233,7 +236,7 @@ public class Object{
         QueryResult<DcsEntity> tempResult = SeadQueryService.queryService.query(queryStr, 0, 0);
         int total = (int)tempResult.getTotal();
         int solrTotalCount = total;
-        int mongoTotalCount = getMongoTotal();
+        int mongoTotalCount = getMongoTotal(queryParams);
 
         ObjectList objectList = new ObjectList();
 
@@ -376,13 +379,13 @@ public class Object{
         }
     }
 
-    private int getMongoTotal() {
-        WebResource webResource = Client.create().resource(SeadQueryService.SEAD_DATAONE_URL + "/object");
-        ClientResponse response = webResource
-                .path("/total")
-                .accept("application/xml")
-                .type("application/xml")
-                .get(ClientResponse.class);
+    private int getMongoTotal(Map<String, String> queryParams) {
+        WebResource webResource = Client.create().resource(SeadQueryService.SEAD_DATAONE_URL + "/object/total");
+        webResource.accept("application/xml").type("application/xml");
+        for(String param :queryParams.keySet()){
+            webResource = webResource.queryParam(param, queryParams.get(param));
+        }
+        ClientResponse response = webResource.get(ClientResponse.class);
         String total = response.getEntity(new GenericType<String>() {});
         return Integer.parseInt(total);
     }

@@ -178,7 +178,9 @@ public class Metadata {
         metadata.setAuthoritativeMemberNode(nodeReference);
 
         String ip = null;
-        if (request != null)
+        if(request != null && request.getHeader("remoteAddr") != null && !request.getHeader("remoteAddr").equals(""))
+            ip = request.getHeader("remoteAddr");
+        else if (request != null)
             ip = request.getRemoteAddr();
         LogEvent readEvent = SeadQueryService.dataOneLogService.creatEvent(Event.READ.xmlValue(), userAgent, ip, URLEncoder.encode(objectId));
         SeadQueryService.dataOneLogService.indexLog(readEvent);

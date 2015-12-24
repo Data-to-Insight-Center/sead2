@@ -83,6 +83,9 @@ public class Replica {
         List<QueryMatch<DcsEntity>> matches = result.getMatches();
         InputStream is = null;
         String lastFormat = null;
+        String ip = null;
+        if(request!=null)
+            ip = request.getRemoteAddr();
 
         for(QueryMatch<DcsEntity> entity: matches) {
             DcsFile dcsFile = (DcsFile) entity.getObject();
@@ -105,9 +108,6 @@ public class Replica {
                 }
             }
 
-            String ip = null;
-            if(request!=null)
-                ip = request.getRemoteAddr();
             DcsEvent replicateEvent  = SeadQueryService.dataOneLogService.creatEvent(SeadQueryService.d1toSeadEventTypes.get(Event.REPLICATE.xmlValue()), userAgent, ip, entity.getObject());
 
             ResearchObject eventsSip = new ResearchObject();
@@ -120,6 +120,8 @@ public class Replica {
         if (matches.size() < 1) {
             WebResource webResource = Client.create().resource(SeadQueryService.SEAD_DATAONE_URL + "/replica");
             ClientResponse response = webResource.path(id)
+                    .header("user-agent", userAgent)
+                    .header("remoteAddr", ip == null ? "" : ip)
                     .accept("application/xml")
                     .type("application/xml")
                     .get(ClientResponse.class);

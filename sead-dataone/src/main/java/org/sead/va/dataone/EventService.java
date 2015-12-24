@@ -62,7 +62,7 @@ public class EventService {
         Log log = new Log();
 
         BasicDBObject query = new BasicDBObject("id", Constants.BASE_URL + "/event/" + eventId);
-        List<LogEvent> result = SeadQueryService.dataOneLogService.queryLog(query);
+        List<LogEvent> result = SeadQueryService.dataOneLogService.queryLog(query, null , 0);
 
         if (result.size() > 0) {
 

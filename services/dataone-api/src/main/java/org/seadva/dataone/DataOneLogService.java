@@ -18,7 +18,6 @@ package org.seadva.dataone;
 
 import org.dataconservancy.dcs.id.impl.UidGenerator;
 import org.dataconservancy.dcs.index.api.IndexServiceException;
-import org.dataconservancy.dcs.index.dcpsolr.DcpIndexService;
 import org.dataconservancy.dcs.index.dcpsolr.DcsSolrField;
 import org.dataconservancy.dcs.index.dcpsolr.ROIndexService;
 import org.dataconservancy.dcs.index.dcpsolr.SolrService;
@@ -96,7 +95,8 @@ public class DataOneLogService {
             queryStr+= " AND ("+ DcsSolrField.EventField.TYPE.solrName() + ":" + SeadQueryService.d1toSeadEventTypes.get(event) ;
             if(event.equals(Event.READ.xmlValue()))
                 queryStr+= " OR "+ DcsSolrField.EventField.TYPE.solrName() + ":" +
-                        SeadQueryService.d1toSeadEventTypes.get(Event.READ.xmlValue()) +" )" ;
+                        SeadQueryService.d1toSeadEventTypes.get(Event.READ.xmlValue()) ;
+            queryStr = queryStr  +" )";
         }
         else {
             queryStr+= " AND ("+ DcsSolrField.EventField.TYPE.solrName() + ":" + SeadQueryService.d1toSeadEventTypes.get(Event.READ.xmlValue()) ;
@@ -147,6 +147,17 @@ public class DataOneLogService {
             resultObject.total = 0;
         resultObject.logs = events;
         return resultObject;
+    }
+
+    public int getTotalCount() {
+        String queryStr  = SolrQueryUtil.createLiteralQuery(DcsSolrField.EntityField.TYPE.solrName(), DcsSolrField.EntityTypeValue.EVENT.solrValue());
+        QueryResult<DcsEntity> result = null;
+        try {
+            result = SeadQueryService.queryService.query(queryStr, 0, 0); //sort by filename
+        } catch (QueryServiceException e) {
+            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+        }
+        return (int) result.getTotal();
     }
 
     public class Result{

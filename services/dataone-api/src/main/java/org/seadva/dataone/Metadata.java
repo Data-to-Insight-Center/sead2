@@ -97,6 +97,10 @@ public class Metadata{
             e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
         }
 
+        String ip = null;
+        if(request!=null)
+            ip = request.getRemoteAddr();
+
         String date = null;
         SeadFile file = null;
         String depositDate = null;
@@ -104,6 +108,8 @@ public class Metadata{
         if(matches.size()==0) {
             WebResource webResource = Client.create().resource(SeadQueryService.SEAD_DATAONE_URL + "/meta");
             ClientResponse response = webResource.path(URLEncoder.encode(objectId))
+                    .header("user-agent", userAgent)
+                    .header("remoteAddr", ip == null ? "" : ip)
                     .accept("application/xml")
                     .type("application/xml")
                     .get(ClientResponse.class);
@@ -212,10 +218,6 @@ public class Metadata{
         nodeReference.setValue(SeadQueryService.NODE_IDENTIFIER);
         metadata.setOriginMemberNode(nodeReference);
         metadata.setAuthoritativeMemberNode(nodeReference);
-
-        String ip = null;
-        if(request!=null)
-            ip = request.getRemoteAddr();
 
         SeadEvent readEvent  = SeadQueryService.dataOneLogService.creatEvent( Events.FILEMETADATA_D1READ, userAgent, ip, file);
 

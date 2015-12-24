@@ -100,7 +100,9 @@ public class Replica {
             }
 
             String ip = null;
-            if (request != null)
+            if(request != null && request.getHeader("remoteAddr") != null && !request.getHeader("remoteAddr").equals(""))
+                ip = request.getHeader("remoteAddr");
+            else if (request != null)
                 ip = request.getRemoteAddr();
             LogEvent readEvent = SeadQueryService.dataOneLogService.creatEvent(Event.REPLICATE.xmlValue(), userAgent, ip, id);
             SeadQueryService.dataOneLogService.indexLog(readEvent);

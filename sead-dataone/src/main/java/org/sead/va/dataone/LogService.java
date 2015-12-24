@@ -30,6 +30,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.transform.TransformerException;
+import java.net.URLEncoder;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -62,19 +63,23 @@ public class LogService {
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
         if (fromDate != null) {
             fromDate = fromDate.replace("+00:00", "Z");
-            obj.add(new BasicDBObject(Constants.META_INFO + "." + Constants.META_UPDATE_DATE,
-                    new BasicDBObject("$gte", fromDate)));
+            obj.add(new BasicDBObject("date", new BasicDBObject("$gte", fromDate)));
         }
         if (toDate != null) {
             toDate = toDate.replace("+00:00", "Z");
-            obj.add(new BasicDBObject(Constants.META_INFO + "." + Constants.META_UPDATE_DATE,
-                    new BasicDBObject("$lte", toDate)));
+            obj.add(new BasicDBObject("date", new BasicDBObject("$lte", toDate)));
+        }
+        if(pidFilter != null){
+            obj.add(new BasicDBObject("target", URLEncoder.encode(pidFilter)));
+        }
+        if(event != null){
+            obj.add(new BasicDBObject("eventType", event));
         }
         if (obj.size() != 0) {
             andQuery.put("$and", obj);
         }
 
-        List<LogEvent> result = SeadQueryService.dataOneLogService.queryLog(andQuery);
+        List<LogEvent> result = SeadQueryService.dataOneLogService.queryLog(andQuery, countStr, start);
 
         for (LogEvent d1log : result) {
 
@@ -117,7 +122,7 @@ public class LogService {
         }
 
         log.setCount(result.size());
-        log.setTotal(SeadQueryService.dataOneLogService.countEvents());
+        log.setTotal(Integer.parseInt(countEvents(event, pidFilter, fromDate, toDate)));
         log.setStart(start);
         return SeadQueryService.marshal(log);
     }
@@ -125,7 +130,34 @@ public class LogService {
     @GET
     @Path("/total")
     @Produces(MediaType.APPLICATION_XML)
-    public String countEvents() {
-        return SeadQueryService.dataOneLogService.countEvents() + "";
+    public String countEvents(@QueryParam("event") String event,
+                              @QueryParam("pidFilter") String pidFilter,
+                              @QueryParam("fromDate") String fromDate,
+                              @QueryParam("toDate") String toDate) {
+
+        BasicDBObject andQuery = new BasicDBObject();
+        List<BasicDBObject> obj = new ArrayList<BasicDBObject>();
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
+        if (fromDate != null) {
+            fromDate = fromDate.replace("+00:00", "Z");
+            obj.add(new BasicDBObject("date", new BasicDBObject("$gte", fromDate)));
+        }
+        if (toDate != null) {
+            toDate = toDate.replace("+00:00", "Z");
+            obj.add(new BasicDBObject("date", new BasicDBObject("$lte", toDate)));
+        }
+        if(pidFilter != null){
+            obj.add(new BasicDBObject("target", URLEncoder.encode(pidFilter)));
+        }
+        if(event != null){
+            obj.add(new BasicDBObject("eventType", event));
+        }
+        if (obj.size() != 0) {
+            andQuery.put("$and", obj);
+        }
+
+        List<LogEvent> result = SeadQueryService.dataOneLogService.queryLog(andQuery, Constants.INFINITE, 0);
+
+        return result.size() + "";
     }
 }

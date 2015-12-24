@@ -86,7 +86,9 @@ public class ObjectChecksum {
         andQuery.put("$and", obj);
 
         String ip = null;
-        if (request != null)
+        if(request != null && request.getHeader("remoteAddr") != null && !request.getHeader("remoteAddr").equals(""))
+            ip = request.getHeader("remoteAddr");
+        else if (request != null)
             ip = request.getRemoteAddr();
 
         FindIterable<Document> iter = fgdcCollection.find(andQuery);

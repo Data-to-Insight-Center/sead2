@@ -60,8 +60,24 @@ public class DataOneLogService {
         eventCollection.insert(basicDBObject);
     }
 
-    public List<LogEvent>  queryLog(BasicDBObject query){
-        DBCursor cursor = eventCollection.find(query);
+    public List<LogEvent>  queryLog(BasicDBObject query, String countStr, int start){
+
+        int count = 80;
+        if(countStr!=null && !countStr.equals(Constants.INFINITE))
+            count = Integer.parseInt(countStr);
+        start = start < 0 ? 0 : start;
+
+        DBCursor cursor;
+        if(countStr!=null && countStr.equals(Constants.INFINITE)) {
+            cursor = eventCollection.find(query)
+                            .skip(start)
+                            .sort(new BasicDBObject("id", 1));
+        } else {
+            cursor = eventCollection.find(query)
+                    .limit(count)
+                    .skip(start)
+                    .sort(new BasicDBObject("id", 1));
+        }
         List<LogEvent> logEvents = new ArrayList<LogEvent>();
         try {
             while(cursor.hasNext()) {
@@ -74,10 +90,6 @@ public class DataOneLogService {
             cursor.close();
         }
         return logEvents;
-    }
-
-    public int countEvents() {
-        return ((int) eventCollection.count());
     }
 
 }

@@ -97,6 +97,8 @@ public class ObjectChecksum {
                 webResource = webResource.queryParam("checksumAlgorithm", checksumAlgorithm);
             }
             ClientResponse response = webResource
+                    .header("user-agent", userAgent)
+                    .header("remoteAddr", ip == null ? "" : ip)
                     .accept("application/xml")
                     .type("application/xml")
                     .get(ClientResponse.class);

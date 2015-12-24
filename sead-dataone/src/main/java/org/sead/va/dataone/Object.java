@@ -130,7 +130,9 @@ public class Object {
             }
 
             String ip = null;
-            if (request != null)
+            if(request != null && request.getHeader("remoteAddr") != null && !request.getHeader("remoteAddr").equals(""))
+                ip = request.getHeader("remoteAddr");
+            else if (request != null)
                 ip = request.getRemoteAddr();
             LogEvent readEvent = SeadQueryService.dataOneLogService.creatEvent(Event.READ.xmlValue(), userAgent, ip, id);
             SeadQueryService.dataOneLogService.indexLog(readEvent);
@@ -233,7 +235,7 @@ public class Object {
         }
 
         ObjectList objectList = new ObjectList();
-        int totalMongoCount = (int)fgdcCollection.count();
+        int totalMongoCount = Integer.parseInt(countObjects(formatId, fromDate, toDate));
         if(countZero){
             objectList.setCount(0);
             objectList.setTotal(totalMongoCount);
@@ -335,9 +337,36 @@ public class Object {
     @GET
     @Path("/total")
     @Produces(MediaType.APPLICATION_XML)
-    public String countObjects(@Context HttpServletRequest request,
-                              @HeaderParam("user-agent") String userAgent) {
-        Long total = fgdcCollection.count();
-        return String.format("%d", total);
+    public String countObjects(@QueryParam("formatId") String formatId,
+                               @QueryParam("fromDate") String fromDate,
+                               @QueryParam("toDate") String toDate) {
+
+        BasicDBObject andQuery = new BasicDBObject();
+        List<BasicDBObject> obj = new ArrayList<BasicDBObject>();
+        if(formatId!=null) {
+            String tempFormat = SeadQueryService.d12seadFormat.get(formatId);
+            if(tempFormat ==null)
+                tempFormat = formatId;
+            obj.add(new BasicDBObject(Constants.META_INFO + "." + Constants.META_FORMAT, tempFormat));
+        }
+        if(fromDate!=null) {
+            fromDate = fromDate.replace("+00:00","Z");
+            obj.add(new BasicDBObject(Constants.META_INFO + "." + Constants.META_UPDATE_DATE,
+                    new BasicDBObject("$gte", fromDate)));
+        }
+        if(toDate!=null) {
+            toDate = toDate.replace("+00:00","Z");
+            obj.add(new BasicDBObject(Constants.META_INFO + "." + Constants.META_UPDATE_DATE,
+                    new BasicDBObject("$lte", toDate)));
+        }
+        if(obj.size() != 0) {
+            andQuery.put("$and", obj);
+        }
+
+        long count = fgdcCollection.count(andQuery);
+        return String.valueOf((int)count);
+
+
+
     }
 }
