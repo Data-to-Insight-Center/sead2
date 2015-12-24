@@ -29,9 +29,7 @@ import java.util.Map;
  */
 public class SeadQueryService {
 
-    public static String NODE_IDENTIFIER;
-    public static String SUBJECT;
-    public static String BASE_URL;
+
     public static Map<String, String> d1toSeadfixity;
     public static Map<String, String> sead2d1fixity;
     static Map<String, String> d1toSeadEventTypes;
@@ -39,11 +37,8 @@ public class SeadQueryService {
 
     public static Map<String, String> sead2d1Format;
     public static Map<String, String> d12seadFormat;
-    public static String solrPath;
-    public static String datastreamURL;
-
+    public static DataOneLogService dataOneLogService;
     public static Map<String, String> mimeMapping;
-
 
     static TransformerFactory factory;
     static Source xslt;
@@ -55,6 +50,7 @@ public class SeadQueryService {
             factory = TransformerFactory.newInstance();
             xslt = new StreamSource(SeadQueryService.class.getResourceAsStream("DateFormat.xslt"));
             transformer = factory.newTransformer(xslt);
+            dataOneLogService = new DataOneLogService();
 
             sead2d1Format = new HashMap<String, String>();
             sead2d1Format.put("application/excel", "application/vnd.ms-excel");

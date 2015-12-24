@@ -24,6 +24,7 @@ import org.dataone.service.types.v1.*;
 import org.jibx.runtime.JiBXException;
 import org.json.JSONObject;
 import org.sead.va.dataone.util.Constants;
+import org.sead.va.dataone.util.LogEvent;
 import org.sead.va.dataone.util.MongoDB;
 import org.sead.va.dataone.util.SeadQueryService;
 import org.xml.sax.SAXException;
@@ -179,13 +180,8 @@ public class Metadata {
         String ip = null;
         if (request != null)
             ip = request.getRemoteAddr();
-
-        //SeadEvent readEvent  = SeadQueryService.dataOneLogService.creatEvent( Events.FILEMETADATA_D1READ, userAgent, ip, file);
-
-        //ResearchObject eventsSip = new ResearchObject();
-        //eventsSip.addEvent(readEvent);
-
-        //SeadQueryService.dataOneLogService.indexLog(eventsSip);
+        LogEvent readEvent = SeadQueryService.dataOneLogService.creatEvent(Event.READ.xmlValue(), userAgent, ip, URLEncoder.encode(objectId));
+        SeadQueryService.dataOneLogService.indexLog(readEvent);
 
         return Response.ok(SeadQueryService.marshal(metadata)).build();
     }

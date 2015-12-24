@@ -20,8 +20,10 @@ import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import org.bson.Document;
+import org.dataone.service.types.v1.Event;
 import org.json.JSONObject;
 import org.sead.va.dataone.util.Constants;
+import org.sead.va.dataone.util.LogEvent;
 import org.sead.va.dataone.util.MongoDB;
 import org.sead.va.dataone.util.SeadQueryService;
 import org.xml.sax.SAXException;
@@ -97,16 +99,11 @@ public class Replica {
                         "inline; filename=" + id);
             }
 
-
             String ip = null;
-            if(request!=null)
+            if (request != null)
                 ip = request.getRemoteAddr();
-            //DcsEvent replicateEvent  = SeadQueryService.dataOneLogService.creatEvent(SeadQueryService.d1toSeadEventTypes.get(Event.REPLICATE.xmlValue()), userAgent, ip, entity.getObject());
-
-            //ResearchObject eventsSip = new ResearchObject();
-            //eventsSip.addEvent(replicateEvent);
-
-            //SeadQueryService.dataOneLogService.indexLog(eventsSip);
+            LogEvent readEvent = SeadQueryService.dataOneLogService.creatEvent(Event.REPLICATE.xmlValue(), userAgent, ip, id);
+            SeadQueryService.dataOneLogService.indexLog(readEvent);
 
             return responseBuilder.build();
         }  else {

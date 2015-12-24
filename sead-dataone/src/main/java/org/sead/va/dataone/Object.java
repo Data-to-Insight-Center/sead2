@@ -28,6 +28,7 @@ import org.dataone.service.types.v1.*;
 import org.jibx.runtime.JiBXException;
 import org.json.JSONObject;
 import org.sead.va.dataone.util.Constants;
+import org.sead.va.dataone.util.LogEvent;
 import org.sead.va.dataone.util.MongoDB;
 import org.sead.va.dataone.util.SeadQueryService;
 import org.xml.sax.SAXException;
@@ -127,6 +128,12 @@ public class Object {
                 responseBuilder.header("Content-Disposition",
                         "inline; filename=" + id);
             }
+
+            String ip = null;
+            if (request != null)
+                ip = request.getRemoteAddr();
+            LogEvent readEvent = SeadQueryService.dataOneLogService.creatEvent(Event.READ.xmlValue(), userAgent, ip, id);
+            SeadQueryService.dataOneLogService.indexLog(readEvent);
 
             return responseBuilder.build();
         } else {
@@ -328,7 +335,7 @@ public class Object {
     @GET
     @Path("/total")
     @Produces(MediaType.APPLICATION_XML)
-    public String listObjects(@Context HttpServletRequest request,
+    public String countObjects(@Context HttpServletRequest request,
                               @HeaderParam("user-agent") String userAgent) {
         Long total = fgdcCollection.count();
         return String.format("%d", total);

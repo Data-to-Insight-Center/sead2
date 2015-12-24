@@ -22,9 +22,11 @@ import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import org.bson.Document;
 import org.dataone.service.types.v1.Checksum;
+import org.dataone.service.types.v1.Event;
 import org.jibx.runtime.JiBXException;
 import org.json.JSONObject;
 import org.sead.va.dataone.util.Constants;
+import org.sead.va.dataone.util.LogEvent;
 import org.sead.va.dataone.util.MongoDB;
 import org.sead.va.dataone.util.SeadQueryService;
 
@@ -102,24 +104,18 @@ public class ObjectChecksum {
                     checksum.setAlgorithm(checksumAlgorithm);
                     checksum.setValue(fixityVal);
 
-                    //DcsEvent readEvent  = SeadQueryService.dataOneLogService.creatEvent(Event.READ.xmlValue(), userAgent, ip, entity.getObject());
+                    LogEvent readEvent = SeadQueryService.dataOneLogService.creatEvent(Event.READ.xmlValue(), userAgent, ip, objectId);
+                    SeadQueryService.dataOneLogService.indexLog(readEvent);
 
-                    //ResearchObject eventsSip = new ResearchObject();
-                    //eventsSip.addEvent(readEvent);
-
-                    //SeadQueryService.dataOneLogService.indexLog(eventsSip);
                     return Response.ok(SeadQueryService.marshal(checksum)).build();
                 }
             } else {
                 checksum.setAlgorithm(SeadQueryService.sead2d1fixity.get(fixityAlgo));
                 checksum.setValue(fixityVal);
 
-                //DcsEvent readEvent  = SeadQueryService.dataOneLogService.creatEvent(Event.READ.xmlValue(), userAgent, ip, entity.getObject());
+                LogEvent readEvent = SeadQueryService.dataOneLogService.creatEvent(Event.READ.xmlValue(), userAgent, ip, objectId);
+                SeadQueryService.dataOneLogService.indexLog(readEvent);
 
-                //ResearchObject eventsSip = new ResearchObject();
-                //eventsSip.addEvent(readEvent);
-
-                //SeadQueryService.dataOneLogService.indexLog(eventsSip);
                 return Response.ok(SeadQueryService.marshal(checksum)).build();
             }
             return Response.ok(SeadQueryService.marshal(new Checksum())).build();

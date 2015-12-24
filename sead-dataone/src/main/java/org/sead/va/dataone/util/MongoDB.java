@@ -30,6 +30,7 @@ public class MongoDB {
 
 	static public MongoClient mongoClientInstance = null;
     public static String fgdc = "fgdc";
+    public static String event = "event";
 
 	public static synchronized MongoClient getMongoClientInstance() {
 	    if (mongoClientInstance == null) {
@@ -46,4 +47,9 @@ public class MongoDB {
 		MongoDatabase db = getMongoClientInstance().getDatabase(Constants.dataonDbName);
 		return db;
 	}
+
+    static public DB getDB() {
+        DB db = getMongoClientInstance().getDB(Constants.dataonDbName);
+        return db;
+    }
 }
