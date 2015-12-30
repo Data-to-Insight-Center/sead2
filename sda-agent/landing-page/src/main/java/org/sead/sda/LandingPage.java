@@ -64,6 +64,7 @@ public class LandingPage extends HttpServlet {
             JSONObject describes = (JSONObject) oreFile.get("describes");
             Map<String, List<String>> roProperties = new HashMap<String, List<String>>();
             Map<String, String> downloadList = new HashMap<String, String>();
+            Map<String, String> linkedHashMap = new LinkedHashMap<String, String>();	
 
             // extract properties from ORE
             JSONArray status = (JSONArray) cp.get("Status");
@@ -133,9 +134,108 @@ public class LandingPage extends HttpServlet {
 		            
 		            
 	            }
+	            
+	            // display folder hierarchy 
+            	Set<String> namelist = downloadList.keySet();
+	            
+	            int maxCount = 0;
+	            List<String[]> allNames = new ArrayList<String[]>();
+
+	            for (String name : namelist){
+	            	String[] tem = name.split("/");
+	            	if (tem.length >= maxCount){
+	            		maxCount = tem.length;
+	            	}
+	            	allNames.add(tem);
+	            	
+	            }	            
+	           	
+	            List<String> namesAsc = new ArrayList<String>();
+	            for (int i = 2; i <= maxCount; i++){
+	            	for (int j = 0; j < allNames.size(); j++){
+	            		if (allNames.get(j).length == i){
+	            			String tem = "";
+	            			for (int k = 0; k < allNames.get(j).length; k++){
+	            				tem+=allNames.get(j)[k]+"/";
+	            			}
+	            			namesAsc.add(tem);	            			
+	            		}else if (allNames.get(j).length > i){
+	            			String tem = "";
+	            			for (int k = 0; k < i; k++){
+	            				tem += allNames.get(j)[k]+"/";
+	            			}
+	            			if (!namesAsc.contains(tem)){
+	            				namesAsc.add(tem);
+	            			}
+	            		}
+	            	}
+	            }
+	            List<String[]> allNamesAsc = new ArrayList<String[]>();
+	            for (int i = 0; i< namesAsc.size();i++){
+	            	allNamesAsc.add(namesAsc.get(i).split("/"));
+	            }
+	            
+	            allNames = new ArrayList<String[]>();
+	            allNames.add(allNamesAsc.remove(0));
+	            
+	            while(!allNamesAsc.isEmpty()){	 
+	            	for (int loc = 0; loc < allNames.size(); loc++){
+		            	for (int i = 0; i < allNamesAsc.size(); i++){
+		            		if (allNames.get(loc).length == allNamesAsc.get(i).length && allNames.get(loc)[allNames.get(loc).length-2].equals(allNamesAsc.get(i)[allNamesAsc.get(i).length-2])){
+		            			allNames.add(loc+1, allNamesAsc.remove(i));
+		            		}
+		            		else if (allNames.get(loc).length == allNamesAsc.get(i).length-1 && allNames.get(loc)[allNames.get(loc).length-1].equals(allNamesAsc.get(i)[allNamesAsc.get(i).length-2])){
+		            			allNames.add(loc+1, allNamesAsc.remove(i));	
+		            		}
+		            	}
+	            	}     		            	
+	            }
+	            	            	            
+	           
+	            List<String> newAllNames = new ArrayList<String>();
+	            for (int i = 0; i < allNames.size(); i++){
+	            	String tem = "";
+	            	for (int j = 0; j < allNames.get(i).length; j++){
+	            		tem = tem + allNames.get(i)[j] + "/";
+	            	}       
+	            	newAllNames.add(tem.substring(0, tem.length()-1));
+	            }
+	            
+	            linkedHashMap = new LinkedHashMap<String, String>();
+	            	            
+	            for (int i = 0 ; i < newAllNames.size(); i++){
+	            	if (downloadList.containsKey(newAllNames.get(i))){
+	            		String[] tem = newAllNames.get(i).split("/");
+	            		String temp = "";
+	            		if (tem.length != 2){
+	            			temp = "|";
+	            		}
+	            		
+	            		for(int j = 0; j < tem.length-2; j++){
+	            			temp+="____";
+	            		}
+	            		temp += tem[tem.length-1];
+	            		linkedHashMap.put(newAllNames.get(i),temp);
+	            	}else{
+	            		String[] tem = newAllNames.get(i).split("/");
+	            		String temp = "";
+	            		if (tem.length != 2){
+	            			temp = "|";
+	            		}
+	            		for(int j = 0; j < tem.length-2; j++){
+	            			temp+="____";
+	            		}
+	            		temp += tem[tem.length-1];
+	            		linkedHashMap.put(newAllNames.get(i),temp);
+	            	}
+	            }					            
+	         
             // set download list as an attribute
+            // set linkedHashMap as an attribute
             }
             request.setAttribute("downloadList", downloadList);
+            request.setAttribute("linkedHashMap", linkedHashMap);
+           
             // forward the user to get_id UI
             RequestDispatcher dispatcher = request.getRequestDispatcher("/ro.jsp");
             dispatcher.forward(request, response);

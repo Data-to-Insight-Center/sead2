@@ -18,6 +18,7 @@
 <%
     Map<String, List<String>> properties = (Map<String, List<String>>) request.getAttribute("roProperties");
 	Map<String, String> downloadList = (Map<String, String>) request.getAttribute("downloadList");
+	Map<String, String> linkedHashMap = (Map<String, String>) request.getAttribute("linkedHashMap");
 	String tag = (String) request.getAttribute("obTag");	
 	String sdaUrl = (String) request.getAttribute("landingPageUrl") + "/home.html";
 %>
@@ -93,17 +94,24 @@
 
             <table id = "list" class='table table-striped' style="width: 70%">
                     <%
-                        for (String key : downloadList.keySet()) {
-                            String val = downloadList.get(key);
+                        for (String key : linkedHashMap.keySet()) {
+                            String val = linkedHashMap.get(key);
                     %>
                     <tr>
-                        <td style="width: 50%"><b><%= key%></b></td>
-                        <td style="width: 15%"><%= val%></td>
-                        <td style="width: 5%">
-	                    <form method="get" action="sda/<%= key %>">
-						<button type="submit" class="btn btn-primary">Download</button>
-						</form>
-        				</td>
+                        
+                       <% if (downloadList.get(key) == null){ %>
+                      		<td style="width: 15%" > <Font color = "#2ECCFA"><b><%= val%></b></Font></td>
+                        	<td style="width: 15%" ><%= "Folder"%></td>
+                       		
+                       <% }else{ %>
+                        	<td style="width: 50%" ><b><%= val %></b></td>
+                        	<td style="width: 15%"><%=downloadList.get(key)%></td>
+                        	<td style="width: 5%">
+	                    	<form method="get" action="sda/<%= key %>">
+							<button type="submit" class="btn btn-primary">Download</button>
+							</form>
+							</td>
+                       <% } %>
                     </tr>
                     <%
                       }
