@@ -465,7 +465,9 @@ public class ROServices {
 			if (profileDoc != null) {
 				String currentAffiliations = profileDoc
 						.getString("affiliation");
-				orgs = Arrays.asList(currentAffiliations.split("\\s*,\\s*"));
+                if(currentAffiliations != null) {
+                    orgs = Arrays.asList(currentAffiliations.split("\\s*,\\s*"));
+                }
 			}
 		}
 
