@@ -73,7 +73,7 @@ public class LandingPage extends HttpServlet {
             roProperties.put("Full Metadata", Arrays.asList(Constants.landingPage + "/metadata/" + tag + "/oremap"));
             addROProperty("Creator", describes, roProperties);
             addROProperty("Publication Date", describes, roProperties);
-            addROProperty("Label", describes, roProperties);
+            addROProperty("Title", describes, roProperties);
             addROProperty("Abstract", describes, roProperties);
 
             Map<String, String> properties = new HashMap<String, String>();

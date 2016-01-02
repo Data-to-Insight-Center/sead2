@@ -26,19 +26,29 @@
 
 
 <div id="wrapper" align = "center">
-	<div style = "display : inline-block">
+    <div style="display : inline-block" class="container">
+        <div style="width: 70%;">
+            <img align="right" src="http://brand.iu.edu/img/signatures/indiana-university/indiana-university" style="position: relative; float: right; width: 28%; height: 19%">
+        </div>
+	</div>
+	<div>
         <h1 style="cursor: pointer;"><a style="color: #333; text-decoration: none;" href="<%= sdaUrl%>">IU SEAD Cloud</a></h1>
 	</div>
     
     <div id="page-wrapper" align = "center">
-    <% List<String> label = properties.get("Label"); %>
-    	<h2>Dataset : <%= label.get(0)%></h2>
+    <% List<String> label = properties.get("Title"); %>
+    	<%--<h2>Dataset : <%= label.get(0)%></h2>--%>
+    	<h2>Research Object Landing Page</h2>
         <div class="container float" align = "center">
 
                 <table class='table table-condensed' style="width: 70%" >
+                <tr>
+                    <td style="width: 20%"><b>Title</b></td>
+                    <td><%= properties.get("Title") != null ? properties.get("Title").get(0) : ""%></br></td>
+                </tr>
                     <%
                         for (String key : properties.keySet()) {
-                            if(key == "Label") {
+                            if(key == "Title") {
                                 continue;
                             }
                         	List<String> vals = properties.get(key);
@@ -78,17 +88,17 @@
             
             <div style="width:450px;">
 			<div style="float: left; width: 225px"> 
-			 <form action="sda/<%= properties.get("Label").get(0)%>" method="get">
-			    <button type="submit" class="btn btn-primary">Download Full Dataset</button>
+			 <form action="sda/<%= properties.get("Title").get(0)%>" method="get">
+			    <button type="submit" class="btn btn-primary">Download Full Research Object</button>
 			</form>
 			</div>
 			<div style="float: right; width: 225px"> 
 			    <form method="get" action="sda/list=<%= tag%>">
-				<button type="submit" class="btn btn-primary">Files in this dataset</button>
+				<button type="submit" class="btn btn-primary">Files in this Research Object</button>
 			    </form>
 			</div>
 			</div>
-			
+
 			
 			<td style="line-height:20px;" colspan=3>&nbsp;</td>
 
