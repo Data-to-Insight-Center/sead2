@@ -21,11 +21,11 @@
 
 package org.seadpdt.people;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import org.bson.Document;
 import org.json.JSONObject;
+
+import java.util.HashMap;
+import java.util.Map;
 
 
 abstract public class Provider {
@@ -37,6 +37,7 @@ abstract public class Provider {
 	Provider.registerProvider(new OrcidProvider());
 	Provider.registerProvider(new GooglePlusProvider());
 	Provider.registerProvider(new LinkedInProvider());
+    Provider.registerProvider(new ClowderProvider());
 	// Clowder/SEAD2
 	}
 	
