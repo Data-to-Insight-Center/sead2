@@ -67,6 +67,7 @@ public class ClowderProvider extends Provider {
         if (rawDocument.get("affiliation") != null) {
             personDocument.append("affiliation", rawDocument.get("affiliation"));
         }
+        personDocument.put("PersonalProfileDocument",getCanonicalId(rawDocument.get("id").toString()));
 
         return personDocument;
     }
