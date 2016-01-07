@@ -25,8 +25,6 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
 
-import org.apache.commons.codec.binary.Base64;
-
 public class HttpDownload {
 	
 	private HttpURLConnection httpConn;
@@ -46,8 +44,8 @@ public class HttpDownload {
 			this.fileUrl = fileUrl;
 			URL url = new URL(fileUrl);
 			httpConn = (HttpURLConnection) url.openConnection();
-			String basicAuth = "Basic " + new String(new Base64().encode(userAndpass.getBytes()));
-			httpConn.setRequestProperty ("Authorization", basicAuth);
+			//String basicAuth = "Basic " + new String(new Base64().encode(userAndpass.getBytes()));
+			//httpConn.setRequestProperty ("Authorization", basicAuth);
 		}catch(Exception e){
 			e.printStackTrace();
 		}
