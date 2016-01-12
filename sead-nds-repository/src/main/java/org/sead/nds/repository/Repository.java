@@ -38,7 +38,7 @@ public class Repository {
 	private static final Logger log = Logger.getLogger(Repository.class);
 	private static String repoID = null;
 	private static Properties props = new Properties();
-	private static String dataPath=null;
+	private static String dataPath = null;
 
 	static {
 		try {
@@ -48,27 +48,32 @@ public class Repository {
 		} catch (IOException e) {
 			log.warn("Could not read repositories.properties file");
 		}
-		repoID=props.getProperty("repo.ID", "bob");
-		dataPath=props.getProperty("repo.datapath", "./test2");
-		
+		repoID = props.getProperty("repo.ID", "bob");
+		dataPath = props.getProperty("repo.datapath", "./test2");
+
 	}
-	
+
 	public Repository() {
 	}
 
 	public static void main(String[] args) {
 		PropertyConfigurator.configure("./log4j.properties");
-		
+
 		if (args.length == 1) {
-			
+
 			BagGenerator bg;
-			C3PRPubRequestFacade RO = new C3PRPubRequestFacade(args[0], props); 
+			C3PRPubRequestFacade RO = new C3PRPubRequestFacade(args[0], props);
 			bg = new BagGenerator(RO);
-			//FixMe - use repo.ID from properties file (possibly in repo class
-			if(bg.generateBag()) {
-				RO.sendStatus(C3PRPubRequestFacade.SUCCESS_STAGE, RO.getOREMap().getJSONObject("describes").getString("External Identifier"));
+			// FixMe - use repo.ID from properties file (possibly in repo class
+			if (bg.generateBag()) {
+				RO.sendStatus(
+						C3PRPubRequestFacade.SUCCESS_STAGE,
+						RO.getOREMap().getJSONObject("describes")
+								.getString("External Identifier"));
 			} else {
-				RO.sendStatus(C3PRPubRequestFacade.FAILURE_STAGE, "Processing of this request has failed and no further attempts to process this request will be made. Please contact the repository for further information.");
+				RO.sendStatus(
+						C3PRPubRequestFacade.FAILURE_STAGE,
+						"Processing of this request has failed and no further attempts to process this request will be made. Please contact the repository for further information.");
 			}
 		} else {
 			System.out.println("Usage: <oremap URL>");
@@ -80,25 +85,28 @@ public class Repository {
 		return props.getProperty("repo.landing.base",
 				"http://bobdiscountdatashack.com/howabout/") + bagName;
 	}
+
 	static public String getDataPath() {
 		return dataPath;
 	}
 
-	public static String createDOIForRO(String bagName, C3PRPubRequestFacade RO) throws EZIDException {
-		String target = Repository.getLandingPage(bagName);
+	public static String createDOIForRO(String bagID, C3PRPubRequestFacade RO)
+			throws EZIDException {
+		String target = Repository.getLandingPage(bagID);
 		log.debug("DOI Landing Page: " + target);
-		String creators = RO.getCreatorsString(RO.normalizeValues(RO.getOREMap().get(
-				"Creator")));
+		String creators = RO.getCreatorsString(RO.normalizeValues(RO
+				.getOREMap().get("Creator")));
 
 		HashMap<String, String> metadata = new LinkedHashMap<String, String>();
 		metadata.put(InternalProfile.TARGET.toString(), target);
-		metadata.put(DataCiteProfile.TITLE.toString(),
-				((JSONObject) RO.getOREMap().get("describes")).getString("Title"));
+		metadata.put(DataCiteProfile.TITLE.toString(), ((JSONObject) RO
+				.getOREMap().get("describes")).getString("Title"));
 		metadata.put(DataCiteProfile.CREATOR.toString(), creators);
 		String rightsholderString = "SEAD (http://sead-data.net";
 		if (RO.getPublicationRequest().has("Rights Holder")) {
-			rightsholderString = RO.getPublicationRequest().getString("Rights Holder") + ", "
-					+ rightsholderString;
+			rightsholderString = RO.getPublicationRequest().getString(
+					"Rights Holder")
+					+ ", " + rightsholderString;
 		} else {
 			log.warn("Request has no Rights Holder");
 		}
@@ -110,13 +118,15 @@ public class Repository {
 
 		boolean permanent = props.get("doi.default").equals("temporary") ? false
 				: true;
-		if (((JSONObject) RO.getPublicationRequest().get("Preferences")).has("Purpose")) {
-			String purpose = ((JSONObject) RO.getPublicationRequest().get("Preferences"))
-					.getString("Purpose");
+		if (((JSONObject) RO.getPublicationRequest().get("Preferences"))
+				.has("Purpose")) {
+			String purpose = ((JSONObject) RO.getPublicationRequest().get(
+					"Preferences")).getString("Purpose");
 			if (purpose.equalsIgnoreCase("Testing-Only")) {
 				permanent = false;
 			}
 		}
+	
 		ezid.login(props.getProperty("doi.user"), props.getProperty("doi.pwd"));
 		String shoulder = (permanent) ? props.getProperty("doi.shoulder.prod")
 				: props.getProperty("doi.shoulder.test");
@@ -127,5 +137,4 @@ public class Repository {
 	public static String getID() {
 		return repoID;
 	}
-
 }

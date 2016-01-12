@@ -4,8 +4,8 @@
 	<modelVersion>4.0.0</modelVersion>
 	<artifactId>sead-nds-repository</artifactId>
 	<version>0.9-SNAPSHOT</version>
-	<name>SEAD NDS Repository root pom</name>
-	<packaging>jar</packaging>
+	<name>SEAD NDS Repository</name>
+	<packaging>war</packaging>
 
 	<parent>
 		<groupId>org.sead.va</groupId>
@@ -13,7 +13,7 @@
 		<version>2.0.0-SNAPSHOT</version>
 	</parent>
 	<build>
-
+		<finalName>ndsrepository</finalName>
 		<plugins>
 			<plugin>
 				<artifactId>maven-compiler-plugin</artifactId>
@@ -23,6 +23,28 @@
 					<source>1.6</source>
 					<target>1.6</target>
 				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-war-plugin</artifactId>
+				<version>2.2</version>
+				<configuration>
+					<archiveClasses>false</archiveClasses>
+					<webResources>
+						<resource>
+							<filtering>true</filtering>
+							<directory>${basedir}/src/main/webapp</directory>
+							<includes>
+								<include>WEB-INF/web.xml</include>
+							</includes>
+						</resource>
+					</webResources>
+				</configuration>
+				<executions>
+					<execution>
+						<phase>prepare-package</phase>
+					</execution>
+				</executions>
 			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
@@ -60,6 +82,8 @@
 			</resource>
 		</resources>
 	</build>
+
+    
 	<repositories>
 		<repository>
 			<id>ezid.local</id>
@@ -90,10 +114,6 @@
 		<dependency>
 			<groupId>com.jcraft</groupId>
 			<artifactId>jsch</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>javax.ws.rs</groupId>
-			<artifactId>javax.ws.rs-api</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>commons-net</groupId>
@@ -131,10 +151,6 @@
 			<artifactId>json</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>javax.servlet</groupId>
-			<artifactId>servlet-api</artifactId>
-		</dependency>
-		<dependency>
 			<groupId>edu.ucsb.nceas</groupId>
 			<artifactId>ezid</artifactId>
 		</dependency>
@@ -143,6 +159,12 @@
 			<artifactId>commons-lang3</artifactId>
 		</dependency>
 
+		<dependency>
+			<groupId>javax.servlet</groupId>
+			<artifactId>javax.servlet-api</artifactId>
+			<version>3.1.0</version>
+			<scope>provided</scope>
+		</dependency>
 	</dependencies>
 	<dependencyManagement>
 		<dependencies>
@@ -160,11 +182,6 @@
 				<groupId>com.jcraft</groupId>
 				<artifactId>jsch</artifactId>
 				<version>0.1.50</version>
-			</dependency>
-			<dependency>
-				<groupId>javax.ws.rs</groupId>
-				<artifactId>javax.ws.rs-api</artifactId>
-				<version>2.0</version>
 			</dependency>
 			<dependency>
 				<groupId>commons-net</groupId>
@@ -200,11 +217,6 @@
 				<groupId>org.json</groupId>
 				<artifactId>json</artifactId>
 				<version>20140107</version>
-			</dependency>
-			<dependency>
-				<groupId>javax.servlet</groupId>
-				<artifactId>servlet-api</artifactId>
-				<version>2.5</version>
 			</dependency>
 			<dependency>
 				<groupId>edu.ucsb.nceas</groupId>
