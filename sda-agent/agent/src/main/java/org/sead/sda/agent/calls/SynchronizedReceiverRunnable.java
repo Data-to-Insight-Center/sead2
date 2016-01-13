@@ -88,6 +88,9 @@ public class SynchronizedReceiverRunnable implements Runnable {
                         String target = PropertiesReader.landingPage + "?tag=" + identifier;
                         DOI doi = new DOI(target, ore);
                         String doiUrl = doi.getDoi();
+                        if(doiUrl.startsWith("doi:")){
+                            doiUrl = doiUrl.replace("doi:", "http://dx.doi.org/");
+                        }
                         System.out.println("DOI: " + doiUrl);
 
                         System.out.println("Updating status in C3P-R with the DOI...");
