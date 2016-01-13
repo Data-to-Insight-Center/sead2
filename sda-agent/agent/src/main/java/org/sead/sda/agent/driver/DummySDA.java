@@ -81,10 +81,10 @@ public class DummySDA {
                 download((JSONArray) itemNew.get("content"), newDownloadPath);
             } else {
                 HttpDownload httpDownload = new HttpDownload();
-                String label = itemNew.get("Label").toString();
+                String title = itemNew.get("Title").toString();
                 String fileUrl = itemNew.get("Link").toString();
-                String downloadPath_new = downloadPath + File.separator + label;
-                httpDownload.connection(fileUrl, this.userAndpass, label);
+                String downloadPath_new = downloadPath + File.separator + title;
+                httpDownload.connection(fileUrl, this.userAndpass, title);
                 httpDownload.downloadFile(downloadPath_new);
                 errorLinks.addAll(httpDownload.gerErrorLinks());
                 httpDownload.disconnect();

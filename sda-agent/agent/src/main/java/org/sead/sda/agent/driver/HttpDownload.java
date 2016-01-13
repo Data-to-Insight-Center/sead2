@@ -30,7 +30,7 @@ public class HttpDownload {
 	private HttpURLConnection httpConn;
 	private InputStream inputStream;
 	private ArrayList<String> errorLinks;
-	private String label;
+	private String title;
 	private String fileUrl;
 	
 	public HttpDownload(){
@@ -38,9 +38,9 @@ public class HttpDownload {
 	}
 	
 	
-	public void connection(String fileUrl, String userAndpass, String label){
+	public void connection(String fileUrl, String userAndpass, String title){
 		try{
-			this.label = label;
+			this.title = title;
 			this.fileUrl = fileUrl;
 			URL url = new URL(fileUrl);
 			httpConn = (HttpURLConnection) url.openConnection();
@@ -87,12 +87,12 @@ public class HttpDownload {
 				outputStream.close();
 				inputStream.close();
 				
-				System.out.println("[HTTP FILE: HTTP File downloaded into local server] "+label);
+				System.out.println("[HTTP FILE: HTTP File downloaded into local server] "+title);
 
 				
 			}catch(Exception e){
 				e.printStackTrace();
-				System.out.println("[HTTP FILE: Invalid HTTP link] "+label);
+				System.out.println("[HTTP FILE: Invalid HTTP link] "+title);
 				errorLinks.add("[Invalid HTTP FILE] "+this.fileUrl);
 			}
 			

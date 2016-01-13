@@ -39,7 +39,7 @@ public class NewOREmap {
 	public JSONObject buildHierarchy(JSONObject ore){
 		JSONObject describe = (JSONObject) ore.get("describes") ;
 		
-		String label = (String) describe.get("Label");
+		//String label = (String) describe.get("Label");
 		
 		JSONArray aggregate = (JSONArray) describe.get("aggregates");
 		
@@ -47,7 +47,7 @@ public class NewOREmap {
 		
 		JSONObject output = new JSONObject();
 		
-		output.put("Folder", describe.get("Label"));
+		output.put("Folder", describe.get("Title"));
 		output.put("aggregates", hasPart(aggregate, part, 0, aggregate.size()-1));
 		
 		return output;
@@ -65,7 +65,7 @@ public class NewOREmap {
 				int stop_new = i + size;
 				List part_new = (List) list_item.get("Has Part");
 				JSONObject oneItem = new JSONObject();
-				oneItem.put("Folder", list_item.get("Label"));
+				oneItem.put("Folder", list_item.get("Title"));
 				oneItem.put("content", hasPart(agg, part_new,location_new, stop_new));
 				example.add(oneItem);	
 				i += size;
@@ -73,7 +73,7 @@ public class NewOREmap {
 			
 			if (part.contains(list_item.get("Identifier")) && !list_item.containsKey("Has Part")){
 				JSONObject oneItem = new JSONObject();
-				oneItem.put("Label", list_item.get("Label"));
+				oneItem.put("Title", list_item.get("Title"));
 				oneItem.put("Link", list_item.get("similarTo"));
 				example.add(oneItem);
 				
