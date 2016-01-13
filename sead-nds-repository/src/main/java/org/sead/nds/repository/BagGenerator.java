@@ -161,8 +161,8 @@ public class BagGenerator {
 				} else {
 					first = false;
 				}
-				sha1StringBuffer.append(sha1Entry.getKey() + " "
-						+ sha1Entry.getValue());
+				sha1StringBuffer.append(sha1Entry.getValue() + " "
+						+ sha1Entry.getKey());
 			}
 			createFileFromString(bagName + "/manifest-sha1.txt",
 					sha1StringBuffer.toString());
@@ -239,11 +239,11 @@ public class BagGenerator {
 					// Successfully included - now check for hash value and
 					// generate if needed
 					if (i > 0) { // Not root container
-						if (!sha1Map.containsValue(pidMap.get(resourceIndex
+						if (!sha1Map.containsKey(pidMap.get(resourceIndex
 								.get(i)))) {
 
 							if (!RO.childIsContainer(i - 1))
-								log.debug("Missing sha1 hash for: "
+								log.warn("Missing sha1 hash for: "
 										+ resourceIndex.get(i));
 							// FixMe - actually generate it before adding the
 							// oremap
@@ -380,7 +380,11 @@ public class BagGenerator {
 				pidMap.put(child.getString("Identifier"), childPath);
 				// Check for nulls!
 				if (child.has("SHA1 Hash")) {
-					sha1Map.put(child.getString("SHA1 Hash"), childPath);
+					if(sha1Map.containsValue(child.getString("SHA1 Hash"))) {
+						//Something else has this hash
+						log.warn("Duplicate/Collision: " + child.getString("Identifier") + " has SHA1 Hash: " + child.getString("SHA1 Hash"));
+					}
+					sha1Map.put(childPath, child.getString("SHA1 Hash"));
 				}
 			}
 		}
@@ -442,9 +446,9 @@ public class BagGenerator {
 
 	private void checkFiles(HashMap<String, String> sha1Map2, ZipFile zf) {
 		for (Entry<String, String> entry : sha1Map2.entrySet()) {
-			if (!hasValidFileHash(entry.getKey(), entry.getValue(), zf)) {
-				RO.sendStatus("Problem", "Hash for " + entry.getValue()
-						+ "(" + entry.getKey() + ") is incorrect.");
+			if (!hasValidFileHash(entry.getValue(), entry.getKey(), zf)) {
+				RO.sendStatus("Problem", "Hash for " + entry.getKey()
+						+ "(" + entry.getValue() + ") is incorrect.");
 			}
 		}
 	}
@@ -463,7 +467,7 @@ public class BagGenerator {
 
 		ZipArchiveEntry archiveEntry1 = zf.getEntry(name);
 		//Error check - add file sizes to compare against supplied stats
-		totalDataSize += archiveEntry1.getSize();
+
 		long start = System.currentTimeMillis();
 		InputStream inputStream;
 		String realHash = null;
@@ -481,6 +485,8 @@ public class BagGenerator {
 		}
 		log.debug("Retrieve/compute time = "
 				+ (System.currentTimeMillis() - start) + " ms");
+		//Error check - add file sizes to compare against supplied stats
+		totalDataSize += archiveEntry1.getSize();
 		return realHash;
 	}
 
