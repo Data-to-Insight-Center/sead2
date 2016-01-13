@@ -320,7 +320,9 @@ public class LandingPage extends HttpServlet {
             List<String> list = new ArrayList<String>();
             if (valJSON instanceof JSONArray) {
                 for(int i=0; i < ((JSONArray) valJSON).size() ; i++) {
-                    list.add(((JSONArray) valJSON).get(i).toString());
+                    if (((JSONArray) valJSON).get(i) != null) {
+                        list.add(((JSONArray) valJSON).get(i).toString());
+                    }
                 }
                 properties.put(propertyName,list);
             } else {
