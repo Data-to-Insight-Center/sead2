@@ -131,6 +131,10 @@ public class Repository {
 		String shoulder = (permanent) ? props.getProperty("doi.shoulder.prod")
 				: props.getProperty("doi.shoulder.test");
 		String doi = ezid.mintIdentifier(shoulder, metadata);
+		//Should be true
+		if(doi.startsWith("doi:")) {
+			doi = doi.substring(4);
+		}
 		return "http://dx.doi.org/" + doi;
 	}
 

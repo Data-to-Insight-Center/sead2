@@ -263,13 +263,13 @@ public class BagGenerator {
 			log.debug("Data Count: " + dataCount);
 			log.debug("Data Size: " + totalDataSize);
 			//Check stats
-			if(Long.parseLong(pubRequest.getJSONObject("Aggregation Statistics").getString(
-					"Number of Datasets"))!=dataCount) {
+			if(pubRequest.getJSONObject("Aggregation Statistics").getLong(
+					"Number of Datasets")!=dataCount) {
 				log.warn("Request contains incorrect data count: should be: " + dataCount);
 			}
 			//Total size is calced during checkFiles
-			if(Long.parseLong(pubRequest.getJSONObject("Aggregation Statistics").getString(
-					"Total Size"))!=totalDataSize) {
+			if(pubRequest.getJSONObject("Aggregation Statistics").getLong(
+					"Total Size")!=totalDataSize) {
 				log.warn("Request contains incorrect Total Size: should be: " + totalDataSize);
 			}
 			zf.close();
@@ -293,7 +293,7 @@ public class BagGenerator {
 				}
 			}
 		} else if(context instanceof JSONObject) {
-				addToContext(((JSONObject)context), label, predicate);
+				((JSONObject)context).put(label, predicate);
 				return true;
 		}
 		return false;
@@ -580,17 +580,17 @@ public class BagGenerator {
 		info.append(CRLF);
 
 		info.append("Bag-Size: ");
-		info.append(FileUtils.byteCountToDisplaySize(Long.parseLong(request
+		info.append(FileUtils.byteCountToDisplaySize(request
 				.getJSONObject("Aggregation Statistics")
-				.getString("Total Size"))));
+				.getLong("Total Size")));
 		info.append(CRLF);
 
 		info.append("Payload-Oxum: ");
-		info.append(request.getJSONObject("Aggregation Statistics").getString(
+		info.append(request.getJSONObject("Aggregation Statistics").getLong(
 				"Total Size"));
 		info.append(".");
-		info.append(request.getJSONObject("Aggregation Statistics").getString(
-				"Number of Datasets"));
+		info.append(request.getJSONObject("Aggregation Statistics").getLong(
+				"Number of Datasets")); 
 		info.append(CRLF);
 
 		info.append("Internal-Sender-Identifier: ");
