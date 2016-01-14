@@ -13,6 +13,7 @@
         <groupId>org.sead.va</groupId>
         <artifactId>va-parent</artifactId>
         <version>2.0.0-SNAPSHOT</version>
+	<relativePath>../../</relativePath>
     </parent>
 
     <build>
