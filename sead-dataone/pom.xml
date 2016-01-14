@@ -117,11 +117,11 @@
             <name>seadva-snapshots</name>
             <url>http://seadva-test.d2i.indiana.edu:8081/artifactory/ext-snapshot-local</url>
         </repository>
-   	<repository>
+   	    <repository>
       		<id>java.net-m2</id>
       		<name>java.net - Maven 2</name>
       		<url>https://repository.jboss.org/nexus/content/repositories/java.net-m2</url>
-   	</repository>
+   	    </repository>
     </repositories>
     <properties>
         <jersey.version>2.17</jersey.version>

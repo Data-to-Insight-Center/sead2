@@ -13,7 +13,7 @@
         <groupId>org.sead.va</groupId>
         <artifactId>va-parent</artifactId>
         <version>2.0.0-SNAPSHOT</version>
-	<relativePath>../../</relativePath>
+	    <relativePath>../../</relativePath>
     </parent>
 
     <build>
@@ -57,11 +57,6 @@
 
     <repositories>
         <repository>
-            <id>m2.java.net</id>
-            <name>Java.net Maven 2 Repository</name>
-            <url>http://download.java.net/maven/2</url>
-        </repository>
-        <repository>
             <id>org.dspace</id>
             <name>Dspace Repository</name>
             <url>http://mvnrepository.com</url>
@@ -77,23 +72,11 @@
             <url>http://seadva-test.d2i.indiana.edu:8081/artifactory/ext-snapshot-local</url>
         </repository>
         <repository>
-                <id>java.net-m2</id>
-                <name>java.net - Maven 2</name>
-                <url>https://repository.jboss.org/nexus/content/repositories/java.net-m2</url>
+            <id>java.net-m2</id>
+            <name>java.net - Maven 2</name>
+            <url>https://repository.jboss.org/nexus/content/repositories/java.net-m2</url>
         </repository>
     </repositories>
-    <pluginRepositories>
-        <pluginRepository>
-            <id>m2.java.net</id>
-            <name>Java.net Maven 2 Repository</name>
-            <url>http://download.java.net/maven/2</url>
-        </pluginRepository>
-        <pluginRepository>
-            <id>org.dspace</id>
-            <name>Dspace Repository</name>
-            <url>http://mvnrepository.com</url>
-        </pluginRepository>
-    </pluginRepositories>
 
     <dependencies>
 
