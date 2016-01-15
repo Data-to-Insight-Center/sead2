@@ -63,13 +63,13 @@ public class BagGenerator {
 	private Boolean[] resourceUsed = null;
 	private HashMap<String, String> pidMap = new LinkedHashMap<String, String>();
 	private HashMap<String, String> sha1Map = new LinkedHashMap<String, String>();
-	
+
 	private String license = "No license information provided";
 
 	private String bagPath = null;
-	
-	private long dataCount=0l;
-	private long totalDataSize=0l;
+
+	private long dataCount = 0l;
+	private long totalDataSize = 0l;
 
 	private C3PRPubRequestFacade RO = null;
 
@@ -99,13 +99,13 @@ public class BagGenerator {
 					.has("License")) {
 				license = ((JSONObject) RO.getPublicationRequest().get(
 						"Preferences")).getString("License");
-				
+
 			}
 			JSONObject oremap = RO.getOREMap();
 			JSONObject aggregation = oremap.getJSONObject("describes");
-			
+
 			aggregation.put("License", license);
-			
+
 			String bagID = aggregation.getString("Identifier");
 			String bagName = bagID;
 			try {
@@ -183,14 +183,18 @@ public class BagGenerator {
 						.normalizeValues(oremap.getJSONObject("describes").get(
 								"Contact"))));
 			}
-			
+
 			Object context = oremap.get("@context");
-			//FixMe - should test that these labels don't have a different definition (currently we're just checking to see if they a already defined)
-			if(!isInContext(context, "License")) {
-				addToContext(context, "License", "http://purl.org/dc/terms/license");
+			// FixMe - should test that these labels don't have a different
+			// definition (currently we're just checking to see if they a
+			// already defined)
+			if (!isInContext(context, "License")) {
+				addToContext(context, "License",
+						"http://purl.org/dc/terms/license");
 			}
-			if(!isInContext(context, "External Identifier")) {
-				addToContext(context, "External Identifier", "http://purl.org/dc/terms/identifier");
+			if (!isInContext(context, "External Identifier")) {
+				addToContext(context, "External Identifier",
+						"http://purl.org/dc/terms/identifier");
 			}
 
 			// Serialize oremap itself (pretty printed) - SEAD recommendation
@@ -253,24 +257,23 @@ public class BagGenerator {
 				}
 
 			}
-			
-			
-			
 
 			// Run a confirmation test - should verify all files and sha1s
 			checkFiles(sha1Map, zf);
-			
+
 			log.debug("Data Count: " + dataCount);
 			log.debug("Data Size: " + totalDataSize);
-			//Check stats
-			if(pubRequest.getJSONObject("Aggregation Statistics").getLong(
-					"Number of Datasets")!=dataCount) {
-				log.warn("Request contains incorrect data count: should be: " + dataCount);
+			// Check stats
+			if (pubRequest.getJSONObject("Aggregation Statistics").getLong(
+					"Number of Datasets") != dataCount) {
+				log.warn("Request contains incorrect data count: should be: "
+						+ dataCount);
 			}
-			//Total size is calced during checkFiles
-			if(pubRequest.getJSONObject("Aggregation Statistics").getLong(
-					"Total Size")!=totalDataSize) {
-				log.warn("Request contains incorrect Total Size: should be: " + totalDataSize);
+			// Total size is calced during checkFiles
+			if (pubRequest.getJSONObject("Aggregation Statistics").getLong(
+					"Total Size") != totalDataSize) {
+				log.warn("Request contains incorrect Total Size: should be: "
+						+ totalDataSize);
 			}
 			zf.close();
 			return true;
@@ -285,29 +288,29 @@ public class BagGenerator {
 	}
 
 	private boolean addToContext(Object context, String label, String predicate) {
-		if(context instanceof JSONArray) {
-			//Look for an object in the array to add to
-			for (int i = 0; i<((JSONArray)context).length(); i++) {
-				if(addToContext(((JSONArray)context).get(i), label, predicate)) {
+		if (context instanceof JSONArray) {
+			// Look for an object in the array to add to
+			for (int i = 0; i < ((JSONArray) context).length(); i++) {
+				if (addToContext(((JSONArray) context).get(i), label, predicate)) {
 					return true;
 				}
 			}
-		} else if(context instanceof JSONObject) {
-				((JSONObject)context).put(label, predicate);
-				return true;
+		} else if (context instanceof JSONObject) {
+			((JSONObject) context).put(label, predicate);
+			return true;
 		}
 		return false;
 	}
 
 	private boolean isInContext(Object context, String label) {
-		if(context instanceof JSONArray) {
-			for (int i = 0; i<((JSONArray)context).length(); i++) {
-				if(isInContext(((JSONArray)context).get(i), label)) {
+		if (context instanceof JSONArray) {
+			for (int i = 0; i < ((JSONArray) context).length(); i++) {
+				if (isInContext(((JSONArray) context).get(i), label)) {
 					return true;
 				}
 			}
-		} else if(context instanceof JSONObject) {
-			if(((JSONObject)context).has(label)) {
+		} else if (context instanceof JSONObject) {
+			if (((JSONObject) context).has(label)) {
 				return true;
 			}
 		}
@@ -363,9 +366,12 @@ public class BagGenerator {
 				// add item
 				String dataUrl = (String) child.get("similarTo");
 				String title = (String) child.get("Title");
-				if(titles.contains(title)) {
-					log.warn("**** Multiple items with the same title in: " + currentPath);
-					log.warn("**** Will cause failure in hash validation.");
+				if (titles.contains(title)) {
+					log.warn("**** Multiple items with the same title in: "
+							+ currentPath);
+					log.warn("**** Will cause failure in hash and size validation.");
+				} else {
+					titles.add(title);
 				}
 				String childPath = currentPath + title;
 				try {
@@ -380,9 +386,12 @@ public class BagGenerator {
 				pidMap.put(child.getString("Identifier"), childPath);
 				// Check for nulls!
 				if (child.has("SHA1 Hash")) {
-					if(sha1Map.containsValue(child.getString("SHA1 Hash"))) {
-						//Something else has this hash
-						log.warn("Duplicate/Collision: " + child.getString("Identifier") + " has SHA1 Hash: " + child.getString("SHA1 Hash"));
+					if (sha1Map.containsValue(child.getString("SHA1 Hash"))) {
+						// Something else has this hash
+						log.warn("Duplicate/Collision: "
+								+ child.getString("Identifier")
+								+ " has SHA1 Hash: "
+								+ child.getString("SHA1 Hash"));
 					}
 					sha1Map.put(childPath, child.getString("SHA1 Hash"));
 				}
@@ -447,8 +456,8 @@ public class BagGenerator {
 	private void checkFiles(HashMap<String, String> sha1Map2, ZipFile zf) {
 		for (Entry<String, String> entry : sha1Map2.entrySet()) {
 			if (!hasValidFileHash(entry.getValue(), entry.getKey(), zf)) {
-				RO.sendStatus("Problem", "Hash for " + entry.getKey()
-						+ "(" + entry.getValue() + ") is incorrect.");
+				RO.sendStatus("Problem", "Hash for " + entry.getKey() + "("
+						+ entry.getValue() + ") is incorrect.");
 			}
 		}
 	}
@@ -466,7 +475,7 @@ public class BagGenerator {
 	private String generateFileHash(String name, ZipFile zf) {
 
 		ZipArchiveEntry archiveEntry1 = zf.getEntry(name);
-		//Error check - add file sizes to compare against supplied stats
+		// Error check - add file sizes to compare against supplied stats
 
 		long start = System.currentTimeMillis();
 		InputStream inputStream;
@@ -485,7 +494,7 @@ public class BagGenerator {
 		}
 		log.debug("Retrieve/compute time = "
 				+ (System.currentTimeMillis() - start) + " ms");
-		//Error check - add file sizes to compare against supplied stats
+		// Error check - add file sizes to compare against supplied stats
 		totalDataSize += archiveEntry1.getSize();
 		return realHash;
 	}
@@ -505,7 +514,8 @@ public class BagGenerator {
 		log.debug("Writing dirs");
 		dirs.writeTo(zipArchiveOutputStream);
 		dirs.close();
-		log.debug("Dirs written");;
+		log.debug("Dirs written");
+		;
 		scatterZipCreator.writeTo(zipArchiveOutputStream);
 		log.debug("Files written");
 	}
@@ -586,9 +596,8 @@ public class BagGenerator {
 		info.append(CRLF);
 
 		info.append("Bag-Size: ");
-		info.append(FileUtils.byteCountToDisplaySize(request
-				.getJSONObject("Aggregation Statistics")
-				.getLong("Total Size")));
+		info.append(FileUtils.byteCountToDisplaySize(request.getJSONObject(
+				"Aggregation Statistics").getLong("Total Size")));
 		info.append(CRLF);
 
 		info.append("Payload-Oxum: ");
@@ -596,7 +605,7 @@ public class BagGenerator {
 				"Total Size"));
 		info.append(".");
 		info.append(request.getJSONObject("Aggregation Statistics").getLong(
-				"Number of Datasets")); 
+				"Number of Datasets"));
 		info.append(CRLF);
 
 		info.append("Internal-Sender-Identifier: ");
