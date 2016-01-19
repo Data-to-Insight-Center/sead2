@@ -68,6 +68,8 @@ public class BagGenerator {
 
 	private String bagPath = null;
 
+	private String hashtype = null;
+
 	private long dataCount = 0l;
 	private long totalDataSize = 0l;
 
@@ -151,7 +153,7 @@ public class BagGenerator {
 			}
 			createFileFromString(bagName + "/pid-mapping.txt",
 					pidStringBuffer.toString());
-			// SHA1 hash manifest - a hash manifest for md5 or sha1 is required
+			// Hash manifest - a hash manifest is required
 			// by Bagit spec
 			StringBuffer sha1StringBuffer = new StringBuffer();
 			first = true;
@@ -164,8 +166,15 @@ public class BagGenerator {
 				sha1StringBuffer.append(sha1Entry.getValue() + " "
 						+ sha1Entry.getKey());
 			}
-			createFileFromString(bagName + "/manifest-sha1.txt",
-					sha1StringBuffer.toString());
+			String manifestName = bagName + "/manifest-";
+			if (hashtype.equals("SHA1 Hash")) {
+				manifestName = manifestName + "sha1.txt";
+			} else if (hashtype.equals("SHA512 Hash")) {
+				manifestName = manifestName + "sha512.txt";
+			} else {
+				log.warn("Unsupported Hash type: " + hashtype);
+			}
+			createFileFromString(manifestName, sha1StringBuffer.toString());
 			// bagit.txt - Required by spec
 			createFileFromString(bagName + "/bagit.txt",
 					"BagIt-Version: 0.97\nTag-File-Character-Encoding: UTF-8");
@@ -384,8 +393,14 @@ public class BagGenerator {
 				dataCount++;
 				// Check for nulls!
 				pidMap.put(child.getString("Identifier"), childPath);
+
 				// Check for nulls!
+
 				if (child.has("SHA1 Hash")) {
+					if (hashtype != null && !hashtype.equals("SHA1 Hash")) {
+						log.warn("Multiple has values in use - not supported");
+					}
+					hashtype = "SHA1 Hash";
 					if (sha1Map.containsValue(child.getString("SHA1 Hash"))) {
 						// Something else has this hash
 						log.warn("Duplicate/Collision: "
@@ -395,6 +410,21 @@ public class BagGenerator {
 					}
 					sha1Map.put(childPath, child.getString("SHA1 Hash"));
 				}
+				if (child.has("SHA512 Hash")) {
+					if (hashtype != null && !hashtype.equals("SHA512 Hash")) {
+						log.warn("Multiple has values in use - not supported");
+					}
+					hashtype = "SHA512 Hash";
+					if (sha1Map.containsValue(child.getString("SHA512 Hash"))) {
+						// Something else has this hash
+						log.warn("Duplicate/Collision: "
+								+ child.getString("Identifier")
+								+ " has SHA512 Hash: "
+								+ child.getString("SHA512 Hash"));
+					}
+					sha1Map.put(childPath, child.getString("SHA512 Hash"));
+				}
+
 			}
 		}
 	}
@@ -482,8 +512,11 @@ public class BagGenerator {
 		String realHash = null;
 		try {
 			inputStream = zf.getInputStream(archiveEntry1);
-
-			realHash = DigestUtils.sha1Hex(inputStream);
+			if (hashtype.equals("SHA1 Hash")) {
+				realHash = DigestUtils.sha1Hex(inputStream);
+			} else if (hashtype.equals("SHA512 Hash")) {
+				realHash = DigestUtils.sha512Hex(inputStream);
+			}
 
 		} catch (ZipException e) {
 			// TODO Auto-generated catch block
