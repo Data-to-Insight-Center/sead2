@@ -36,6 +36,19 @@ sead-doi-service/WEB-INF/classes/org/seadva/services/util/doi.properties
 va-workflow/WEB-INF/classes/org/sead/workflow/sead-wf.xml
 metadata-gen/WEB-INF/classes/org/seadva/metadatagen/util/Config.properties
 
+* Add a setenv.sh file under bin (if it's not already there) and set the 
+-Dorg.apache.tomcat.util.buf.UDecoder.ALLOW_ENCODED_SLASH=true parameter to make
+sure the encoded URL requests work fine.
+
+Ex: 
+export JAVA_OPTS="-Xss1024m -Xms512m -Xmx4096m -XX:MaxPermSize=2048m -Dorg.apache.tomcat.util.buf.UDecoder.ALLOW_ENCODED_SLASH=true -Dorg.apache.catalina.connector.CoyoteAdapter.ALLOW_BACKSLASH=true"
+
+* If SEAD should run on https, follow the guide below to setup SSL on Tomcat. Make sure that
+you use Sun JDK instead of OpenJDK if you need SSL.
+
+Ex:
+https://tomcat.apache.org/tomcat-7.0-doc/ssl-howto.html
+
 * Start the server.
 
 * Now the API should be accessible through the following URL.
