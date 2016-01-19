@@ -23,12 +23,14 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
+import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.security.NoSuchAlgorithmException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map.Entry;
 import java.util.concurrent.ExecutionException;
@@ -55,18 +57,26 @@ public class BagGenerator {
 
 	private ParallelScatterZipCreator scatterZipCreator = new ParallelScatterZipCreator();
 	private ScatterZipOutputStream dirs = null;
-	
+
 	private JSONArray aggregates = null;
 	private ArrayList<String> resourceIndex = null;
 	private Boolean[] resourceUsed = null;
 	private HashMap<String, String> pidMap = new LinkedHashMap<String, String>();
 	private HashMap<String, String> sha1Map = new LinkedHashMap<String, String>();
 
+	private String license = "No license information provided";
+
 	private String bagPath = null;
 
+	private String hashtype = null;
+
+	private long dataCount = 0l;
+	private long totalDataSize = 0l;
+
 	private C3PRPubRequestFacade RO = null;
+
 	public BagGenerator(C3PRPubRequestFacade ro) {
-		RO=ro;
+		RO = ro;
 		this.bagPath = Repository.getDataPath();
 	}
 
@@ -80,14 +90,24 @@ public class BagGenerator {
 		log.debug("Generating: Bag to the Future!");
 		log.debug("BagPath: " + getBagPath());
 		JSONObject pubRequest = RO.getPublicationRequest();
-		RO.sendStatus(C3PRPubRequestFacade.PENDING_STAGE, Repository.getID() + " is now processing this request");
+		RO.sendStatus(C3PRPubRequestFacade.PENDING_STAGE, Repository.getID()
+				+ " is now processing this request");
 		try {
 
 			File tmp = File.createTempFile("sead-scatter-dirs", "tmp");
 			dirs = ScatterZipOutputStream.fileBased(tmp);
 
+			if (((JSONObject) RO.getPublicationRequest().get("Preferences"))
+					.has("License")) {
+				license = ((JSONObject) RO.getPublicationRequest().get(
+						"Preferences")).getString("License");
+
+			}
 			JSONObject oremap = RO.getOREMap();
 			JSONObject aggregation = oremap.getJSONObject("describes");
+
+			aggregation.put("License", license);
+
 			String bagID = aggregation.getString("Identifier");
 			String bagName = bagID;
 			try {
@@ -133,7 +153,7 @@ public class BagGenerator {
 			}
 			createFileFromString(bagName + "/pid-mapping.txt",
 					pidStringBuffer.toString());
-			// SHA1 hash manifest - a hash manifest for md5 or sha1 is required
+			// Hash manifest - a hash manifest is required
 			// by Bagit spec
 			StringBuffer sha1StringBuffer = new StringBuffer();
 			first = true;
@@ -143,29 +163,57 @@ public class BagGenerator {
 				} else {
 					first = false;
 				}
-				sha1StringBuffer.append(sha1Entry.getKey() + " "
-						+ sha1Entry.getValue());
+				sha1StringBuffer.append(sha1Entry.getValue() + " "
+						+ sha1Entry.getKey());
 			}
-			createFileFromString(bagName + "/manifest-sha1.txt",
-					sha1StringBuffer.toString());
+			String manifestName = bagName + "/manifest-";
+			if (hashtype.equals("SHA1 Hash")) {
+				manifestName = manifestName + "sha1.txt";
+			} else if (hashtype.equals("SHA512 Hash")) {
+				manifestName = manifestName + "sha512.txt";
+			} else {
+				log.warn("Unsupported Hash type: " + hashtype);
+			}
+			createFileFromString(manifestName, sha1StringBuffer.toString());
 			// bagit.txt - Required by spec
 			createFileFromString(bagName + "/bagit.txt",
 					"BagIt-Version: 0.97\nTag-File-Character-Encoding: UTF-8");
 
 			// Generate DOI:
 			oremap.getJSONObject("describes").put("External Identifier",
-					Repository.createDOIForRO(bagName, RO));
+					Repository.createDOIForRO(bagID, RO));
+			if (oremap.getJSONObject("describes").has("Creator")) {
+				aggregation.put("Creator", RO.expandPeople(RO
+						.normalizeValues(oremap.getJSONObject("describes").get(
+								"Creator"))));
+			}
+			if (oremap.getJSONObject("describes").has("Contact")) {
+				aggregation.put("Contact", RO.expandPeople(RO
+						.normalizeValues(oremap.getJSONObject("describes").get(
+								"Contact"))));
+			}
 
-			aggregation.put("Creators",
-					RO.expandPeople(RO.normalizeValues(oremap.getJSONObject("describes").get("Creator"))));
+			Object context = oremap.get("@context");
+			// FixMe - should test that these labels don't have a different
+			// definition (currently we're just checking to see if they a
+			// already defined)
+			if (!isInContext(context, "License")) {
+				addToContext(context, "License",
+						"http://purl.org/dc/terms/license");
+			}
+			if (!isInContext(context, "External Identifier")) {
+				addToContext(context, "External Identifier",
+						"http://purl.org/dc/terms/identifier");
+			}
+
 			// Serialize oremap itself (pretty printed) - SEAD recommendation
 			// (DataOne distributes metadata files within the bag
 			// FixMe - add missing hash values if needed and update context
 			// (read and cache files or read twice?)
 			createFileFromString(bagName + "/oremap.jsonld.txt",
 					oremap.toString(2));
-			
-			//Add a bag-info file
+
+			// Add a bag-info file
 			createFileFromString(bagName + "/bag-info.txt",
 					generateInfoFile(pubRequest, oremap));
 
@@ -183,35 +231,37 @@ public class BagGenerator {
 			// are retrieved via URLs in parallel (defaults to one thread per
 			// processor)
 			// directly to the zip file
+			log.debug("Starting write");
 			writeTo(zipArchiveOutputStream);
+			log.debug("Written");
 			// Finish
 			zipArchiveOutputStream.close();
-
+			log.debug("Closed");
 			ZipFile zf = new ZipFile(result);
 
 			// Validate oremap - all entries are part of the collection
 			for (int i = 0; i < resourceUsed.length; i++) {
 				Boolean b = resourceUsed[i];
 				if (b == null) {
-					RO.sendStatus("Problem",
-							pidMap.get(resourceIndex.get(i)) + " was not used");
+					RO.sendStatus("Problem", pidMap.get(resourceIndex.get(i))
+							+ " was not used");
 				} else if (b == false) {
-					RO.sendStatus("Problem",
-							pidMap.get(resourceIndex.get(i))
-									+ " was not included successfully");
+					RO.sendStatus("Problem", pidMap.get(resourceIndex.get(i))
+							+ " was not included successfully");
 				} else {
 					// Successfully included - now check for hash value and
 					// generate if needed
-					if(i>0) { //Not root container
-					if (!sha1Map
-							.containsValue(pidMap.get(resourceIndex.get(i)))) {
-						 
-						if(!RO.childIsContainer(i-1))
-						log.debug("Missing sha1 hash for: "
-								+ resourceIndex.get(i));
-						// FixMe - actually generate it before adding the oremap
-						// to the zip
-					}
+					if (i > 0) { // Not root container
+						if (!sha1Map.containsKey(pidMap.get(resourceIndex
+								.get(i)))) {
+
+							if (!RO.childIsContainer(i - 1))
+								log.warn("Missing sha1 hash for: "
+										+ resourceIndex.get(i));
+							// FixMe - actually generate it before adding the
+							// oremap
+							// to the zip
+						}
 					}
 				}
 
@@ -219,6 +269,21 @@ public class BagGenerator {
 
 			// Run a confirmation test - should verify all files and sha1s
 			checkFiles(sha1Map, zf);
+
+			log.debug("Data Count: " + dataCount);
+			log.debug("Data Size: " + totalDataSize);
+			// Check stats
+			if (pubRequest.getJSONObject("Aggregation Statistics").getLong(
+					"Number of Datasets") != dataCount) {
+				log.warn("Request contains incorrect data count: should be: "
+						+ dataCount);
+			}
+			// Total size is calced during checkFiles
+			if (pubRequest.getJSONObject("Aggregation Statistics").getLong(
+					"Total Size") != totalDataSize) {
+				log.warn("Request contains incorrect Total Size: should be: "
+						+ totalDataSize);
+			}
 			zf.close();
 			return true;
 
@@ -229,6 +294,36 @@ public class BagGenerator {
 					"Processing failure during Bagit file creation");
 			return false;
 		}
+	}
+
+	private boolean addToContext(Object context, String label, String predicate) {
+		if (context instanceof JSONArray) {
+			// Look for an object in the array to add to
+			for (int i = 0; i < ((JSONArray) context).length(); i++) {
+				if (addToContext(((JSONArray) context).get(i), label, predicate)) {
+					return true;
+				}
+			}
+		} else if (context instanceof JSONObject) {
+			((JSONObject) context).put(label, predicate);
+			return true;
+		}
+		return false;
+	}
+
+	private boolean isInContext(Object context, String label) {
+		if (context instanceof JSONArray) {
+			for (int i = 0; i < ((JSONArray) context).length(); i++) {
+				if (isInContext(((JSONArray) context).get(i), label)) {
+					return true;
+				}
+			}
+		} else if (context instanceof JSONObject) {
+			if (((JSONObject) context).has(label)) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	private String getValidNameAndUpdatePath(String bagName)
@@ -244,6 +339,7 @@ public class BagGenerator {
 
 	private void processContainer(JSONObject item, String currentPath) {
 		JSONArray children = RO.getChildren(item);
+		HashSet<String> titles = new HashSet<String>();
 		currentPath = currentPath + item.getString("Title") + "/";
 		try {
 			createDir(currentPath);
@@ -272,13 +368,21 @@ public class BagGenerator {
 			// Aggregation is at index 0, so need to shift by 1 for aggregates
 			// entries
 			JSONObject child = aggregates.getJSONObject(index - 1);
-			if (RO.childIsContainer(index-1)) {
+			if (RO.childIsContainer(index - 1)) {
 				// create dir and process children
 				processContainer(child, currentPath);
 			} else {
 				// add item
 				String dataUrl = (String) child.get("similarTo");
-				String childPath = currentPath + (String) child.get("Title");
+				String title = (String) child.get("Title");
+				if (titles.contains(title)) {
+					log.warn("**** Multiple items with the same title in: "
+							+ currentPath);
+					log.warn("**** Will cause failure in hash and size validation.");
+				} else {
+					titles.add(title);
+				}
+				String childPath = currentPath + title;
 				try {
 					log.debug("Requesting: " + childPath + " from " + dataUrl);
 					createFileFromURL(childPath, dataUrl);
@@ -286,12 +390,41 @@ public class BagGenerator {
 					resourceUsed[index] = false;
 					e.printStackTrace();
 				}
+				dataCount++;
 				// Check for nulls!
 				pidMap.put(child.getString("Identifier"), childPath);
+
 				// Check for nulls!
+
 				if (child.has("SHA1 Hash")) {
-					sha1Map.put(child.getString("SHA1 Hash"), childPath);
+					if (hashtype != null && !hashtype.equals("SHA1 Hash")) {
+						log.warn("Multiple has values in use - not supported");
+					}
+					hashtype = "SHA1 Hash";
+					if (sha1Map.containsValue(child.getString("SHA1 Hash"))) {
+						// Something else has this hash
+						log.warn("Duplicate/Collision: "
+								+ child.getString("Identifier")
+								+ " has SHA1 Hash: "
+								+ child.getString("SHA1 Hash"));
+					}
+					sha1Map.put(childPath, child.getString("SHA1 Hash"));
 				}
+				if (child.has("SHA512 Hash")) {
+					if (hashtype != null && !hashtype.equals("SHA512 Hash")) {
+						log.warn("Multiple has values in use - not supported");
+					}
+					hashtype = "SHA512 Hash";
+					if (sha1Map.containsValue(child.getString("SHA512 Hash"))) {
+						// Something else has this hash
+						log.warn("Duplicate/Collision: "
+								+ child.getString("Identifier")
+								+ " has SHA512 Hash: "
+								+ child.getString("SHA512 Hash"));
+					}
+					sha1Map.put(childPath, child.getString("SHA512 Hash"));
+				}
+
 			}
 		}
 	}
@@ -300,7 +433,7 @@ public class BagGenerator {
 		ArrayList<String> l = new ArrayList<String>(aggregates.length() + 1);
 		l.add(aggId);
 		for (int i = 0; i < aggregates.length(); i++) {
-			log.debug("Indexing : " + i + " " 
+			log.debug("Indexing : " + i + " "
 					+ aggregates.getJSONObject(i).getString("Identifier"));
 			l.add(aggregates.getJSONObject(i).getString("Identifier"));
 		}
@@ -352,9 +485,9 @@ public class BagGenerator {
 
 	private void checkFiles(HashMap<String, String> sha1Map2, ZipFile zf) {
 		for (Entry<String, String> entry : sha1Map2.entrySet()) {
-			if (!hasValidFileHash(entry.getKey(), entry.getValue(), zf)) {
-				RO.sendStatus("Problem", "Hash for " + entry.getValue()
-						+ " is incorrect.");
+			if (!hasValidFileHash(entry.getValue(), entry.getKey(), zf)) {
+				RO.sendStatus("Problem", "Hash for " + entry.getKey() + "("
+						+ entry.getValue() + ") is incorrect.");
 			}
 		}
 	}
@@ -372,13 +505,18 @@ public class BagGenerator {
 	private String generateFileHash(String name, ZipFile zf) {
 
 		ZipArchiveEntry archiveEntry1 = zf.getEntry(name);
+		// Error check - add file sizes to compare against supplied stats
+
 		long start = System.currentTimeMillis();
 		InputStream inputStream;
 		String realHash = null;
 		try {
 			inputStream = zf.getInputStream(archiveEntry1);
-
-			realHash = DigestUtils.sha1Hex(inputStream);
+			if (hashtype.equals("SHA1 Hash")) {
+				realHash = DigestUtils.sha1Hex(inputStream);
+			} else if (hashtype.equals("SHA512 Hash")) {
+				realHash = DigestUtils.sha512Hex(inputStream);
+			}
 
 		} catch (ZipException e) {
 			// TODO Auto-generated catch block
@@ -389,6 +527,8 @@ public class BagGenerator {
 		}
 		log.debug("Retrieve/compute time = "
 				+ (System.currentTimeMillis() - start) + " ms");
+		// Error check - add file sizes to compare against supplied stats
+		totalDataSize += archiveEntry1.getSize();
 		return realHash;
 	}
 
@@ -404,15 +544,18 @@ public class BagGenerator {
 
 	public void writeTo(ZipArchiveOutputStream zipArchiveOutputStream)
 			throws IOException, ExecutionException, InterruptedException {
+		log.debug("Writing dirs");
 		dirs.writeTo(zipArchiveOutputStream);
 		dirs.close();
+		log.debug("Dirs written");
+		;
 		scatterZipCreator.writeTo(zipArchiveOutputStream);
+		log.debug("Files written");
 	}
 
 	public String getBagPath() {
 		return bagPath;
 	}
-
 
 	static final String CRLF = "\r\n";
 
@@ -429,8 +572,8 @@ public class BagGenerator {
 		}
 		JSONArray contactsArray = new JSONArray();
 		if (map.getJSONObject("describes").has("Contact")) {
-			contactsArray = RO.expandPeople(RO.normalizeValues(map.getJSONObject(
-					"describes").get("Contact")));
+			contactsArray = RO.expandPeople(RO.normalizeValues(map
+					.getJSONObject("describes").get("Contact")));
 		} else {
 			if (request.has("Rights Holder")) {
 				contactsArray = RO.expandPeople(RO.normalizeValues(request
@@ -479,22 +622,22 @@ public class BagGenerator {
 		info.append((new SimpleDateFormat("yyyy-MM-dd").format(Calendar
 				.getInstance().getTime())));
 		info.append(CRLF);
+
 		info.append("External-Identifier: ");
 		info.append(map.getJSONObject("describes").getString(
 				"External Identifier"));
 		info.append(CRLF);
 
 		info.append("Bag-Size: ");
-		info.append(FileUtils.byteCountToDisplaySize(Long.parseLong(request
-				.getJSONObject("Aggregation Statistics")
-				.getString("Total Size"))));
+		info.append(FileUtils.byteCountToDisplaySize(request.getJSONObject(
+				"Aggregation Statistics").getLong("Total Size")));
 		info.append(CRLF);
 
 		info.append("Payload-Oxum: ");
-		info.append(request.getJSONObject("Aggregation Statistics").getString(
+		info.append(request.getJSONObject("Aggregation Statistics").getLong(
 				"Total Size"));
 		info.append(".");
-		info.append(request.getJSONObject("Aggregation Statistics").getString(
+		info.append(request.getJSONObject("Aggregation Statistics").getLong(
 				"Number of Datasets"));
 		info.append(CRLF);
 

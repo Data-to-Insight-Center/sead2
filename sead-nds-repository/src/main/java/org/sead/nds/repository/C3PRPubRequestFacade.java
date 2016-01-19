@@ -268,6 +268,7 @@ public class C3PRPubRequestFacade {
 						log.trace("Retrieved: " + uri);
 						return response.getEntity().getContent();
 					}
+					log.debug("Status: " + response.getStatusLine().getStatusCode());
 				} catch (ClientProtocolException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
@@ -278,6 +279,7 @@ public class C3PRPubRequestFacade {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
+				
 				return null;
 			}
 		};
@@ -319,27 +321,37 @@ public class C3PRPubRequestFacade {
 
 		JSONArray peopleArray = new JSONArray();
 		if ((people != null) && (people.length != 0)) {
+			String c3prServer = props.getProperty("c3pr.address");
 			for (int i = 0; i < people.length; i++) {
 				log.debug("Expanding: " + people[i]);
-				String c3prServer = props.getProperty("c3pr.address");
+				try {
+					log.debug(URLEncoder.encode(people[i], "UTF-8"));
+				} catch (UnsupportedEncodingException e2) {
+					// TODO Auto-generated catch block
+					e2.printStackTrace();
+				}
 				HttpGet getPerson;
 				try {
 					getPerson = new HttpGet(c3prServer + "api/people/"
 							+ URLEncoder.encode(people[i], "UTF-8"));
 
 					getPerson.addHeader("accept", "application/json");
-
+					log.trace("getPerson created" + getPerson.getURI());
 					CloseableHttpResponse response = client.execute(getPerson);
 
 					if (response.getStatusLine().getStatusCode() == 200) {
 						String mapString = EntityUtils.toString(response
 								.getEntity());
-						log.debug("Expanded: " + mapString);
+						log.trace("Expanded: " + mapString);
 						peopleArray.put(new JSONObject(mapString));
 
 					} else {
+						log.trace("Adding unexpanded person: " + people[i]);
 						peopleArray.put(people[i]);
 					}
+					//Required to avoid some calls hanging in execute() even though we do not reuse the HttpGet object
+					getPerson.reset();
+
 				} catch (UnsupportedEncodingException e1) {
 					// TODO Auto-generated catch block
 					e1.printStackTrace();
@@ -349,8 +361,11 @@ public class C3PRPubRequestFacade {
 				} catch (IOException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
-				}
+				} catch (IllegalArgumentException ia) {
+					ia.printStackTrace();
+				} 
 			}
+			log.debug("Expansion complete");
 		}
 		return peopleArray;
 	}
@@ -384,13 +399,13 @@ public class C3PRPubRequestFacade {
 						: false);
 				cookieStore.addCookie(cookie);
 			}
-			postStatus.addHeader("accept", "application/json");
+			postStatus.addHeader("accept", MediaType.APPLICATION_JSON);
 			StringEntity status = new StringEntity("{\"reporter\":\""
 					+ Repository.getID() + "\", \"stage\":\"" + stage
 					+ "\", \"message\":\"" + message + "\"}");
 			log.trace("Status: " + status);
 			postStatus.addHeader("content-type",
-					"application/x-www-form-urlencoded");
+					MediaType.APPLICATION_JSON);
 			postStatus.setEntity(status);
 
 			CloseableHttpResponse response = client.execute(postStatus);
