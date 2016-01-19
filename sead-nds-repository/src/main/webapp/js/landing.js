@@ -51,7 +51,7 @@ seadData.buildGrid = function(map) {
 							$('<tr/>').html('<th>Name</th><th>Size</th>')))
 					.append($('<tbody/>')));
 	//Using timeout Allows metadata to display
-	setTimeout(function() {seadData.loadChildren(map.describes, map.describes, null, map.describes.Title);activateTable();},2);^
+	setTimeout(function() {seadData.loadChildren(map.describes, map.describes, null, map.describes.Title);activateTable();},2);
 	//seadData.calcTotalSize(map.describes.aggregates);
 
 	$('#actions').append(
@@ -109,6 +109,8 @@ seadData.formatKeywords = function(keywords) {
 				k = ", " + k;
 			}
 			p.text(p.text() + k);
+		} else {
+			p=keywords;
 		}
 	}
 	return p;
