@@ -57,9 +57,17 @@ seadData.buildGrid = function(map) {
 		activateTable();
 	}, 2);
 	// seadData.calcTotalSize(map.describes.aggregates);
+	// seadData.calcTotalSize(map.describes.aggregates);
+	var liveCopy = map.describes["Is Version Of"];
+	// 1.5 Kludge
+	if (!liveCopy.startsWith('http')) {
+		var similar = map.describes.similarTo;
+		similar = similar.substring(0, similar.indexOf('/resteasy'));
+		liveCopy = similar + '#collection?uri=' + liveCopy;
+	}
 
 	$('#livecopy').prepend(
-			$('<a/>').attr('href', map.describes.similarTo).text(
+			$('<a/>').attr('href', liveCopy).text(
 					map.describes.Title));
 	$('#actions').append(
 			($('<a/>').attr('href', './api/researchobjects/' + seadData.getId()
