@@ -58,6 +58,9 @@ seadData.buildGrid = function(map) {
 	}, 2);
 	// seadData.calcTotalSize(map.describes.aggregates);
 
+	$('#livecopy').prepend(
+			$('<a/>').attr('href', map.describes.similarTo).text(
+					map.describes.Title));
 	$('#actions').append(
 			($('<a/>').attr('href', './api/researchobjects/' + seadData.getId()
 					+ '/bag')).attr('download',
@@ -171,9 +174,15 @@ seadData.loadChildren = function loadChildren(agg, parent, parentid, parentpath)
 
 			} else {
 
+				var fileSize = child.Size;
+
+				// Clowder Build 113 kludge
+				if (fileSize == null) {
+					fileSize = child.size;
+				}
 				$('#datatable tbody').append(
 						getDataRow(parentid, i, child.Title, parentpath + '%2F'
-								+ child.Title, child.Size));
+								+ child.Title, fileSize));
 			}
 
 		}
@@ -208,8 +217,8 @@ seadData.isCollection = function isCollection(item) {
 
 function getDataRow(parentId, childId, name, uri, size) {
 	var newRow = $('<tr/>');
-	if(size==null) {
-		size =0;
+	if (size == null) {
+		size = 0;
 	}
 	if (parentId != null) {
 		childId = parentId + '-d' + childId;
