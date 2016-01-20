@@ -95,7 +95,7 @@ public class Repository {
 		String target = Repository.getLandingPage(bagID);
 		log.debug("DOI Landing Page: " + target);
 		String creators = RO.getCreatorsString(RO.normalizeValues(RO
-				.getOREMap().get("Creator")));
+				.getOREMap().getJSONObject("describes").get("Creator")));
 
 		HashMap<String, String> metadata = new LinkedHashMap<String, String>();
 		metadata.put(InternalProfile.TARGET.toString(), target);

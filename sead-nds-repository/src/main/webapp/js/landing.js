@@ -50,9 +50,13 @@ seadData.buildGrid = function(map) {
 					$('<thead/>').append(
 							$('<tr/>').html('<th>Name</th><th>Size</th>')))
 					.append($('<tbody/>')));
-	//Using timeout Allows metadata to display
-	setTimeout(function() {seadData.loadChildren(map.describes, map.describes, null, map.describes.Title);activateTable();},2);
-	//seadData.calcTotalSize(map.describes.aggregates);
+	// Using timeout Allows metadata to display
+	setTimeout(function() {
+		seadData.loadChildren(map.describes, map.describes, null,
+				map.describes.Title);
+		activateTable();
+	}, 2);
+	// seadData.calcTotalSize(map.describes.aggregates);
 
 	$('#actions').append(
 			($('<a/>').attr('href', './api/researchobjects/' + seadData.getId()
@@ -109,9 +113,9 @@ seadData.formatKeywords = function(keywords) {
 				k = ", " + k;
 			}
 			p.text(p.text() + k);
-		} else {
-			p=keywords;
 		}
+	} else {
+		p = keywords;
 	}
 	return p;
 }
@@ -204,6 +208,9 @@ seadData.isCollection = function isCollection(item) {
 
 function getDataRow(parentId, childId, name, uri, size) {
 	var newRow = $('<tr/>');
+	if(size==null) {
+		size =0;
+	}
 	if (parentId != null) {
 		childId = parentId + '-d' + childId;
 	} else {

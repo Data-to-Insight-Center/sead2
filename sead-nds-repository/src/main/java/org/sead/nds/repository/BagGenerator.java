@@ -166,6 +166,7 @@ public class BagGenerator {
 				sha1StringBuffer.append(sha1Entry.getValue() + " "
 						+ sha1Entry.getKey());
 			}
+			if(!(hashtype == null)) {
 			String manifestName = bagName + "/manifest-";
 			if (hashtype.equals("SHA1 Hash")) {
 				manifestName = manifestName + "sha1.txt";
@@ -175,6 +176,9 @@ public class BagGenerator {
 				log.warn("Unsupported Hash type: " + hashtype);
 			}
 			createFileFromString(manifestName, sha1StringBuffer.toString());
+			} else {
+				log.warn("No Hash values sent - Bag File does not meet BagIT specification requirement");
+			}
 			// bagit.txt - Required by spec
 			createFileFromString(bagName + "/bagit.txt",
 					"BagIt-Version: 0.97\nTag-File-Character-Encoding: UTF-8");
