@@ -105,9 +105,9 @@ public class RightsHolderIDsRequiredMatcher implements Matcher {
 	public Document getDescription() {
 		return new Document("Rule Name", getName())
 				.append("Repository Trigger",
-						" \"Creator IDs Required\": \"http://sead-data.net/terms/CreatorIdsRequired\" : true,  ")
+						" \"Rights Holder IDs Required\": \"http://sead-data.net/terms/RightsHolderIdsRequired\" : true,  ")
 				.append("Publication Trigger",
-						"\"Creator\": http://purl.org/dc/terms//creator entries in \"Aggregation\" in publication request");
+						"\"Rights Holder\": http://purl.org/dc/terms/rightsHolder entries at the top level in the publication request");
 	}
 
 	// FixMe - Copied from org.seadpdt.ROServices, should be one shared method
