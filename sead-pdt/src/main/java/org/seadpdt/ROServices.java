@@ -295,13 +295,30 @@ public class ROServices {
 		// First remove map
 		FindIterable<Document> iter = publicationsCollection.find(new Document(
 				"Aggregation.Identifier", id));
+        Document document = iter.first();
 
-        if(iter.first() != null) {
-            ArrayList Statuses = (ArrayList)iter.first().get("Status");
-            for(Object status : Statuses){
-                Document statusObj = (Document)status;
+        if(document != null) {
+            boolean processing = false;
+            ArrayList Statuses = (ArrayList) document.get("Status");
+            for (Object status : Statuses) {
+                Document statusObj = (Document) status;
                 String stage = statusObj.get("stage").toString();
-                if (stage.equalsIgnoreCase("Success") || stage.equalsIgnoreCase("Pending")){
+                if (stage.equalsIgnoreCase("Success") || stage.equalsIgnoreCase("Pending")) {
+                    processing = true;
+                    break;
+                }
+            }
+            String purpose = (String)document.get("Purpose");
+            if(Constants.deleteTestRO) {
+                if(( purpose == null || !purpose.equalsIgnoreCase("Testing-Only")) && processing) {
+                    // if server is configured to delete test ROs then still don't delete ROs that are not flagged as "Testing-Only" and in processing/deposited stage
+                    return Response.status(ClientResponse.Status.BAD_REQUEST)
+                            .entity("Cannot revoke the request since the repository is either processing or has deposited the requested RO")
+                            .build();
+                }
+            } else {
+                if (processing) {
+                    // if server is configured not to delete test ROs then don't delete all ROs in processing/deposit stage
                     return Response.status(ClientResponse.Status.BAD_REQUEST)
                             .entity("Cannot revoke the request since the repository is either processing or has deposited the requested RO")
                             .build();
@@ -311,10 +328,11 @@ public class ROServices {
 
 		iter.projection(new Document("Aggregation", 1).append("_id", 0));
 
-		Document document = iter.first();
+		document = iter.first();
 		if (document == null) {
 			return Response.status(javax.ws.rs.core.Response.Status.NOT_FOUND)
-					.build();
+                    .entity("RO with ID " + id + " does not exist")
+                    .build();
 		}
 
         ObjectId mapId =  new ObjectId(((Document)document.get("Aggregation")).get("authoratativeMap").toString());
@@ -329,9 +347,13 @@ public class ROServices {
 		DeleteResult dr = publicationsCollection.deleteOne(new Document(
 				"Aggregation.Identifier", id));
 		if (dr.getDeletedCount() == 1) {
-			return Response.status(ClientResponse.Status.OK).build();
+			return Response.status(ClientResponse.Status.OK)
+                    .entity("RO Successfully Deleted")
+                    .build();
 		} else {
-			return Response.status(ClientResponse.Status.NOT_FOUND).build();
+            return Response.status(ClientResponse.Status.NOT_FOUND)
+                    .entity("RO with ID " + id + " does not exist")
+                    .build();
 		}
 	}
 

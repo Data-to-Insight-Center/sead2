@@ -34,7 +34,9 @@ public class Constants {
 	public static String pdtDbName;
 	public static String metaDbName;
 	public static String oreDbName;
-	
+
+	public static boolean deleteTestRO;
+
 	public static String serviceName = "SEAD-C3PR";
 
 	static {
@@ -56,7 +58,8 @@ public class Constants {
 		metaDbName = props.getProperty("metadata.db.name", "sead-metadata");
 		mongoOreHost = props.getProperty("mongo.ore.host", "localhost");
 		mongoOrePort = Integer.parseInt(props.getProperty("mongo.ore.port",
-				"27018"));
+                "27018"));
 		oreDbName = props.getProperty("ore.db.name", "sead-ore");
+		deleteTestRO = Boolean.parseBoolean(props.getProperty("delete.test.ro", "false"));
 	}
 }
