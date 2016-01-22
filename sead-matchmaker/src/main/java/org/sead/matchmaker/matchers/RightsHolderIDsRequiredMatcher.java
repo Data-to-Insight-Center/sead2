@@ -29,8 +29,11 @@ import org.sead.matchmaker.RuleResult;
 
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
+import com.sun.jersey.api.client.UniformInterfaceException;
 import com.sun.jersey.api.client.WebResource;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Iterator;
 
@@ -47,7 +50,7 @@ public class RightsHolderIDsRequiredMatcher implements Matcher {
 		if (!idsRequired) {
 			return result;
 		}
-		
+
 		boolean atleastonecreator = false;
 		BasicBSONList nonIDscreators = new BasicBSONList();
 		if (rightsHolders != null) {
@@ -119,14 +122,24 @@ public class RightsHolderIDsRequiredMatcher implements Matcher {
 	private String getInternalId(String personID) {
 		WebResource pdtResource = Client.create().resource(
 				MatchmakerConstants.pdtUrl);
-		ClientResponse response = pdtResource
-				.path(MatchmakerConstants.PDT_PEOPLE + "/canonical/" + personID)
-				.accept(MediaType.TEXT_PLAIN).get(ClientResponse.class);
-		if (response.getStatus() == 200) {
-			return response.getEntity(String.class);
-		} else {
-			return null;
+		ClientResponse response;
+		try {
+			response = pdtResource
+					.path(MatchmakerConstants.PDT_PEOPLE + "/canonical/"
+							+ URLEncoder.encode(personID, "UTF-8"))
+					.accept(MediaType.TEXT_PLAIN).get(ClientResponse.class);
+
+			if (response.getStatus() == 200) {
+				return response.getEntity(String.class);
+			}
+		} catch (UniformInterfaceException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (UnsupportedEncodingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
+		return null;
 
 	}
 
