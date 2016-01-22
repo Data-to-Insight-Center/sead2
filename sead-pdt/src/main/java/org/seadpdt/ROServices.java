@@ -308,7 +308,11 @@ public class ROServices {
                     break;
                 }
             }
-            String purpose = (String)document.get("Purpose");
+            Document preferences = (Document)document.get("Preferences");
+            String purpose = null;
+            if(preferences != null){
+                purpose = (String)preferences.get("Purpose");
+            }
             if(Constants.deleteTestRO) {
                 if(( purpose == null || !purpose.equalsIgnoreCase("Testing-Only")) && processing) {
                     // if server is configured to delete test ROs then still don't delete ROs that are not flagged as "Testing-Only" and in processing/deposited stage
