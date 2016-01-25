@@ -361,6 +361,37 @@ public class ROServices {
 		}
 	}
 
+    @DELETE
+    @Path("/{id}/override")
+    public Response DeleteOverrideRO(@PathParam("id") String id) {
+
+        // First remove map
+        FindIterable<Document> iter = publicationsCollection.find(new Document(
+                "Aggregation.Identifier", id));
+        iter.projection(new Document("Aggregation", 1).append("_id", 0));
+
+        Document document = iter.first();
+        if (document == null) {
+            return Response.status(javax.ws.rs.core.Response.Status.NOT_FOUND)
+                    .entity("RO with ID " + id + " does not exist")
+                    .build();
+        }
+
+        ObjectId mapId =  new ObjectId(((Document)document.get("Aggregation")).get("authoratativeMap").toString());
+        oreMapBucket.remove(mapId);
+        DeleteResult dr = publicationsCollection.deleteOne(new Document(
+                "Aggregation.Identifier", id));
+        if (dr.getDeletedCount() == 1) {
+            return Response.status(ClientResponse.Status.OK)
+                    .entity("RO Successfully Deleted")
+                    .build();
+        } else {
+            return Response.status(ClientResponse.Status.NOT_FOUND)
+                    .entity("RO with ID " + id + " does not exist")
+                    .build();
+        }
+    }
+
     @POST
     @Path("/oremap")
     @Consumes(MediaType.APPLICATION_JSON)
