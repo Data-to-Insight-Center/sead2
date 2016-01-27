@@ -34,7 +34,7 @@ public class SynchronizedReceiverRunnable implements Runnable {
 
     SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy.MM.dd hh:mm:ss a zzz");
     Date now = null;
-    Date previous = null;
+    Date before = null;
 
     public void run() {
 
@@ -42,7 +42,7 @@ public class SynchronizedReceiverRunnable implements Runnable {
             Shimcalls call = new Shimcalls();
             JSONArray allResearchObjects = call.getAllResearchObjects();
             now = new Date();
-            previous = new Date(now.getTime() - PropertiesReader.gcBeforeDays*24*60*60*1000);
+            before = new Date(now.getTime() - PropertiesReader.gcBeforeDays*24*60*60*1000);
             System.out.println("\nScanning Research Objects : " + dateFormat.format(now) + "\n");
 
             for (Object item : allResearchObjects.toArray()) {
@@ -67,7 +67,7 @@ public class SynchronizedReceiverRunnable implements Runnable {
             }
 
             try {
-                // wait between 2 garbage collection jobs
+                // wait between 2 garbage collecting jobs
                 Thread.sleep(PropertiesReader.gcIntervalHours * 60*60*1000);
             } catch (InterruptedException e) {
                 // ignore
@@ -78,26 +78,36 @@ public class SynchronizedReceiverRunnable implements Runnable {
 
     private boolean isExpired(JSONObject researchObject) {
         Object statusObj = researchObject.get("Status");
+        Date latest = null;
         if (statusObj != null) {
             JSONArray statusArray = (JSONArray) statusObj;
             for (Object status : statusArray) {
                 if (status instanceof JSONObject) {
                     JSONObject statusJson = (JSONObject) status;
-                    String stage = statusJson.get("stage").toString();
-                    if ("Success".equals(stage)) {
-                        String dateStr = statusJson.get("date").toString();
-                        try {
-                            Date date = DateFormat.getDateTimeInstance().parse(dateStr);
-                            if(date.before(previous)) {
-                                return true;
-                            }
-                        } catch (ParseException e) {
-                            e.printStackTrace();
+                    //String stage = statusJson.get("stage").toString();
+                    //if ("Success".equals(stage)) {
+
+                    String dateStr = statusJson.get("date").toString();
+                    try {
+                        Date date = DateFormat.getDateTimeInstance().parse(dateStr);
+                        if(latest == null){
+                            latest = date;
                         }
+                        else if (date.after(latest)) {
+                            latest = date;
+                        }
+                    } catch (ParseException e) {
+                        e.printStackTrace();
                     }
+                    //}
                 }
             }
         }
-        return false;
+
+        if(latest.before(before)){
+            return true;
+        } else {
+            return false;
+        }
     }
 }
