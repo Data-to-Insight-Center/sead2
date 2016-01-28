@@ -56,8 +56,13 @@ public class OrganizationMatcher implements Matcher {
 			}
             if (!affiliated) {
                 StringBuilder sBuilder = new StringBuilder();
+                boolean first = true;
                 for (String requiredAffiliation : requiredAffiliations) {
-                    sBuilder.append(", ").append(requiredAffiliation);
+                	if(!first) {
+                    sBuilder.append(", ");
+                    first = false;
+                	}
+                    sBuilder.append(requiredAffiliation);
                 }
 				result.setResult(-1,
 						"Collection does not have an affiliation with a required organization ("
