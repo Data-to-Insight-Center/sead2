@@ -576,8 +576,9 @@ public class BagGenerator {
 		}
 		JSONArray contactsArray = new JSONArray();
 		if (map.getJSONObject("describes").has("Contact")) {
-			contactsArray = RO.expandPeople(RO.normalizeValues(map
-					.getJSONObject("describes").get("Contact")));
+			
+			log.debug(map.getJSONObject("describes").get("Contact").toString());
+			contactsArray = map.getJSONObject("describes").getJSONArray("Contact");
 		} else {
 			if (request.has("Rights Holder")) {
 				contactsArray = RO.expandPeople(RO.normalizeValues(request
