@@ -130,5 +130,31 @@ public class Shimcalls {
     public String getID() {
         return this.output;
     }
+    
+
+    public Boolean validUrl(String url_string){
+    	
+    	try {
+            URL url = new URL(url_string);
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("HEAD");
+
+            if (conn.getResponseCode() != 200) {
+                throw new RuntimeException("Failed : Live data links isn't existed : "
+                        + conn.getResponseCode());
+                
+            }
+
+            conn.disconnect();
+            
+            return true;
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    	   	
+    	
+    }
 
 }
