@@ -31,34 +31,41 @@ import org.sead.matchmaker.RuleResult;
 public class OrganizationMatcher implements Matcher {
 
 	@SuppressWarnings("unchecked")
-	public RuleResult runRule(Document aggregation, Object rightsHolders, BasicBSONList affiliations,
-			Document preferences, Document statsDocument, Document profile, Object context) {
+	public RuleResult runRule(Document aggregation, Object rightsHolders,
+			BasicBSONList affiliations, Document preferences,
+			Document statsDocument, Document profile, Object context) {
 		RuleResult result = new RuleResult();
 		try {
 			// Get required affiliations from profile
 			ArrayList<String> requiredAffiliations = (ArrayList<String>) profile
 					.get("Affiliations");
 			// Add asserted affiliations to the derived ones
-            Object aff = preferences.get("Affiliations");
-            if (aff instanceof ArrayList) {
-                affiliations.addAll((ArrayList<String>) aff);
-            } else {
-                affiliations.add(aff);
-            }
+			Object aff = preferences.get("Affiliations");
+			if (aff instanceof ArrayList) {
+				affiliations.addAll((ArrayList<String>) aff);
+			} else {
+				affiliations.add(aff);
+			}
 			boolean affiliated = false;
 			String requiredOrgString = null;
-			for (String org : affiliations.toArray(new String[affiliations.size()])) {
+			for (String org : affiliations.toArray(new String[affiliations
+					.size()])) {
 				if ((requiredAffiliations.contains(org))) {
 					affiliated = true;
 					requiredOrgString = org;
 					break;
 				}
 			}
-            if (!affiliated) {
-                StringBuilder sBuilder = new StringBuilder();
-                for (String requiredAffiliation : requiredAffiliations) {
-                    sBuilder.append(", ").append(requiredAffiliation);
-                }
+			if (!affiliated) {
+				StringBuilder sBuilder = new StringBuilder();
+				boolean first = true;
+				for (String requiredAffiliation : requiredAffiliations) {
+					if (!first) {
+						sBuilder.append(", ");
+					}
+					first = false;
+					sBuilder.append(requiredAffiliation);
+				}
 				result.setResult(-1,
 						"Collection does not have an affiliation with a required organization ("
 								+ sBuilder.toString() + ").");
