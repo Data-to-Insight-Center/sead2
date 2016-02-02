@@ -75,10 +75,27 @@ public class LandingPage extends HttpServlet {
             addROProperty("Publication Date", describes, roProperties);
             addROProperty("Title", describes, roProperties);
             addROProperty("Abstract", describes, roProperties);
+            addROProperty("license", (JSONObject) cp.get("Preferences"), roProperties);
 
             //Map<String, String> properties = new HashMap<String, String>();
             //String Label = properties.get("Label");
-           
+            
+            // extract Live Data Links from ORE
+            String liveCopy = describes.get("Is Version Of").toString();
+            if (!liveCopy.startsWith("http")){
+            	String similar = describes.get("similarTo").toString();
+            	similar = similar.substring(0, similar.indexOf("/resteasy")+1);
+            	liveCopy = similar + "#collection?uri=" + liveCopy;
+            }
+            List<String> liveCopyList = new ArrayList<String>();
+            if (shim.validUrl(liveCopy)){
+            	liveCopyList.add(liveCopy);
+            }else{
+            	liveCopyList.add("Live Data Links is not existed");
+            }
+            
+            roProperties.put("Live Data Links", liveCopyList);
+            
             // set properties as an attribute
             request.setAttribute("roProperties", roProperties);
            
@@ -96,120 +113,47 @@ public class LandingPage extends HttpServlet {
             		}
             	}
 	            if (c % 2 != 0){
-	            	downloadList = new HashMap<String, String>();
-		            SFTP sftp = new SFTP();
-		            String target = Constants.sdaPath + title + "/" + title + ".tar";
-		            
-		            InputStream inStream = sftp.downloadFile(target);
-		            
-		            TarArchiveInputStream myTarFile = new TarArchiveInputStream(inStream);
-			        TarArchiveEntry entry = null;
-		            String individualFiles;
-		            
-		            while ((entry = myTarFile.getNextTarEntry()) != null) {
-		                
-		                individualFiles = entry.getName();
-		                byte[] content = new byte[(int) entry.getSize()];
-		                String size = null;
-		                                
-		                int bytes = content.length;
-		                int kb = bytes / 1024;
-		                int mb = kb / 1024;
-		                int gb = mb /1024;
-		                if (bytes <= 1024){
-		                	size = bytes + " Bytes";
-		                }else if (kb <= 1024){
-		                	size = kb + " KB";
-		                }else if (mb <= 1024){
-		                	size = mb + " MB";
-		                }else{
-		                	size = gb + " GB";
-		                }
-		                
-		                downloadList.put(individualFiles, size);
-		                
-		            }
-		            myTarFile.close();
-		            sftp.disConnectSessionAndChannel();  
-		            
-		            // display folder hierarchy 
-      	      		Set<String> namelist = downloadList.keySet();
 	            
-	            	int maxCount = 0;
-	            	List<String[]> allNames = new ArrayList<String[]>();
-
-	            	for (String name : namelist){
-	            		String[] tem = name.split("/");
-	            		if (tem.length >= maxCount){
-	            			maxCount = tem.length;
-	            		}
-	            		allNames.add(tem);
+					//extract RO hierarchy
+	            	NewOREmap oreMap = new NewOREmap(oreFile);
+	            	downloadList = oreMap.getHierarchy();
 	            	
-	            	}	            
-	           	
-	            	List<String> namesAsc = new ArrayList<String>();
-	            	for (int i = 2; i <= maxCount; i++){
-	            		for (int j = 0; j < allNames.size(); j++){
-	            			if (allNames.get(j).length == i){
-	            				String tem = "";
-	            				for (int k = 0; k < allNames.get(j).length; k++){
-	            					tem+=allNames.get(j)[k]+"/";
-	            				}
-	            				namesAsc.add(tem);	            			
-	            			}else if (allNames.get(j).length > i){
-	            				String tem = "";
-	            				for (int k = 0; k < i; k++){
-	            					tem += allNames.get(j)[k]+"/";
-	            				}
-	            				if (!namesAsc.contains(tem)){
-	            					namesAsc.add(tem);
-	            				}
-	            			}
+	            	Set<String> nameList = downloadList.keySet();
+	            	
+	            	for (String name : nameList){
+	            		String[] name_split = name.split("/");
+	            		String size = null;
+	            		if (downloadList.get(name) != null){
+		            		int bytes = Integer.parseInt(downloadList.get(name));
+		            		
+		            		int kb = bytes / 1024;
+			                int mb = kb / 1024;
+			                int gb = mb /1024;
+			                if (bytes <= 1024){
+			                	size = bytes + " Bytes";
+			                }else if (kb <= 1024){
+			                	size = kb + " KB";
+			                }else if (mb <= 1024){
+			                	size = mb + " MB";
+			                }else{
+			                	size = gb + " GB";
+			                }
 	            		}
-	            	}
-	            	List<String[]> allNamesAsc = new ArrayList<String[]>();
-	            	for (int i = 0; i< namesAsc.size();i++){
-	            		allNamesAsc.add(namesAsc.get(i).split("/"));
-	            	}
-	            
-	            	allNames = new ArrayList<String[]>();
-	            	allNames.add(allNamesAsc.remove(0));
-	            
-	            	while(!allNamesAsc.isEmpty()){	 
-	            		for (int loc = 0; loc < allNames.size(); loc++){
-		            		for (int i = 0; i < allNamesAsc.size(); i++){
-		            			if (allNames.get(loc).length == allNamesAsc.get(i).length && allNames.get(loc)[allNames.get(loc).length-2].equals(allNamesAsc.get(i)[allNamesAsc.get(i).length-2])){
-		            				allNames.add(loc+1, allNamesAsc.remove(i));
-		            			}
-		            			else if (allNames.get(loc).length == allNamesAsc.get(i).length-1 && allNames.get(loc)[allNames.get(loc).length-1].equals(allNamesAsc.get(i)[allNamesAsc.get(i).length-2])){
-		            				allNames.add(loc+1, allNamesAsc.remove(i));	
-		            			}
-		            		}
-	            		}     		            	
-	            	}
-	            	            	            
-	           
-	            	List<String> newAllNames = new ArrayList<String>();
-	            	for (int i = 0; i < allNames.size(); i++){
-	            		String tem = "";
-	            		for (int j = 0; j < allNames.get(i).length; j++){
-	            			tem = tem + allNames.get(i)[j] + "/";
-	            		}       
-	            		newAllNames.add(tem.substring(0, tem.length()-1));
-	            	}
-	            
-	            	linkedHashMap = new LinkedHashMap<String, String>();
-	            	            
-	            	for (int i = 0 ; i < newAllNames.size(); i++){
-	            		String[] tem = newAllNames.get(i).split("/");
-		            	String temp = "";
-		            	if (tem.length <= 2){		            		
-		            		temp = "<span style='padding-left:"+30*(tem.length-2)+"px'>"+tem[tem.length-1]+"</span>";
-		            		linkedHashMap.put(newAllNames.get(i),temp);
-		            	}else{		            		
-		            		temp = "<span style='padding-left:"+30*(tem.length-2)+"px'>"+"|__"+tem[tem.length-1]+"</span>";
-		            		linkedHashMap.put(newAllNames.get(i),temp);
+		                
+		                String temp = null;
+		            	if (name_split.length <= 2){
+		            		
+		            		temp = "<span style='padding-left:"+30*(name_split.length-2)+"px'>"+name_split[name_split.length-1]+"</span>";
+		            		linkedHashMap.put(name,temp);
+		            	}else{
+		            		
+		            		temp = "<span style='padding-left:"+30*(name_split.length-2)+"px'>"+"|__"+name_split[name_split.length-1]+"</span>";
+		            		linkedHashMap.put(name,temp);
 		            	}
+		                
+		            	downloadList.replace(name, size);
+		                
+		                
 	            	}
 		            
 	            }
