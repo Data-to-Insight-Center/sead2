@@ -150,6 +150,7 @@ public class Object {
     @Produces(MediaType.APPLICATION_XML)
     public Response addObject(@Context HttpServletRequest request,
                               @PathParam("objectId") String id,
+                              @QueryParam("creators") String creators,
                               String fgdcString) throws UnsupportedEncodingException {
 
         Document metaInfo = new Document();
@@ -169,15 +170,11 @@ public class Object {
             System.out.println(e.getMessage());
         }
 
-        org.w3c.dom.NodeList origins = doc.getElementsByTagName("origin");
         String creator = "";
-        for (int i = 0; i < origins.getLength(); i++) {
-            org.w3c.dom.Node origin = origins.item(i);
-            creator = origin.getChildNodes().item(0).getNodeValue();
-            break;
+        if (creators != null && !creators.equals("")) {
+            creator = URLEncoder.encode(creators.split("\\|")[0].replace(" ","").replace(",","")) + "-";
         }
-        creator = URLEncoder.encode(creator.split(":")[0].replace(" ","").replace(",",""));
-        String fgdcId = "seadva-" + creator + "-" + UUID.randomUUID().toString();
+        String fgdcId = "seadva-" + creator + UUID.randomUUID().toString();
         metaInfo.put(Constants.FGDC_ID, fgdcId);
 
         final byte[] utf8Bytes = fgdcString.getBytes("UTF-8");
