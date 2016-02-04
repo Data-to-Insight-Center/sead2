@@ -59,6 +59,11 @@ seadData.buildGrid = function(map) {
 	// seadData.calcTotalSize(map.describes.aggregates);
 	// seadData.calcTotalSize(map.describes.aggregates);
 	var liveCopy = map.describes["Is Version Of"];
+	// Clowder build 113 kludge
+	if (liveCopy == null) {
+		liveCopy = map.describes["Is Version of"];
+	}
+
 	// 1.5 Kludge
 	if (!liveCopy.startsWith('http')) {
 		var similar = map.describes.similarTo;
@@ -67,8 +72,7 @@ seadData.buildGrid = function(map) {
 	}
 
 	$('#livecopy').prepend(
-			$('<a/>').attr('href', liveCopy).text(
-					map.describes.Title));
+			$('<a/>').attr('href', liveCopy).text(map.describes.Title));
 	$('#actions').append(
 			($('<a/>').attr('href', './api/researchobjects/' + seadData.getId()
 					+ '/bag')).attr('download',

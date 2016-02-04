@@ -72,8 +72,21 @@ public class SynchronizedReceiverRunnable implements Runnable {
                         NewOREmap oreMap = new NewOREmap(ore);
                         JSONObject newOREmap = oreMap.getNewOREmap();
 
+						System.out.println("Generating DOI...");
+                        String target = PropertiesReader.landingPage + "?tag=" + identifier;
+                        DOI doi = new DOI(target, ore);
+                        String doiUrl = doi.getDoi();
+                        if(doiUrl.startsWith("doi:")){
+                            doiUrl = doiUrl.replace("doi:", "http://dx.doi.org/");
+                        }
+                        System.out.println("DOI: " + doiUrl);
+                        
+                        
                         System.out.println("Downloading data files...");
-                        DummySDA dummySDA = new DummySDA(newOREmap, call.getJsonORE(oreUrl));
+                        Object license = new Object();
+                    	JSONObject preferences = (JSONObject) pulishObject.get("Preferences");	
+                    	license = ((JSONObject) preferences).get("License");
+                        DummySDA dummySDA = new DummySDA(newOREmap, call.getJsonORE(oreUrl), doiUrl, license);
                         if (dummySDA.getErrorLinks().size() > 0) {
                             throw new Exception("Error while downloading some/all files");
                         }
@@ -84,14 +97,7 @@ public class SynchronizedReceiverRunnable implements Runnable {
                         System.out.println("Depositing RO into SDA as a tar archive...");
                         new SFTP(rootPath + ".tar");
 
-                        System.out.println("Generating DOI...");
-                        String target = PropertiesReader.landingPage + "?tag=" + identifier;
-                        DOI doi = new DOI(target, ore);
-                        String doiUrl = doi.getDoi();
-                        if(doiUrl.startsWith("doi:")){
-                            doiUrl = doiUrl.replace("doi:", "http://dx.doi.org/");
-                        }
-                        System.out.println("DOI: " + doiUrl);
+                        
 
                         System.out.println("Updating status in C3P-R with the DOI...");
                         call.updateStatus(doiUrl, identifier);

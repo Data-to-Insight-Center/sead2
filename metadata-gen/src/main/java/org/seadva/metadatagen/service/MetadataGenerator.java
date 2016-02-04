@@ -23,6 +23,7 @@ package org.seadva.metadatagen.service;
 
 import com.sun.jersey.api.client.*;
 import com.sun.jersey.api.client.filter.ClientFilter;
+import org.apache.commons.lang.StringUtils;
 import org.bson.Document;
 import org.bson.types.ObjectId;
 import org.json.JSONException;
@@ -71,6 +72,9 @@ public class MetadataGenerator {
         } else {
             ClientResponse postResponse = dataoneWebService
                     .path(id)
+                    .queryParam("creators", !fgdcMetadataGen.getCreatorsList().isEmpty()
+                            ? StringUtils.join(fgdcMetadataGen.getCreatorsList().toArray(), "|")
+                            : "")
                     .accept("application/xml")
                     .type("application/xml")
                     .post(ClientResponse.class, response);

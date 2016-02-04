@@ -20,21 +20,22 @@
 
 package org.seadva.metadatagen.metagen.impl;
 
-import com.mongodb.MongoClient;
-import com.mongodb.client.MongoCollection;
-import com.mongodb.client.MongoDatabase;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
+import com.sun.jersey.api.client.GenericType;
 import com.sun.jersey.api.client.WebResource;
 import noNamespace.*;
 import org.apache.commons.lang.StringUtils;
 import org.apache.xmlbeans.XmlOptions;
 import org.bson.Document;
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.seadva.metadatagen.metagen.BaseMetadataGen;
 import org.seadva.metadatagen.util.Constants;
 import org.seadva.metadatagen.util.ROQueryUtil;
 import org.seadva.metadatagen.util.SeadNCEDConstants;
 
+import java.net.URLEncoder;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -45,6 +46,7 @@ public class FGDCMetadataGen extends BaseMetadataGen {
     static WebResource pdtWebService;
 
     private String doi;
+    private List<String> creatorsList = new ArrayList<String>();
 
     static {
         pdtWebService = Client.create().resource(Constants.pdtURL);
@@ -52,6 +54,10 @@ public class FGDCMetadataGen extends BaseMetadataGen {
 
     public FGDCMetadataGen(String doi){
         this.doi = doi;
+    }
+
+    public List<String> getCreatorsList() {
+        return creatorsList;
     }
 
     ROQueryUtil util = new ROQueryUtil();
@@ -96,11 +102,23 @@ public class FGDCMetadataGen extends BaseMetadataGen {
 
         Set<String>  creators = new HashSet<String>();
         if(aggregation.get(CREATOR) instanceof String){
-            creators.add(aggregation.get(CREATOR).toString());
+            String creator = getCreator((String) aggregation.get(CREATOR));
+            if(!creator.equals("")){
+                creators.add(creator);
+                creatorsList.add(creator);
+            } else {
+                creators.add((String) aggregation.get(CREATOR));
+            }
         } else if(aggregation.get(CREATOR) instanceof ArrayList) {
             ArrayList list = (ArrayList)aggregation.get(CREATOR);
             for(Object creator : list){
-                creators.add(creator.toString());
+                String creatorFullName = getCreator(creator.toString());
+                if(!creatorFullName.equals("")){
+                    creators.add(creatorFullName);
+                    creatorsList.add(creatorFullName);
+                } else {
+                    creators.add(creator.toString());
+                }
             }
         }
 
@@ -265,5 +283,31 @@ public class FGDCMetadataGen extends BaseMetadataGen {
         xmlOptions.setSavePrettyPrint();
         return metadataDoc.xmlText(xmlOptions);
 
+    }
+
+    private String getCreator(String id) {
+        String creator = "";
+        ClientResponse response = pdtWebService.path("people/" + URLEncoder.encode(id))
+                .accept("application/json")
+                .type("application/json")
+                .get(ClientResponse.class);
+        if (response.getStatus() == 200) {
+            try {
+                JSONObject object = new JSONObject(response.getEntity(new GenericType<String>() {}));
+                String name = "";
+                if (object.has("givenName")) {
+                    name += object.get("givenName");
+                }
+                if (object.has("familyName")) {
+                    name += " " + object.get("familyName");
+                }
+                if (!name.equals("")) {
+                    creator = name.trim();
+                }
+            } catch (JSONException e) {
+                System.out.println(e.getMessage());
+            }
+        }
+        return creator;
     }
 }
