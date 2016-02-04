@@ -21,6 +21,7 @@
         <module>sead-api</module>
         <module>sead-dataone</module>
         <module>services/dataone-api</module>
+        <module>sead-nds-repository</module>
   </modules>
 
 </project>
