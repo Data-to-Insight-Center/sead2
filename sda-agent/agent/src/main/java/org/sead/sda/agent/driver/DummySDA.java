@@ -34,12 +34,22 @@ public class DummySDA {
     private ArrayList<String> errorLinks;
     private String rootPath = null;
 
-    public DummySDA(JSONObject ore, org.json.JSONObject prettyOre) {
+    public DummySDA(JSONObject ore, org.json.JSONObject prettyOre, String doiUrl, Object license) {
         this.userAndpass = PropertiesReader.clowderUser + ":" + PropertiesReader.clowderPassword;
 
         this.errorLinks = new ArrayList<String>();
         this.rootPath = createRootFolder(ore, PropertiesReader.dummySDA);
-
+		
+		try {
+        	JSONObject newLicense = new JSONObject();
+        	newLicense.put("License", license);
+			prettyOre.put("Preferences", newLicense);
+			prettyOre.put("@doi", doiUrl);
+		} catch (JSONException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
         writeOREmap(this.rootPath, prettyOre);
 
         JSONArray aggre = (JSONArray) ore.get("aggregates");
