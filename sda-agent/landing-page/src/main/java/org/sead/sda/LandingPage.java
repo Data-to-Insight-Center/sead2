@@ -64,7 +64,8 @@ public class LandingPage extends HttpServlet {
             JSONObject describes = (JSONObject) oreFile.get("describes");
             Map<String, List<String>> roProperties = new HashMap<String, List<String>>();
             Map<String, String> downloadList = new HashMap<String, String>();
-            Map<String, String> linkedHashMap = new LinkedHashMap<String, String>();	
+            Map<String, String> linkedHashMap = new LinkedHashMap<String, String>();
+            Map<String, String> newDownloadList = new LinkedHashMap<String, String>();	
 
             // extract properties from ORE
             JSONArray status = (JSONArray) cp.get("Status");
@@ -75,7 +76,7 @@ public class LandingPage extends HttpServlet {
             addROProperty("Publication Date", describes, roProperties);
             addROProperty("Title", describes, roProperties);
             addROProperty("Abstract", describes, roProperties);
-            addROProperty("license", (JSONObject) cp.get("Preferences"), roProperties);
+            addROProperty("License", (JSONObject) cp.get("Preferences"), roProperties);
 
             //Map<String, String> properties = new HashMap<String, String>();
             //String Label = properties.get("Label");
@@ -151,7 +152,7 @@ public class LandingPage extends HttpServlet {
 		            		linkedHashMap.put(name,temp);
 		            	}
 		                
-		            	downloadList.replace(name, size);
+		            	newDownloadList.put(name, size);
 		                
 		                
 	            	}
@@ -162,7 +163,7 @@ public class LandingPage extends HttpServlet {
             // set download list as an attribute
             // set linkedHashMap as an attribute
             }
-            request.setAttribute("downloadList", downloadList);
+            request.setAttribute("downloadList", newDownloadList);
             request.setAttribute("linkedHashMap", linkedHashMap);
            
             // forward the user to get_id UI
