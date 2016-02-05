@@ -203,7 +203,7 @@ public class C3PRPubRequestFacade {
 		return null;
 	}
 
-	JSONObject getOREMap() {
+	public JSONObject getOREMap() {
 		if (oremap == null) {
 
 			log.debug("Retreiving: " + getOREMapURI().toString());
@@ -253,7 +253,7 @@ public class C3PRPubRequestFacade {
 			request.addHeader("accept", returnType);
 		}
 		return request;
-	};
+	}
 
 	InputStreamSupplier getInputStreamSupplier(final String uri) {
 
@@ -427,7 +427,7 @@ public class C3PRPubRequestFacade {
 			e.printStackTrace();
 		}
 
-		if (echoToConsole == true) {
+		if (echoToConsole) {
 			System.out
 					.println("*********************Status Message******************************");
 			System.out.println("Reporter: " + Repository.getID() + ", Stage: "
