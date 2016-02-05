@@ -21,6 +21,8 @@ package org.sead.sda.agent.service;
 
 import org.apache.log4j.Logger;
 
+import org.apache.log4j.PropertyConfigurator;
+import org.sead.nds.repository.Repository;
 import org.sead.sda.agent.calls.CallConfig;
 import org.sead.sda.agent.calls.CallDaemons;
 import org.sead.sda.agent.engine.PropertiesReader;
@@ -58,7 +60,10 @@ public class ServiceLauncher {
 
     public static void main(String[] args) {
         try {
+            // assumes there's a log4j.properties file in the running directory
+            PropertyConfigurator.configure("./log4j.properties");
             PropertiesReader.init(args[0]);
+            Repository.init(PropertiesReader.properties);
             ServiceLauncher.start();
             if (!ServiceLauncher.startShimCalls()) {
                 System.out.println("Agent Server shutting down...");

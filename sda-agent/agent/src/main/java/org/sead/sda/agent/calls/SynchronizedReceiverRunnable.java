@@ -19,9 +19,12 @@
 
 package org.sead.sda.agent.calls;
 
+import org.apache.log4j.Logger;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
+import org.sead.nds.repository.BagGenerator;
+import org.sead.nds.repository.C3PRPubRequestFacade;
 import org.sead.sda.agent.apicalls.NewOREmap;
 import org.sead.sda.agent.apicalls.Shimcalls;
 import org.sead.sda.agent.driver.DummySDA;
@@ -31,12 +34,12 @@ import org.sead.sda.agent.engine.DOI;
 import org.sead.sda.agent.engine.PropertiesReader;
 import org.sead.sda.agent.engine.SFTP;
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.io.BufferedOutputStream;
+import java.io.OutputStream;
 
 public class SynchronizedReceiverRunnable implements Runnable {
 
-    SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy.MM.dd hh:mm:ss a zzz");
+    private static final Logger log = Logger.getLogger(SynchronizedReceiverRunnable.class);
 
     public void run() {
 
@@ -53,62 +56,22 @@ public class SynchronizedReceiverRunnable implements Runnable {
                     if (identifier == null) {
                         throw new Exception("SDA Agent : Cannot get Identifier of RO");
                     }
-                    // System.out.println("\nResearch Object found, ID: " + identifier);
+                    // log.info("\nResearch Object found, ID: " + identifier);
 
                     if (!isAlreadyPublished(researchObject)) {
-                        System.out.println("\n" + dateFormat.format(new Date()));
-                        System.out.println("New Research Object found, ID: " + identifier);
-                        System.out.println("Starting to publish Research Object...");
-
-                        JSONObject pulishObject = call.getResearchObject(identifier);
-                        call.getObjectID(pulishObject, "@id");
-                        String oreUrl = call.getID();
-
-                        if (oreUrl == null) {
-                            throw new Exception("SDA Agent : Cannot get ORE map file of RO");
+                        log.info("New Research Object found, ID: " + identifier);
+                        log.info("Starting to publish Research Object...");
+                        if ("tar".equals(PropertiesReader.packageFormat.trim())) {
+                            log.info("Generating Tar..");
+                            depositTar(call, identifier);
+                        } else {
+                            log.info("Generating BagIt..");
+                            depositBag(identifier);
                         }
-                        System.out.println("Fetching ORE from: " + oreUrl);
-                        JSONObject ore = call.getResearchObjectORE(oreUrl);
-                        NewOREmap oreMap = new NewOREmap(ore);
-                        JSONObject newOREmap = oreMap.getNewOREmap();
-
-						System.out.println("Generating DOI...");
-                        String target = PropertiesReader.landingPage + "?tag=" + identifier;
-                        DOI doi = new DOI(target, ore);
-                        String doiUrl = doi.getDoi();
-                        if(doiUrl.startsWith("doi:")){
-                            doiUrl = doiUrl.replace("doi:", "http://dx.doi.org/");
-                        }
-                        System.out.println("DOI: " + doiUrl);
-                        
-                        
-                        System.out.println("Downloading data files...");
-                        Object license = new Object();
-                    	JSONObject preferences = (JSONObject) pulishObject.get("Preferences");	
-                    	license = ((JSONObject) preferences).get("License");
-                        DummySDA dummySDA = new DummySDA(newOREmap, call.getJsonORE(oreUrl), doiUrl, license);
-                        if (dummySDA.getErrorLinks().size() > 0) {
-                            throw new Exception("Error while downloading some/all files");
-                        }
-
-                        String rootPath = dummySDA.getRootPath();
-                        new ZipDirectory(rootPath);
-
-                        System.out.println("Depositing RO into SDA as a tar archive...");
-                        new SFTP(rootPath + ".tar");
-
-                        
-
-                        System.out.println("Updating status in C3P-R with the DOI...");
-                        call.updateStatus(doiUrl, identifier);
-
-                        FileManager manager = new FileManager();
-                        manager.removeTempFile(rootPath + ".tar");
-                        manager.removeTempFolder(rootPath);
-                        System.out.println("Successfully published Research Object: " + identifier + "\n");
+                        log.info("Successfully published Research Object: " + identifier + "\n");
                     }
                 } catch (Exception e) {
-                    System.out.println("ERROR: Error while publishing Research Object...");
+                    log.info("ERROR: Error while publishing Research Object...");
                     e.printStackTrace();
                 }
                 try {
@@ -127,6 +90,80 @@ public class SynchronizedReceiverRunnable implements Runnable {
             }
 
         }
+    }
+
+    private void depositBag(String roId) throws Exception {
+        // use the BagGenerator from reference repository code
+        BagGenerator bg;
+        C3PRPubRequestFacade ro = new C3PRPubRequestFacade(roId, PropertiesReader.properties);
+        bg = new BagGenerator(ro);
+
+        SFTP sftp = new SFTP();
+        OutputStream ftpOS = sftp.openOutputStream(BagGenerator.getValidName(roId), ".zip");
+        BufferedOutputStream bufferedOS = new BufferedOutputStream(ftpOS);
+
+        log.info("Depositing RO into SDA as a BagIt Zip archive...");
+        if (bg.generateBag(bufferedOS)) {
+            String doi = ro.getOREMap().getJSONObject("describes").getString("External Identifier");
+            log.info("Updating status in C3P-R with the DOI: " + doi);
+            ro.sendStatus(C3PRPubRequestFacade.SUCCESS_STAGE, doi);
+        } else {
+            log.debug("RO deposit failed, roId: " + roId);
+            ro.sendStatus(C3PRPubRequestFacade.FAILURE_STAGE, "Processing of this request has failed and no further " +
+                    "attempts to process this request will be made. Please contact the repository for further information.");
+        }
+
+        // close output streams and disconnect sftp channel
+        bufferedOS.close();
+        ftpOS.close();
+        sftp.disconnect();
+    }
+
+    private void depositTar(Shimcalls call, String identifier) throws Exception {
+        JSONObject pulishObject = call.getResearchObject(identifier);
+        call.getObjectID(pulishObject, "@id");
+        String oreUrl = call.getID();
+
+        if (oreUrl == null) {
+            throw new Exception("SDA Agent : Cannot get ORE map file of RO");
+        }
+        log.info("Fetching ORE from: " + oreUrl);
+        JSONObject ore = call.getResearchObjectORE(oreUrl);
+        NewOREmap oreMap = new NewOREmap(ore);
+        JSONObject newOREmap = oreMap.getNewOREmap();
+
+        log.info("Generating DOI...");
+        String target = PropertiesReader.landingPage + "?tag=" + identifier;
+        DOI doi = new DOI(target, ore);
+        String doiUrl = doi.getDoi();
+        if(doiUrl.startsWith("doi:")){
+            doiUrl = doiUrl.replace("doi:", "http://dx.doi.org/");
+        }
+        log.info("DOI: " + doiUrl);
+
+
+        log.info("Downloading data files...");
+        JSONObject preferences = (JSONObject) pulishObject.get("Preferences");
+        Object license = preferences.get("License");
+        DummySDA dummySDA = new DummySDA(newOREmap, call.getJsonORE(oreUrl), doiUrl, license);
+        if (dummySDA.getErrorLinks().size() > 0) {
+            throw new Exception("Error while downloading some/all files");
+        }
+
+        String rootPath = dummySDA.getRootPath();
+        new ZipDirectory(rootPath);
+
+        log.info("Depositing RO into SDA as a tar archive...");
+        SFTP sftp = new SFTP();
+        sftp.depositFile(rootPath + ".tar");
+        sftp.disconnect();
+
+        log.info("Updating status in C3P-R with the DOI...");
+//        call.updateStatus(doiUrl, identifier);
+
+        FileManager manager = new FileManager();
+        manager.removeTempFile(rootPath + ".tar");
+        manager.removeTempFolder(rootPath);
     }
 
     private boolean isAlreadyPublished(JSONObject researchObject) {
