@@ -117,13 +117,29 @@ public class SeadWorkflowService {
         System.out.println("-----------------------------------");
 
         String id = null;
+        String response = "";
 
         try {
             JSONObject roObject = new JSONObject(ro);
-            JSONObject aggregation = (JSONObject)roObject.get("Aggregation");
-            id = aggregation.get("Identifier").toString();
+            if (roObject.has(Constants.AGGREGATION) && roObject.get(Constants.AGGREGATION) instanceof JSONObject) {
+                JSONObject aggregation = (JSONObject) roObject.get(Constants.AGGREGATION);
+                if(aggregation.has(Constants.IDENTIFIER) && aggregation.get(Constants.IDENTIFIER) instanceof String) {
+                    id = aggregation.get(Constants.IDENTIFIER).toString();
+                } else {
+                    response = "{\"response\": \"failure\", \"message\": \" '" + Constants.AGGREGATION + "' does not contain a valid '"+ Constants.IDENTIFIER +"'\"}";
+                }
+            } else {
+                response = "{\"response\": \"failure\", \"message\": \" RO request does not contain a valid '" + Constants.AGGREGATION + "'\"}";
+            }
         } catch (JSONException e) {
-            e.printStackTrace();
+            response = "{\"response\": \"failure\", \"message\": \" RO request is not a valid JSONLD object\"}";
+        }
+
+        if (!response.equals("")) {
+            System.out.println("-----------------------------------");
+            System.out.println("SeadWorkflowService - Respond to publishRO request : " + response);
+            System.out.println("-----------------------------------");
+            return Response.serverError().entity(response).type(MediaType.APPLICATION_JSON_TYPE).build();
         }
 
         SeadWorkflowContext context = new SeadWorkflowContext();
@@ -131,7 +147,6 @@ public class SeadWorkflowService {
         context.addProperty(Constants.REQUEST_URL, requestURL);
         context.setCollectionId(id);
 
-        String response = "";
 
         int executedActivities = 0;
         for (SeadWorkflowActivity activity : SeadWorkflowService.config.getActivities()) {

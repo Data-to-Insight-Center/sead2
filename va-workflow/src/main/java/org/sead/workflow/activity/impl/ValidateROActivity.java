@@ -18,9 +18,8 @@
 
 package org.sead.workflow.activity.impl;
 
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.WebResource;
+import com.sun.jersey.api.client.*;
+import com.sun.jersey.api.client.filter.ClientFilter;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -31,8 +30,8 @@ import org.sead.workflow.context.SeadWorkflowContext;
 import org.sead.workflow.exception.SeadWorkflowException;
 import org.sead.workflow.util.Constants;
 
-import java.net.URLEncoder;
-import java.util.ArrayList;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriBuilder;
 import java.util.HashMap;
 
 /**
@@ -61,7 +60,7 @@ public class ValidateROActivity extends AbstractWorkflowActivity {
 
         // Call RO Info System to find whether RO already exists
         WebResource webResource = Client.create().resource(pdtUrl);
-        ClientResponse response = webResource
+        ClientResponse response = webResource.path("researchobjects")
                 .path(context.getCollectionId())
                 .accept("application/json")
                 .type("application/json")
@@ -77,6 +76,7 @@ public class ValidateROActivity extends AbstractWorkflowActivity {
         boolean validated = true;
         String roString = context.getProperty(Constants.JSON_RO);
         try {
+            validated = hasValidROMetadata(roString, webResource);
             validated = hasMinimalMetadata(roString, context);
         } catch (JSONException e) {
             throw new SeadWorkflowException( "Error occurred while validating the collection "
@@ -89,7 +89,8 @@ public class ValidateROActivity extends AbstractWorkflowActivity {
         } else {
             System.out.println(ValidateROActivity.class.getName() + " : RO Validation Failed");
             context.addProperty(Constants.VALIDATED, Constants.FALSE);
-            throw new SeadWorkflowException("Error occurred while validating collection " + context.getCollectionId());            
+            throw new SeadWorkflowException("Error occurred while validating collection " + context.getCollectionId()
+                    + ": " + context.getProperty(Constants.VALIDATION_ERROR));
         }
 
         System.out.println("=====================================\n");
@@ -103,13 +104,97 @@ public class ValidateROActivity extends AbstractWorkflowActivity {
         JSONObject roObject = new JSONObject(roString);
         JSONObject object = (JSONObject)roObject.get(Constants.AGGREGATION);
 
-        if(!object.has(Constants.CREATOR) || !nullCheck(object.get(Constants.CREATOR)) ||
-                !object.has(Constants.TITLE) || !nullCheck(object.get(Constants.TITLE)) ||
-                !object.has(Constants.ABSTRACT) || !nullCheck(object.get(Constants.ABSTRACT)) ) {
+
+        if(!object.has(Constants.CREATOR) || !nullCheck(object.get(Constants.CREATOR)) ) {
             validated = false;
+            context.addProperty(Constants.VALIDATION_ERROR, "RO request does not contain value for '" + Constants.CREATOR  + "' field.");
+        }
+        if(!object.has(Constants.TITLE) || !nullCheck(object.get(Constants.TITLE)) ) {
+            validated = false;
+            context.addProperty(Constants.VALIDATION_ERROR, "RO request does not contain value for '" + Constants.TITLE  + "' field.");
+        }
+        if(!object.has(Constants.ABSTRACT) || !nullCheck(object.get(Constants.ABSTRACT)) ) {
+            validated = false;
+            context.addProperty(Constants.VALIDATION_ERROR, "RO request does not contain value for '" + Constants.ABSTRACT  + "' field.");
         }
 
         return validated;
+    }
+
+    private boolean hasValidROMetadata(String roString, WebResource webResource) throws JSONException {
+
+        // Checking whether RO request contains metadata needed - check for independent submissions
+        JSONObject roObject = null;
+        try {
+            roObject = new JSONObject(roString);
+        } catch (JSONException e) {
+            throw new SeadWorkflowException("Request RO is not a valid JSON object");
+        }
+
+        if(!roObject.has(Constants.AGGREGATION)) {
+            throw new SeadWorkflowException("Request RO Does not have 'Aggregation'");
+        }
+        JSONObject aggregation = (JSONObject)roObject.get(Constants.AGGREGATION);
+
+        if(!roObject.has(Constants.PUB_CALLBACK)) {
+            throw new SeadWorkflowException("Request RO Does not have 'Publication Callback' URL"); // TODO validate pub callback
+        }
+
+        if(!roObject.has(Constants.REPOSITORY)) {
+            throw new SeadWorkflowException("Request RO Does not have a value for 'Repository'");
+        }
+        Object repository = roObject.get(Constants.REPOSITORY);
+        if(!(repository instanceof String)) {
+            throw new SeadWorkflowException("Request RO Does not have a valid String value for 'Repository'");
+        }
+        ClientResponse response = webResource.path("repositories")
+                .path((String)repository)
+                .accept("application/json")
+                .type("application/json")
+                .get(ClientResponse.class);
+        if(response.getStatus() != 200) {
+            throw new SeadWorkflowException("Repository " + repository.toString() + " is not registered with C3PR");
+        }
+
+        if(!aggregation.has(Constants.OREMAP_ID)) {
+            throw new SeadWorkflowException("Request RO Does not have OREMap specified in '" + Constants.AGGREGATION
+                    + "." + Constants.OREMAP_ID + "'");
+        }
+        Object idObject = aggregation.get(Constants.OREMAP_ID);
+        if(idObject instanceof String){
+            WebResource oreWebResource = Client.create().resource(idObject.toString());
+            oreWebResource.addFilter(new RedirectFilter());
+            try {
+                response = oreWebResource.accept("application/json")
+                        .get(ClientResponse.class);
+                if (response.getStatus() == 200) {
+                    hasValidOREMetadata(response.getEntity(String.class));
+                } else {
+                    throw new SeadWorkflowException("Request RO Does not have an valid URL for OREMap specified in '"
+                            + Constants.AGGREGATION + "." + Constants.OREMAP_ID  + "'");
+                }
+            } catch (RuntimeException e) {
+                throw new SeadWorkflowException("Request RO Does not have an valid URL for OREMap");
+            }
+        } else {
+            throw new SeadWorkflowException("Request RO Does not have a String value for '" + Constants.AGGREGATION
+                    + "." + Constants.OREMAP_ID + "'");
+        }
+
+        return true;
+    }
+
+    private boolean hasValidOREMetadata(String oreString) throws JSONException {
+
+        // Checking whether OREMap request contains metadata needed - check for independent submissions
+        JSONObject oreObject = null;
+        try {
+            oreObject = new JSONObject(oreString);
+        } catch (JSONException e) {
+            throw new SeadWorkflowException("Request ORE is not a valid JSON object");
+        }
+
+        return true;
     }
 
     private boolean nullCheck(Object object) throws JSONException {
@@ -137,5 +222,27 @@ public class ValidateROActivity extends AbstractWorkflowActivity {
 
     @Override
     public void rollback(SeadWorkflowContext context, SeadWorkflowConfig config) {
+    }
+
+
+    class RedirectFilter extends ClientFilter {
+
+        @Override
+        public ClientResponse handle(ClientRequest cr) throws ClientHandlerException {
+            ClientHandler ch = getNext();
+            ClientResponse resp = ch.handle(cr);
+
+            if (resp.getClientResponseStatus().getFamily() != Response.Status.Family.REDIRECTION) {
+                return resp;
+            }
+            else {
+                // try location
+                String redirectTarget = resp.getHeaders().getFirst("Location");
+                cr.setURI(UriBuilder.fromUri(redirectTarget).build());
+                return ch.handle(cr);
+            }
+
+        }
+
     }
 }

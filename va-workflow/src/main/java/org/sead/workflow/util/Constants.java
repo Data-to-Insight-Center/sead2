@@ -35,16 +35,21 @@ public class Constants {
     public static final String FALSE = "false";
 
     // constants in context
-    public static final String JSON_RO = "jsonRO"; // JSONLD format of RO metadata
-    public static final String REQUEST_URL = "requestUrl"; // JSONLD format of RO metadata
+    public static final String JSON_RO = "jsonRO";
+    public static final String REQUEST_URL = "requestUrl";
     public static final String VALIDATED = "validated";
+    public static final String VALIDATION_ERROR = "validationError";
     public static final String ORE_ID = "oreId";
 
     // constants in JSONLD of RO
     public static String AGGREGATION = "Aggregation";
+    public static String IDENTIFIER = "Identifier";
+    public static String OREMAP_ID = "@id";
     public static String CREATOR = "Creator";
     public static String ABSTRACT = "Abstract";
     public static String TITLE = "Title";
+    public static String PUB_CALLBACK = "Publication Callback";
+    public static String REPOSITORY = "Repository";
 
     static{
         try {
