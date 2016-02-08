@@ -111,12 +111,17 @@ public class MetadataGenerator {
             webResource = client.resource(aggregation.get("@id").toString());
             webResource.addFilter(new RedirectFilter());
 
-            ClientResponse response = webResource.accept("application/json")
-                    .get(ClientResponse.class);
-
-            if (response.getStatus() != 200) {
-                System.out.println(MetadataGenerator.class.getName() + ": Error while retrieving OREMap from Project Space - Response : " + response.getStatus());
-                throw new RuntimeException("" + response.getStatus());
+            ClientResponse response = null;
+            try {
+                response = webResource.accept("application/json")
+                        .get(ClientResponse.class);
+                if (response.getStatus() != 200) {
+                    System.out.println(MetadataGenerator.class.getName() + ": Error while retrieving OREMap from Project Space - Response : " + response.getStatus());
+                    throw new RuntimeException("Error while retrieving OREMap: " + response.getStatus());
+                }
+            } catch (RuntimeException e) {
+                System.out.println(MetadataGenerator.class.getName() + ": Error while retrieving OREMap");
+                throw new RuntimeException("Error while retrieving OREMap");
             }
 
             Document oreMapDocument = Document.parse(response
