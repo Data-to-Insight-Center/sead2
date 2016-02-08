@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 University of Michigan
+ * Copyright 2015 University of Michigan, 2015 The Trustees of Indiana University
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,16 +14,12 @@
  * limitations under the License.
  *
  * @author myersjd@umich.edu
+ * @author isuriara@indiana.edu
  */
 
 package org.sead.nds.repository;
 
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
-import java.nio.file.Files;
+import java.io.*;
 import java.nio.file.Paths;
 import java.security.NoSuchAlgorithmException;
 import java.text.SimpleDateFormat;
@@ -66,8 +62,6 @@ public class BagGenerator {
 
 	private String license = "No license information provided";
 
-	private String bagPath = null;
-
 	private String hashtype = null;
 
 	private long dataCount = 0l;
@@ -77,228 +71,260 @@ public class BagGenerator {
 
 	public BagGenerator(C3PRPubRequestFacade ro) {
 		RO = ro;
-		this.bagPath = Repository.getDataPath();
 	}
 
 	/*
-	 * Full workflow to generate new BagIt bag from ORE Map Url and Bag
-	 * path/name on disk
+	 * Full workflow to generate new BagIt bag from ORE Map Url and to write the bag
+	 * to the provided output stream (Ex: File OS, FTP OS etc.).
 	 * 
 	 * @return success true/false
 	 */
-	public boolean generateBag() {
+	public boolean generateBag(OutputStream outputStream) throws Exception {
 		log.debug("Generating: Bag to the Future!");
-		log.debug("BagPath: " + getBagPath());
 		JSONObject pubRequest = RO.getPublicationRequest();
 		RO.sendStatus(C3PRPubRequestFacade.PENDING_STAGE, Repository.getID()
 				+ " is now processing this request");
-		try {
 
-			File tmp = File.createTempFile("sead-scatter-dirs", "tmp");
-			dirs = ScatterZipOutputStream.fileBased(tmp);
+        File tmp = File.createTempFile("sead-scatter-dirs", "tmp");
+        dirs = ScatterZipOutputStream.fileBased(tmp);
 
-			if (((JSONObject) RO.getPublicationRequest().get("Preferences"))
-					.has("License")) {
-				license = ((JSONObject) RO.getPublicationRequest().get(
-						"Preferences")).getString("License");
+        if (((JSONObject) RO.getPublicationRequest().get("Preferences"))
+                .has("License")) {
+            license = ((JSONObject) RO.getPublicationRequest().get(
+                    "Preferences")).getString("License");
 
-			}
-			JSONObject oremap = RO.getOREMap();
-			JSONObject aggregation = oremap.getJSONObject("describes");
+        }
+        JSONObject oremap = RO.getOREMap();
+        JSONObject aggregation = oremap.getJSONObject("describes");
 
-			aggregation.put("License", license);
+        aggregation.put("License", license);
 
-			String bagID = aggregation.getString("Identifier");
-			String bagName = bagID;
-			try {
-				// Create valid filename from identifier and extend path with
-				// two levels of hash-based subdirs to help distribute files
-				bagName = getValidNameAndUpdatePath(bagName);
-			} catch (Exception e) {
-				log.error("Couldn't create valid filename: "
-						+ e.getLocalizedMessage());
-				return false;
-			}
-			// Create data dir in bag, also creates parent bagName dir
-			String currentPath = bagName + "/data/";
-			createDir(currentPath);
+        String bagID = aggregation.getString("Identifier");
+        String bagName = bagID;
+        try {
+            // Create valid filename from identifier and extend path with
+            // two levels of hash-based subdirs to help distribute files
+            bagName = getValidName(bagName);
+        } catch (Exception e) {
+            log.error("Couldn't create valid filename: "
+                    + e.getLocalizedMessage());
+            return false;
+        }
+        // Create data dir in bag, also creates parent bagName dir
+        String currentPath = bagName + "/data/";
+        createDir(currentPath);
 
-			aggregates = aggregation.getJSONArray("aggregates");
+        aggregates = aggregation.getJSONArray("aggregates");
 
-			if (aggregates != null) {
-				// Add container and data entries
-				// Setup global index of the aggregation and all aggregated
-				// resources by Identifier
-				resourceIndex = indexResources(bagID, aggregates);
-				// Setup global list of succeed(true), fail(false), notused
-				// (null) flags
-				resourceUsed = new Boolean[aggregates.length() + 1];
-				// Process current container (the aggregation itself) and its
-				// children
-				processContainer(aggregation, currentPath);
-			}
-			// Create mainifest files
-			// pid-mapping.txt - a DataOne recommendation to connect ids and
-			// in-bag path/names
-			StringBuffer pidStringBuffer = new StringBuffer();
-			boolean first = true;
-			for (Entry<String, String> pidEntry : pidMap.entrySet()) {
-				if (!first) {
-					pidStringBuffer.append("\n");
-				} else {
-					first = false;
-				}
-				pidStringBuffer.append(pidEntry.getKey() + " "
-						+ pidEntry.getValue());
-			}
-			createFileFromString(bagName + "/pid-mapping.txt",
-					pidStringBuffer.toString());
-			// Hash manifest - a hash manifest is required
-			// by Bagit spec
-			StringBuffer sha1StringBuffer = new StringBuffer();
-			first = true;
-			for (Entry<String, String> sha1Entry : sha1Map.entrySet()) {
-				if (!first) {
-					sha1StringBuffer.append("\n");
-				} else {
-					first = false;
-				}
-				sha1StringBuffer.append(sha1Entry.getValue() + " "
-						+ sha1Entry.getKey());
-			}
-			if(!(hashtype == null)) {
-			String manifestName = bagName + "/manifest-";
-			if (hashtype.equals("SHA1 Hash")) {
-				manifestName = manifestName + "sha1.txt";
-			} else if (hashtype.equals("SHA512 Hash")) {
-				manifestName = manifestName + "sha512.txt";
-			} else {
-				log.warn("Unsupported Hash type: " + hashtype);
-			}
-			createFileFromString(manifestName, sha1StringBuffer.toString());
-			} else {
-				log.warn("No Hash values sent - Bag File does not meet BagIT specification requirement");
-			}
-			// bagit.txt - Required by spec
-			createFileFromString(bagName + "/bagit.txt",
-					"BagIt-Version: 0.97\nTag-File-Character-Encoding: UTF-8");
+        if (aggregates != null) {
+            // Add container and data entries
+            // Setup global index of the aggregation and all aggregated
+            // resources by Identifier
+            resourceIndex = indexResources(bagID, aggregates);
+            // Setup global list of succeed(true), fail(false), notused
+            // (null) flags
+            resourceUsed = new Boolean[aggregates.length() + 1];
+            // Process current container (the aggregation itself) and its
+            // children
+            processContainer(aggregation, currentPath);
+        }
+        // Create mainifest files
+        // pid-mapping.txt - a DataOne recommendation to connect ids and
+        // in-bag path/names
+        StringBuffer pidStringBuffer = new StringBuffer();
+        boolean first = true;
+        for (Entry<String, String> pidEntry : pidMap.entrySet()) {
+            if (!first) {
+                pidStringBuffer.append("\n");
+            } else {
+                first = false;
+            }
+            pidStringBuffer.append(pidEntry.getKey() + " "
+                    + pidEntry.getValue());
+        }
+        createFileFromString(bagName + "/pid-mapping.txt",
+                pidStringBuffer.toString());
+        // Hash manifest - a hash manifest is required
+        // by Bagit spec
+        StringBuffer sha1StringBuffer = new StringBuffer();
+        first = true;
+        for (Entry<String, String> sha1Entry : sha1Map.entrySet()) {
+            if (!first) {
+                sha1StringBuffer.append("\n");
+            } else {
+                first = false;
+            }
+            sha1StringBuffer.append(sha1Entry.getValue() + " "
+                    + sha1Entry.getKey());
+        }
+        if(!(hashtype == null)) {
+            String manifestName = bagName + "/manifest-";
+            if (hashtype.equals("SHA1 Hash")) {
+                manifestName = manifestName + "sha1.txt";
+            } else if (hashtype.equals("SHA512 Hash")) {
+                manifestName = manifestName + "sha512.txt";
+            } else {
+                log.warn("Unsupported Hash type: " + hashtype);
+            }
+            createFileFromString(manifestName, sha1StringBuffer.toString());
+        } else {
+            log.warn("No Hash values sent - Bag File does not meet BagIT specification requirement");
+        }
+        // bagit.txt - Required by spec
+        createFileFromString(bagName + "/bagit.txt",
+                "BagIt-Version: 0.97\nTag-File-Character-Encoding: UTF-8");
 
-			// Generate DOI:
-			oremap.getJSONObject("describes").put("External Identifier",
-					Repository.createDOIForRO(bagID, RO));
-			if (oremap.getJSONObject("describes").has("Creator")) {
-				aggregation.put("Creator", RO.expandPeople(RO
-						.normalizeValues(oremap.getJSONObject("describes").get(
-								"Creator"))));
-			}
-			if (oremap.getJSONObject("describes").has("Contact")) {
-				aggregation.put("Contact", RO.expandPeople(RO
-						.normalizeValues(oremap.getJSONObject("describes").get(
-								"Contact"))));
-			}
+        // Generate DOI:
+        oremap.getJSONObject("describes").put("External Identifier",
+                Repository.createDOIForRO(bagID, RO));
+        if (oremap.getJSONObject("describes").has("Creator")) {
+            aggregation.put("Creator", RO.expandPeople(RO
+                    .normalizeValues(oremap.getJSONObject("describes").get(
+                            "Creator"))));
+        }
+        if (oremap.getJSONObject("describes").has("Contact")) {
+            aggregation.put("Contact", RO.expandPeople(RO
+                    .normalizeValues(oremap.getJSONObject("describes").get(
+                            "Contact"))));
+        }
 
-			Object context = oremap.get("@context");
-			// FixMe - should test that these labels don't have a different
-			// definition (currently we're just checking to see if they a
-			// already defined)
-			if (!isInContext(context, "License")) {
-				addToContext(context, "License",
-						"http://purl.org/dc/terms/license");
-			}
-			if (!isInContext(context, "External Identifier")) {
-				addToContext(context, "External Identifier",
-						"http://purl.org/dc/terms/identifier");
-			}
+        Object context = oremap.get("@context");
+        // FixMe - should test that these labels don't have a different
+        // definition (currently we're just checking to see if they a
+        // already defined)
+        if (!isInContext(context, "License")) {
+            addToContext(context, "License",
+                    "http://purl.org/dc/terms/license");
+        }
+        if (!isInContext(context, "External Identifier")) {
+            addToContext(context, "External Identifier",
+                    "http://purl.org/dc/terms/identifier");
+        }
 
-			// Serialize oremap itself (pretty printed) - SEAD recommendation
-			// (DataOne distributes metadata files within the bag
-			// FixMe - add missing hash values if needed and update context
-			// (read and cache files or read twice?)
-			createFileFromString(bagName + "/oremap.jsonld.txt",
-					oremap.toString(2));
+        // Serialize oremap itself (pretty printed) - SEAD recommendation
+        // (DataOne distributes metadata files within the bag
+        // FixMe - add missing hash values if needed and update context
+        // (read and cache files or read twice?)
+        createFileFromString(bagName + "/oremap.jsonld.txt",
+                oremap.toString(2));
 
-			// Add a bag-info file
-			createFileFromString(bagName + "/bag-info.txt",
-					generateInfoFile(pubRequest, oremap));
+        // Add a bag-info file
+        createFileFromString(bagName + "/bag-info.txt",
+                generateInfoFile(pubRequest, oremap));
 
-			log.debug("Creating bag: " + getBagPath());
-			// Create the bag file on disk
-			File parent = new File(getBagPath());
-			parent.mkdirs();
-			File result = new File(getBagPath(), bagName + ".zip");
-			// Create an output stream backed by the file
-			ZipArchiveOutputStream zipArchiveOutputStream = new ZipArchiveOutputStream(
-					result);
+        log.debug("Creating bag: " + bagName);
 
-			// Add all the waiting contents - dirs created first, then data
-			// files
-			// are retrieved via URLs in parallel (defaults to one thread per
-			// processor)
-			// directly to the zip file
-			log.debug("Starting write");
-			writeTo(zipArchiveOutputStream);
-			log.debug("Written");
-			// Finish
-			zipArchiveOutputStream.close();
-			log.debug("Closed");
-			ZipFile zf = new ZipFile(result);
+        ZipArchiveOutputStream zipArchiveOutputStream = new ZipArchiveOutputStream(outputStream);
 
-			// Validate oremap - all entries are part of the collection
-			for (int i = 0; i < resourceUsed.length; i++) {
-				Boolean b = resourceUsed[i];
-				if (b == null) {
-					RO.sendStatus("Problem", pidMap.get(resourceIndex.get(i))
-							+ " was not used");
-				} else if (b == false) {
-					RO.sendStatus("Problem", pidMap.get(resourceIndex.get(i))
-							+ " was not included successfully");
-				} else {
-					// Successfully included - now check for hash value and
-					// generate if needed
-					if (i > 0) { // Not root container
-						if (!sha1Map.containsKey(pidMap.get(resourceIndex
-								.get(i)))) {
+        // Add all the waiting contents - dirs created first, then data
+        // files
+        // are retrieved via URLs in parallel (defaults to one thread per
+        // processor)
+        // directly to the zip file
+        log.debug("Starting write");
+        writeTo(zipArchiveOutputStream);
+        log.debug("Written");
+        // Finish
+        zipArchiveOutputStream.close();
+        log.debug("Closed");
 
-							if (!RO.childIsContainer(i - 1))
-								log.warn("Missing sha1 hash for: "
-										+ resourceIndex.get(i));
-							// FixMe - actually generate it before adding the
-							// oremap
-							// to the zip
-						}
-					}
-				}
+        // Validate oremap - all entries are part of the collection
+        for (int i = 0; i < resourceUsed.length; i++) {
+            Boolean b = resourceUsed[i];
+            if (b == null) {
+                RO.sendStatus("Problem", pidMap.get(resourceIndex.get(i))
+                        + " was not used");
+            } else if (!b) {
+                RO.sendStatus("Problem", pidMap.get(resourceIndex.get(i))
+                        + " was not included successfully");
+            } else {
+                // Successfully included - now check for hash value and
+                // generate if needed
+                if (i > 0) { // Not root container
+                    if (!sha1Map.containsKey(pidMap.get(resourceIndex
+                            .get(i)))) {
 
-			}
+                        if (!RO.childIsContainer(i - 1))
+                            log.warn("Missing sha1 hash for: "
+                                    + resourceIndex.get(i));
+                        // FixMe - actually generate it before adding the
+                        // oremap
+                        // to the zip
+                    }
+                }
+            }
 
-			// Run a confirmation test - should verify all files and sha1s
-			checkFiles(sha1Map, zf);
+        }
 
-			log.debug("Data Count: " + dataCount);
-			log.debug("Data Size: " + totalDataSize);
-			// Check stats
-			if (pubRequest.getJSONObject("Aggregation Statistics").getLong(
-					"Number of Datasets") != dataCount) {
-				log.warn("Request contains incorrect data count: should be: "
-						+ dataCount);
-			}
-			// Total size is calced during checkFiles
-			if (pubRequest.getJSONObject("Aggregation Statistics").getLong(
-					"Total Size") != totalDataSize) {
-				log.warn("Request contains incorrect Total Size: should be: "
-						+ totalDataSize);
-			}
-			zf.close();
-			return true;
+        log.debug("Data Count: " + dataCount);
+        log.debug("Data Size: " + totalDataSize);
+        // Check stats
+        if (pubRequest.getJSONObject("Aggregation Statistics").getLong(
+                "Number of Datasets") != dataCount) {
+            log.warn("Request contains incorrect data count: should be: "
+                    + dataCount);
+        }
+        // Total size is calced during checkFiles
+        if (pubRequest.getJSONObject("Aggregation Statistics").getLong(
+                "Total Size") != totalDataSize) {
+            log.warn("Request contains incorrect Total Size: should be: "
+                    + totalDataSize);
+        }
+        return true;
 
-		} catch (Exception e) {
-			log.error(e.getLocalizedMessage());
-			e.printStackTrace();
-			RO.sendStatus("Failure",
-					"Processing failure during Bagit file creation");
-			return false;
-		}
-	}
+    }
+
+    public boolean generateBag(String bagName) {
+        FileOutputStream bagFileOS = null;
+        try {
+            File bagFile = createBagFile(bagName);
+            // Create an output stream backed by the file
+            bagFileOS = new FileOutputStream(bagFile);
+            if (generateBag(bagFileOS)) {
+                validateBagFile(bagFile);
+                return true;
+            } else {
+                return false;
+            }
+        } catch (Exception e) {
+            log.error(e.getLocalizedMessage());
+            e.printStackTrace();
+            RO.sendStatus("Failure", "Processing failure during Bagit file creation");
+            return false;
+        } finally {
+            if (bagFileOS != null) {
+                try {
+                    bagFileOS.close();
+                } catch (IOException e) {
+                    log.error("Error while closing Bag output stream", e);
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
+    private File createBagFile(String bagName) throws Exception {
+        String pathString = DigestUtils.sha1Hex(bagName);
+        // Two level hash-based distribution o files
+        String bagPath = Paths.get(Repository.getDataPath(), pathString.substring(0, 2),
+                pathString.substring(2, 4)).toString();
+        // Create the bag file on disk
+        File parent = new File(bagPath);
+        parent.mkdirs();
+        // Create known-good filename
+        bagName = getValidName(bagName);
+        File bagFile = new File(bagPath, bagName + ".zip");
+        log.debug("BagPath: " + bagFile.getAbsolutePath());
+        // Create an output stream backed by the file
+        return bagFile;
+    }
+
+    private void validateBagFile(File bagFile) throws IOException {
+        // Run a confirmation test - should verify all files and sha1s
+        ZipFile zf = new ZipFile(bagFile);
+        checkFiles(sha1Map, zf);
+        zf.close();
+    }
 
 	private boolean addToContext(Object context, String label, String predicate) {
 		if (context instanceof JSONArray) {
@@ -330,13 +356,7 @@ public class BagGenerator {
 		return false;
 	}
 
-	private String getValidNameAndUpdatePath(String bagName)
-			throws NoSuchAlgorithmException, IOException {
-		String pathString = DigestUtils.sha1Hex(bagName);
-
-		// Two level hash-based distribution o files
-		bagPath = Paths.get(bagPath, pathString.substring(0, 2),
-				pathString.substring(2, 4)).toString();
+	public static String getValidName(String bagName) throws NoSuchAlgorithmException, IOException {
 		// Create known-good filename
 		return bagName.replaceAll("\\W+", "_");
 	}
@@ -552,13 +572,8 @@ public class BagGenerator {
 		dirs.writeTo(zipArchiveOutputStream);
 		dirs.close();
 		log.debug("Dirs written");
-		;
 		scatterZipCreator.writeTo(zipArchiveOutputStream);
 		log.debug("Files written");
-	}
-
-	public String getBagPath() {
-		return bagPath;
 	}
 
 	static final String CRLF = "\r\n";

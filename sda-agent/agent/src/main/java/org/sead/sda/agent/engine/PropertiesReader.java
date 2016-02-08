@@ -24,6 +24,8 @@ import java.util.Properties;
 
 public class PropertiesReader {
 
+    public static Properties properties;
+
     public static String sdaHost;
     public static String sdaUser;
     public static String sdaPassword;
@@ -36,6 +38,7 @@ public class PropertiesReader {
     public static String clowderUser;
     public static String clowderPassword;
     public static String sdaPath;
+    public static String packageFormat;
 
     public static String doiEndpoint;
     public static String isDoiPermanent;
@@ -52,7 +55,7 @@ public class PropertiesReader {
     }
 
     private static void loadConfigurations(String configPath) throws Exception {
-        Properties properties = new Properties();
+        properties = new Properties();
         InputStream inputStream = new FileInputStream(configPath);
         properties.load(inputStream);
         // read properties
@@ -67,6 +70,7 @@ public class PropertiesReader {
         clowderUser = properties.getProperty("clowder.user");
         clowderPassword = properties.getProperty("clowder.pass");
         sdaPath = properties.getProperty("sda.path");
+        packageFormat = properties.getProperty("package.format");
         doiEndpoint = properties.getProperty("doi.service.url");
         isDoiPermanent = properties.getProperty("doi.permanent");
         roPublishInterval = Integer.parseInt(properties.getProperty("ro.publish.interval.secs"));

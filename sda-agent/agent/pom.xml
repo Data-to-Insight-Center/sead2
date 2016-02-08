@@ -84,6 +84,11 @@
             <artifactId>json</artifactId>
             <version>20140107</version>
         </dependency>
+        <dependency>
+            <groupId>org.sead.va</groupId>
+            <artifactId>sead-reference-repository</artifactId>
+            <version>0.9-SNAPSHOT</version>
+        </dependency>
     </dependencies>
 
 </project>  			

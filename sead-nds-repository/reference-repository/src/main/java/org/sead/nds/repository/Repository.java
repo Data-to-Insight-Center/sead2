@@ -14,6 +14,7 @@
  * limitations under the License.
  *
  * @author myersjd@umich.edu
+ * @author isuriara@indiana.edu
  */
 
 package org.sead.nds.repository;
@@ -37,27 +38,33 @@ public class Repository {
 
 	private static final Logger log = Logger.getLogger(Repository.class);
 	private static String repoID = null;
-	private static Properties props = new Properties();
+	private static Properties props;
 	private static String dataPath = null;
 
-	static {
-		try {
-			props.load(Repository.class
-					.getResourceAsStream("repository.properties"));
-			log.trace(props.toString());
-		} catch (IOException e) {
-			log.warn("Could not read repositories.properties file");
-		}
-		repoID = props.getProperty("repo.ID", "bob");
+    public Repository() {
+    }
+
+    public static void init(Properties properties) {
+        props = properties;
+        repoID = props.getProperty("repo.ID", "bob");
 		dataPath = props.getProperty("repo.datapath", "./test2");
-
 	}
 
-	public Repository() {
-	}
+    private static Properties loadProperties() {
+        Properties props = new Properties();
+        try {
+            props.load(Repository.class
+                    .getResourceAsStream("repository.properties"));
+            log.trace(props.toString());
+        } catch (IOException e) {
+            log.warn("Could not read repositories.properties file");
+        }
+        return props;
+    }
 
 	public static void main(String[] args) {
 		PropertyConfigurator.configure("./log4j.properties");
+        init(loadProperties());
 
 		if (args.length == 1) {
 
@@ -65,7 +72,7 @@ public class Repository {
 			C3PRPubRequestFacade RO = new C3PRPubRequestFacade(args[0], props);
 			bg = new BagGenerator(RO);
 			// FixMe - use repo.ID from properties file (possibly in repo class
-			if (bg.generateBag()) {
+			if (bg.generateBag(args[0])) {
 				RO.sendStatus(
 						C3PRPubRequestFacade.SUCCESS_STAGE,
 						RO.getOREMap().getJSONObject("describes")
@@ -76,7 +83,7 @@ public class Repository {
 						"Processing of this request has failed and no further attempts to process this request will be made. Please contact the repository for further information.");
 			}
 		} else {
-			System.out.println("Usage: <oremap URL>");
+			System.out.println("Usage: <RO Identifier>");
 		}
 		System.exit(0);
 	}
