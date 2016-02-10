@@ -73,7 +73,7 @@ public class NewOREmap {
 			
 			if (part.contains(list_item.get("Identifier")) && !list_item.containsKey("Has Part")){
 				JSONObject oneItem = new JSONObject();
-				oneItem.put("Title", list_item.get("Title"));
+				oneItem.put("Title", list_item.get("Label"));
 				oneItem.put("Link", list_item.get("similarTo"));
 				example.add(oneItem);
 				
