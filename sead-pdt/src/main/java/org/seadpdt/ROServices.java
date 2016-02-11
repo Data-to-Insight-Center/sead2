@@ -236,11 +236,17 @@ public class ROServices {
 		FindIterable<Document> iter = publicationsCollection.find(new Document(
 				"Aggregation.Identifier", id));
 		if (iter == null) {
-			return Response.status(ClientResponse.Status.NOT_FOUND).build();
+			return Response
+                    .status(ClientResponse.Status.NOT_FOUND)
+                    .entity(new JSONObject().put("Error", "Cannot find RO with id " + id).toString())
+                    .build();
 		}
 		Document document = iter.first();
 		if (document == null) {
-			return Response.status(ClientResponse.Status.NOT_FOUND).build();
+			return Response
+                    .status(ClientResponse.Status.NOT_FOUND)
+                    .entity(new JSONObject().put("Error", "Cannot find RO with id " + id).toString())
+                    .build();
 		}
 		// Internal meaning only - strip from exported doc
 		document.remove("_id");
@@ -417,7 +423,7 @@ public class ROServices {
         if(iter == null || iter.first() == null) {
             return Response
                     .status(javax.ws.rs.core.Response.Status.NOT_FOUND)
-                    .entity(new JSONObject().put("Error", "Cannot find RO with id " + id))
+                    .entity(new JSONObject().put("Error", "Cannot find RO with id " + id).toString())
                     .build();
         }
 
@@ -430,7 +436,7 @@ public class ROServices {
         if(dbFile==null) {
             return Response
                     .status(javax.ws.rs.core.Response.Status.NOT_FOUND)
-                    .entity(new JSONObject().put("Error", "Cannot find ORE with id " + id))
+                    .entity(new JSONObject().put("Error", "Cannot find ORE with id " + id).toString())
                     .build();
         }
 
