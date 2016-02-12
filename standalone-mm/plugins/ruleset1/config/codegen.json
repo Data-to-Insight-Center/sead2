@@ -1,0 +1,20 @@
+[
+{
+	"format": "C:\\Users\\yuanluo\\WorkZone\\workspace\\MatchMaker\\profile\\person.json",
+	"className":"Person",
+	"packageName":"edu.indiana.d2i.sead.matchmaker.pojo",
+	"codeLocation":"C:\\Users\\yuanluo\\WorkZone\\workspace\\MatchMaker\\plugins\\ruleset1\\src\\main\\java"
+},
+{
+	"format": "C:\\Users\\yuanluo\\WorkZone\\workspace\\MatchMaker\\profile\\research_object.json",
+	"className":"ResearchObject",
+	"packageName":"edu.indiana.d2i.sead.matchmaker.pojo",
+	"codeLocation":"C:\\Users\\yuanluo\\WorkZone\\workspace\\MatchMaker\\plugins\\ruleset1\\src\\main\\java"
+},
+{
+	"format": "C:\\Users\\yuanluo\\WorkZone\\workspace\\MatchMaker\\profile\\repositories.json",
+	"className":"Repositories",
+	"packageName":"edu.indiana.d2i.sead.matchmaker.pojo",
+	"codeLocation":"C:\\Users\\yuanluo\\WorkZone\\workspace\\MatchMaker\\plugins\\ruleset1\\src\\main\\java"
+}
+]
