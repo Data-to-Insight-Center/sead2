@@ -144,7 +144,10 @@ public class SynchronizedReceiverRunnable implements Runnable {
 
         log.info("Downloading data files...");
         JSONObject preferences = (JSONObject) pulishObject.get("Preferences");
-        Object license = preferences.get("License");
+        String license = null;
+        if (preferences.containsKey("License")){
+            license = preferences.get("License").toString();
+        }
         DummySDA dummySDA = new DummySDA(newOREmap, call.getJsonORE(oreUrl), doiUrl, license);
         if (dummySDA.getErrorLinks().size() > 0) {
             throw new Exception("Error while downloading some/all files");
