@@ -35,17 +35,39 @@ public class DummySDA {
     private ArrayList<String> errorLinks;
     private String rootPath = null;
 
-    public DummySDA(JSONObject ore, org.json.JSONObject prettyOre, String doiUrl, Object license) {
+    public DummySDA(JSONObject ore, org.json.JSONObject prettyOre, String doiUrl, String license) {
         this.userAndpass = PropertiesReader.clowderUser + ":" + PropertiesReader.clowderPassword;
 
         this.errorLinks = new ArrayList<String>();
         this.rootPath = createRootFolder(ore, PropertiesReader.dummySDA);
 		
 		try {
-        	JSONObject newLicense = new JSONObject();
-        	newLicense.put("License", license);
-			prettyOre.put("Preferences", newLicense);
-			prettyOre.put("@doi", doiUrl);
+        	if (license != null){
+        		org.json.JSONArray context = (org.json.JSONArray) prettyOre.get("@context");    		
+        		org.json.JSONArray newContext = new org.json.JSONArray();
+	        	for (int i = 0; i < context.length(); i++){
+	        		if (context.get(i) instanceof org.json.JSONObject){
+	        			org.json.JSONObject item = (org.json.JSONObject) context.get(i);
+	        			if (!item.has("License")){
+	        				item.put("License", "http://purl.org/dc/terms/license");
+	        				newContext.put(i, item);
+	        			}else{
+	        				newContext.put(i,context.get(i));
+	        			}
+	        		}else{
+	        			newContext.put(i,context.get(i));
+	        		}
+	        	}
+	        	
+	        	org.json.JSONObject newDescribes = (org.json.JSONObject) prettyOre.get("describes");
+	        	
+	        	if (!newDescribes.has("License") || newDescribes.get("License") == null){
+	        		newDescribes.put("License", license);
+	        	}	        	
+	        	prettyOre.put("@context", newContext);
+	        	prettyOre.put("describes", newDescribes);       	        	
+        	}
+        	
 		} catch (JSONException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
