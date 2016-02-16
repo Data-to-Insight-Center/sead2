@@ -87,8 +87,18 @@
 
             
             <div style="width:450px;">
-			<div style="float: left; width: 225px"> 
-			 <form action="sda/<%= properties.get("Title").get(0)%>" method="get">
+			<div style="float: left; width: 225px">
+                <%
+                    String roName = properties.get("Title").get(0);
+                    if (request.getAttribute("bagExists") != null) {
+                        String bagExists = (String) request.getAttribute("bagExists");
+                        if ("true".equals(bagExists)) {
+                            roName = tag;
+                        }
+                    }
+                %>
+
+			 <form action="sda/<%= roName%>" method="get">
 			    <button type="submit" class="btn btn-primary">Download Full Research Object</button>
 			</form>
 			</div>

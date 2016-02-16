@@ -21,6 +21,7 @@ package org.sead.sda;
 
 import java.io.InputStream;
 import java.util.Properties;
+import java.util.Vector;
 
 import com.jcraft.jsch.Channel;
 import com.jcraft.jsch.ChannelSftp;
@@ -108,6 +109,16 @@ public class SFTP {
             return null;
         }
 
+    }
+
+    public boolean doesFileExist(String filePath) {
+        try {
+            Vector vals = channelSftp.ls(filePath);
+            return vals.size() != 0;
+        } catch (SftpException e) {
+            // ignore exception as we know this is because the file is not there. just return false
+            return false;
+        }
     }
 
 }

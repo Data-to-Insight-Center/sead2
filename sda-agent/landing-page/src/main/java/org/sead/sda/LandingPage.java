@@ -51,8 +51,17 @@ public class LandingPage extends HttpServlet {
         	}else{
         		tag = request.getRequestURI().split("/sda/list=")[1];
         	}
-        	
-        	request.setAttribute("obTag", tag);
+
+            // here we check whether the BagIt zip file for this RO exists in SDA
+            SFTP sftp = new SFTP();
+            String bagName = getBagNameFromId(tag);
+            if (sftp.doesFileExist(Constants.sdaPath + bagName + "/" + bagName + ".zip")) {
+                System.out.println("Bag Exists in SDA...");
+                request.setAttribute("bagExists", "true");
+            }
+            sftp.disConnectSessionAndChannel();
+
+            request.setAttribute("obTag", tag);
         	request.setAttribute("landingPageUrl", Constants.landingPage);
 
             Shimcalls shim = new Shimcalls();
@@ -82,20 +91,26 @@ public class LandingPage extends HttpServlet {
             //String Label = properties.get("Label");
             
             // extract Live Data Links from ORE
-            String liveCopy = describes.get("Is Version Of").toString();
-            if (!liveCopy.startsWith("http")){
-            	String similar = describes.get("similarTo").toString();
-            	similar = similar.substring(0, similar.indexOf("/resteasy")+1);
-            	liveCopy = similar + "#collection?uri=" + liveCopy;
+            String liveCopy = null;
+            if (describes.get("Is Version Of") != null) {
+                String versionOf = describes.get("Is Version Of").toString();
+                if (versionOf.startsWith("http")) {
+                    liveCopy = versionOf;
+                } else if (describes.get("similarTo") != null) {
+                    String similar = describes.get("similarTo").toString();
+                    similar = similar.substring(0, similar.indexOf("/resteasy") + 1);
+                    liveCopy = similar + "#collection?uri=" + versionOf;
+                }
             }
-            List<String> liveCopyList = new ArrayList<String>();
-            if (shim.validUrl(liveCopy)){
-            	liveCopyList.add(liveCopy);
-            }else{
-            	liveCopyList.add("Live Data Links is not existed");
+            if (liveCopy != null) {
+                List<String> liveCopyList = new ArrayList<String>();
+                if (shim.validUrl(liveCopy)){
+                    liveCopyList.add(liveCopy);
+                }else{
+                    liveCopyList.add("Not Available");
+                }
+                roProperties.put("Live Data Links", liveCopyList);
             }
-            
-            roProperties.put("Live Data Links", liveCopyList);
             
             // set properties as an attribute
             request.setAttribute("roProperties", roProperties);
@@ -174,7 +189,7 @@ public class LandingPage extends HttpServlet {
 
             // collection title is the last part of the request URI
             String requestURI = request.getRequestURI();          
-            String newURL = requestURI.substring(requestURI.lastIndexOf("sda/")+4);            
+            String newURL = requestURI.substring(requestURI.lastIndexOf("sda/")+4);
             String title = null;
             String filename = null;
             
@@ -188,8 +203,12 @@ public class LandingPage extends HttpServlet {
             newURL = URLDecoder.decode(newURL, "UTF-8");            
             
             SFTP sftp = new SFTP();
-            String target = Constants.sdaPath + title + "/" + title + ".tar";
-                    
+            String bgName = getBagNameFromId(title);
+            String target = Constants.sdaPath + bgName + "/" + bgName + ".zip";
+            if (!sftp.doesFileExist(target)) {
+                target = Constants.sdaPath + title + "/" + title + ".tar";
+            }
+
             System.out.println("title "+title);
             System.out.println("filename "+filename);
             
@@ -275,6 +294,11 @@ public class LandingPage extends HttpServlet {
                 properties.put(propertyName, list);
             }
         }    
+    }
+
+    private static String getBagNameFromId(String bagId) {
+        // Create known-good filename
+        return bagId.replaceAll("\\W+", "_");
     }
 
 }
