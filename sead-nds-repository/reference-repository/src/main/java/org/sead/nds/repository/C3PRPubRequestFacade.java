@@ -32,6 +32,7 @@ import java.util.Properties;
 import javax.ws.rs.core.MediaType;
 
 import org.apache.commons.compress.parallel.InputStreamSupplier;
+import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
@@ -52,8 +53,14 @@ public class C3PRPubRequestFacade {
 	private static final Logger log = Logger
 			.getLogger(C3PRPubRequestFacade.class);
 	BasicCookieStore cookieStore = new BasicCookieStore();
+	private int timeout = 5;
+	private RequestConfig config = RequestConfig.custom()
+	  .setConnectTimeout(timeout * 1000)
+	  .setConnectionRequestTimeout(timeout * 1000)
+	  .setSocketTimeout(timeout * 1000).build();
+	
 	private CloseableHttpClient client = HttpClientBuilder.create()
-			.setDefaultCookieStore(cookieStore).build();
+			.setDefaultCookieStore(cookieStore).setDefaultRequestConfig(config).build();
 	Properties props = null;
 	String RO_ID = null;
 	String bearerToken = null;
@@ -400,10 +407,11 @@ public class C3PRPubRequestFacade {
 				cookieStore.addCookie(cookie);
 			}
 			postStatus.addHeader("accept", MediaType.APPLICATION_JSON);
-			StringEntity status = new StringEntity("{\"reporter\":\""
+			String statusString = "{\"reporter\":\""
 					+ Repository.getID() + "\", \"stage\":\"" + stage
-					+ "\", \"message\":\"" + message + "\"}");
-			log.trace("Status: " + status);
+					+ "\", \"message\":\"" + message + "\"}";
+			StringEntity status = new StringEntity(statusString);
+			log.trace("Status: " + statusString);
 			postStatus.addHeader("content-type",
 					MediaType.APPLICATION_JSON);
 			postStatus.setEntity(status);
@@ -416,17 +424,31 @@ public class C3PRPubRequestFacade {
 				log.warn("Failed to post status, response code: "
 						+ response.getStatusLine().getStatusCode());
 			}
+			// Must consume entity to allow connection to be released
+			// If this line is not here, the third try to send status will result in a 
+			// org.apache.http.conn.ConnectionPoolTimeoutException: Timeout waiting for connection from pool
+			// (or a blocked call/hund program if timeouts weren't set
+			EntityUtils.consumeQuietly(response.getEntity());
+			
 		} catch (UnsupportedEncodingException e) {
 			// TODO Auto-generated catch block
+			log.error("Error posting status.", e);
+
 			e.printStackTrace();
 		} catch (ClientProtocolException e) {
 			// TODO Auto-generated catch block
+			log.error("Error posting status.", e);
+
 			e.printStackTrace();
 		} catch (IOException e) {
 			log.error("Error posting status.", e);
 			e.printStackTrace();
-		}
+		} catch(Exception e) {
+			log.error("Odd Error posting status.", e);
+			e.printStackTrace();
 
+		}
+		
 		if (echoToConsole) {
 			System.out
 					.println("*********************Status Message******************************");

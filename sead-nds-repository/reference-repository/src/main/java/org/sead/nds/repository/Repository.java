@@ -142,6 +142,7 @@ public class Repository {
 		if(doi.startsWith("doi:")) {
 			doi = doi.substring(4);
 		}
+		log.debug("Generated DOI: http://dx.doi.org/" + doi);
 		return "http://dx.doi.org/" + doi;
 	}
 
