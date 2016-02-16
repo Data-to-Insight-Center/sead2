@@ -162,7 +162,7 @@ public class SynchronizedReceiverRunnable implements Runnable {
         sftp.disconnect();
 
         log.info("Updating status in C3P-R with the DOI...");
-//        call.updateStatus(doiUrl, identifier);
+        call.updateStatus(doiUrl, identifier);
 
         FileManager manager = new FileManager();
         manager.removeTempFile(rootPath + ".tar");

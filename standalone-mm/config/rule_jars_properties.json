@@ -1,0 +1,14 @@
+{
+	"MatchMakingListClass" : "edu.indiana.d2i.sead.matchmaker.custom.ruleset1.Ruleset1MatchMakingList",
+	"jars":[	
+					{
+						"jarLocation":"/Users/yuanluo/WorkZone/workspace/matchmaker-master/plugins/ruleset1/target/ruleset1-1.0.0.jar",
+						"classNames":["edu.indiana.d2i.sead.matchmaker.custom.ruleset1.Ruleset1Utility"]
+					}
+			],
+	"POJOClasses":{
+					"ResearchObject": "edu.indiana.d2i.sead.matchmaker.pojo.ResearchObject",
+					"Person": "edu.indiana.d2i.sead.matchmaker.pojo.Person",
+					"Repository": "edu.indiana.d2i.sead.matchmaker.pojo.Repository"
+				}
+}
