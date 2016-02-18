@@ -74,6 +74,7 @@ public class LandingPage extends HttpServlet {
             Map<String, List<String>> roProperties = new HashMap<String, List<String>>();
             Map<String, String> downloadList = new HashMap<String, String>();
             Map<String, String> linkedHashMap = new LinkedHashMap<String, String>();
+            Map<String, String> linkedHashMapTemp = new LinkedHashMap<String, String>();
             Map<String, String> newDownloadList = new LinkedHashMap<String, String>();	
 
             // extract properties from ORE
@@ -157,19 +158,22 @@ public class LandingPage extends HttpServlet {
 	            		}
 		                
 		                String temp = null;
-		            	if (name_split.length <= 2){
+		            	if (name_split.length <= 2 && size != null){
 		            		
 		            		temp = "<span style='padding-left:"+30*(name_split.length-2)+"px'>"+name_split[name_split.length-1]+"</span>";
 		            		linkedHashMap.put(name,temp);
 		            	}else{
 		            		
 		            		temp = "<span style='padding-left:"+30*(name_split.length-2)+"px'>"+"|__"+name_split[name_split.length-1]+"</span>";
-		            		linkedHashMap.put(name,temp);
+		            		linkedHashMapTemp.put(name,temp);
 		            	}
 		                
 		            	newDownloadList.put(name, size);
-		                
-		                
+		                	                
+	            	}
+	            	
+	            	for (String key : linkedHashMapTemp.keySet()){
+	            		linkedHashMap.put(key, linkedHashMapTemp.get(key));
 	            	}
 		            
 	            }
