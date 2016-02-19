@@ -127,7 +127,7 @@
                         	<td style="width: 50%" ><b><%= val %></b></td>
                         	<td style="width: 15%"><%=downloadList.get(key)%></td>
                         	<td style="width: 5%">
-	                    	<form method="get" action="sda/<%= key %>">
+	                    	<form method="get" action="sda/<%= tag+"/data/"+key %>">
 							<button type="submit" class="btn btn-primary">Download</button>
 							</form>
 							</td>
