@@ -70,7 +70,10 @@ public class MatchMaker {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response makeMatches(String matchRequest) {
 		String messageString = null;
-		Document request = Document.parse(matchRequest);
+        System.out.println("=================");
+        System.out.println("MM request : " + matchRequest);
+        System.out.println("=================");
+        Document request = Document.parse(matchRequest);
 		Document content = (Document) request.get("Aggregation");
 		if (content == null) {
 			messageString += "Missing Aggregation";
@@ -200,7 +203,12 @@ public class MatchMaker {
 			}
 		} catch (UnsupportedEncodingException e) {
 			e.printStackTrace();
-		}
+		} catch (RuntimeException e){
+            System.out.println("Error ocurred while registering person with ID :" + personID);
+        }
+
+
+
 		if (personProfile == null) {
 			System.out.println("Can't identify the person: " + personID);
 		} else {

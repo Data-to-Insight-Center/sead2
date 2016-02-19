@@ -99,7 +99,7 @@ public class ClowderProvider extends Provider {
             if (m.find( )) {
                 return "http://sead2-beta.ncsa.illinois.edu/api/users/" + m.group(1);
             }
-        } else if (personID.matches("^[a-zA-Z0-9]+$")) {
+        } else if (personID.matches("^[0-9]+$")) {
             return "http://sead2-beta.ncsa.illinois.edu/api/users/" + personID;
         }
 
