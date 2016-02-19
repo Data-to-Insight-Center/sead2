@@ -39,18 +39,16 @@ import noNamespace.*;
  */
 public class SeadNCEDConstants {
     
-    public static final String DEFAULT_ORIGINATOR = "NCED";
+    public static final String DEFAULT_ORIGINATOR = "None";
     public static final String DEFAULT_PUBDATE = "20070101";
-    public static final String DEFAULT_ABSTRACT = "All data created or compiled by NCED-funded scientists.";
-    public static final String DEFAULT_PURPOSE = "Data related to study of Earth Surface Dynamics";
-    public static final String DEFAULT_CONTACTPERSON = "National Center for Earth-surface Dynamics";
+    public static final String DEFAULT_ABSTRACT = "All data created or compiled by Sustainability Science Research Scientists.";
+    public static final String DEFAULT_PURPOSE = "Data related to Sustainability Science Research";
+    public static final String DEFAULT_CONTACTPERSON = "None";
     
     public static final String DEFAULT_BEGINDATE = "20070101";
     public static final String DEFAULT_ENDDATE = "20070101";
     
-    public static final String DEFAULT_UUID = "TEST";
-    public static final String DEFAULT_ONLINK = "http://bad.onlink"; 
-    
+    public static final String DEFAULT_UUID = "Default";
     public static final String DEFAULT_CURRENTREF = "ground condition";
     
     public static final ProgressType.Enum DEFAULT_PROGRESS = ProgressType.COMPLETE;
@@ -63,18 +61,16 @@ public class SeadNCEDConstants {
 
 
     public static final String DEFAULT_THEMEKT = "None";
-    public static final String[] DEFAULT_THEMEKEYS = {"Angelo Reserve", "Eel Watershed"};
-    
-    public static final String DEFAULT_TITLE_THEMEKT = "Title";
-    
+    public static final String[] DEFAULT_THEMEKEYS = {"None"};
+
     public static final String DEFAULT_PLACEKT = "None";
-    public static final String[] DEFAULT_PLACEKEYS = {"Angelo Reserve", "Eel Watershed", "North Fork Eel", "South Fork Eel"};
+    public static final String[] DEFAULT_PLACEKEYS = {"None"};
     
     public static final String DEFAULT_TEMPORALKT = "None";
-    public static final String[] DEFAULT_TEMPORALKEYS = {"Januray 2007"};
+    public static final String[] DEFAULT_TEMPORALKEYS = {"None"};
     
     public static final String DEFAULT_ACCESSCONSTRAINT = "Public";
-    public static final String DEFAULT_USECONSTRAINT = "Permission from Owner only";
+    public static final String DEFAULT_USECONSTRAINT = "Default";
     
     public static final String DEFAULT_METD = "20070101";
     
@@ -83,12 +79,12 @@ public class SeadNCEDConstants {
         CntperpType cntperpType = DEFAULT_METADATACONTACT.addNewCntperp();
         cntperpType.setCntper(DEFAULT_CONTACTPERSON);
         CntaddrType cntaddrType = DEFAULT_METADATACONTACT.addNewCntaddr();
-        cntaddrType.setAddrtype("Mailing");
-        cntaddrType.setCity("University of Minnesota");
-        cntaddrType.setState("Minnesota");
-        cntaddrType.setPostal("55414");
+        cntaddrType.setAddrtype("None");
+        cntaddrType.setCity("None");
+        cntaddrType.setState("None");
+        cntaddrType.setPostal("None");
         CntvoiceType cntvoiceType = DEFAULT_METADATACONTACT.addNewCntvoice();
-        cntvoiceType.setStringValue("800-555-6666");
+        cntvoiceType.setStringValue("None");
     };
     
     public static final String DEFAULT_METADATANAME = "FGDC Standard for Digital Geospatial Metadata";

@@ -65,6 +65,9 @@ public class ResearchObject {
     public Response getObject(@Context HttpServletRequest request,
                               @PathParam("roId") String roId) throws IOException {
 
+        String errorMsg = "<error name=\"NotFound\" errorCode=\"404\" pid=\"" + roId + "\" nodeId=\"" + Constants.NODE_IDENTIFIER + "\">\n" +
+                "<description>The specified object does not exist on this node.</description>\n" +
+                "</error>";
 
         FindIterable<Document> iter = fgdcCollection.find(new Document(Constants.META_INFO + "." + Constants.RO_ID, roId));
         if(iter != null && iter.first() != null){
@@ -72,7 +75,7 @@ public class ResearchObject {
             String fgdcMetadata = object.get(Constants.METADATA).toString();
             return Response.ok().entity(fgdcMetadata).build();
         } else {
-            return Response.status(ClientResponse.Status.NOT_FOUND).build();
+            return Response.status(ClientResponse.Status.NOT_FOUND).entity(errorMsg).build();
         }
     }
 

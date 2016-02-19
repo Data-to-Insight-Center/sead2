@@ -206,8 +206,16 @@ public class FGDCMetadataGen extends BaseMetadataGen {
         TimeinfoType timeinfoType = timeperdType.addNewTimeinfo();
 
         RngdatesType rngdatesType = timeinfoType.addNewRngdates();
-        rngdatesType.setBegdate(SeadNCEDConstants.DEFAULT_BEGINDATE);
-        rngdatesType.setEnddate(SeadNCEDConstants.DEFAULT_ENDDATE);
+
+        if(publicationDate!=null)
+            rngdatesType.setBegdate(publicationDate);
+        else
+            rngdatesType.setBegdate(SeadNCEDConstants.DEFAULT_BEGINDATE);
+
+        if(publicationDate!=null)
+            rngdatesType.setEnddate(publicationDate);
+        else
+            rngdatesType.setEnddate(SeadNCEDConstants.DEFAULT_ENDDATE);
 
         timeperdType.setCurrent(SeadNCEDConstants.DEFAULT_CURRENTREF);
 
@@ -242,7 +250,10 @@ public class FGDCMetadataGen extends BaseMetadataGen {
         idinfoType.setUseconst(SeadNCEDConstants.DEFAULT_USECONSTRAINT);
 
         MetainfoType metainfoType = metadataType.addNewMetainfo();
-        metainfoType.setMetd(SeadNCEDConstants.DEFAULT_METD);
+        if(publicationDate!=null)
+            metainfoType.setMetd(publicationDate);
+        else
+            metainfoType.setMetd(SeadNCEDConstants.DEFAULT_METD);
 
         if(contacts!=null && !contacts.isEmpty()){
             String contactsAppended = "";
