@@ -18,8 +18,9 @@
 
 package org.sead.workflow.activity.impl;
 
-import com.sun.jersey.api.client.*;
-import com.sun.jersey.api.client.filter.ClientFilter;
+import com.sun.jersey.api.client.Client;
+import com.sun.jersey.api.client.ClientResponse;
+import com.sun.jersey.api.client.WebResource;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -30,8 +31,6 @@ import org.sead.workflow.context.SeadWorkflowContext;
 import org.sead.workflow.exception.SeadWorkflowException;
 import org.sead.workflow.util.Constants;
 
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriBuilder;
 import java.util.HashMap;
 
 /**
@@ -134,6 +133,11 @@ public class ValidateROActivity extends AbstractWorkflowActivity {
         if(!roObject.has(Constants.AGGREGATION)) {
             throw new SeadWorkflowException("Request RO Does not have 'Aggregation'");
         }
+
+        if(!(roObject.get(Constants.AGGREGATION) instanceof JSONObject)) {
+            throw new SeadWorkflowException("'Aggregation' is not a valid JSON object");
+        }
+
         JSONObject aggregation = (JSONObject)roObject.get(Constants.AGGREGATION);
 
         if(!roObject.has(Constants.PUB_CALLBACK)) {
@@ -161,37 +165,9 @@ public class ValidateROActivity extends AbstractWorkflowActivity {
                     + "." + Constants.OREMAP_ID + "'");
         }
         Object idObject = aggregation.get(Constants.OREMAP_ID);
-        if(idObject instanceof String){
-            WebResource oreWebResource = Client.create().resource(idObject.toString());
-            oreWebResource.addFilter(new RedirectFilter());
-            try {
-                response = oreWebResource.accept("application/json")
-                        .get(ClientResponse.class);
-                if (response.getStatus() == 200) {
-                    hasValidOREMetadata(response.getEntity(String.class));
-                } else {
-                    throw new SeadWorkflowException("Request RO Does not have an valid URL for OREMap specified in '"
-                            + Constants.AGGREGATION + "." + Constants.OREMAP_ID  + "'");
-                }
-            } catch (RuntimeException e) {
-                throw new SeadWorkflowException("Request RO Does not have an valid URL for OREMap");
-            }
-        } else {
+        if(!(idObject instanceof String)) {
             throw new SeadWorkflowException("Request RO Does not have a String value for '" + Constants.AGGREGATION
                     + "." + Constants.OREMAP_ID + "'");
-        }
-
-        return true;
-    }
-
-    private boolean hasValidOREMetadata(String oreString) throws JSONException {
-
-        // Checking whether OREMap request contains metadata needed - check for independent submissions
-        JSONObject oreObject = null;
-        try {
-            oreObject = new JSONObject(oreString);
-        } catch (JSONException e) {
-            throw new SeadWorkflowException("Request ORE is not a valid JSON object");
         }
 
         return true;
@@ -224,25 +200,4 @@ public class ValidateROActivity extends AbstractWorkflowActivity {
     public void rollback(SeadWorkflowContext context, SeadWorkflowConfig config) {
     }
 
-
-    class RedirectFilter extends ClientFilter {
-
-        @Override
-        public ClientResponse handle(ClientRequest cr) throws ClientHandlerException {
-            ClientHandler ch = getNext();
-            ClientResponse resp = ch.handle(cr);
-
-            if (resp.getClientResponseStatus().getFamily() != Response.Status.Family.REDIRECTION) {
-                return resp;
-            }
-            else {
-                // try location
-                String redirectTarget = resp.getHeaders().getFirst("Location");
-                cr.setURI(UriBuilder.fromUri(redirectTarget).build());
-                return ch.handle(cr);
-            }
-
-        }
-
-    }
 }

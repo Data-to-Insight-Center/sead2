@@ -29,6 +29,7 @@ import org.bson.types.ObjectId;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.seadva.metadatagen.metagen.impl.FGDCMetadataGen;
+import org.seadva.metadatagen.metagen.impl.OREMetadataGen;
 import org.seadva.metadatagen.util.Constants;
 
 import javax.ws.rs.*;
@@ -116,16 +117,32 @@ public class MetadataGenerator {
                 response = webResource.accept("application/json")
                         .get(ClientResponse.class);
                 if (response.getStatus() != 200) {
-                    System.out.println(MetadataGenerator.class.getName() + ": Error while retrieving OREMap from Project Space - Response : " + response.getStatus());
-                    throw new RuntimeException("Error while retrieving OREMap: " + response.getStatus());
+                    String message = "Error while retrieving OREMap from Project Space - Response : " + response.getStatus();
+                    System.out.println(MetadataGenerator.class.getName() + " - " + message);
+                    return Response.status(ClientResponse.Status.BAD_REQUEST)
+                            .entity(message)
+                            .build();
                 }
             } catch (RuntimeException e) {
-                System.out.println(MetadataGenerator.class.getName() + ": Error while retrieving OREMap");
-                throw new RuntimeException("Error while retrieving OREMap");
+                String message = "Error while retrieving OREMap from Project Space - Response : " + e.getMessage();
+                System.out.println(MetadataGenerator.class.getName() + " - " + message);
+                return Response.status(ClientResponse.Status.BAD_REQUEST)
+                        .entity(message)
+                        .build();
             }
 
-            Document oreMapDocument = Document.parse(response
-                    .getEntity(String.class));
+            String oreString = response.getEntity(String.class);
+
+            OREMetadataGen oreMetadataGen = new OREMetadataGen();
+            if(!oreMetadataGen.hasValidOREMetadata(oreString)){
+                String message = "Error occurred while validating OREMap : " + oreMetadataGen.getErrorMsg();
+                System.out.println(MetadataGenerator.class.getName() + " - " + message);
+                return Response.status(ClientResponse.Status.BAD_REQUEST)
+                        .entity(message)
+                        .build();
+            }
+
+            Document oreMapDocument = Document.parse(oreString);
             ObjectId mapId = new ObjectId();
             //oreMapDocument.put("_id", mapId);
 
