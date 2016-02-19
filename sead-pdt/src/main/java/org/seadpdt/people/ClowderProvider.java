@@ -95,11 +95,11 @@ public class ClowderProvider extends Provider {
         String canonical = null;
 
         if (personID.matches("^.*/api/users/[a-zA-Z0-9]+$")) {
-            Matcher m = Pattern.compile("^.*/api/users/([a-zA-Z0-9]+)$").matcher(personID);
+            Matcher m = Pattern.compile("^.*/api/users/([a-z0-9]{24}+)$").matcher(personID);
             if (m.find( )) {
                 return "http://sead2-beta.ncsa.illinois.edu/api/users/" + m.group(1);
             }
-        } else if (personID.matches("^[0-9]+$")) {
+        } else if (personID.matches("^[a-z0-9]{24}+$")) {
             return "http://sead2-beta.ncsa.illinois.edu/api/users/" + personID;
         }
 
