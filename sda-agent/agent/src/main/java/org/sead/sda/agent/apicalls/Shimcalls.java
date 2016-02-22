@@ -158,10 +158,10 @@ public class Shimcalls {
 		}
 	}
 
-    public void updateStatus(String doiUrl, String id) {
+    public void updateStatus(String stage, String message, String id) {
         WebResource webResource = Client.create().resource(this.cp_researchobject);
-        String status = "{\"reporter\":\"sda\", \"stage\":\"Success\", \"message\":\"" +
-                doiUrl.trim() + "\"}";
+        String status = "{\"reporter\":\"sda\", \"stage\":\"" + stage + "\", \"message\":\"" +
+                message.trim() + "\"}";
         System.out.println("Status update JSON: " + status);
         ClientResponse response = webResource.path(id)
                 .path("status")

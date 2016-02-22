@@ -33,6 +33,8 @@ import org.sead.sda.agent.driver.ZipDirectory;
 import org.sead.sda.agent.engine.DOI;
 import org.sead.sda.agent.engine.PropertiesReader;
 import org.sead.sda.agent.engine.SFTP;
+import org.sead.sda.agent.policy.EnforcementResult;
+import org.sead.sda.agent.policy.PolicyEnforcer;
 
 import java.io.BufferedOutputStream;
 import java.io.OutputStream;
@@ -61,9 +63,20 @@ public class SynchronizedReceiverRunnable implements Runnable {
                     if (!isAlreadyPublished(researchObject)) {
                         log.info("New Research Object found, ID: " + identifier);
                         log.info("Starting to publish Research Object...");
+
+                        JSONObject publicationRequest = call.getResearchObject(identifier);
+                        // check whether RO adheres to the SDA policy, if not reject
+                        EnforcementResult enforcementResult = PolicyEnforcer.getInstance().isROAllowed(publicationRequest);
+                        if (!enforcementResult.isROAllowed()) {
+                            call.updateStatus(C3PRPubRequestFacade.FAILURE_STAGE, enforcementResult.getC3prUpdateMessage(), identifier);
+                            log.info("Rejected RO: " + identifier + ", message: " + enforcementResult.getC3prUpdateMessage());
+                            continue;
+                        }
+                        log.info("Policy validation passed, id: " + identifier);
+
                         if ("tar".equals(PropertiesReader.packageFormat.trim())) {
                             log.info("Generating Tar..");
-                            depositTar(call, identifier);
+                            depositTar(publicationRequest, call, identifier);
                         } else {
                             log.info("Generating BagIt..");
                             depositBag(identifier);
@@ -119,8 +132,7 @@ public class SynchronizedReceiverRunnable implements Runnable {
         sftp.disconnect();
     }
 
-    private void depositTar(Shimcalls call, String identifier) throws Exception {
-        JSONObject pulishObject = call.getResearchObject(identifier);
+    private void depositTar(JSONObject pulishObject, Shimcalls call, String identifier) throws Exception {
         call.getObjectID(pulishObject, "@id");
         String oreUrl = call.getID();
 
@@ -162,7 +174,7 @@ public class SynchronizedReceiverRunnable implements Runnable {
         sftp.disconnect();
 
         log.info("Updating status in C3P-R with the DOI...");
-        call.updateStatus(doiUrl, identifier);
+        call.updateStatus(C3PRPubRequestFacade.SUCCESS_STAGE, doiUrl, identifier);
 
         FileManager manager = new FileManager();
         manager.removeTempFile(rootPath + ".tar");

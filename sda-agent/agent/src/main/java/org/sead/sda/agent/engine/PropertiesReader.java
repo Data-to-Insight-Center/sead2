@@ -43,6 +43,10 @@ public class PropertiesReader {
     public static String doiEndpoint;
     public static String isDoiPermanent;
 
+    public static String mongoHost;
+    public static int mongoPort;
+    public static String agentDBName;
+
     public static int roPublishInterval;
     public static int roFetchInterval;
 
@@ -73,6 +77,9 @@ public class PropertiesReader {
         packageFormat = properties.getProperty("package.format");
         doiEndpoint = properties.getProperty("doi.service.url");
         isDoiPermanent = properties.getProperty("doi.permanent");
+        mongoHost = properties.getProperty("mongo.host");
+        mongoPort = Integer.parseInt(properties.getProperty("mongo.port", "27017"));
+        agentDBName = properties.getProperty("sda.agent.db.name");
         roPublishInterval = Integer.parseInt(properties.getProperty("ro.publish.interval.secs"));
         roFetchInterval = Integer.parseInt(properties.getProperty("ro.fetch.interval.secs"));
     }
