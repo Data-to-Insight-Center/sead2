@@ -35,6 +35,10 @@ import java.io.OutputStream;
 import java.net.URLDecoder;
 import java.util.*;
 
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
+import java.io.BufferedInputStream;
+
 /**
  * SDA LandingPage
  */
@@ -132,48 +136,52 @@ public class LandingPage extends HttpServlet {
 	            if (c % 2 != 0){
 	            
 					//extract RO hierarchy
-	            	NewOREmap oreMap = new NewOREmap(oreFile);
-	            	downloadList = oreMap.getHierarchy();
-	            	
-	            	Set<String> nameList = downloadList.keySet();
-	            	
-	            	for (String name : nameList){
-	            		String[] name_split = name.split("/");
-	            		String size = null;
-	            		if (downloadList.get(name) != null){
-		            		int bytes = Integer.parseInt(downloadList.get(name));
-		            		
-		            		int kb = bytes / 1024;
-			                int mb = kb / 1024;
-			                int gb = mb /1024;
-			                if (bytes <= 1024){
-			                	size = bytes + " Bytes";
-			                }else if (kb <= 1024){
-			                	size = kb + " KB";
-			                }else if (mb <= 1024){
-			                	size = mb + " MB";
-			                }else{
-			                	size = gb + " GB";
-			                }
-	            		}
-		                
-		                String temp = null;
-		            	if (name_split.length <= 2 && size != null){
-		            		
-		            		temp = "<span style='padding-left:"+30*(name_split.length-2)+"px'>"+name_split[name_split.length-1]+"</span>";
-		            		linkedHashMap.put(name,temp);
-		            	}else{
-		            		
-		            		temp = "<span style='padding-left:"+30*(name_split.length-2)+"px'>"+"|__"+name_split[name_split.length-1]+"</span>";
-		            		linkedHashMapTemp.put(name,temp);
+	            	try{
+		            	NewOREmap oreMap = new NewOREmap(oreFile);
+		            	downloadList = oreMap.getHierarchy();
+		            	
+		            	Set<String> nameList = downloadList.keySet();
+		            	
+		            	for (String name : nameList){
+		            		String[] name_split = name.split("/");
+		            		String size = null;
+		            		if (downloadList.get(name) != null){
+			            		int bytes = Integer.parseInt(downloadList.get(name));
+			            		
+			            		int kb = bytes / 1024;
+				                int mb = kb / 1024;
+				                int gb = mb /1024;
+				                if (bytes <= 1024){
+				                	size = bytes + " Bytes";
+				                }else if (kb <= 1024){
+				                	size = kb + " KB";
+				                }else if (mb <= 1024){
+				                	size = mb + " MB";
+				                }else{
+				                	size = gb + " GB";
+				                }
+		            		}
+			                
+			                String temp = null;
+			            	if (name_split.length <= 2 && size != null){
+			            		
+			            		temp = "<span style='padding-left:"+30*(name_split.length-2)+"px'>"+name_split[name_split.length-1]+"</span>";
+			            		linkedHashMap.put(name,temp);
+			            	}else{
+			            		
+			            		temp = "<span style='padding-left:"+30*(name_split.length-2)+"px'>"+"|__"+name_split[name_split.length-1]+"</span>";
+			            		linkedHashMapTemp.put(name,temp);
+			            	}
+			                
+			            	newDownloadList.put(name, size);
+			                	                
 		            	}
-		                
-		            	newDownloadList.put(name, size);
-		                	                
-	            	}
-	            	
-	            	for (String key : linkedHashMapTemp.keySet()){
-	            		linkedHashMap.put(key, linkedHashMapTemp.get(key));
+		            	
+		            	for (String key : linkedHashMapTemp.keySet()){
+		            		linkedHashMap.put(key, linkedHashMapTemp.get(key));
+		            	}
+	            	}catch(Exception e){
+	            		System.err.println("Landing Page OREmap error: invalid keys. Please check these keys in OREmap: 'Title', 'Size', 'Label' and 'Folder'");
 	            	}
 		            
 	            }
@@ -248,24 +256,42 @@ public class LandingPage extends HttpServlet {
 		            }
 	            }else{
 	            	//download individual files
-	            	System.out.println("SDA download path: " + Constants.sdaPath + newURL);
-	            	TarArchiveInputStream myTarFile = new TarArchiveInputStream(inStream);
-	    	        
-	    	        TarArchiveEntry entry = null;
-	                String individualFiles;
-	                int offset;
-	
-		            while ((entry = myTarFile.getNextTarEntry()) != null) {		                
-		                individualFiles = entry.getName();
-		              
-		                if (individualFiles.equals(newURL)){
-		                    byte[] content = new byte[(int) entry.getSize()];
-		                    offset=0;		
-		                    myTarFile.read(content, offset, content.length - offset);		                    
-		                    outStream.write(content);
-		                }
-			        }
-		            myTarFile.close();
+	            	if (target.contains(".tar")){
+		            	System.out.println("SDA download path: " + Constants.sdaPath + newURL);
+		            	TarArchiveInputStream myTarFile = new TarArchiveInputStream(inStream);
+		    	        
+		    	        TarArchiveEntry entry = null;
+		                String individualFiles;
+		                int offset;
+		
+			            while ((entry = myTarFile.getNextTarEntry()) != null) {		                
+			                individualFiles = entry.getName();
+			              
+			                if (individualFiles.equals(newURL)){
+			                    byte[] content = new byte[(int) entry.getSize()];
+			                    offset=0;		
+			                    myTarFile.read(content, offset, content.length - offset);		                    
+			                    outStream.write(content);
+			                }
+				        }
+			            myTarFile.close();
+	            	}else{
+	            		System.out.println("SDA download path: " + Constants.sdaPath + bgName+"/"+bgName+".zip/"+bgName+"/"+newURL.substring(newURL.indexOf("/")+1));
+	            		BufferedInputStream bin = new BufferedInputStream(inStream);
+	            		ZipInputStream myZipFile = new ZipInputStream(bin);
+	            		
+	            		ZipEntry ze = null;
+	            		while ((ze = myZipFile.getNextEntry()) != null) {
+	            		    if (ze.getName().equals(bgName+"/"+newURL.substring(newURL.indexOf("/")+1))) {
+	            		        byte[] buffer = new byte[4096];
+	            		        int len;
+	            		        while ((len = myZipFile.read(buffer)) != -1) {
+	            		            outStream.write(buffer, 0, len);
+	            		        }
+	            		        break;
+	            		    }
+	            		}
+	            	}
 	            }
 	            inStream.close();
 	            outStream.close(); 
