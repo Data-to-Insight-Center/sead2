@@ -44,11 +44,12 @@
                 <table class='table table-condensed' style="width: 70%" >
                 <tr>
                     <td style="width: 20%"><b>Title</b></td>
-                    <td><%= properties.get("Title") != null ? properties.get("Title").get(0) : ""%></br></td>
+                    <td><%= properties.get("Title") != null ? properties.get("Title").get(0) : ""%>
+                        </br></td>
                 </tr>
                     <%
                         for (String key : properties.keySet()) {
-                            if(key == "Title") {
+                            if(key.equals("Title")) {
                                 continue;
                             }
                         	List<String> vals = properties.get(key);
@@ -87,7 +88,7 @@
 
             
             <div style="width:450px;">
-			<div style="float: left; width: 225px">
+
                 <%
                     String roName = properties.get("Title").get(0);
                     if (request.getAttribute("bagExists") != null) {
@@ -96,8 +97,21 @@
                             roName = tag;
                         }
                     }
-                %>
 
+                    boolean restricted = false;
+                    if (request.getAttribute("accessRestricted") != null) {
+                        String restr = (String) request.getAttribute("accessRestricted");
+                        if ("true".equals(restr)) {
+                            restricted = true;
+                        }
+                    }
+
+                    if (restricted) {
+                %>
+                <p><span style="color: red;">This data set has restricted access. Please contact IU SEAD Cloud to access data.</span></p>
+                <% } else { %>
+
+            <div style="float: left; width: 225px">
 			 <form action="sda/<%= roName%>" method="get">
 			    <button type="submit" class="btn btn-primary">Download Full Research Object</button>
 			</form>
@@ -107,9 +121,11 @@
 				<button type="submit" class="btn btn-primary">Files in this Research Object</button>
 			    </form>
 			</div>
+
+                <% } %>
 			</div>
 
-			
+            <% if (!restricted) { %>
 			<td style="line-height:20px;" colspan=3>&nbsp;</td>
 
             <table id = "list" class='table table-striped' style="width: 70%">
@@ -137,6 +153,8 @@
                       }
                     %>
             </table>
+            <% } %>
+
             <div style="width: 70%">
                 <div style="float: left; font-size:11px">
                     <a href="<%= sdaUrl%>">IU SEAD Cloud</a>

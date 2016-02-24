@@ -45,6 +45,8 @@ import java.io.BufferedInputStream;
 public class LandingPage extends HttpServlet {
 
     private static final long serialVersionUID = 1L;
+
+    private static final String RESTRICTED_ACCESS = "http://sead-data.net/terms/access/restricted";
     
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         if (request.getParameter("tag") != null || request.getRequestURI().contains("/sda/list")) {       	
@@ -69,6 +71,8 @@ public class LandingPage extends HttpServlet {
         	request.setAttribute("landingPageUrl", Constants.landingPage);
 
             Shimcalls shim = new Shimcalls();
+            // Fix: accessing RO from c3pr here is wrong. we have to access the ore map in the
+            // published package and read properties from that.
             JSONObject cp = shim.getResearchObject(tag);
             
             shim.getObjectID(cp, "@id");
@@ -83,14 +87,29 @@ public class LandingPage extends HttpServlet {
 
             // extract properties from ORE
             JSONArray status = (JSONArray) cp.get("Status");
-            String doi = ((JSONObject) status.get(1)).get("message").toString();
+            String doi = "No DOI Found";             // handle this as an exception
+            for (Object st : status) {
+                JSONObject jsonStatus = (JSONObject) st;
+                String stage = (String) jsonStatus.get("stage");
+                if ("Success".equals(stage)) {
+                    doi = (String) jsonStatus.get("message");
+                }
+            }
             roProperties.put("DOI", Arrays.asList(doi));
             roProperties.put("Full Metadata", Arrays.asList(Constants.landingPage + "/metadata/" + tag + "/oremap"));
             addROProperty("Creator", describes, roProperties);
             addROProperty("Publication Date", describes, roProperties);
             addROProperty("Title", describes, roProperties);
             addROProperty("Abstract", describes, roProperties);
-            addROProperty("License", (JSONObject) cp.get("Preferences"), roProperties);
+            addROProperty("Contact", describes, roProperties);
+            JSONObject preferences = (JSONObject) cp.get("Preferences");
+            addROProperty("License", preferences, roProperties);
+            addROProperty("Access Rights", preferences, roProperties);
+
+            // check access rights
+            if (roProperties.containsKey("Access Rights") && roProperties.get("Access Rights").contains(RESTRICTED_ACCESS)) {
+                request.setAttribute("accessRestricted", "true");
+            }
 
             //Map<String, String> properties = new HashMap<String, String>();
             //String Label = properties.get("Label");
@@ -212,7 +231,12 @@ public class LandingPage extends HttpServlet {
             	filename = newURL.substring(newURL.indexOf("/")+1);
             }         
             title = URLDecoder.decode(title, "UTF-8");
-            newURL = URLDecoder.decode(newURL, "UTF-8");            
+            newURL = URLDecoder.decode(newURL, "UTF-8");
+
+            // don't allow downloads for restricted ROs
+            if (isRORestricted(title)) {
+                return;
+            }
             
             SFTP sftp = new SFTP();
             String bgName = getBagNameFromId(title);
@@ -329,6 +353,19 @@ public class LandingPage extends HttpServlet {
     private static String getBagNameFromId(String bagId) {
         // Create known-good filename
         return bagId.replaceAll("\\W+", "_");
+    }
+
+    private boolean isRORestricted(String roId) {
+        Shimcalls shim = new Shimcalls();
+        JSONObject ro = shim.getResearchObject(roId);
+        JSONObject preferences = (JSONObject) ro.get("Preferences");
+        if (preferences != null && preferences.get("Access Rights") != null) {
+            String accessRights = (String) preferences.get("Access Rights");
+            if (RESTRICTED_ACCESS.equals(accessRights.trim())) {
+                return true;
+            }
+        }
+        return false;
     }
 
 }
