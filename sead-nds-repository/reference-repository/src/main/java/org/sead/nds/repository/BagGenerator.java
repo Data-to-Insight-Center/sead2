@@ -100,6 +100,13 @@ public class BagGenerator {
 		JSONObject aggregation = oremap.getJSONObject("describes");
 
 		aggregation.put("License", license);
+        // check whether Access Rights set, if so, add it to aggregation
+        if (((JSONObject) RO.getPublicationRequest().get("Preferences"))
+                .has("Access Rights")) {
+            String accessRights = ((JSONObject) RO.getPublicationRequest().get(
+                    "Preferences")).getString("Access Rights");
+            aggregation.put("Access Rights", accessRights);
+        }
 
 		String bagID = aggregation.getString("Identifier");
 		String bagName = bagID;
@@ -199,6 +206,9 @@ public class BagGenerator {
 		if (!isInContext(context, "License")) {
 			addToContext(context, "License", "http://purl.org/dc/terms/license");
 		}
+        if (!isInContext(context, "Access Rights")) {
+            addToContext(context, "Access Rights", "http://purl.org/dc/terms/accessRights");
+        }
 		if (!isInContext(context, "External Identifier")) {
 			addToContext(context, "External Identifier",
 					"http://purl.org/dc/terms/identifier");
