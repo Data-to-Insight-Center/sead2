@@ -22,17 +22,19 @@ package org.sead.sda;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
-
+import java.util.Map;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 public class NewOREmap {
 	
 	private JSONObject new_ore; 
+	private Map<String, String> keyMapList;
 	
 	LinkedHashMap<String, String> hierarchy;
 	
-	public NewOREmap(JSONObject ore){
+	public NewOREmap(JSONObject ore, Map<String, String> keyMapList){
+		this.keyMapList = keyMapList;
 		new_ore = buildHierarchy(ore);
 		hierarchy = new LinkedHashMap<String, String>();
 		String rootName = new_ore.get("Folder").toString();
@@ -69,15 +71,15 @@ public class NewOREmap {
 	}
 	
 	public JSONObject buildHierarchy(JSONObject ore){
-		JSONObject describe = (JSONObject) ore.get("describes") ;	
-		JSONArray context = (JSONArray) ore.get("@context");		
-		JSONArray aggregate = (JSONArray) describe.get("aggregates");
+		JSONObject describe = (JSONObject) ore.get(keyMapList.get("describes".toLowerCase())) ;	
+		JSONArray context = (JSONArray) ore.get(keyMapList.get("@context".toLowerCase()));		
+		JSONArray aggregate = (JSONArray) describe.get(keyMapList.get("aggregates".toLowerCase()));
 		
-		List part = (List) describe.get("Has Part");
+		List part = (List) describe.get(keyMapList.get("Has Part".toLowerCase()));
 		
 		JSONObject output = new JSONObject();
 
-		output.put("Folder", describe.get("Title"));			
+		output.put("Folder", describe.get(keyMapList.get("Title".toLowerCase())));			
 		output.put("aggregates", hasPart(aggregate, part, 0, aggregate.size()-1));
 		
 		return output;
@@ -91,23 +93,22 @@ public class NewOREmap {
 		Object[] list = agg.toArray();
 		for (int i = location; i <= stop; i++){
 			JSONObject list_item = (JSONObject) list[i];
-			if (list_item.containsKey("Has Part") && part.contains(list_item.get("Identifier"))){
-				int size = ((JSONArray) list_item.get("Has Part")).size();
+			if (list_item.containsKey(keyMapList.get("Has Part".toLowerCase())) && part.contains(list_item.get(keyMapList.get("Identifier".toLowerCase())))){
+				int size = ((JSONArray) list_item.get(keyMapList.get("Has Part".toLowerCase()))).size();
 				int location_new = i;
 				int stop_new = i + size;
-				List part_new = (List) list_item.get("Has Part");
+				List part_new = (List) list_item.get(keyMapList.get("Has Part".toLowerCase()));
 				JSONObject oneItem = new JSONObject();
-				//modify
-				oneItem.put("Folder", list_item.get("Title"));
+				oneItem.put("Folder", list_item.get(keyMapList.get("Title".toLowerCase())));
 				oneItem.put("content", hasPart(agg, part_new,location_new, stop_new));
 				example.add(oneItem);	
 				i += size;
 			}
 			
-			if (part.contains(list_item.get("Identifier")) && !list_item.containsKey("Has Part")){
+			if (part.contains(list_item.get(keyMapList.get("Identifier".toLowerCase()))) && !list_item.containsKey(keyMapList.get("Has Part".toLowerCase()))){
 				JSONObject oneItem = new JSONObject();
-				oneItem.put("Title", list_item.get("Label"));
-				oneItem.put("Size", list_item.get("Size"));
+				oneItem.put("Title", list_item.get(keyMapList.get("Label".toLowerCase())));
+				oneItem.put("Size", list_item.get(keyMapList.get("Size".toLowerCase())));
 				example.add(oneItem);
 				
 			}

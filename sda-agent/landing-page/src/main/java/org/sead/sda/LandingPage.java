@@ -45,7 +45,7 @@ import java.io.BufferedInputStream;
 public class LandingPage extends HttpServlet {
 
     private static final long serialVersionUID = 1L;
-
+    private static Map<String, String> keyMapList;
     private static final String RESTRICTED_ACCESS = "http://sead-data.net/terms/access/restricted";
     
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
@@ -69,16 +69,25 @@ public class LandingPage extends HttpServlet {
 
             request.setAttribute("obTag", tag);
         	request.setAttribute("landingPageUrl", Constants.landingPage);
-
+   	
+        	String keyList_cp = "@id|status|message|preferences";
+        	String keyList_ore = "contact|creator|publication date|title|abstract|license|is version of|similarto|title|describes|@context|aggregates|has part|identifier|label|size";
+        	
+        	keyMapList = new HashMap<String, String>();
+        	
             Shimcalls shim = new Shimcalls();
             // Fix: accessing RO from c3pr here is wrong. we have to access the ore map in the
             // published package and read properties from that.
             JSONObject cp = shim.getResearchObject(tag);
+            keyMap(cp, keyList_cp);
+            
             
             shim.getObjectID(cp, "@id");
             String oreUrl = shim.getID();
             JSONObject oreFile = shim.getResearchObjectORE(oreUrl);
-            JSONObject describes = (JSONObject) oreFile.get("describes");
+            keyMap(oreFile, keyList_ore);
+            
+            JSONObject describes = (JSONObject) oreFile.get(keyMapList.get("describes"));
             Map<String, List<String>> roProperties = new HashMap<String, List<String>>();
             Map<String, String> downloadList = new HashMap<String, String>();
             Map<String, String> linkedHashMap = new LinkedHashMap<String, String>();
@@ -86,7 +95,7 @@ public class LandingPage extends HttpServlet {
             Map<String, String> newDownloadList = new LinkedHashMap<String, String>();	
 
             // extract properties from ORE
-            JSONArray status = (JSONArray) cp.get("Status");
+            JSONArray status = (JSONArray) cp.get(keyMapList.get("Status".toLowerCase()));
             String doi = "No DOI Found";             // handle this as an exception
             for (Object st : status) {
                 JSONObject jsonStatus = (JSONObject) st;
@@ -102,7 +111,7 @@ public class LandingPage extends HttpServlet {
             addROProperty("Title", describes, roProperties);
             addROProperty("Abstract", describes, roProperties);
             addROProperty("Contact", describes, roProperties);
-            JSONObject preferences = (JSONObject) cp.get("Preferences");
+            JSONObject preferences = (JSONObject) cp.get(keyMapList.get("Preferences".toLowerCase()).toLowerCase());
             addROProperty("License", preferences, roProperties);
 
             // check access rights
@@ -118,12 +127,12 @@ public class LandingPage extends HttpServlet {
             
             // extract Live Data Links from ORE
             String liveCopy = null;
-            if (describes.get("Is Version Of") != null) {
-                String versionOf = describes.get("Is Version Of").toString();
+            if (describes.get(keyMapList.get("Is Version Of".toLowerCase())) != null) {
+                String versionOf = describes.get(keyMapList.get("Is Version Of".toLowerCase())).toString();
                 if (versionOf.startsWith("http")) {
                     liveCopy = versionOf;
-                } else if (describes.get("similarTo") != null) {
-                    String similar = describes.get("similarTo").toString();
+                } else if (describes.get(keyMapList.get("similarTo".toLowerCase())) != null) {
+                    String similar = describes.get(keyMapList.get("similarTo".toLowerCase())).toString();
                     similar = similar.substring(0, similar.indexOf("/resteasy") + 1);
                     liveCopy = similar + "#collection?uri=" + versionOf;
                 }
@@ -141,7 +150,7 @@ public class LandingPage extends HttpServlet {
             // set properties as an attribute
             request.setAttribute("roProperties", roProperties);
            
-            String title = describes.get("Title").toString();
+           // String title = describes.get(keyMapList.get("Title".toLowerCase())).toString();
             
             // extract file names from tar archive in SDA
             String requestURI = request.getRequestURI();
@@ -158,7 +167,7 @@ public class LandingPage extends HttpServlet {
 	            
 					//extract RO hierarchy
 	            	try{
-		            	NewOREmap oreMap = new NewOREmap(oreFile);
+		            	NewOREmap oreMap = new NewOREmap(oreFile, keyMapList);
 		            	downloadList = oreMap.getHierarchy();
 		            	
 		            	Set<String> nameList = downloadList.keySet();
@@ -202,7 +211,7 @@ public class LandingPage extends HttpServlet {
 		            		linkedHashMap.put(key, linkedHashMapTemp.get(key));
 		            	}
 	            	}catch(Exception e){
-	            		System.err.println("Landing Page OREmap error: invalid keys. Please check these keys in OREmap: 'Title', 'Size', 'Label' and 'Folder'");
+	            		System.err.println("Landing Page OREmap error: inaccurate keys");
 	            	}
 		            
 	            }
@@ -239,7 +248,12 @@ public class LandingPage extends HttpServlet {
             // Fix: use ORE from package
             Shimcalls shim = new Shimcalls();
             JSONObject ro = shim.getResearchObject(title);
-            if (isRORestricted((JSONObject) ro.get("Preferences"))) {
+            
+            String keyList_cp = "@id|status|message|preferences";
+            keyMapList = new HashMap<String, String>();
+            keyMap(ro, keyList_cp);
+            
+            if (isRORestricted((JSONObject) ro.get(keyMapList.get("Preferences".toLowerCase())))) {
                 return;
             }
             
@@ -337,22 +351,28 @@ public class LandingPage extends HttpServlet {
 
     private void addROProperty(String propertyName, JSONObject describes,
                                Map<String, List<String>> properties) {
-    	Object valJSON = describes.get(propertyName);
-        if (valJSON != null) {
-            // some properties my come as arrays
-            List<String> list = new ArrayList<String>();
-            if (valJSON instanceof JSONArray) {
-                for(int i=0; i < ((JSONArray) valJSON).size() ; i++) {
-                    if (((JSONArray) valJSON).get(i) != null) {
-                        list.add(((JSONArray) valJSON).get(i).toString());
-                    }
-                }
-                properties.put(propertyName,list);
-            } else {
-                list.add(valJSON.toString());
-                properties.put(propertyName, list);
-            }
-        }    
+    	if (keyMapList.containsKey(propertyName.toLowerCase())){
+	    	Object valJSON = describes.get(keyMapList.get(propertyName.toLowerCase()));
+	        if (valJSON != null) {
+	            // some properties my come as arrays
+	            List<String> list = new ArrayList<String>();
+	            if (valJSON instanceof JSONArray) {
+	                for(int i=0; i < ((JSONArray) valJSON).size() ; i++) {
+	                    if (((JSONArray) valJSON).get(i) != null) {
+	                        list.add(((JSONArray) valJSON).get(i).toString());
+	                    }
+	                }
+	                properties.put(propertyName,list);
+	            } else {
+	                list.add(valJSON.toString());
+	                properties.put(propertyName, list);
+	            }
+	        } 
+    	}else{
+    		List<String> temp = new ArrayList<String>();
+    		temp.add("No "+propertyName+" Found");
+    		properties.put(propertyName, temp);
+    	}
     }
 
     private static String getBagNameFromId(String bagId) {
@@ -369,5 +389,27 @@ public class LandingPage extends HttpServlet {
         }
         return false;
     }
+    
+    private static void keyMap(Object obj, String keyList){
+    	
+    	if (obj instanceof JSONArray){
+    		for (Object item : ((JSONArray) obj).toArray()){
+    			keyMap(item, keyList);
+    		}
+    	}else if (obj instanceof JSONObject){
+    		for (Object key : ((JSONObject) obj).keySet()){
+    			
+    			if (key.toString().toLowerCase().matches(keyList)){
+    				if (!keyMapList.containsKey(key.toString())){
+    					keyMapList.put(key.toString().toLowerCase(), key.toString());
+    				}
+    				keyMap(((JSONObject) obj).get(key), keyList);
+    			}else{
+    				keyMap(((JSONObject) obj).get(key), keyList);
+    			}
+    		}
+    	}
+
+    } 
 
 }
