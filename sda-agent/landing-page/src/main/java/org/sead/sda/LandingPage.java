@@ -104,11 +104,13 @@ public class LandingPage extends HttpServlet {
             addROProperty("Contact", describes, roProperties);
             JSONObject preferences = (JSONObject) cp.get("Preferences");
             addROProperty("License", preferences, roProperties);
-            addROProperty("Access Rights", preferences, roProperties);
 
             // check access rights
-            if (roProperties.containsKey("Access Rights") && roProperties.get("Access Rights").contains(RESTRICTED_ACCESS)) {
+            if (isRORestricted(preferences)) {
                 request.setAttribute("accessRestricted", "true");
+                List<String> rights = new ArrayList<String>();
+                rights.add("Restricted");
+                roProperties.put("Access Rights", rights);
             }
 
             //Map<String, String> properties = new HashMap<String, String>();
@@ -234,7 +236,10 @@ public class LandingPage extends HttpServlet {
             newURL = URLDecoder.decode(newURL, "UTF-8");
 
             // don't allow downloads for restricted ROs
-            if (isRORestricted(title)) {
+            // Fix: use ORE from package
+            Shimcalls shim = new Shimcalls();
+            JSONObject ro = shim.getResearchObject(title);
+            if (isRORestricted((JSONObject) ro.get("Preferences"))) {
                 return;
             }
             
@@ -355,10 +360,7 @@ public class LandingPage extends HttpServlet {
         return bagId.replaceAll("\\W+", "_");
     }
 
-    private boolean isRORestricted(String roId) {
-        Shimcalls shim = new Shimcalls();
-        JSONObject ro = shim.getResearchObject(roId);
-        JSONObject preferences = (JSONObject) ro.get("Preferences");
+    private boolean isRORestricted(JSONObject preferences) {
         if (preferences != null && preferences.get("Access Rights") != null) {
             String accessRights = (String) preferences.get("Access Rights");
             if (RESTRICTED_ACCESS.equals(accessRights.trim())) {

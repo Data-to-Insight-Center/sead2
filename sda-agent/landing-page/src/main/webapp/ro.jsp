@@ -108,7 +108,8 @@
 
                     if (restricted) {
                 %>
-                <p><span style="color: red;">This data set has restricted access. Please contact IU SEAD Cloud to access data.</span></p>
+                <p><span style="color: red;">This data set has restricted access. Please use the Contact information above
+                    to learn more about the conditions for use of this data and to request access.</span></p>
                 <% } else { %>
 
             <div style="float: left; width: 225px">
