@@ -111,7 +111,7 @@ public class LandingPage extends HttpServlet {
             addROProperty("Title", describes, roProperties);
             addROProperty("Abstract", describes, roProperties);
             addROProperty("Contact", describes, roProperties);
-            JSONObject preferences = (JSONObject) cp.get(keyMapList.get("Preferences".toLowerCase()).toLowerCase());
+            JSONObject preferences = (JSONObject) cp.get(keyMapList.get("Preferences".toLowerCase()));
             addROProperty("License", preferences, roProperties);
 
             // check access rights
