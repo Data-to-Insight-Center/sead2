@@ -34,7 +34,7 @@ public class PolicyEnforcer {
     private static final long TOTAL_RO_SIZE_LIMIT_BYTES = 1000000000L;
     private static final int MAX_COLLECTION_DEPTH = 4;
     // list of minimal metadata fields
-    private static final String[] MINIMAL_METADATA = new String[]{"Creator", "Date", "Title", "Publishing Project"};
+    private static final String[] MINIMAL_METADATA = new String[]{"Creator", "Creation Date", "Title", "Publishing Project"};
 
     static public PolicyEnforcer policyEnforcerInstance = null;
     private MongoCollection<Document> projectsCollection = null;
