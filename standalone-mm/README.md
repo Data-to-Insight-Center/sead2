@@ -365,3 +365,58 @@ messaging.exchangename=ExternalExchange
 messaging.queuename=ExternalQueue
 messaging.routingkey=ExternalKey
 ~~~
+Configuration and Installation (As a Web Application)
+-----------------
+1) Build the module
+~~~
+cd /sead2/standalone-mm
+mvn clean install -DskipTests=true
+~~~
+2) Copy the .war file to tomcat/webapps folder
+~~~
+cp target/matchmaker-1.0.0.war CATALINA_HOME/webapps/mm.war
+~~~
+3) Start tomcat
+
+Use matchmaker - REST API
+-----------------
+1) Send a POST request to http://&lt;host&gt;:&lt;port&gt;/mm/rest with the following request as the POST body
+~~~
+{
+    "operation" : "query",
+    "message" : {
+        "@context": "http://schema.org/",
+        "@type": "DataDownload",
+        "name": "Debris Flow Flume",
+        "description": "Sample description",
+        "sourceOrganization": "Columbia University",
+        "author": {
+            "@type": "Person",
+            "name": "Hsu, Leslie",
+            "@id": "http://orcid.org/0000-0002-5353-807X",
+            "email": "lhsu@ldeo.columbia.edu"
+        },
+        "fileSize": {"unit":"MB", "value": 2000},
+        "contentUrl": "http://sead-vivo.d2i.indiana.edu:8080/sead-vivo/individual/n15603",
+        "/subject": "Geophysics",
+        "contentType" : "tif"
+    }
+}
+~~~
+The result would be;
+~~~
+{
+"responseID":"null",
+"sucess":true,
+"response":{
+  "IU SDA" : {
+    "weight" : 0,
+    "priority" : 0
+  },
+  "D2I" : {
+    "weight" : 0,
+    "priority" : 0
+  }
+}
+}
+~~~
