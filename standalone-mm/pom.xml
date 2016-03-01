@@ -6,19 +6,56 @@
 	<groupId>edu.indiana.d2i.sead</groupId>
 	<artifactId>matchmaker</artifactId>
 	<version>1.0.0</version>
+    <packaging>war</packaging>
+
 	<build>
-	  <plugins>
-	    <plugin>
-	      <groupId>org.apache.maven.plugins</groupId>
-	      <artifactId>maven-compiler-plugin</artifactId>
-	      <configuration>
-	        <source>1.8</source>
-	        <target>1.8</target>
-	      </configuration>
-	    </plugin>
-	  </plugins>
+        <plugins>
+            <plugin>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>2.3.2</version>
+                <inherited>true</inherited>
+                <configuration>
+                    <source>1.8</source>
+                    <target>1.8</target>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-war-plugin</artifactId>
+                <version>2.2</version>
+                <configuration>
+                    <archiveClasses>false</archiveClasses>
+                    <webResources>
+                        <resource>
+                            <filtering>true</filtering>
+                            <directory>${basedir}/src/main/webapp</directory>
+                            <includes>
+                                <include>WEB-INF/web.xml</include>
+                            </includes>
+                        </resource>
+                    </webResources>
+                </configuration>
+                <executions>
+                    <execution>
+                        <phase>prepare-package</phase>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>2.2</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
 	</build>
-	<profiles>
+	<!--<profiles>
 	  <profile>
 	    <id>codegen</id>
 	    <build>
@@ -74,7 +111,7 @@
 	      </plugins>
 	    </build>
 	  </profile>
-	</profiles>
+	</profiles>-->
 
 	<dependencies>
 		<!-- core -->
@@ -125,6 +162,45 @@
 			<artifactId>httpclient</artifactId>
 			<version>4.4</version>
 		</dependency>
+        <!--<dependency>
+            <groupId>org.glassfish.jersey.containers</groupId>
+            <artifactId>jersey-container-servlet-core</artifactId>
+            <version>2.22.1</version>
+            &lt;!&ndash; use the following artifactId if you don't need servlet 2.x compatibility &ndash;&gt;
+            &lt;!&ndash; artifactId>jersey-container-servlet</artifactId &ndash;&gt;
+        </dependency>
+        &lt;!&ndash; uncomment this to get JSON support&ndash;&gt;
+        <dependency>
+            <groupId>org.glassfish.jersey.media</groupId>
+            <artifactId>jersey-media-moxy</artifactId>
+            <version>2.22.1</version>
+        </dependency>
+        <dependency>
+            <groupId>com.sun.jersey</groupId>
+            <artifactId>jersey-client</artifactId>
+            <version>1.19</version>
+        </dependency>-->
+
+        <dependency>
+            <groupId>com.sun.jersey</groupId>
+            <artifactId>jersey-server</artifactId>
+            <version>${jersey-version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.sun.jersey.contribs</groupId>
+            <artifactId>jersey-atom-abdera</artifactId>
+            <version>${jersey-version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.sun.jersey.contribs</groupId>
+            <artifactId>jersey-multipart</artifactId>
+            <version>${jersey-version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.sun.jersey</groupId>
+            <artifactId>jersey-client</artifactId>
+            <version>${jersey-version}</version>
+        </dependency>
 		
 		<!-- RabbitMQ  -->
 		<dependency>
@@ -139,4 +215,9 @@
 			<version>1.2.17</version>
 		</dependency>
 	</dependencies>
+
+    <properties>
+        <jersey-version>1.8</jersey-version>
+    </properties>
+
 </project>

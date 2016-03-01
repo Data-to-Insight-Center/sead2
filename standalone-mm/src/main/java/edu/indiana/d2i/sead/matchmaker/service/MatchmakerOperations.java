@@ -24,16 +24,14 @@
 # 
 */
 
-package edu.indiana.d2i.sead.matchmaker.service.messaging;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+package edu.indiana.d2i.sead.matchmaker.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
-
-import edu.indiana.d2i.sead.matchmaker.drivers.Deposit;
 import edu.indiana.d2i.sead.matchmaker.drivers.MetaDriver;
 import edu.indiana.d2i.sead.matchmaker.drivers.Query;
+import edu.indiana.d2i.sead.matchmaker.util.MatchmakerENV;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * @author Yuan Luo
@@ -58,10 +56,10 @@ public class MatchmakerOperations {
 		if(request.get("operation").asText().equals("query")){
 			md =  new Query(env, request.get("message").toString(),responseID);
 			return md.exec();
-		}else if(request.get("operation").asText().equals("deposit")){
+		}/*else if(request.get("operation").asText().equals("deposit")){
 			md =  new Deposit(env, request, responseID);
 			return md.exec();
-		}
+		}*/
 		return "{success:false,response:\"Invalid Operation\"}";
 
 	}

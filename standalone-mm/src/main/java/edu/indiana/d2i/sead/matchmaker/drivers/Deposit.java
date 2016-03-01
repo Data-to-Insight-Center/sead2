@@ -1,17 +1,12 @@
 package edu.indiana.d2i.sead.matchmaker.drivers;
 
-import java.io.File;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Set;
-
+import com.fasterxml.jackson.databind.JsonNode;
+import edu.indiana.d2i.sead.matchmaker.client.AsynchronizedClient;
+import edu.indiana.d2i.sead.matchmaker.service.messaging.MessagingConfig;
+import edu.indiana.d2i.sead.matchmaker.util.MatchmakerENV;
 import org.apache.log4j.Logger;
 
-import com.fasterxml.jackson.databind.JsonNode;
-
-import edu.indiana.d2i.sead.matchmaker.client.AsynchronizedClient;
-import edu.indiana.d2i.sead.matchmaker.service.messaging.MatchmakerENV;
-import edu.indiana.d2i.sead.matchmaker.service.messaging.MessagingConfig;
+import java.util.Set;
 
 public class Deposit extends MetaDriver {
 	private Logger log;

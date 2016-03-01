@@ -25,17 +25,15 @@
 */
 package edu.indiana.d2i.sead.matchmaker.core;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
-
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.*;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
+
+import java.io.*;
+import java.lang.reflect.InvocationTargetException;
 
 
 public class POJOGenerator {
@@ -49,7 +47,8 @@ public class POJOGenerator {
 	
 	public POJOGenerator(String className) throws ClassNotFoundException{
 		ClassLoader cls =ClassLoader.getSystemClassLoader();
-		this.pojo=cls.loadClass(className);
+		//this.pojo=cls.loadClass(className);
+		this.pojo=Class.forName(className);
 	}
 	
 	public void fromPath(String filePath){
@@ -57,8 +56,10 @@ public class POJOGenerator {
 		 
 		BufferedReader fileReader;
 		try {
-			fileReader = new BufferedReader(
-				new FileReader(filePath));
+            //fileReader = new BufferedReader(
+            //new FileReader(filePath));
+            fileReader = new BufferedReader(new InputStreamReader(
+                    this.getClass().getResourceAsStream(filePath)));
 			JsonNode rootNode = mapper.readTree(fileReader);
 			this.jsonTree=rootNode;	
 	 

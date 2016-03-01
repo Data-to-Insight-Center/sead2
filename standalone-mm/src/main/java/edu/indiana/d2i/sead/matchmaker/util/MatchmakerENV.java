@@ -24,9 +24,7 @@
 # 
 */
 
-package edu.indiana.d2i.sead.matchmaker.service.messaging;
-
-import edu.indiana.d2i.sead.matchmaker.service.PropertyReader;
+package edu.indiana.d2i.sead.matchmaker.util;
 
 /**
  * @author yuanluo

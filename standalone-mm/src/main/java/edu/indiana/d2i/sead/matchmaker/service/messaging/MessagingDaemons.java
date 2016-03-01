@@ -26,12 +26,11 @@
 
 package edu.indiana.d2i.sead.matchmaker.service.messaging;
 
-import edu.indiana.d2i.sead.matchmaker.drivers.*;
 import edu.indiana.d2i.sead.matchmaker.service.ServiceLauncher;
+import edu.indiana.d2i.sead.matchmaker.util.MatchmakerENV;
+import org.apache.log4j.Logger;
 
 import java.io.IOException;
-
-import org.apache.log4j.Logger;
 
 
 

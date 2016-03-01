@@ -41,25 +41,15 @@
 
 package edu.indiana.d2i.sead.matchmaker.core;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
-import java.util.function.BiFunction;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.log4j.Logger;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.util.JSONPObject;
+import org.apache.log4j.Logger;
 
-import edu.indiana.d2i.sead.matchmaker.drivers.MetaDriver;
-import edu.indiana.d2i.sead.matchmaker.service.messaging.MatchmakerOperations;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Set;
 
 public class MatchMakingList {
 	
@@ -183,8 +173,8 @@ public class MatchMakingList {
 	public static void main(String[] args) throws JsonProcessingException, ClassNotFoundException {
 		// TODO Auto-generated method stub
 		
-		POJOGenerator reposGen = new POJOGenerator("edu.indiana.d2i.sead.matchmaker.pojo.Repository");
-    	reposGen.fromPath("C:\\Users\\yuanluo\\WorkZone\\workspace\\MatchMaker\\profile\\repositories.json");
+		/*POJOGenerator reposGen = new POJOGenerator("edu.indiana.d2i.sead.matchmaker.pojo.Repository");
+    	reposGen.fromPath("/Users/charmadu/repo/git/git2/sead2/standalone-mm/profile/repositories.json");
     	MatchMakingList mml=new MatchMakingList((ArrayNode)reposGen.getJsonTree());
         mml.addWeight("B",3);
 		mml.printCandidateList();
@@ -207,7 +197,7 @@ public class MatchMakingList {
 		preferredList.add("A");
 		preferredList.add("B");
 		mml.preferred(preferredList);
-		mml.printCandidateList();
+		mml.printCandidateList();*/
 	
 	}
 

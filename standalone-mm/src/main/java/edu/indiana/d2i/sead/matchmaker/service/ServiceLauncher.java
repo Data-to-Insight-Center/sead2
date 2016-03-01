@@ -28,10 +28,15 @@
 
 package edu.indiana.d2i.sead.matchmaker.service;
 
-import edu.indiana.d2i.sead.matchmaker.service.messaging.*;
-import java.io.IOException;
+import edu.indiana.d2i.sead.matchmaker.service.messaging.MessagingConfig;
+import edu.indiana.d2i.sead.matchmaker.service.messaging.MessagingDaemons;
+import edu.indiana.d2i.sead.matchmaker.service.messaging.MessagingDaemonsConfig;
+import edu.indiana.d2i.sead.matchmaker.util.MatchmakerENV;
+import edu.indiana.d2i.sead.matchmaker.util.PropertyReader;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
+
+import java.io.IOException;
 
 
 

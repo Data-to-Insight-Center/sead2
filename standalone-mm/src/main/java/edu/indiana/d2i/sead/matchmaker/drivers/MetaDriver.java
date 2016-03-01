@@ -25,25 +25,21 @@
 */
 package edu.indiana.d2i.sead.matchmaker.drivers;
 
-import java.io.File;
-import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
-
-import org.apache.log4j.Logger;
-
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
-
 import edu.indiana.d2i.sead.matchmaker.core.MatchMaker;
 import edu.indiana.d2i.sead.matchmaker.core.MatchMakingList;
-import edu.indiana.d2i.sead.matchmaker.core.POJOFactory;
 import edu.indiana.d2i.sead.matchmaker.core.POJOGenerator;
-import edu.indiana.d2i.sead.matchmaker.service.messaging.MatchmakerENV;
-import edu.indiana.d2i.sead.matchmaker.service.messaging.SynchronizedReceiverRunnable;
+import edu.indiana.d2i.sead.matchmaker.util.MatchmakerENV;
+import org.apache.log4j.Logger;
+
+import java.io.File;
+import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
 
 /**
  * @author yuanluo

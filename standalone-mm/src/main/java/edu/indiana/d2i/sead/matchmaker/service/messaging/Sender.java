@@ -26,17 +26,12 @@
 
 package edu.indiana.d2i.sead.matchmaker.service.messaging;
 
+import com.rabbitmq.client.*;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-
-import com.rabbitmq.client.Channel;
-import com.rabbitmq.client.Connection;
-import com.rabbitmq.client.ConnectionFactory;
-import com.rabbitmq.client.MessageProperties;
-
-import com.rabbitmq.client.ShutdownSignalException;
 
 /**
  * @author Yuan Luo
@@ -152,12 +147,12 @@ public class Sender {
 	};
 	
 	public static void main(String[] args) throws ShutdownSignalException, IOException, InterruptedException {
-    		MessagingConfig msgconf=new MessagingConfig("/Users/yuanluo/WorkZone/workspace/MatchMaker/config/server.properties");
+    		/*MessagingConfig msgconf=new MessagingConfig("/Users/charmadu/repo/git/git2/sead2/standalone-mm/config/server.properties");
     		Sender sender=new Sender(msgconf, MessagingOperationTypes.SEND_REQUEST);
     		System.out.println(sender.RoutingKey);
-    		File messageFile=new File("/Users/yuanluo/WorkZone/workspace/MatchMaker/samples/research_object.json");
+    		File messageFile=new File("/Users/charmadu/repo/git/git2/sead2/standalone-mm/samples/research_object.json");
     		sender.sendMessage(messageFile);
-    		sender.closeConnection();
+    		sender.closeConnection();*/
 		
 
 	}

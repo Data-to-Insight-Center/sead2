@@ -1,6 +1,6 @@
 package edu.indiana.d2i.sead.matchmaker.drivers;
 
-import edu.indiana.d2i.sead.matchmaker.service.messaging.MatchmakerENV;
+import edu.indiana.d2i.sead.matchmaker.util.MatchmakerENV;
 
 public class Query extends MetaDriver {
 

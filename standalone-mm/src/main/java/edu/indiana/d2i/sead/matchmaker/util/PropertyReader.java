@@ -24,10 +24,10 @@
 # 
 */
 
-package edu.indiana.d2i.sead.matchmaker.service;
+package edu.indiana.d2i.sead.matchmaker.util;
 
-import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Properties;
 
@@ -42,7 +42,7 @@ public class PropertyReader {
     
     private PropertyReader(String propertiesPath) {
         try {
-            FileInputStream fileInputStream = new FileInputStream(propertiesPath);
+            InputStream fileInputStream = PropertyReader.class.getResourceAsStream(propertiesPath);
             properties = new Properties();
             properties.load(fileInputStream);
         } catch (IOException e) {
