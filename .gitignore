@@ -13,4 +13,6 @@ Thumbs.db
 *.prefs
 **/target/
 **/.settings/
- 
+*.iml
+*.ipr
+*.iws
