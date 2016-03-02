@@ -28,8 +28,13 @@ package edu.indiana.d2i.sead.matchmaker.core;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import org.kie.api.KieServices;
+import org.kie.api.builder.KieBuilder;
+import org.kie.api.builder.KieFileSystem;
+import org.kie.api.builder.KieRepository;
+import org.kie.api.builder.Message;
 import org.kie.api.runtime.KieContainer;
 import org.kie.api.runtime.KieSession;
+import org.kie.internal.io.ResourceFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -41,13 +46,32 @@ public class MatchMaker {
 
     public void basicGo(PrintStream out, File[] ruleFiles, String[] classNames, MatchMakingList initList, Object[] repositories, Object person, Object researchObject) throws ClassNotFoundException, JsonParseException, JsonMappingException, IOException, InstantiationException, IllegalAccessException {
         KieServices ks = KieServices.Factory.get();
+
         /*KieRepository kr = ks.getRepository();
         KieModule kModule=null;
         for(File rulefile : ruleFiles){
         	kModule = kr.addKieModule(ks.getResources().newFileSystemResource(rulefile));
-        }*/
-        //KieContainer kContainer = ks.newKieContainer(kModule.getReleaseId());
-        KieContainer kContainer = ks.getKieClasspathContainer();
+        }
+        KieContainer kContainer = ks.newKieContainer(kModule.getReleaseId());*/
+
+        /*KieContainer kContainer = ks.getKieClasspathContainer();
+
+        KieSession kSession = kContainer.newKieSession("ksession-rules");*/
+
+
+        KieRepository kr = ks.getRepository();
+        KieFileSystem kfs = ks.newKieFileSystem();
+
+        kfs.write(ResourceFactory.newClassPathResource("rules/ruleset1.drl", this.getClass()));
+
+        KieBuilder kb = ks.newKieBuilder(kfs);
+
+        kb.buildAll(); // kieModule is automatically deployed to KieRepository if successfully built.
+        if (kb.getResults().hasMessages(Message.Level.ERROR)) {
+            throw new RuntimeException("Build Errors:\n" + kb.getResults().toString());
+        }
+
+        KieContainer kContainer = ks.newKieContainer(kr.getDefaultReleaseId());
 
         KieSession kSession = kContainer.newKieSession();
 
@@ -63,6 +87,7 @@ public class MatchMaker {
         System.out.println("Fire All Rules...");
         kSession.fireAllRules();
         //initList.printCandidateList();
+        kSession.dispose();
     }
 
     public static void main(String[] args) throws ClassNotFoundException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException, JsonParseException, JsonMappingException, IOException, InstantiationException {
