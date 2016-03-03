@@ -2,7 +2,6 @@ package edu.indiana.d2i.sead.matchmaker;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sun.jersey.api.client.ClientResponse;
 import edu.indiana.d2i.sead.matchmaker.core.POJOGenerator;
 import edu.indiana.d2i.sead.matchmaker.service.MatchmakerOperations;
@@ -30,6 +29,7 @@ import org.kie.internal.builder.KnowledgeBuilderFactory;
 import org.kie.internal.io.ResourceFactory;
 
 import java.io.*;
+import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.List;
 
@@ -78,7 +78,7 @@ public class RestTest {
     public Response getMatchingRepositories(String roString) {
         this.input.fromString(roString);
         JsonNode requestMessageJsonNode=this.input.getJsonTree();
-//String ResponseRoutingKey=requestMessageJsonNode.get("responseKey").asText();
+        //String ResponseRoutingKey=requestMessageJsonNode.get("responseKey").asText();
         JsonNode request=requestMessageJsonNode.get("request");
         log.info("[Matchmaker server: Request] "+request);
         //log.info("[Matchmaker server: Message Response Routing Key] "+ResponseRoutingKey);
@@ -99,13 +99,14 @@ public class RestTest {
 	@GET
     @Path("/rules")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response getRulesList() throws IOException, DroolsParserException, JsonProcessingException, ClassNotFoundException, JSONException {
+    public Response getRulesList() throws IOException, DroolsParserException, JsonProcessingException, ClassNotFoundException, JSONException, URISyntaxException {
 
         JSONObject root = new JSONObject();
         JSONArray rulesArray = new JSONArray();
         root.put("rules", rulesArray);
 
-        File folder = new File("/Users/kunarath/Projects/sead2/standalone-mm/src/main/resources/rules/");
+        ClassLoader classLoader = getClass().getClassLoader();
+        File folder = new File(classLoader.getResource("rules").getFile());
         File[] listOfFiles = folder.listFiles();
 
         KnowledgeBuilder kbuilder = KnowledgeBuilderFactory.newKnowledgeBuilder();
@@ -118,32 +119,20 @@ public class RestTest {
             if (listOfFiles[m].isFile()) {
                 if (listOfFiles[m].getName().endsWith(".drl")) {
                     String ruleFile = "rules/" + listOfFiles[m].getName();
-                    System.out.println( "Loading file: " + ruleFile );
                     Resource resource = ResourceFactory.newClassPathResource(ruleFile, getClass());
                     kbuilder.add(resource, ResourceType.DRL);
 
                         DrlParser parser = new DrlParser();
                         PackageDescr packageDescr=parser.parse(resource);
-                        List<RuleDescr> val = packageDescr.getRules();
+                        List<RuleDescr> rules_val = packageDescr.getRules();
                         int val2 = packageDescr.getRules().size();
-                        System.out.println(val);
-                        System.out.println(val2);
-                        //parser.getExpandedDRL(reader1, dsl);
 
                             for (int i = 0; i < val2; i = i + 1) {
-                                System.out.println("Java for loops:" + i);
                                 JSONObject obj = new JSONObject();
-                                RuleDescr rule = (RuleDescr) packageDescr.getRules().get( i );
-                                System.out.println(rule.getName());
+                                RuleDescr rule = rules_val.get( i );
                                 obj.put("name", rule.getName());
-
-                                System.out.println("L: " + rule.getName());
                                 AndDescr lhs = rule.getLhs();
-                                //assertNotNull( lhs );
-
                                 List<BaseDescr> val4 = rule.getLhs().getDescrs();
-                                System.out.println("L: " + val4.size());
-                                System.out.println("L: " + val4);
 
                                 JSONArray lhsArray = new JSONArray();
                                 obj.put("lhs", lhsArray);
@@ -157,17 +146,13 @@ public class RestTest {
                                     PatternDescr first = (PatternDescr) lhs.getDescrs().get( j );
                                     String lhs_identifier = first.getIdentifier();
                                     String lhs_objtype = first.getObjectType();
-                                    System.out.println("L: " + first);
 
                                     objj.put("id", lhs_identifier);
                                     objj.put("objType", lhs_objtype);
-                                    System.out.println("L: " + lhs_identifier);
-                                    System.out.println("L: " + lhs_objtype);
                                     lhsArray.put(objj);
                                 }
-                                String rhs = (String) ((RuleDescr) packageDescr.getRules().get( i )).getConsequence();
+                                String rhs = (String) (rules_val.get( i )).getConsequence();
                                 List<String> rhsList = Arrays.asList(rhs.split(";"));
-                                System.out.println("R: " + rhs);
 
                                 JSONObject obj3 = new JSONObject();
                                 obj3.put("rhs_val", rhsList);
@@ -183,7 +168,6 @@ public class RestTest {
     }
 	
 	public static void main( String args[]) throws Exception {
-        //new RestTest().runRules( new String[] { "rules/ruleset1.drl", "rules/sample.drl" });
         RestTest resttest = new RestTest();
         resttest.getRulesList();
     }
