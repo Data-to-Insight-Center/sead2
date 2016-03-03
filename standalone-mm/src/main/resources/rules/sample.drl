@@ -1,0 +1,79 @@
+package edu.indiana.d2i.sead.matchmaker.defaultrules
+
+import edu.indiana.d2i.sead.matchmaker.core.*
+import java.util.Set
+import java.util.HashSet
+import java.util.Iterator
+
+
+//import function edu.indiana.d2i.sead.matchmaker.core.MatchMakingList.printCandidateList
+//global MatchMakingList MatchMakingList;
+
+rule "Add Weight"
+	when
+		mml: MatchMakingList()
+	then
+		System.out.println( " Add weight to B" );
+		mml.addWeight("B",3);
+		mml.printCandidateList();
+
+end
+
+rule "Reduce Weight"
+	when
+		mml: MatchMakingList()
+	then
+		System.out.println( " Reduce weight of B" );
+		mml.reduceWeight("B",1);
+		mml.printCandidateList();
+
+end
+
+rule "Set Weight"
+	when
+		mml: MatchMakingList()
+	then
+		System.out.println( " Set weight of C" );
+		mml.setWeight("C",10);
+		mml.printCandidateList();
+
+end
+
+
+rule "Not Allowed"
+	when
+		mml: MatchMakingList()
+	then
+		System.out.println( " C not allowed" );
+		Set<String> notAllowedList= new HashSet<String>();
+		notAllowedList.add("C");
+		mml.notAllowed(notAllowedList);
+		mml.printCandidateList();
+end
+
+rule "Restrict"
+	when
+		mml: MatchMakingList()
+	then
+		System.out.println( " Restricted to A,B,D,F " );
+		Set<String> restrictedList= new HashSet<String>();
+		restrictedList.add("A");
+		restrictedList.add("B");
+		restrictedList.add("D");
+		restrictedList.add("F");
+		mml.restricted(restrictedList);
+		mml.printCandidateList();
+
+end
+
+rule "Preferred"
+	when
+		mml: MatchMakingList()
+	then
+		System.out.println( " A, and B are preferred " );
+		Set<String> preferredList= new HashSet<String>();
+		preferredList.add("A");
+		preferredList.add("B");
+		mml.preferred(preferredList);
+		mml.printCandidateList();
+end

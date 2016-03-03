@@ -37,7 +37,7 @@
 
     <servlet-mapping>
         <servlet-name>mm-core</servlet-name>
-        <url-pattern>/*</url-pattern>
+        <url-pattern>/mm/*</url-pattern>
     </servlet-mapping>
 
 </web-app>

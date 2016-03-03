@@ -1,0 +1,113 @@
+html, body, div, span, applet, object, iframe, h1, h2, h3, h4, h5, h6, p, blockquote, pre, a, abbr, acronym, address, big, cite, code, del, dfn, em, img, ins, kbd, q, s, samp, small, strike, strong, sub, sup, tt, var, b, u, i, center, dl, dt, dd, ol, ul, li, fieldset, form, label, legend, table, caption, tbody, tfoot, thead, tr, th, td, article, aside, canvas, details, embed, figure, figcaption, footer, header, hgroup, menu, nav, output, ruby, section, summary, time, mark, audio, video { border: 0; font-size: 13px; font-family: Verdana, Arial, Helvetica, sans-serif; vertical-align: baseline; margin: 0; padding: 0; }
+        article, aside, details, figcaption, figure, footer, header, hgroup, menu, nav, section { display: block; }
+        body { line-height: 1; }
+        ol, ul { list-style: none; }
+        blockquote, q { quotes: none; }
+        blockquote:before, blockquote:after, q:before, q:after { content: none; }
+        table { border-collapse: collapse; border-spacing: 0; box-shadow: 0 9px #999; }
+        
+        .mediumTable { margin: 0 auto; width: 100%; border: 0; }
+        .mediumTable table { width: 100%; padding: 0; margin: 0; }
+        .mediumTable caption { caption-side: top; text-align: right; }
+        .mediumTable tr { color: #797268; }
+        .mediumTable th { color: #4f6b72; border: 1px solid #C1DAD7; letter-spacing: 2px; /*text-transform: uppercase;*/ text-align: left; padding: 2px 2px 2px 6px; background: #CAE8EA url(/images/mediumTable_bg_header.jpg) repeat-x; text-align: center; }
+        .mediumTable th[scope=row] { text-align: left; }
+        .mediumTable td { vertical-align: middle; border-right: 1px solid #C1DAD7; border-left: 1px solid #C1DAD7; border-bottom: 1px solid #C1DAD7; padding: 0.3em 0.3em; background-color: #F5FAFA; color: #797268; }
+        .mediumTable tr.even td { background-color: #EEE; }
+        .mediumTable tr:hover td, .mediumTable tr.even:hover td, .mediumTable tr.odd:hover td, .mediumTable tr.alt:hover td { background-color: #F4FF9A; color: #000; }
+        .mediumTable tr.footer { }
+        .mediumTable tr.pager:hover td { background-color: #F5FAFA; }
+        .mediumTable tr.pager td table { padding: 0px; width: auto; }
+        .mediumTable tr.pager td table tr td { padding: 0 2px; border: 0; }
+        .mediumTable tr.pager td table tr td:hover { background-color: #FFF; }
+        .mediumTable tr.pager td table tr td a { text-decoration: none; color: #4f6b72; padding: .2em .4em; display: block; border: 1px solid #C1DAD7; }
+        .mediumTable tr.pager td table tr td span { background-color: #C1DAD7; color: #4f6b72; padding: .2em .4em; display: block; border: 1px solid #C1DAD7; }
+		a:link, a:visited {color: #f44336; padding: 14px 25px;
+    text-align: center; 
+    text-decoration: none;
+    display: inline-block;
+	font-family:"Verdana";
+}
+a:hover, a:active {
+    background-color: #cc9900;
+}
+h1 {
+    border-bottom: 3px solid #3b5998;
+    color: #3b5998;
+    font-size: 30px;
+}
+table, th , td {
+    border: 1px solid grey;
+    border-collapse: collapse;
+    padding: 5px;
+	font-family:"Verdana";
+	font-size:13px;
+}
+td{
+	width:30%
+}
+table tr:nth-child(odd) {
+    background-color: #f1f1f1;
+}
+table tr:nth-child(even) {
+    background-color: #ffffff;
+}#input{
+  	color: #fff;
+  	background-color: #cc9900;
+  	text-shadow: -1px 1px #cc9900;
+  	border: none;
+  	width:16%;
+  	height:36px;
+  	margin:20px 0px 20px 0px;
+  	font-size:14px;
+  	font-family:"Verdana";
+}.vertical_line{
+	height:435px; width:10px;background:#3b5998;margin:55px 30px 0px 30px;
+}.footer{
+	margin:20px 0px 20px 0px;
+}#error_output{
+	color: #D8000C;
+	background-color: #FFBABA;
+	background-image: url('images/error.png');
+	border: 1px solid;
+	margin: 10px 0px;
+	padding:10px 10px 10px 50px;
+	background-repeat: no-repeat;
+	background-position: 10px center;
+	width:18%;
+}#success_output{
+	color: #4F8A10;
+	background-color: #DFF2BF;
+	background-image:url('images/success.png');
+	border: 1px solid;
+	margin: 10px 0px;
+	padding:10px 10px 10px 50px;
+	background-repeat: no-repeat;
+	background-position: 10px center;
+	width:18%;
+}
+#add_button, #cancel, #save, #edit, #delete {
+  display: inline-block;
+  padding: 15px 15px;
+  font-size: 12px;
+  cursor: pointer;
+  text-align: center;	
+  text-decoration: none;
+  outline: none;
+  color: #fff;
+  background-color: #008CBA;
+  border: none;
+  border-radius: 15px;
+  box-shadow: 0 9px #999;
+  margin-bottom:20px;
+}
+
+#add_button:hover, #cancel:hover, #save:hover, #edit:hover, #delete:hover{background-color: #3b5998}
+
+#add_button:active #cancel:active, #save:active, #edit:active, #delete:active{
+  background-color: #3b5998;
+  box-shadow: 0 5px #666;
+  transform: translateY(4px);
+}.editRow{
+	height:150px;
+}

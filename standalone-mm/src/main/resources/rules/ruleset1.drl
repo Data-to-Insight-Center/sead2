@@ -27,7 +27,7 @@ end
 rule "file type"
 	when
 		repo: Repository()
-		not ResearchObject(repo.contentType contains contentType ||repo.contentType contains "any")
+		ResearchObject(repo.contentType not contains contentType && repo.contentType not contains "any")
 		mml: Ruleset1MatchMakingList()
 	then
 		System.out.println( " Repo " +repo.getRepositoryName()+" not allowed (File Type Restriction)");
