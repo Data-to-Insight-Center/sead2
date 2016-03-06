@@ -1,0 +1,5 @@
+# OS generated files #
+######################
+src/main/java/edu/indiana/d2i/sead/matchmaker/pojo/
+src/main/java/edu/indiana/d2i/sead/matchmaker/service/MatchmakerInputSchema.java
+src/main/java/edu/indiana/d2i/sead/matchmaker/service/Request.java
