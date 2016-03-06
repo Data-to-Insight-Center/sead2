@@ -26,22 +26,15 @@
 
 package edu.indiana.d2i.sead.matchmaker.core;
 
-import java.io.File;
-import java.io.IOException;
-import java.net.URL;
-
-import org.jsonschema2pojo.DefaultGenerationConfig;
-import org.jsonschema2pojo.Jsonschema2Pojo;
-import org.jsonschema2pojo.SchemaGenerator;
-import org.jsonschema2pojo.SchemaMapper;
-import org.jsonschema2pojo.rules.RuleFactory;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.sun.codemodel.JCodeModel;
-import com.sun.codemodel.JType;
+import org.jsonschema2pojo.SchemaGenerator;
+import org.jsonschema2pojo.SchemaMapper;
+
+import java.io.File;
+import java.io.IOException;
 
 public class POJOFactory {
 
@@ -55,7 +48,7 @@ public class POJOFactory {
 	}
 
 	public static void main(String[] args) throws JsonProcessingException, IOException, ClassNotFoundException {
-		// TODO Auto-generated method stub
+		/*// TODO Auto-generated method stub
 		
 		ObjectMapper mapper = new ObjectMapper();
 
@@ -77,21 +70,28 @@ public class POJOFactory {
 			JsonNode rootNode = mapper.readTree(new File(conf.get("format").asText()));
 			POJOFactory.createClass(conf.get("className").asText(),conf.get("packageName").asText(), rootNode, new File(conf.get("codeLocation").asText()));
 		}
-		
-				
-		
-		/*
-		JsonNode rootNode = mapper.readTree(new File("C:\\Users\\yuanluo\\WorkZone\\workspace\\MatchMaker\\profile\\person.json"));
-		POJOFactory.createClass("Person","edu.indiana.d2i.sead.matchmaker.pojo", rootNode, new File("C:\\Users\\yuanluo\\WorkZone\\workspace\\MatchMaker\\plugins\\ruleset1\\src\\main\\java"));
-		
-		rootNode = mapper.readTree(new File("C:\\Users\\yuanluo\\WorkZone\\workspace\\MatchMaker\\profile\\research_object.json"));
-		POJOFactory.createClass("ResearchObject","edu.indiana.d2i.sead.matchmaker.pojo", rootNode, new File("C:\\Users\\yuanluo\\WorkZone\\workspace\\MatchMaker\\plugins\\ruleset1\\src\\main\\java"));
-		
-		rootNode = mapper.readTree(new File("C:\\Users\\yuanluo\\WorkZone\\workspace\\MatchMaker\\profile\\repositories.json"));
-		POJOFactory.createClass("Repositories","edu.indiana.d2i.sead.matchmaker.pojo", rootNode, new File("C:\\Users\\yuanluo\\WorkZone\\workspace\\MatchMaker\\plugins\\ruleset1\\src\\main\\java"));
-	
-		rootNode = mapper.readTree(new File("C:\\Users\\yuanluo\\WorkZone\\workspace\\MatchMaker\\config\\MatchmakerInputSchema.json"));
-		POJOFactory.createClass("MatchmakerInputSchema","edu.indiana.d2i.sead.matchmaker.service.messaging", rootNode, new File("C:\\Users\\yuanluo\\WorkZone\\workspace\\MatchMaker\\src\\main\\java"));
 		*/
-	} 
+
+        ObjectMapper mapper = new ObjectMapper();
+
+        if(args.length < 2) {
+            System.out.println("Couldn't generate POJOs : Missing parameters");
+            return;
+        }
+        String src = args[0];
+        String resources = args[1];
+
+		JsonNode rootNode = mapper.readTree(new File(resources + "profile/person.json"));
+		POJOFactory.createClass("Person","edu.indiana.d2i.sead.matchmaker.pojo", rootNode, new File(src));
+
+        rootNode = mapper.readTree(new File(resources + "profile/research_object.json"));
+        POJOFactory.createClass("ResearchObject","edu.indiana.d2i.sead.matchmaker.pojo", rootNode, new File(src));
+
+        rootNode = mapper.readTree(new File(resources + "profile/repositories.json"));
+        POJOFactory.createClass("Repositories","edu.indiana.d2i.sead.matchmaker.pojo", rootNode, new File(src));
+
+        rootNode = mapper.readTree(new File(resources + "profile/MatchmakerInputSchema.json"));
+        POJOFactory.createClass("MatchmakerInputSchema","edu.indiana.d2i.sead.matchmaker.service", rootNode, new File(src));
+
+    }
 }
