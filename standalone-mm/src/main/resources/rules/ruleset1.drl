@@ -17,10 +17,11 @@ rule "file size"
 		mml: Ruleset1MatchMakingList()
 	then
 		System.out.println( " Repo " +repo.getRepositoryName()+" not allowed (File Size Restriction)");
-		Set<String> notAllowedList= new HashSet<String>();
-		notAllowedList.add(repo.getRepositoryName());
-		mml.notAllowed(notAllowedList);
-		mml.printCandidateList();
+		//Set<String> notAllowedList= new HashSet<String>();
+		//notAllowedList.add(repo.getRepositoryName());
+		//mml.notAllowed(notAllowedList);
+		mml.ruleFired(repo.getRepositoryName(), "file size", "Collection size is not allowed" , "-1");
+		//mml.printCandidateList();
 		
 end
 
@@ -31,9 +32,10 @@ rule "file type"
 		mml: Ruleset1MatchMakingList()
 	then
 		System.out.println( " Repo " +repo.getRepositoryName()+" not allowed (File Type Restriction)");
-		Set<String> notAllowedList= new HashSet<String>();
-		notAllowedList.add(repo.getRepositoryName());
-		mml.notAllowed(notAllowedList);
-		mml.printCandidateList();
+		//Set<String> notAllowedList= new HashSet<String>();
+		//notAllowedList.add(repo.getRepositoryName());
+		//mml.notAllowed(notAllowedList);
+		mml.ruleFired(repo.getRepositoryName(), "file type", "File type is not allowed" , "-1");
+		//mml.printCandidateList();
 end
 //

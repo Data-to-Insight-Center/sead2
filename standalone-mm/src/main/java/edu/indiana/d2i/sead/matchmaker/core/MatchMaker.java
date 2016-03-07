@@ -34,12 +34,15 @@ import org.kie.api.builder.KieRepository;
 import org.kie.api.builder.Message;
 import org.kie.api.runtime.KieContainer;
 import org.kie.api.runtime.KieSession;
+import org.kie.api.runtime.rule.Match;
 import org.kie.internal.io.ResourceFactory;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.lang.reflect.InvocationTargetException;
+import java.util.HashMap;
+import java.util.Map;
 
 
 public class MatchMaker {
@@ -74,6 +77,8 @@ public class MatchMaker {
         KieContainer kContainer = ks.newKieContainer(kr.getDefaultReleaseId());
 
         KieSession kSession = kContainer.newKieSession();
+        TrackingAgendaEventListener trackingAgendaEventListener = new TrackingAgendaEventListener();
+        kSession.addEventListener(trackingAgendaEventListener);
 
         for(Object repo:repositories){
             kSession.insert(repo);
@@ -82,12 +87,20 @@ public class MatchMaker {
         kSession.insert(researchObject);
         kSession.insert(initList);
         for(String className : classNames){
-            kSession.insert(Class.forName(className).newInstance());
+           kSession.insert(Class.forName(className).newInstance());
         }
         System.out.println("Fire All Rules...");
         kSession.fireAllRules();
         //initList.printCandidateList();
+
+        Map rules = new HashMap<String , String>();
+        for(Match match : trackingAgendaEventListener.getMatchList()){
+            rules.put(match.getRule().getName(), "rule");
+        }
+
         kSession.dispose();
+
+        initList.addUnmatchedRules(rules.keySet());
     }
 
     public static void main(String[] args) throws ClassNotFoundException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException, JsonParseException, JsonMappingException, IOException, InstantiationException {

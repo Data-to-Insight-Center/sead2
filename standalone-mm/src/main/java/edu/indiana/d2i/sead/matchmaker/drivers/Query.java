@@ -11,7 +11,11 @@ public class Query extends MetaDriver {
 	public String exec() {
 		System.out.println("responseID="+responseID);
 		return "{\n\"responseID\":\""+responseID+"\",\n\"sucess\":"+true+",\n\"response\":"+candidateList.CandidateList() +"\n}"; 
-	} 
+	}
+
+    public String getResults() {
+        return candidateList.CandidateList();
+    }
 
 	
 }

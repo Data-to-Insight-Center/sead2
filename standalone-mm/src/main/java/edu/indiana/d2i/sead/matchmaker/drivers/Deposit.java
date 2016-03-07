@@ -1,12 +1,8 @@
 package edu.indiana.d2i.sead.matchmaker.drivers;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import edu.indiana.d2i.sead.matchmaker.client.AsynchronizedClient;
-import edu.indiana.d2i.sead.matchmaker.service.messaging.MessagingConfig;
 import edu.indiana.d2i.sead.matchmaker.util.MatchmakerENV;
 import org.apache.log4j.Logger;
-
-import java.util.Set;
 
 public class Deposit extends MetaDriver {
 	private Logger log;
@@ -20,7 +16,7 @@ public class Deposit extends MetaDriver {
 	}
 	
 	public String exec() {
-		Set<String> repositories= candidateList.getCandidateList().keySet();
+		/*Set<String> repositories= candidateList.getCandidateList().keySet();
 		String repoStrings = "";
 		boolean depositFlag = true;
 		for (String repo : repositories ){
@@ -52,7 +48,10 @@ public class Deposit extends MetaDriver {
 		log.info("{\n\"responseID\":\""+responseID+"\",\n\"sucess\":"+depositFlag+",\n\"response\": \"Deposit requests sent to "+repoStrings+"\"\n}");
 		
 		return "{\n\"responseID\":\""+responseID+"\",\n\"sucess\":"+depositFlag+",\n\"response\": \"Deposit requests sent to "+repoStrings+"\"\n}";
-	}
+	*/
+
+        return "";
+    }
 	
 	public String getBaseRoutingKeyForRepo(String repoName){
 		//TODO: right now the routingkey to a repo is the same as the repo name. Need to make this configurable by add a json file for mapping repo names to routingkeys.

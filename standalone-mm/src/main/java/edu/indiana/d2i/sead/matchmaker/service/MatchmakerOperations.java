@@ -55,7 +55,7 @@ public class MatchmakerOperations {
 		l.info(request.get("operation").asText());
 		if(request.get("operation").asText().equals("query")){
 			md =  new Query(env, request.get("message").toString(),responseID);
-			return md.exec();
+			return md.getResults();
 		}/*else if(request.get("operation").asText().equals("deposit")){
 			md =  new Deposit(env, request, responseID);
 			return md.exec();

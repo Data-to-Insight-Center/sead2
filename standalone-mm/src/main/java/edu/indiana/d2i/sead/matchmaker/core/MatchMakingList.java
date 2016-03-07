@@ -47,9 +47,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import org.apache.log4j.Logger;
 
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Set;
+import java.util.*;
 
 public class MatchMakingList {
 	
@@ -58,10 +56,16 @@ public class MatchMakingList {
 	protected int WEIGHT_DEFAULT;
 	protected String PRIMARY_KEY;
 	private Logger log;
-	
+
+    private static final String REPOSITORY_NAME = "repositoryName";
+    private static final String PER_RULE_SCORE = "Per Rule Scores";
+    private static final String RULE_NAME = "Rule Name";
+    private static final String RULE_SCORE = "Score";
+    private static final String RULE_MESSAGE = "Message";
+
 	//String MatchmakingSchema ="{\"priority\":\"Integer\", \"weight\":\"Integer\"}";
 	
-	private HashMap<String, HashMap<String, Integer>> candidateList;
+	private Map<String, HashMap<String, Object>> candidateList;
 	
 	/*
 	 * Initiate candidateList, add all repositories.
@@ -69,12 +73,14 @@ public class MatchMakingList {
 	public MatchMakingList(ArrayNode repositories){
 		log = Logger.getLogger(MatchMakingList.class);
 		init();
-		this.candidateList = new HashMap<String, HashMap<String, Integer>>();
+		this.candidateList = new HashMap<String, HashMap<String, Object>>();
 		for (JsonNode repo : repositories ){
-			HashMap<String, Integer> params = new HashMap<String, Integer>();
-			params.put("priority", PRIORITY_DEFAULT);
-			params.put("weight", WEIGHT_DEFAULT);
-			this.candidateList.put(repo.path(PRIMARY_KEY).asText(),params);
+			HashMap<String, Object> params = new HashMap<String, Object>();
+			//params.put("priority", PRIORITY_DEFAULT);
+			//params.put("weight", WEIGHT_DEFAULT);
+			//params.put("orgidentifier", repo.path(PRIMARY_KEY).asText());
+			params.put(REPOSITORY_NAME, repo.path(PRIMARY_KEY).asText());
+			this.candidateList.put(repo.path(PRIMARY_KEY).asText(), params);
 			//System.out.println(repo.toString());
 		}
 	}
@@ -92,8 +98,8 @@ public class MatchMakingList {
 	 * Therefore, get intersections of two sets: candidateList and restrictCandidates.
 	 * */
 	public void restricted(Set<String> restrictCandidates){
-		Set<String> newCandidateKeys=this.candidateList.keySet();
-		newCandidateKeys.retainAll(restrictCandidates);
+		//Set<String> newCandidateKeys=this.candidateList.keySet();
+		//newCandidateKeys.retainAll(restrictCandidates);
 	}
 	
 	/*
@@ -101,13 +107,13 @@ public class MatchMakingList {
 	 * Therefore, get the relative complement of notAllowedList in candidateList
 	 * */
 	public void notAllowed(Set<String> notAllowedList){
-		Set<String> candidateKeySet=this.candidateList.keySet();
+		/*Set<String> candidateKeySet=this.candidateList.keySet();
 		Iterator iterator = candidateKeySet.iterator();
       	while (iterator.hasNext()){
       		if(notAllowedList.contains(iterator.next())){
       			iterator.remove();
       		}
-      	}
+      	}*/
 		
 	}
 	
@@ -115,41 +121,90 @@ public class MatchMakingList {
 	 * Some rules may indicate preferred list. 
 	 * */
 	public void preferred(Set<String> PreferredList){
-		for(String candidate : PreferredList){
+		/*for(String candidate : PreferredList){
 			if(this.candidateList.containsKey(candidate)){
 				HashMap<String, Integer> params= this.candidateList.get(candidate);
 				params.replace("priority", PRIORITY_PREFERRED);
 			}
-		}
+		}*/
 		
 	}
 	
 	public void setWeight(String candidate, int weight){
-		if (this.candidateList.containsKey(candidate)){
+		/*if (this.candidateList.containsKey(candidate)){
 			//System.out.println(candidate+" "+weight);
 			HashMap<String, Integer> params= this.candidateList.get(candidate);
 			params.replace("weight", weight);
-		}
+		}*/
 	}
 	
 	public void addWeight(String candidate, int weight){
-		if (this.candidateList.containsKey(candidate)){
+		/*if (this.candidateList.containsKey(candidate)){
 			//System.out.println(candidate+" "+weight);
 			HashMap<String, Integer> params= this.candidateList.get(candidate);
 			params.replace("weight", params.get("weight").intValue() + weight);
-		}
+		}*/
 	}
 	
 	public void reduceWeight(String candidate, int weight){
-		if (this.candidateList.containsKey(candidate)){
+		/*if (this.candidateList.containsKey(candidate)){
 			//System.out.println(candidate+" "+weight);
 			HashMap<String, Integer> params= this.candidateList.get(candidate);
 			params.replace("weight", params.get("weight").intValue() - weight);
-		}
+		}*/
 	}
-	
-	public HashMap<String, HashMap<String, Integer>> getCandidateList(){
-		return this.candidateList;
+
+    public void ruleFired(String candidate, String rule, String message, String score) {
+        if (this.candidateList.containsKey(candidate)){
+            //System.out.println(candidate+" "+weight);
+            HashMap<String, Object> repository= this.candidateList.get(candidate);
+            HashMap<String, Object> ruleScore = new HashMap<String, Object>();
+            ruleScore.put(RULE_NAME, rule);
+            ruleScore.put(RULE_MESSAGE, message);
+            ruleScore.put(RULE_SCORE, score);
+
+            List<HashMap<String, Object>> ruleScoreList = new ArrayList<HashMap<String, Object>>();
+
+            if(repository.containsKey(PER_RULE_SCORE)){
+                ruleScoreList = (List<HashMap<String, Object>>)repository.get(PER_RULE_SCORE);
+            } else {
+                repository.put(PER_RULE_SCORE, ruleScoreList);
+            }
+            ruleScoreList.add(ruleScore);
+
+        }
+    }
+
+    public void addUnmatchedRules(Set<String> rules) {
+        for (HashMap<String, Object> candidate : this.candidateList.values()) {
+
+            List<HashMap<String, Object>> ruleScoreList = new ArrayList<HashMap<String, Object>>();
+            if(candidate.containsKey(PER_RULE_SCORE)){
+                ruleScoreList = (List<HashMap<String, Object>>)candidate.get(PER_RULE_SCORE);
+            } else {
+                candidate.put(PER_RULE_SCORE, ruleScoreList);
+            }
+
+            List currentRules = new ArrayList();
+            for (Object rule : (ArrayList) candidate.get(PER_RULE_SCORE)) {
+                currentRules.add(((HashMap) rule).get(RULE_NAME));
+            }
+
+            for (String availRule : rules) {
+                if (!currentRules.contains(availRule)) {
+                    HashMap<String, Object> ruleScore = new HashMap<String, Object>();
+                    ruleScore.put(RULE_NAME, availRule);
+                    ruleScore.put(RULE_MESSAGE, "Not Used");
+                    ruleScore.put(RULE_SCORE, "0");
+                    ruleScoreList.add(ruleScore);
+                }
+            }
+        }
+
+    }
+
+    public List<HashMap<String, Object>> getCandidateList(){
+		return new ArrayList<HashMap<String, Object>>(this.candidateList.values());
 	}
 	
 	public void printCandidateList(){
@@ -160,7 +215,7 @@ public class MatchMakingList {
 		ObjectMapper mapper = new ObjectMapper();
         String matchmaking = "";
 		try {
-			matchmaking = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(this.candidateList);
+			matchmaking = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(getCandidateList());
 			//System.out.println(matchmaking);
 			log.info(matchmaking);
 		} catch (JsonProcessingException e) {
