@@ -11,15 +11,12 @@ import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
 import org.drools.compiler.compiler.DrlParser;
 import org.drools.compiler.compiler.DroolsParserException;
-import org.drools.compiler.lang.descr.AndDescr;
-import org.drools.compiler.lang.descr.BaseDescr;
-import org.drools.compiler.lang.descr.PackageDescr;
-import org.drools.compiler.lang.descr.PatternDescr;
-import org.drools.compiler.lang.descr.RuleDescr;
+import org.drools.compiler.lang.descr.*;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.kie.api.KieServices;
+import org.kie.api.builder.KieFileSystem;
 import org.kie.api.io.Resource;
 import org.kie.api.io.ResourceType;
 import org.kie.api.runtime.KieContainer;
@@ -144,11 +141,19 @@ public class RestTest {
                                     JSONObject objj = new JSONObject();
                                     // Check jth time patterns
                                     PatternDescr first = (PatternDescr) lhs.getDescrs().get( j );
+                                    List<? extends BaseDescr> lhs_constraint = first.getConstraint().getDescrs();
+                                    String lhs_const_val="";
+                                    if (lhs_constraint.size() > 0) {
+                                        for (int q = 0; q < lhs_constraint.size(); q++) {
+                                            lhs_const_val += lhs_constraint.get(q).getText();
+                                        }
+                                        }
+
                                     String lhs_identifier = first.getIdentifier();
                                     String lhs_objtype = first.getObjectType();
 
                                     objj.put("id", lhs_identifier);
-                                    objj.put("objType", lhs_objtype);
+                                    objj.put("objType", lhs_objtype +"("+lhs_const_val+")");
                                     lhsArray.put(objj);
                                 }
                                 String rhs = (String) (rules_val.get( i )).getConsequence();
@@ -166,9 +171,170 @@ public class RestTest {
         System.out.println(root.toString());
         return Response.ok().entity(root.toString()).build();
     }
-	
-	public static void main( String args[]) throws Exception {
+
+    @POST
+    @Path("/rules")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public String AddNewRule(final String input) throws JSONException, IOException {
+        JSONObject req = new JSONObject(input);
+        JSONArray rules = req.getJSONArray("rules");
+        for (int v = rules.length()-1; v < rules.length(); ++v) {
+            JSONObject rule = rules.getJSONObject(v);
+            String name = rule.getString("name");
+            JSONArray lhs = rule.getJSONArray("lhs");
+            JSONArray rhs = rule.getJSONArray("rhs");
+
+        String new_rule = "\n\nrule " + name + "\n" + "when\n";
+            for (int i = 0; i < lhs.length(); ++i) {
+                JSONObject lh = lhs.getJSONObject(i);
+                String id = lh.getString("id");
+                String objType = lh.getString("objType");
+                new_rule += "    "+ id + " : " + objType +"\n";
+            }
+            new_rule += "then\n";
+
+            for (int u = 0; u < rhs.length(); ++u) {
+                JSONObject rh = rhs.getJSONObject(u);
+                String rhs_val = rh.getString("rhs_val");
+                List<String> rhsList = Arrays.asList(rhs_val.split(";"));
+                for(int o=0; o < rhsList.size(); ++o){
+                    new_rule += "    " +  rhsList.get(o) + ";\n";
+            }}
+
+        new_rule +=    "end\n";
+        KieServices ks = KieServices.Factory.get();
+        KieFileSystem kfs = ks.newKieFileSystem();
+
+        ClassLoader classLoader = getClass().getClassLoader();
+        File folder = new File(classLoader.getResource("rules").getFile());
+        File[] listOfFiles = folder.listFiles();
+
+            for (int m = 0; m < listOfFiles.length; m++) {
+                if (listOfFiles[m].isFile()) {
+                    if (listOfFiles[m].getName().endsWith(".drl") && listOfFiles[m].getName().contentEquals("new.drl")) {
+                        String ruleFile = "rules/" + listOfFiles[m].getName();
+
+                        //open a bufferedReader to file
+                        BufferedReader reader = new BufferedReader(new FileReader(listOfFiles[m].getPath()));
+                        File file = new File(listOfFiles[m].getPath());
+                        FileInputStream fis = new FileInputStream(file);
+                        byte[] data = new byte[(int) file.length()];
+                        fis.read(data);
+                        fis.close();
+
+                        String str = new String(data, "UTF-8");
+                        BufferedWriter out = new BufferedWriter(new FileWriter(listOfFiles[m].getPath()));
+
+                        out.write(new_rule);
+                        out.newLine();
+                        if (str != null) {
+                            out.write(str);
+                        }
+                        out.close();
+
+                        File dest = new File("/Users/kunarath/Projects/sead2/standalone-mm/src/main/resources/rules/new.drl");
+
+                        InputStream inStream = null;
+                        OutputStream outStream = null;
+
+                        inStream = new FileInputStream(file);
+                        outStream = new FileOutputStream(dest);
+
+                        byte[] buffer = new byte[1024];
+                        int length;
+                        //copy the file content in bytes
+                        while ((length = inStream.read(buffer)) > 0){
+                            outStream.write(buffer, 0, length);
+                        }
+
+                        inStream.close();
+                        outStream.close();
+
+                        KieContainer kContainer = ks.getKieClasspathContainer();
+                        KieSession kSession = kContainer.newKieSession("ksession-rules");
+                        kSession.fireAllRules();
+                    }
+
+                    }
+                    }
+        }
+        return input;
+}
+
+    @DELETE
+    @Path("/rules/{name}")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public String DeleteRule(@PathParam("name") final String del_rule_name) throws JSONException, IOException {
+        System.out.println(del_rule_name);
+
+        ClassLoader classLoader = getClass().getClassLoader();
+        File folder = new File(classLoader.getResource("rules").getFile());
+        File[] listOfFiles = folder.listFiles();
+
+        for (int m = 0; m < listOfFiles.length; m++) {
+            if (listOfFiles[m].isFile())
+                if (listOfFiles[m].getName().endsWith(".drl") && listOfFiles[m].getName().contentEquals("new.drl")) {
+                    String ruleFile = "rules/" + listOfFiles[m].getName();
+                    System.out.println(ruleFile);
+
+                    BufferedReader reader = new BufferedReader(new FileReader(listOfFiles[m].getPath()));
+                    File file = new File(listOfFiles[m].getPath());
+                    FileInputStream fis = new FileInputStream(file);
+                    byte[] data = new byte[(int) file.length()];
+                    fis.read(data);
+                    fis.close();
+
+                    String str = new String(data, "UTF-8");
+
+                    if (str.contains(del_rule_name)){
+
+                        String firstDelim = "rule " + del_rule_name;
+                        int p1 = str.indexOf(firstDelim);
+                        String lastDelim = "end";
+                        int p2 = str.indexOf(lastDelim, p1);   // look after start delimiter
+                        String replacement = " ";
+                        if (p1 >= 0 && p2 > p1) {
+                            String res = str.substring(0, p1+firstDelim.length())
+                                    + replacement
+                                    + str.substring(p2);
+                            String content = res.replace((firstDelim + " " + lastDelim), "").trim();
+                            System.out.println(content);
+
+                        BufferedWriter out = new BufferedWriter(new FileWriter(listOfFiles[m].getPath()));
+
+                        out.write(content);
+                        out.close();
+
+                        File dest = new File("/Users/kunarath/Projects/sead2/standalone-mm/src/main/resources/rules/new.drl");
+                        InputStream inStream = null;
+                        OutputStream outStream = null;
+
+                        inStream = new FileInputStream(file);
+                        outStream = new FileOutputStream(dest);
+
+                        byte[] buffer = new byte[1024];
+                        int length;
+                        //copy the file content in bytes
+                        while ((length = inStream.read(buffer)) > 0){
+                            outStream.write(buffer, 0, length);
+                        }
+
+                        inStream.close();
+                        outStream.close();
+                        }
+                    }
+                }
+        }
+
+        return del_rule_name;
+    }
+
+    public static void main( String args[]) throws Exception {
         RestTest resttest = new RestTest();
         resttest.getRulesList();
+        //resttest.AddNewRule("New Rule Array");
+        //resttest.DeleteRule("Deleting Rule Name");
     }
 }
