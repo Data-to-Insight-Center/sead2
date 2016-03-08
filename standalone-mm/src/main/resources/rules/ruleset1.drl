@@ -8,34 +8,69 @@ import edu.indiana.d2i.sead.matchmaker.pojo.*;
 import edu.indiana.d2i.sead.matchmaker.custom.ruleset1.*;
 
 
-rule "file size"
+////// Maximum Total Size ///////
+
+rule "Maximum Total Size - Metadata check"
 	when
-		
+		Repository(getMaxFileSize().unit == null || getMaxFileSize().value == null) or ResearchObject(fileSize.unit == null || fileSize.value == null)
 		repo: Repository()
-		researchObject : ResearchObject()
+		mml: Ruleset1MatchMakingList()
+	then
+		System.out.println( "Maximum Total Size restriction was not used for " +repo.getRepositoryName());
+		mml.ruleFired(repo.getRepositoryName(), "Maximum Total Size", "Not used" , "0");
+end
+
+rule "Maximum Total Size - Not matched"
+	when
+		repo: Repository(getMaxFileSize().unit != null && getMaxFileSize().value != null)
+		researchObject : ResearchObject(fileSize.unit != null && fileSize.value != null)
 		Ruleset1Utility(computeBinaryUnitConverter(repo.MaxFileSize.unit)*repo.MaxFileSize.value < computeBinaryUnitConverter(researchObject.fileSize.unit)*researchObject.fileSize.value)
 		mml: Ruleset1MatchMakingList()
 	then
-		System.out.println( " Repo " +repo.getRepositoryName()+" not allowed (File Size Restriction)");
-		//Set<String> notAllowedList= new HashSet<String>();
-		//notAllowedList.add(repo.getRepositoryName());
-		//mml.notAllowed(notAllowedList);
-		mml.ruleFired(repo.getRepositoryName(), "file size", "Collection size is not allowed" , "-1");
-		//mml.printCandidateList();
-		
+		System.out.println("Total size is not acceptable for " +repo.getRepositoryName());
+		mml.ruleFired(repo.getRepositoryName(), "Maximum Total Size", "Total size is not acceptable (<= " + repo.getMaxFileSize().getValue() + " " + repo.getMaxFileSize().getUnit() + ")" , "-1");
 end
 
-rule "file type"
+rule "Maximum Total Size - Matched"
 	when
-		repo: Repository()
-		ResearchObject(repo.contentType not contains contentType && repo.contentType not contains "any")
+        repo: Repository(getMaxFileSize().unit != null && getMaxFileSize().value != null)
+		researchObject : ResearchObject(fileSize.unit != null && fileSize.value != null)
+		Ruleset1Utility(computeBinaryUnitConverter(repo.MaxFileSize.unit)*repo.MaxFileSize.value >= computeBinaryUnitConverter(researchObject.fileSize.unit)*researchObject.fileSize.value)
 		mml: Ruleset1MatchMakingList()
 	then
-		System.out.println( " Repo " +repo.getRepositoryName()+" not allowed (File Type Restriction)");
-		//Set<String> notAllowedList= new HashSet<String>();
-		//notAllowedList.add(repo.getRepositoryName());
-		//mml.notAllowed(notAllowedList);
-		mml.ruleFired(repo.getRepositoryName(), "file type", "File type is not allowed" , "-1");
-		//mml.printCandidateList();
+		System.out.println("Total size is acceptable for " +repo.getRepositoryName());
+		mml.ruleFired(repo.getRepositoryName(), "Maximum Total Size", "Total size is acceptable (<= " + repo.getMaxFileSize().getValue() + " " + repo.getMaxFileSize().getUnit() + ")", "1");
 end
-//
+
+
+////// Acceptable File Types ///////
+
+rule "Acceptable File Types - Metadata check"
+	when
+	    ResearchObject(contentType == null) or Repository(contentType == null)
+		repo: Repository()
+		mml: Ruleset1MatchMakingList()
+	then
+		System.out.println("Acceptable File Types constraint was not used for " +repo.getRepositoryName());
+		mml.ruleFired(repo.getRepositoryName(), "Acceptable File Types", "Not used" , "0");
+end
+
+rule "Acceptable File Types - Not matched"
+	when
+		repo: Repository(contentType != null)
+		ResearchObject(contentType != null && (repo.contentType not contains contentType && repo.contentType not contains "any"))
+		mml: Ruleset1MatchMakingList()
+	then
+		System.out.println("File types in RO are not acceptable for " +repo.getRepositoryName());
+		mml.ruleFired(repo.getRepositoryName(), "Acceptable File Types", "Collection contains forbidden types" , "-1");
+end
+
+rule "Acceptable File Types - Matched"
+	when
+		repo: Repository(contentType != null)
+		ResearchObject(contentType != null && (repo.contentType contains contentType || repo.contentType contains "any"))
+		mml: Ruleset1MatchMakingList()
+	then
+		System.out.println("File types in RO are acceptable for " +repo.getRepositoryName());
+		mml.ruleFired(repo.getRepositoryName(), "Acceptable File Types", "Collection only contains acceptable types" , "1");
+end

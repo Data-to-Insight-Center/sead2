@@ -41,7 +41,6 @@ public class TrackingAgendaEventListener extends DefaultAgendaEventListener  {
         }
 
         log.debug(sb.toString());
-        System.out.println("\n\n==================== After match " + ruleName + "================\n\n");
     }
 
     public final List<Match> getMatchList() {
