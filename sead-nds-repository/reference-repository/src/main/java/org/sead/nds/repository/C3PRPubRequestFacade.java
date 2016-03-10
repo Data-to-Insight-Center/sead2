@@ -100,15 +100,17 @@ public class C3PRPubRequestFacade {
 		if (o != null) {
 			if (o instanceof JSONArray) {
 				for (int i = 0; i < ((JSONArray) o).length(); i++) {
-					if ("http://cet.ncsa.uiuc.edu/2007/Collection"
-							.equals(((JSONArray) o).getString(i))) {
+                    String type = ((JSONArray) o).getString(i).trim();
+                    if ("http://cet.ncsa.uiuc.edu/2007/Collection".equals(type) ||
+                            "http://cet.ncsa.uiuc.edu/2016/Folder".equals(type)) {
 						return true;
 					}
 					// Check for Clowder type
 				}
 			} else if (o instanceof String) {
-				if ("http://cet.ncsa.uiuc.edu/2007/Collection"
-						.equals((String) o)) {
+                String type = ((String) o).trim();
+                if ("http://cet.ncsa.uiuc.edu/2007/Collection".equals(type) ||
+                        "http://cet.ncsa.uiuc.edu/2016/Folder".equals(type)) {
 					return true;
 				}
 				// Check for Clowder type
