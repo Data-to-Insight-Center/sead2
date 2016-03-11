@@ -2,7 +2,6 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
     <title></title>
-    <link href="css/bootstrap.css" rel="stylesheet" />
     <link href="css/crud_table.css" rel="stylesheet" />
     <script type="text/javascript" src="js/jquery.min.js"></script>
     <script type="text/javascript" src="js/json2.js"></script>
@@ -11,59 +10,55 @@
 
 </head>
 <body>
-<div class="container">
-<div style="height:10px;">&nbsp;</div>
-	<h1>Match Maker Rules Management Admin UI</h1>
+<div class="container" style="margin:50px">
+    <div style="height:10px;">&nbsp;</div>
+    <h1>Match Maker Rules Management Admin UI</h1>
     <div style="height:20px;">&nbsp;</div>
     <div><span id="add_button" name="add" title="add" class="ui-icon ui-icon-pencil AddRow" style="cursor:pointer">Add New Rule</span></div>
     <div style="height:10px;">&nbsp;</div>
     <table id="CRUDthisTable" class="mediumTable">
         <thead>
-        	
-            <tr class="rowHeader">
-                <th>Manage</th>
-                <th>Rule Name </th>
-                <th>LHS ID </th>
-                <th>LHS Object</th>
-                <th>RHS </th>
-            </tr>
-            
+
+        <tr class="rowHeader">
+            <th>Manage</th>
+            <th>Rule Name </th>
+            <th>LHS Full</th>
+            <th>RHS </th>
+        </tr>
+
         </thead>
         <tbody>
         </tbody>
         <tfoot>
-            
+
         </tfoot>
     </table>
-   </div>
+</div>
     <script id="editRowTemplate" type="text/x-jquery-tmpl">
         <tr class="editRow">
-            <td style="width:20%;">
+            <td class="manage">
                 <span id="cancel" name="cancel" tooltip="Cancel" class="ui-icon ui-icon-close CancelRow" style="cursor:pointer">Cancel</span>
                 <span id="save" name="save" tooltip="Save" class="ui-icon ui-icon-disk SaveRow" style="cursor:pointer">Save</span>
             </td>
-           
-            <td style="width:5%;">
-                <input type="text" id="field1" name="field1" class="ruleName" value="${RuleName}" /></td>
-            <td style="width:7%;">
-                <input type="text" id="field2" name="field2" class="lhsId" value="${LHSID}" /></td>
-            <td style="width:20%;">
-                <input type="text" id="field3" name="field3" class="lhsObject" value="${LHSOBJECT}" /></td>
-            <td style="width:48%;">
-                <input type="text" id="field4" name="field4" class="rhs" value="${RHS}" /></td>
+
+            <td>
+				<textarea id="field1" name="field1" class="ruleName" rows="3">${RuleName}</textarea></td>
+			<td>
+                <textarea id="field2" name="field2" class="lhsFull" rows="6">${LHSFULL}</textarea></td>
+            <td>
+                <textarea id="field3" name="field3" class="rhs" rows="6">${RHS}</textarea></td>
         </tr>
     </script>
     <script id="viewRowTemplate" type="text/x-jquery-tmpl">
-	
-		<tr style="height:150px;">
-            <td style="width:8%;"><span id="edit" name="edit" title="Edit" class="ui-icon ui-icon-pencil EditRow" style="cursor:pointer">Edit</span>
+
+		<tr>
+            <td class="manage"><span id="edit" name="edit" title="Edit" class="ui-icon ui-icon-pencil EditRow" style="cursor:pointer">Edit</span>
             <span id="delete" name="delete" title="Delete" class="ui-icon ui-icon-trash DeleteRow" style="cursor:pointer">Delete</span>
 			</td>
-			
-            <td style="width:5%;">${RuleName}</td>
-            <td style="width:7%;">${LHSID}</td>
-            <td style="width:32%;">${LHSOBJECT}</td>
-            <td style="width:48%;">${RHS}</td>
+
+            <td class="view_ruleName">{{html RuleName}}</td>
+			<td class="view_lhsfull" style="width:250px;">{{html LHSFULL}}</td>
+            <td class="view_rhs">{{html RHS}}</td>
         </tr>
     </script>
 </body>

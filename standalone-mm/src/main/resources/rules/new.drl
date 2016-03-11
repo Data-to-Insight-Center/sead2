@@ -1,7 +1,0 @@
-rule TestRule
-when
-    test1 : TestLHS()
-    test2 : TestRHS()
-then
-    printTest();
-end

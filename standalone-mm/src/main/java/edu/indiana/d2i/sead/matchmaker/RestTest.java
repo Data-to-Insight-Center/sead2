@@ -27,6 +27,7 @@ import org.kie.internal.io.ResourceFactory;
 
 import java.io.*;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -129,7 +130,7 @@ public class RestTest {
                                 RuleDescr rule = rules_val.get( i );
                                 obj.put("name", rule.getName());
                                 AndDescr lhs = rule.getLhs();
-                                List<BaseDescr> val4 = rule.getLhs().getDescrs();
+                                List<BaseDescr> val4 = lhs.getDescrs();
 
                                 JSONArray lhsArray = new JSONArray();
                                 obj.put("lhs", lhsArray);
@@ -137,30 +138,17 @@ public class RestTest {
                                 obj.put("rhs", rhsArray);
                                 rulesArray.put(obj);
 
-                                for (int j = 0; j < val4.size(); j=j+1){
-                                    JSONObject objj = new JSONObject();
-                                    // Check jth time patterns
-                                    PatternDescr first = (PatternDescr) lhs.getDescrs().get( j );
-                                    List<? extends BaseDescr> lhs_constraint = first.getConstraint().getDescrs();
-                                    String lhs_const_val="";
-                                    if (lhs_constraint.size() > 0) {
-                                        for (int q = 0; q < lhs_constraint.size(); q++) {
-                                            lhs_const_val += lhs_constraint.get(q).getText();
-                                        }
-                                        }
-
-                                    String lhs_identifier = first.getIdentifier();
-                                    String lhs_objtype = first.getObjectType();
-
-                                    objj.put("id", lhs_identifier);
-                                    objj.put("objType", lhs_objtype +"("+lhs_const_val+")");
-                                    lhsArray.put(objj);
-                                }
+                                getLHS(val4, lhsArray);
                                 String rhs = (String) (rules_val.get( i )).getConsequence();
                                 List<String> rhsList = Arrays.asList(rhs.split(";"));
 
+                                List<String> new_rhs_list = new ArrayList<String>();
+                                for (int f=0; f < rhsList.size()-1; f++){
+                                    new_rhs_list.add(f, rhsList.get(f) + ";");
+                                }
+
                                 JSONObject obj3 = new JSONObject();
-                                obj3.put("rhs_val", rhsList);
+                                obj3.put("rhs_val", new_rhs_list);
                                 rhsArray.put(obj3);
                             }
                         }if ( kbuilder.hasErrors() ) {
@@ -170,6 +158,71 @@ public class RestTest {
         }
         System.out.println(root.toString());
         return Response.ok().entity(root.toString()).build();
+    }
+
+    public static void getLHS(List and_array, JSONArray lhs_array) throws JSONException {
+
+        for (int j = 0; j < and_array.size(); j=j+1){
+            JSONObject objj = new JSONObject();
+            // Check jth time patterns
+            Object arrayObject = and_array.get(j);
+            if(arrayObject instanceof PatternDescr) {
+                String lhs_const_val="";
+                PatternDescr first = (PatternDescr) and_array.get( j );
+                List<? extends BaseDescr> lhs_constraint = first.getConstraint().getDescrs();
+                if (lhs_constraint.size() > 0) {
+                    for (int q = 0; q < lhs_constraint.size(); q++) {
+                        lhs_const_val += lhs_constraint.get(q).getText();
+                    }
+                }
+                String lhs_identifier = first.getIdentifier();
+                String lhs_objtype = first.getObjectType();
+
+                objj.put("id", lhs_identifier);
+                objj.put("objType", lhs_objtype +"("+lhs_const_val+")");
+                if(lhs_identifier == null){
+                    objj.put("lhsFull", lhs_objtype +"("+lhs_const_val+")");
+                }else{
+                    objj.put("lhsFull", lhs_identifier + ":" + lhs_objtype +"("+lhs_const_val+")");
+                }
+                lhs_array.put(objj);
+
+            } else if (arrayObject instanceof OrDescr) {
+                OrDescr first = (OrDescr) and_array.get( j );
+                List<? extends BaseDescr> lhs_constraint = first.getDescrs();
+
+                String lhs_identifier = "";
+                String new_lhs_obj = "";
+                if (lhs_constraint.size() > 0) {
+
+                    for (int q = 0; q < lhs_constraint.size(); q++) {
+                        PatternDescr col = (PatternDescr) first.getDescrs().get(q);
+
+                        lhs_identifier = col.getIdentifier();
+                        String lhs_objtype = col.getObjectType();
+                        AndDescr lhs_const = (AndDescr) col.getConstraint();
+
+                        String lhs_const_or_val = lhs_const.getDescrs().get(0).getText();
+                        new_lhs_obj += lhs_objtype +"("+lhs_const_or_val+") or ";
+
+                    }
+
+                }
+                if (lhs_identifier == null){
+                    lhs_identifier="";
+                }
+                String last_new_lhs_obj =new_lhs_obj.substring(0, new_lhs_obj.lastIndexOf(" ")-2);
+                objj.put("id", lhs_identifier);
+                objj.put("objType", last_new_lhs_obj);
+                if(lhs_identifier == null || lhs_identifier==""){
+                    objj.put("lhsFull", last_new_lhs_obj);
+                }else{
+                    objj.put("lhsFull", lhs_identifier + ":" + last_new_lhs_obj);
+                }
+                lhs_array.put(objj);
+
+            }
+        }
     }
 
     @POST
@@ -185,19 +238,18 @@ public class RestTest {
             JSONArray lhs = rule.getJSONArray("lhs");
             JSONArray rhs = rule.getJSONArray("rhs");
 
-        String new_rule = "\n\nrule " + name + "\n" + "when\n";
-            for (int i = 0; i < lhs.length(); ++i) {
-                JSONObject lh = lhs.getJSONObject(i);
-                String id = lh.getString("id");
-                String objType = lh.getString("objType");
-                new_rule += "    "+ id + " : " + objType +"\n";
-            }
+            String new_rule = "\n\nrule " + '"' + name + '"' + "\n" + "when\n";
+                for (int i = 0; i < lhs.length(); ++i) {
+                    JSONObject lh = lhs.getJSONObject(i);
+                    String lhsFull = lh.getString("lhsFull");
+                    new_rule += "    " + lhsFull +"\n";
+                }
             new_rule += "then\n";
 
             for (int u = 0; u < rhs.length(); ++u) {
                 JSONObject rh = rhs.getJSONObject(u);
                 String rhs_val = rh.getString("rhs_val");
-                List<String> rhsList = Arrays.asList(rhs_val.split(";"));
+                List<String> rhsList = Arrays.asList(rhs_val.split(";\n|;"));
                 for(int o=0; o < rhsList.size(); ++o){
                     new_rule += "    " +  rhsList.get(o) + ";\n";
             }}
@@ -212,9 +264,7 @@ public class RestTest {
 
             for (int m = 0; m < listOfFiles.length; m++) {
                 if (listOfFiles[m].isFile()) {
-                    if (listOfFiles[m].getName().endsWith(".drl") && listOfFiles[m].getName().contentEquals("new.drl")) {
-                        String ruleFile = "rules/" + listOfFiles[m].getName();
-
+                    if (listOfFiles[m].getName().endsWith(".drl") && listOfFiles[m].getName().contentEquals("ruleset1.drl")) {
                         //open a bufferedReader to file
                         BufferedReader reader = new BufferedReader(new FileReader(listOfFiles[m].getPath()));
                         File file = new File(listOfFiles[m].getPath());
@@ -226,14 +276,13 @@ public class RestTest {
                         String str = new String(data, "UTF-8");
                         BufferedWriter out = new BufferedWriter(new FileWriter(listOfFiles[m].getPath()));
 
-                        out.write(new_rule);
-                        out.newLine();
                         if (str != null) {
                             out.write(str);
                         }
+                        out.write(new_rule);
                         out.close();
 
-                        File dest = new File("/Users/kunarath/Projects/sead2/standalone-mm/src/main/resources/rules/new.drl");
+                        File dest = new File("/Users/kunarath/Projects/sead2/standalone-mm/src/main/resources/rules/ruleset1.drl");
 
                         InputStream inStream = null;
                         OutputStream outStream = null;
@@ -256,8 +305,8 @@ public class RestTest {
                         kSession.fireAllRules();
                     }
 
-                    }
-                    }
+                }
+            }
         }
         return input;
 }
@@ -275,11 +324,7 @@ public class RestTest {
 
         for (int m = 0; m < listOfFiles.length; m++) {
             if (listOfFiles[m].isFile())
-                if (listOfFiles[m].getName().endsWith(".drl") && listOfFiles[m].getName().contentEquals("new.drl")) {
-                    String ruleFile = "rules/" + listOfFiles[m].getName();
-                    System.out.println(ruleFile);
-
-                    BufferedReader reader = new BufferedReader(new FileReader(listOfFiles[m].getPath()));
+                if (listOfFiles[m].getName().endsWith(".drl") && listOfFiles[m].getName().contentEquals("ruleset1.drl")) {
                     File file = new File(listOfFiles[m].getPath());
                     FileInputStream fis = new FileInputStream(file);
                     byte[] data = new byte[(int) file.length()];
@@ -290,7 +335,7 @@ public class RestTest {
 
                     if (str.contains(del_rule_name)){
 
-                        String firstDelim = "rule " + del_rule_name;
+                        String firstDelim = "rule " + '"' + del_rule_name + '"';
                         int p1 = str.indexOf(firstDelim);
                         String lastDelim = "end";
                         int p2 = str.indexOf(lastDelim, p1);   // look after start delimiter
@@ -307,7 +352,7 @@ public class RestTest {
                         out.write(content);
                         out.close();
 
-                        File dest = new File("/Users/kunarath/Projects/sead2/standalone-mm/src/main/resources/rules/new.drl");
+                        File dest = new File("/Users/kunarath/Projects/sead2/standalone-mm/src/main/resources/rules/ruleset1.drl");
                         InputStream inStream = null;
                         OutputStream outStream = null;
 

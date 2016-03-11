@@ -3,6 +3,8 @@
         var rowRemovedContents;
         var apiprefix = "./mm";
 
+		$('tr.editRow').addClass('even');
+
         // Post all rows to the server and put into Cache
         function PostTable()
         {
@@ -32,8 +34,7 @@
 
             var rule = {};
             rule.RuleName = row.find('.ruleName').val();
-            rule.LHSID = row.find('.lhsId').val();
-            rule.LHSOBJECT = row.find('.lhsObject').val();
+			rule.LHSFULL = row.find('.lhsFull').val();
             rule.RHS = row.find('.rhs').val();
 
             return rule;
@@ -46,9 +47,8 @@
 
             var rule = {};
             rule.RuleName = row.find('td:eq(1)').text();
-            rule.LHSID = row.find('td:eq(2)').text();
-            rule.LHSOBJECT = row.find('td:eq(3)').text();
-            rule.RHS = row.find('td:eq(4)').text();
+			rule.LHSFULL = row.find('td:eq(2)').text();
+            rule.RHS = row.find('td:eq(3)').text();
 
             return rule;
         }
@@ -92,42 +92,43 @@
 			}
 				xmlhttp.open("GET", url, true);
 				xmlhttp.send();
-			
+
 			function myFunction(response) {
 				arr = JSON.parse(response);
-				
-				//var rules1 = "[";
-				//for(var i = 0; i < arr.rules.length; i++) { 
-            	//var rules1 +=	"{ 'RuleName': " + arr.rules[i].name + ", 'LHSID': '1SS355TE-17', 'LHSOBJECT': '', 'RHS': ''}," +
-				//"];";
-				//}
 				var rules1 = [];
 				for(var i = 0; i < arr.rules.length; i++) {
 					var lhs_ids = [];
 					var lhs_objs = [];
 					var lhs = [];
-					for(var j = 0; j < arr.rules[i].lhs.length; j++){ 
-						//rules1.push( { "RuleName": arr.rules[i].name, "LHSID": arr.rules[i].lhs[j].id, "LHSOBJECT": arr.rules[i].lhs[j].objType, "RHS": arr.rules[i].rhs[0].rhs_val});
+					for(var j = 0; j < arr.rules[i].lhs.length; j++){
 						if (arr.rules[i].lhs[j].id !== undefined){
 							lhs_ids.push(arr.rules[i].lhs[j].id);
 						}if (arr.rules[i].lhs[j].objType !== undefined){
 							lhs_objs.push( arr.rules[i].lhs[j].objType);
 						}
 					}
-					
+
 					var lhs_id_val = "";
 					var lhs_obj_val = "";
+					var lhs_full_val = "";
 					var rhs_full_val = "";
-					for (var s=0; s< lhs_ids.length; s++){						
+					for (var s=0; s< lhs_ids.length; s++){
 						lhs_id_val += "&nbsp;" + lhs_ids[s] + "\r\n";
-					}for (var l=0; l< lhs_objs.length; l++){						
-						lhs_obj_val += "&nbsp;&nbsp;&nbsp;&nbsp;" + lhs_objs[l] + "\r\n";
+					}for (var l=0; l< lhs_objs.length; l++){
+						lhs_obj_val += "&nbsp;" + lhs_objs[l] + "\r\n";
+					}for (var m=0; m< arr.rules[i].lhs.length; m++){
+						if(arr.rules[i].lhs[m].id == "" || arr.rules[i].lhs[m].id == undefined){
+							lhs_full_val += arr.rules[i].lhs[m].objType + "&nbsp;\r\n".replace("\n", "<br /><br />");
+						}else{
+							lhs_full_val += arr.rules[i].lhs[m].id + " : " + arr.rules[i].lhs[m].objType + "&nbsp\r\n".replace("\n", "<br /><br />");
+						}
 					}
-					var rhs_list = arr.rules[i].rhs[0].rhs_val.slice(1, -1).split("),");
+					var rhs_list = arr.rules[i].rhs[0].rhs_val.slice(1, -1).split(/;,|;/);
 					for(var k = 0; k < rhs_list.length-1; k++){
-						rhs_full_val +=  rhs_list[k] + ");\r\n&nbsp;";
+						rhs_full_val +=  rhs_list[k].trim() + ";\r\n".replace("\n", "<br /><br />");
 					}
 					rules1.push( { "RuleName": arr.rules[i].name, "LHSID": lhs_id_val, "LHSOBJECT": lhs_obj_val,
+					"LHSFULL": lhs_full_val,
 					"RHS": rhs_full_val});
 				}
 
@@ -185,7 +186,6 @@
 
 			var row = $(this).parent().parent().parent().children().index($(this).parent().parent());
 
-
 			var output = $("#viewRowTemplate").tmpl(savedData).html();
 
 			var tableRows = $('#CRUDthisTable tbody tr').length;
@@ -201,26 +201,23 @@
 			$('#CRUDthisTable tbody tr').eq(row + 1).remove();
 
 			var new_rulename = savedData.RuleName;
-			var new_lhsid = savedData.LHSID;
-			var new_lhsoject = savedData.LHSOBJECT;
+			var new_lhs_full = savedData.LHSFULL;
 			var new_rhs = savedData.RHS;
 
-			var string = new_lhsid;
-			var string_obj = new_lhsoject;
-			var	new_string = string.split(/\b\s+(?!$)/);
-			var	new_string_obj = string_obj.split(/\s\s/);
+			var new_string_rhs = new_rhs.split("\n");
+			var new_string_lhs_full = new_lhs_full.split("\n");
 			var lhs_array = [];
 
-			if (new_string.length <= new_string_obj.length){
+            for(var i =0; i < new_string_lhs_full.length; i++){
+                lhs_array.push({
+                    "lhsFull" : new_string_lhs_full[i]
+                });
+            }
 
-				for(var i =0; i < new_string_obj.length; i++){
-					lhs_array.push({
-						"id" : new_string[i],
-						"objType" : new_string_obj[i]
-					});
+			var new_rhs_val = "";
+			for(var r =0; r < new_string_rhs.length; r++){
+					new_rhs_val += new_string_rhs[r];
 				}
-
-			}
 
 			var J = arr;
 
@@ -233,7 +230,7 @@
 			}
 
 			for(var b=0; b<1; b++) {
-    			addRule(lhs_array, new_rulename, new_rhs, J.rules);
+    			addRule(lhs_array, new_rulename, new_rhs_val, J.rules);
 			}
 			var new_arr = J;
 
@@ -252,15 +249,15 @@
 						alert(response);
 			});
 		});
-		 
+
 		$('.CancelRow').live('click', function(e)
 		{
 			var row = $(this).parent().parent().parent().children().index($(this).parent().parent());
-		 
+
 			$('#CRUDthisTable tbody tr').eq(row).remove();
-		 
+
 			var tableRows = $('#CRUDthisTable tbody tr').length;
-		 
+
 			if (rowRemovedContents) {
 				if (tableRows === 0 || row === 0) {
 					$('#CRUDthisTable tbody').prepend('<tr style="height:150px;">' + rowRemovedContents + '</tr>');
@@ -269,7 +266,7 @@
 					$('#CRUDthisTable tbody tr').eq(row - 1).after('<tr style="height:150px;">' + rowRemovedContents + '</tr>');
 				}
 			}
-		 
+
 			rowRemovedContents = null;
 		});
 
@@ -277,7 +274,7 @@
 		{
 			e.preventDefault();
 
-			var del_val = $(this).parent().parent()[0].textContent.split(/\b\s+(?!$)/)[2];
+			var del_val = $(this).parent().parent()[0].textContent.split(/\s\s\s/)[14].trim();
 			var rule_name_array = {"rules":[{"name" : del_val}]};
 			var del_new_val=JSON.stringify(rule_name_array);
             var request = $.ajax({
