@@ -320,7 +320,9 @@
 			// Convert the template into pure JavaScript
 			jQuery.trim(markup)
 				.replace( /([\\'])/g, "\\$1" )
-				.replace( /[\r\t\n]/g, " " )
+				.replace( /\n/g, "\\n")
+                .replace( /\r/g, "\\r")
+                .replace( /\t/g, "\\t")
 				.replace( /\$\{([^\}]*)\}/g, "{{= $1}}" )
 				.replace( /\{\{(\/?)(\w+|.)(?:\(((?:[^\}]|\}(?!\}))*?)?\))?(?:\s+(.*?)?)?(\(((?:[^\}]|\}(?!\}))*?)\))?\s*\}\}/g,
 				function( all, slash, type, fnargs, target, parens, args ) {

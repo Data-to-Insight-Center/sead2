@@ -34,7 +34,7 @@
         </tfoot>
     </table>
 </div>
-    <script id="editRowTemplate" type="text/x-jquery-tmpl">
+<script id="editRowTemplate" type="text/x-jquery-tmpl">
         <tr class="editRow">
             <td class="manage">
                 <span id="cancel" name="cancel" tooltip="Cancel" class="ui-icon ui-icon-close CancelRow" style="cursor:pointer">Cancel</span>
@@ -42,14 +42,14 @@
             </td>
 
             <td>
-				<textarea id="field1" name="field1" class="ruleName" rows="3">${RuleName}</textarea></td>
+				<textarea id="field1" name="field1" class="ruleName" rows="3">{{html RuleName}}</textarea></td>
 			<td>
-                <textarea id="field2" name="field2" class="lhsFull" rows="6">${LHSFULL}</textarea></td>
+                <textarea id="field2" name="field2" class="lhsFull" rows="6">{{html LHSFULL}}</textarea></td>
             <td>
-                <textarea id="field3" name="field3" class="rhs" rows="6">${RHS}</textarea></td>
+                <textarea id="field3" name="field3" class="rhs" rows="6">{{html RHS}}</textarea></td>
         </tr>
     </script>
-    <script id="viewRowTemplate" type="text/x-jquery-tmpl">
+<script id="viewRowTemplate" type="text/x-jquery-tmpl">
 
 		<tr>
             <td class="manage"><span id="edit" name="edit" title="Edit" class="ui-icon ui-icon-pencil EditRow" style="cursor:pointer">Edit</span>

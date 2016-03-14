@@ -160,7 +160,7 @@
 
 			var row = $(this).parent().parent().parent().children().index($(this).parent().parent());
 
-			var data = GetViewRowObject(row);
+			data = GetViewRowObject(row);
 
 			var output = $("#editRowTemplate").tmpl(data).html();
 
@@ -182,7 +182,6 @@
 			// if (!isValid)
 			//     return;
 			var savedData = GetEditRowObject();
-
 
 			var row = $(this).parent().parent().parent().children().index($(this).parent().parent());
 
@@ -210,13 +209,13 @@
 
             for(var i =0; i < new_string_lhs_full.length; i++){
                 lhs_array.push({
-                    "lhsFull" : new_string_lhs_full[i]
+                    "lhsFull" : new_string_lhs_full[i].trim()
                 });
             }
 
 			var new_rhs_val = "";
 			for(var r =0; r < new_string_rhs.length; r++){
-					new_rhs_val += new_string_rhs[r];
+					new_rhs_val += new_string_rhs[r].trim();
 				}
 
 			var J = arr;
@@ -234,20 +233,59 @@
 			}
 			var new_arr = J;
 
+
+			if (rowRemovedNum !== 0){
+				alert("Edit Mode");
+				var edit_del_val = data.RuleName;
+				var edit_rule_name_array = {"rules":[{"name" : edit_del_val}]};
+				var edit_del_new_val=JSON.stringify(edit_rule_name_array);
+				var edit_del_request = $.ajax({
+								url: apiprefix + "/rest/rules/" + edit_del_val,
+								type: "delete",
+								data: edit_del_new_val,
+								cache: false,
+								dataType: 'text',
+								contentType : 'application/json'
+								});
+
+				edit_del_request.done(function (response){
+							console.log("Response from server: " + response);
+							alert(response);
+						});
+
+				var edit_data=JSON.stringify(new_arr);
+                var edit_request = $.ajax({
+                                url: apiprefix + "/rest/rules",
+                                type: "post",
+                                data: edit_data,
+                                cache: false,
+                                dataType: 'text',
+                                contentType : 'application/json'
+                                });
+
+                edit_request.done(function (response){
+                            console.log("Response from server: " + response);
+                            alert(response);
+                });
+
+			}else{
+
 			var myData=JSON.stringify(new_arr);
 			var request = $.ajax({
-    						url: apiprefix + "/rest/rules",
-    						type: "post",
-    						data: myData,
+							url: apiprefix + "/rest/rules",
+							type: "post",
+							data: myData,
 							cache: false,
 							dataType: 'text',
 							contentType : 'application/json'
 							});
 
 			request.done(function (response){
-    					console.log("Response from server: " + response);
+						console.log("Response from server: " + response);
 						alert(response);
+
 			});
+			}
 		});
 
 		$('.CancelRow').live('click', function(e)

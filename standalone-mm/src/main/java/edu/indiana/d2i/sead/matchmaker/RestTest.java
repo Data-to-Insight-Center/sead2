@@ -1,6 +1,5 @@
 package edu.indiana.d2i.sead.matchmaker;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.sun.jersey.api.client.ClientResponse;
 import edu.indiana.d2i.sead.matchmaker.core.POJOGenerator;
@@ -97,7 +96,7 @@ public class RestTest {
 	@GET
     @Path("/rules")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response getRulesList() throws IOException, DroolsParserException, JsonProcessingException, ClassNotFoundException, JSONException, URISyntaxException {
+    public Response getRulesList() throws IOException, DroolsParserException, ClassNotFoundException, JSONException, URISyntaxException {
 
         JSONObject root = new JSONObject();
         JSONArray rulesArray = new JSONArray();
@@ -234,24 +233,24 @@ public class RestTest {
         JSONArray rules = req.getJSONArray("rules");
         for (int v = rules.length()-1; v < rules.length(); ++v) {
             JSONObject rule = rules.getJSONObject(v);
-            String name = rule.getString("name");
+            String name = rule.getString("name").trim();
             JSONArray lhs = rule.getJSONArray("lhs");
             JSONArray rhs = rule.getJSONArray("rhs");
 
-            String new_rule = "\n\nrule " + '"' + name + '"' + "\n" + "when\n";
+            String new_rule = "\n\nrule " + '"' + name + '"' + "\n" + "    when\n";
                 for (int i = 0; i < lhs.length(); ++i) {
                     JSONObject lh = lhs.getJSONObject(i);
                     String lhsFull = lh.getString("lhsFull");
-                    new_rule += "    " + lhsFull +"\n";
+                    new_rule += "    " + "    " + lhsFull + "\n";
                 }
-            new_rule += "then\n";
+            new_rule += "    then\n";
 
             for (int u = 0; u < rhs.length(); ++u) {
                 JSONObject rh = rhs.getJSONObject(u);
-                String rhs_val = rh.getString("rhs_val");
+                String rhs_val = rh.getString("rhs_val").trim();
                 List<String> rhsList = Arrays.asList(rhs_val.split(";\n|;"));
                 for(int o=0; o < rhsList.size(); ++o){
-                    new_rule += "    " +  rhsList.get(o) + ";\n";
+                    new_rule += "    " + "    " + rhsList.get(o) + ";\n";
             }}
 
         new_rule +=    "end\n";
