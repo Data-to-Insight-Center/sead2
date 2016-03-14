@@ -34,6 +34,27 @@
         </tfoot>
     </table>
 </div>
+
+<div class="container" style="margin:50px">
+    <h1>Match Maker Comparision</h1>
+    <div id="error"></div>
+    <div id="success"></div>
+    <div width="100%">
+        <div style="float:left">
+            <h2><br/>Match Maker</h2>
+            <form enctype="application/json" id="form">
+                <textarea name="content" style="height:400px;width:600px;" id="inputText" placeholder="PUT YOUR JSON CODE HERE"></textarea>
+                <br>
+                <input id="match" type="submit" name="submit" value="Match" />
+            </form>
+        </div>
+        <div style="float:left" class="vertical_line"></div>
+        <div style="float:left">
+            <h2><br/>Response Code</h2>
+            <textarea style="height:400px;width:500px;" id="match_response" placeholder="MATCH MAKER RESPONSE DETAIL"></textarea>
+        </div>
+    </div>
+</div>
 <script id="editRowTemplate" type="text/x-jquery-tmpl">
         <tr class="editRow">
             <td class="manage">

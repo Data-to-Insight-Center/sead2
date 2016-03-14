@@ -5,6 +5,33 @@
 
 		$('tr.editRow').addClass('even');
 
+		$.ajaxSetup({
+			contentType: "application/json; charset=utf-8",
+			dataType: "json"
+		});
+
+		$(document).ready(function () {
+			$('#match').click(function () {
+				var send = document.getElementById('inputText').value;
+				//alert(send);
+				$.ajax({
+					url: apiprefix + "/rest",
+
+					type: "POST",
+					data: send,
+					success: function (response, status, jqXHR) {
+						document.getElementById("match_response").innerHTML = JSON.stringify(response,null,2);
+						document.getElementById("success").innerHTML = '<div id="success_output">Hooray!!! Successfully Matched.</div>';
+					},
+
+					error: function (jqXHR, status) {
+						document.getElementById("error").innerHTML = '<div id="error_output">Ooops!!! Invalid Json Code.</div>';
+						//alert(JSON.stringify(jqXHR));
+					}
+				});
+				return false;
+			});
+		});
         // Post all rows to the server and put into Cache
         function PostTable()
         {
@@ -253,21 +280,6 @@
 							alert(response);
 						});
 
-				var edit_data=JSON.stringify(new_arr);
-                var edit_request = $.ajax({
-                                url: apiprefix + "/rest/rules",
-                                type: "post",
-                                data: edit_data,
-                                cache: false,
-                                dataType: 'text',
-                                contentType : 'application/json'
-                                });
-
-                edit_request.done(function (response){
-                            console.log("Response from server: " + response);
-                            alert(response);
-                });
-
 			}else{
 
 			var myData=JSON.stringify(new_arr);
@@ -286,7 +298,26 @@
 
 			});
 			}
+			if(rowRemovedNum !== 0){
+				var edit_data=JSON.stringify(new_arr);
+                var edit_request = $.ajax({
+                                url: apiprefix + "/rest/rules",
+                                type: "post",
+                                data: edit_data,
+                                cache: false,
+                                dataType: 'text',
+                                contentType : 'application/json'
+                                });
+
+                edit_request.done(function (response){
+                            console.log("Response from server: " + response);
+                            alert(response);
+
+			});
+			}
+		location.reload(true);
 		});
+
 
 		$('.CancelRow').live('click', function(e)
 		{
@@ -330,5 +361,8 @@
                     });
 
             $(this).parent().parent().remove();
+
+			location.reload(true);
 		});
-	});
+
+});
