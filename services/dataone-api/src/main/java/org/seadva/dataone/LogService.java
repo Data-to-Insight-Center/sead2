@@ -21,6 +21,7 @@ import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.GenericType;
 import com.sun.jersey.api.client.WebResource;
 import org.dataconservancy.dcs.query.api.QueryServiceException;
+import org.dataconservancy.model.dcs.DcsEntityReference;
 import org.dataone.service.types.v1.*;
 import org.jibx.runtime.JiBXException;
 import org.seadva.model.SeadEvent;
@@ -34,6 +35,7 @@ import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.transform.TransformerException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -127,8 +129,13 @@ public class LogService{
                 );
 
                 Identifier identifier = new Identifier();
-                identifier.setValue(d1log.getId()); //DcsEvent Identifier
+                Collection<DcsEntityReference> references = d1log.getTargets();
+                for(DcsEntityReference reference : references){
+                    identifier.setValue(reference.getRef()); //DcsEvent Identifier
+                }
                 logEntry.setIdentifier(identifier);
+
+
                 String ipaddress = d1log.getLogDetail().getIpAddress();
 
                 if(ipaddress==null)

@@ -43,7 +43,8 @@ public class DataOneLogService {
 
     public LogEvent creatEvent(String eventType, String userAgent, String ip, String entityId){
         LogEvent logEvent = new LogEvent();
-        logEvent.setId(Constants.BASE_URL + "/event/" + uidGenerator.generateNextUID());
+        logEvent.setEntityId(Constants.BASE_URL + "/event/" + uidGenerator.generateNextUID());
+        logEvent.setId(entityId);
         logEvent.setEventType(eventType);
         logEvent.setDate(sdfDate.format(new Date()));
         logEvent.setIp(ip);

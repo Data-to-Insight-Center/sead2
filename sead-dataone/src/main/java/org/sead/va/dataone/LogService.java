@@ -89,7 +89,7 @@ public class LogService {
 
             LogEntry logEntry = new LogEntry();
 
-            logEntry.setEntryId(d1log.getId());
+            logEntry.setEntryId(d1log.getEntityId());
             Event eventType = Event.convert(d1log.getEventType());
             if (eventType == Event.READ)
                 eventType = Event.READ;

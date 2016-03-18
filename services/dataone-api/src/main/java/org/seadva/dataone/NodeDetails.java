@@ -17,7 +17,7 @@
 package org.seadva.dataone;
 
 import org.dataone.service.types.v1.*;
-import org.jibx.runtime.*;
+import org.jibx.runtime.JiBXException;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -26,13 +26,8 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
-import javax.xml.bind.JAXBElement;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.namespace.QName;
 import javax.xml.transform.TransformerException;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.StringWriter;
 
 /**
  * Node details adevrtised
@@ -125,16 +120,13 @@ public class NodeDetails {
 
         Synchronization synchronization = new Synchronization();
         Schedule schedule = new Schedule();
-        //schedule.setHour("23");
-        schedule.setHour("*");
-        schedule.setMday("*");
-        //schedule.setMin("00");
-        schedule.setMin("0/3");
-        schedule.setMon("*");
-        //schedule.setSec("00");
-        schedule.setSec("45");
-        schedule.setWday("?");
-        schedule.setYear("*");
+        schedule.setHour(SeadQueryService.SYNC_HOUR);
+        schedule.setMday(SeadQueryService.SYNC_MDAY);
+        schedule.setMin(SeadQueryService.SYNC_MIN);
+        schedule.setMon(SeadQueryService.SYNC_MONTH);
+        schedule.setSec(SeadQueryService.SYNC_SEC);
+        schedule.setWday(SeadQueryService.SYNC_WDAY);
+        schedule.setYear(SeadQueryService.SYNC_YEAR);
         synchronization.setSchedule(schedule);
 
         node.setSynchronize(true);

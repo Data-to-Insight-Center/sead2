@@ -61,7 +61,7 @@ public class EventService {
 
         Log log = new Log();
 
-        BasicDBObject query = new BasicDBObject("id", Constants.BASE_URL + "/event/" + eventId);
+        BasicDBObject query = new BasicDBObject("entityId", Constants.BASE_URL + "/event/" + eventId);
         List<LogEvent> result = SeadQueryService.dataOneLogService.queryLog(query, null , 0);
 
         if (result.size() > 0) {
@@ -69,7 +69,7 @@ public class EventService {
             LogEvent d1log = result.get(0);
             LogEntry logEntry = new LogEntry();
 
-            logEntry.setEntryId(d1log.getId());
+            logEntry.setEntryId(d1log.getEntityId());
             Event eventType = Event.convert(d1log.getEventType());
             if (eventType == Event.READ)
                 eventType = Event.READ;
