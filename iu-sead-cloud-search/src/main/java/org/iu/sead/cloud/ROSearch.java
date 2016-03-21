@@ -124,7 +124,7 @@ public class ROSearch {
         // get elements inside Aggregation to top level
         Document agg = (Document) doc.get("Aggregation");
         for (String key : agg.keySet()) {
-            doc.append(key, agg.getString(key));
+            doc.append(key, agg.get(key));
         }
         doc.remove("Aggregation");
         // extract doi and remove Status
