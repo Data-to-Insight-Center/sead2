@@ -67,6 +67,15 @@ public class ROSearch {
         return Response.ok(array.toString()).cacheControl(control).build();
     }
 
+    @POST
+    @Path("/")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getFilteredListOfROs(String filterString) {
+        // TODO: filter
+        return getAllPublishedROs();
+    }
+
     @GET
     @Path("/{id}")
     @Produces(MediaType.APPLICATION_JSON)
@@ -107,6 +116,7 @@ public class ROSearch {
                 .append("Aggregation.Title", 1)
                 .append("Aggregation.Contact", 1)
                 .append("Aggregation.Abstract", 1)
+                .append("Aggregation.Creation Date", 1)
                 .append("_id", 0));
     }
 
@@ -119,13 +129,16 @@ public class ROSearch {
         doc.remove("Aggregation");
         // extract doi and remove Status
         ArrayList<Document> statusArray = (ArrayList<Document>) doc.get("Status");
-        String doi = null;
+        String doi = "Not Found";
+        String pubDate = "Not Found";
         for (Document status : statusArray) {
             if (Constants.successStage.equals(status.getString("stage"))) {
                 doi = status.getString("message");
+                pubDate = status.getString("date");
             }
         }
         doc.append("DOI", doi);
+        doc.append("Publication Date", pubDate);
         doc.remove("Status");
     }
 

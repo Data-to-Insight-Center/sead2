@@ -22,6 +22,7 @@
         <module>sead-dataone</module>
         <module>services/dataone-api</module>
         <module>sead-nds-repository</module>
+        <module>iu-sead-cloud-search</module>
   </modules>
 
 </project>
