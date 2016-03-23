@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>IU SEAD CLOUD SEARCH</title>
+    <meta name="description" content="A search module for IU SEAD CLOUD">
+    <script type="text/javascript" src="js/jquery-min.js"></script>
+    <script type="text/javascript" src="js/moment-min.js"></script>
+    <script type="text/javascript" src="js/daterangepicker.js"></script>
+    <script type="text/javascript" src="js/filter.js" ></script>	
+	<script type="text/javascript" src="js/jquery.tmpl.js"></script>
+    <script type="text/javascript" src="js/search.js"></script>
+    
+    <link rel="stylesheet" media="all" href="css/bootstrap.min.css">
+    <link rel="stylesheet" media="all" href="css/search.css">
+</head>
+<body>
+
+<div id="header">
+    <div>
+    <a href="#" title="SEAD" rel="home"><img
+                                src="http://sead-data.net/wp-content/uploads/2014/06/logo.png"
+                                alt="SEAD" width="400px" height:"70" style="float:left;"></a>
+    </div>
+    <div>
+    <h1 align="center">IU SEAD Cloud Search Page</h1>
+    </div>
+</div>
+
+<div id="nav">
+    <h4 style="color:#3b5998">Search & Filter By Below Options: </h4>
+    <div id="filter"></div>
+</div>
+
+<div id="middle"></div>
+
+<div id="section">
+	<h3 style="color:#3b5998">Search Results:</h3>
+	<table id="CRUDthisTable" class="mediumTable"></table>
+</div>
+
+<div id="footer">
+<p>SEAD is funded by the National Science Foundation under cooperative agreement #OCI0940824.</p>
+</div>
+</body>
+
+<script type="text/javascript">
+      function sendToServer(data){
+		alert('sending params to server: ' + JSON.stringify(data));
+		var apiprefix = "./ro"; 
+		//var apiprefix = "./ro"; 
+		new_arr=[];
+		if (data.hasOwnProperty('creator_name')){
+			search_creator = data.creator_name.values[0].value;
+		}else{
+			search_creator = "";
+		}if (data.hasOwnProperty('search_content')){
+			search_string = data.search_content.values[0].value;
+		}else{
+			search_string = "";
+		}if (data.hasOwnProperty('title')){
+			search_title = data.title.values[0].value;
+		}else{
+			search_title = "";
+		}
+		new_arr.push({"Creator":search_creator, "Start Date":data.date_range.values[0].value.split("-")[0].trim(),
+					"End Date":data.date_range.values[0].value.split("-")[1].trim(), "Search String": search_string, 
+					"Title":search_title});		
+		var myData=JSON.stringify(new_arr);
+		var request = $.ajax({
+						url: apiprefix + "/researchobjects",
+						type: "post",
+						data: myData,
+						cache: false,
+						dataType: 'text',
+						contentType : 'application/json'
+						});
+
+		request.done(function (response){
+					console.log("Response from server: " + response);
+					alert(response);
+
+		});
+    }
+	var repoOptions = [
+			{name: 'SDA', value: 'sda', selected: true} //selected on display
+		   ],
+		
+		options = {
+			title: 'SEAD Search Filter',
+			dateFormat: this.dateFormat,
+			searchClickedCallback: sendToServer,
+			filterParameters: [
+				{type: 'text', attributeName: 'search_content', name: 'Search Content', placeholder: 'search by any text'},
+				{type: 'text', attributeName: 'creator_name', name: 'Creator Name', placeholder: 'type creator name'},
+				{type: 'date-range', attributeName: 'date_range', name: 'Date Range'},
+				{type: 'single', attributeName: 'repoName',name: 'Repository', options: repoOptions},
+				{type: 'text', attributeName: 'title', name: 'Title', placeholder: 'type title'},
+				{type: 'text', attributeName: 'doi', name: 'DOI', placeholder: 'type doi value'},
+			]
+		};
+	$('#filter').bootstrapFilter(options);
+</script>
+    
+<script id="viewRowTemplate" type="text/x-jquery-tmpl">
+	<ul>
+		<li>
+			<b>Creator: </b>{{html Creator}}</br>
+			<b>Abstract: </b>{{html Abstract}}</br>
+			<b>Title: </b>{{html Title}}</br>
+			<b>Identifier: </b>{{html Identifier}}</br>
+			<b>Publication Date: </b>{{html PublicationDate}}</br>
+			<b>Cretaion Date: </b>{{html CreationDate}}</br>
+			<b>DOI: </b><a href="{{html DOI}}">{{html DOI}}</a>
+		</li>
+	</ul>
+	</br>
+</script>
+</html>

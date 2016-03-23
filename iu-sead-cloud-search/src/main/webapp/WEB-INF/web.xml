@@ -32,7 +32,7 @@
     </servlet>
     <servlet-mapping>
         <servlet-name>Jersey REST Service for IU SEAD Cloud</servlet-name>
-        <url-pattern>/*</url-pattern>
+        <url-pattern>/ro/*</url-pattern>
     </servlet-mapping>
 </web-app>
 
