@@ -43,8 +43,8 @@ function myFunction(response) {
 		var abstract= arr[i].Abstract;
 		var title= arr[i].Title;
 		var identifier= arr[i].Identifier;
-		var pub_date= arr[i].PublicationDate;
-		var create_date= arr[i].CreationDate;
+		var pub_date= arr[i]["Publication Date"];
+		var create_date= arr[i]["Creation Date"];
 		var doi= arr[i].DOI;
 	
 	ros.push( { "Creator":creator, "Abstract": abstract, "Title": title, "Identifier": identifier, 

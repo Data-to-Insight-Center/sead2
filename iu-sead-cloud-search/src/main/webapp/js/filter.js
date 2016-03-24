@@ -317,12 +317,12 @@
         });
 
         // fill other boxes with nothing if too little parameters passed
-        if (6 > realIndex){
-
-            for (var i = 0; i < (6 - realIndex); i++) {
-                filterInternalHtml += buildSingleParameterHtml(i + realIndex , {name: '', type: empty, attributeName: 'bla'})
-            }
-        }
+        //if (6 > realIndex){
+//
+//            for (var i = 0; i < (6 - realIndex); i++) {
+//                filterInternalHtml += buildSingleParameterHtml(i + realIndex , {name: '', type: empty, attributeName: 'bla'})
+//            }
+//        }
 
         //additional filters
 
@@ -738,27 +738,31 @@
         });
     }
 
-    function bindChangeDate(){
-        $('.applyBtn').on('click',function(){
-
-            filterModal.startTime = $('input[name=daterangepicker_start]').last().val();
-            filterModal.endTime = $('input[name=daterangepicker_end]').last().val();
-
-            //re render with dates filter
-            filterModal.that.renderFilter();
-        });
-
-        $('#daterange').on('apply.daterangepicker', function(ev, picker) {
-            addDateSelectedToDataModal($(this).closest('.select-parameter-box'));
-        });
-
-        $('#daterange').on('cancel.daterangepicker', function(ev, picker) {
-            //do something, like clearing an input
-            $('#daterange input').val('');
-            addDateSelectedToDataModal($(this).closest('.select-parameter-box'));
-        });
-
-    }
+   // function bindChangeDate(){
+//        $('.applyBtn').on('click',function(){
+//
+//            filterModal.startTime = $('input[name=daterangepicker_start]').last().val();
+//            filterModal.endTime = $('input[name=daterangepicker_end]').last().val();
+//
+//            //re render with dates filter
+//            filterModal.that.renderFilter();
+//        });
+//
+//        $('#daterange').on('apply.daterangepicker', function(ev, picker) {
+//            addDateSelectedToDataModal($(this).closest('.select-parameter-box'));
+//			var startDate = picker.startTime;
+//			var endDate = picker.endTime;
+//			//MM/DD/YYYY format
+//			alert("New date range selected: '" + startDate.format('YYYY-MM-DD') + "' to '" + endDate.format('YYYY-MM-DD') + "'");
+//        });
+//
+//        $('#daterange').on('cancel.daterangepicker', function(ev, picker) {
+//            //do something, like clearing an input
+//            $('#daterange input').val('');
+//            addDateSelectedToDataModal($(this).closest('.select-parameter-box'));
+//        });
+//
+//    }
 
     function bindExpandCollapse(){
         $('.show-hide-filter-js').on('click', function(){
