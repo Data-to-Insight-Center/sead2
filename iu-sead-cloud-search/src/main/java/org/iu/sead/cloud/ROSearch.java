@@ -54,17 +54,8 @@ public class ROSearch {
     @Path("/")
     @Produces(MediaType.APPLICATION_JSON)
     public Response getAllPublishedROs() {
-        FindIterable<Document> iter = publicationsCollection.find(createPublishedFilter()
-                .append("Repository", Constants.repoName));
-        setROProjection(iter);
-        MongoCursor<Document> cursor = iter.iterator();
-        JSONArray array = new JSONArray();
-        while (cursor.hasNext()) {
-            Document document = cursor.next();
-            reArrangeDocument(document);
-            array.put(JSON.parse(document.toJson()));
-        }
-        return Response.ok(array.toString()).cacheControl(control).build();
+        Document query = createPublishedFilter().append("Repository", Constants.repoName);
+        return getAllPublishedROs(query);
     }
 
     @POST
@@ -72,8 +63,32 @@ public class ROSearch {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Response getFilteredListOfROs(String filterString) {
-        // TODO: filter
-        return getAllPublishedROs();
+        JSONObject filter = new JSONObject(filterString);
+        String creator = filter.getString("Creator");
+        String startDate = filter.getString("Start Date");
+        String endDate = filter.getString("End Date");
+        String searchString = filter.getString("Search String");
+        String title = filter.getString("Title");
+
+        // query
+        Document query = createPublishedFilter().append("Repository", Constants.repoName);
+        if (searchString != null && !"".equals(searchString)) {
+            // doing a text search in entire RO using the given search string
+            query = query.append("$text", new Document("$search", searchString));
+        }
+
+        if (title != null && !"".equals(title)) {
+            // regex for title
+            query = query.append("Aggregation.Title", new Document("$regex", title).append("$options", "i"));
+        }
+
+        // TODO: Search in people collection for person names
+        if (creator != null && !"".equals(creator)) {
+            // regex for creator
+            query = query.append("Aggregation.Creator", new Document("$regex", creator).append("$options", "i"));
+        }
+
+        return getAllPublishedROs(query);
     }
 
     @GET
@@ -101,6 +116,19 @@ public class ROSearch {
         return Response.ok(document.toJson()).cacheControl(control).build();
     }
 
+    private Response getAllPublishedROs(Document filter) {
+        FindIterable<Document> iter = publicationsCollection.find(filter);
+        setROProjection(iter);
+        MongoCursor<Document> cursor = iter.iterator();
+        JSONArray array = new JSONArray();
+        while (cursor.hasNext()) {
+            Document document = cursor.next();
+            reArrangeDocument(document);
+            array.put(JSON.parse(document.toJson()));
+        }
+        return Response.ok(array.toString()).cacheControl(control).build();
+    }
+
     private Document createPublishedFilter() {
         // find only published ROs. there should be a Status with stage=Success
         Document stage = new Document("stage", Constants.successStage);
@@ -111,7 +139,6 @@ public class ROSearch {
     private void setROProjection(FindIterable<Document> iter) {
         iter.projection(new Document("Status", 1)
                 .append("Repository", 1)
-                .append("Aggregation.Identifier", 1)
                 .append("Aggregation.Creator", 1)
                 .append("Aggregation.Title", 1)
                 .append("Aggregation.Contact", 1)
