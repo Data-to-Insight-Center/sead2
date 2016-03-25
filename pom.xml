@@ -12,6 +12,7 @@
 
     <modules>
         <module>services/sead-status-tracker</module>
+        <module>services/sead-monitoring</module>
         <module>va-workflow</module>
         <module>sead-doi-service</module>
         <module>sda-agent</module>
