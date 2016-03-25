@@ -6,10 +6,10 @@
     <script type="text/javascript" src="js/jquery-min.js"></script>
     <script type="text/javascript" src="js/moment-min.js"></script>
     <script type="text/javascript" src="js/daterangepicker.js"></script>
-    <script type="text/javascript" src="js/filter.js" ></script>	
-	<script type="text/javascript" src="js/jquery.tmpl.js"></script>
+    <script type="text/javascript" src="js/filter.js" ></script>
+    <script type="text/javascript" src="js/jquery.tmpl.js"></script>
     <script type="text/javascript" src="js/search.js"></script>
-    
+
     <!--<link rel="stylesheet" media="all" href="css/bootstrap.min.css">-->
     <link rel="stylesheet" media="all" href="css/search.css">
     <link rel="stylesheet" media="all" href="css/daterangepicker.css">
@@ -23,8 +23,8 @@
         <div id="header-left-section">
             <div id="header-logo-image">
                 <a href="#" title="SEAD" rel="home"><img
-                    src="http://sead-data.net/wp-content/uploads/2014/06/logo.png"
-                    alt="SEAD"></a>
+                        src="http://sead-data.net/wp-content/uploads/2014/06/logo.png"
+                        alt="SEAD"></a>
             </div>
         </div>
     </div>
@@ -38,22 +38,20 @@
 <div id="middle"></div>
 
 <div id="section">
-	<h1 style="color:#3b5998"><u>IU SEAD Cloud Search</u></h1>
-	<h3 style="color:#3b5998">Search Results:</h3>
-	<table id="CRUDthisTable" class="mediumTable"></table>
+    <h1 style="color:#3b5998"><u>IU SEAD Cloud Search</u></h1>
+    <h3 style="color:#3b5998">Search Results:</h3>
+    <table id="CRUDthisTable" class="mediumTable"></table>
 </div>
 
 <div id="footer">
-<p>SEAD is funded by the National Science Foundation under cooperative agreement #OCI0940824.</p>
+    <p>SEAD is funded by the National Science Foundation under cooperative agreement #OCI0940824.</p>
 </div>
 </body>
 
 <script type="text/javascript">
       function sendToServer(data){
 		alert('sending params to server: ' + JSON.stringify(data));
-		var apiprefix = "./ro"; 
-		//var apiprefix = "./ro"; 
-		new_arr=[];
+		var apiprefix = "./ro";
 		if (data.hasOwnProperty('creator_name')){
 			search_creator = data.creator_name.values[0].value;
 		}else{
@@ -67,10 +65,11 @@
 		}else{
 			search_title = "";
 		}
-		new_arr.push({"Creator":search_creator, "Start Date":data.date_range.values[0].value.split("-")[0].trim(),
-					"End Date":data.date_range.values[0].value.split("-")[1].trim(), "Search String": search_string, 
-					"Title":search_title});		
-		var myData=JSON.stringify(new_arr);
+
+		var search_json = {"Creator":search_creator, "Start Date":data.date_range.values[0].value.split("-")[0].trim(),
+							"End Date":data.date_range.values[0].value.split("-")[1].trim(), "Search String": search_string,
+							"Title":search_title};
+		var myData=JSON.stringify(search_json);
 		var request = $.ajax({
 						url: apiprefix + "/researchobjects",
 						type: "post",
@@ -104,7 +103,7 @@
 		};
 	$('#filter').bootstrapFilter(options);
 </script>
-    
+
 <script id="viewRowTemplate" type="text/x-jquery-tmpl">
 	<ul>
 		<li>
