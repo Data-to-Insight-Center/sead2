@@ -10,21 +10,25 @@
 	<script type="text/javascript" src="js/jquery.tmpl.js"></script>
     <script type="text/javascript" src="js/search.js"></script>
     
-    <link rel="stylesheet" media="all" href="css/bootstrap.min.css">
+    <!--<link rel="stylesheet" media="all" href="css/bootstrap.min.css">-->
     <link rel="stylesheet" media="all" href="css/search.css">
+    <link rel="stylesheet" media="all" href="css/daterangepicker.css">
+    <link rel="stylesheet" type="text/css" href="css/bootstrap.min.css" />
 </head>
 <body>
 
-<div id="header">
-    <div>
-    <a href="#" title="SEAD" rel="home"><img
-                                src="http://sead-data.net/wp-content/uploads/2014/06/logo.png"
-                                alt="SEAD" width="400px" height:"70" style="float:left;"></a>
+<header id="masthead" class="site-header clearfix">
+    <div id="header-text-nav-wrap" class="clearfix">
+        <!-- #header-logo-image -->
+        <div id="header-left-section">
+            <div id="header-logo-image">
+                <a href="#" title="SEAD" rel="home"><img
+                    src="http://sead-data.net/wp-content/uploads/2014/06/logo.png"
+                    alt="SEAD"></a>
+            </div>
+        </div>
     </div>
-    <div>
-    <h1 align="center">IU SEAD Cloud Search Page</h1>
-    </div>
-</div>
+</header>
 
 <div id="nav">
     <h4 style="color:#3b5998">Search & Filter By Below Options: </h4>
@@ -34,6 +38,7 @@
 <div id="middle"></div>
 
 <div id="section">
+	<h1 style="color:#3b5998"><u>IU SEAD Cloud Search</u></h1>
 	<h3 style="color:#3b5998">Search Results:</h3>
 	<table id="CRUDthisTable" class="mediumTable"></table>
 </div>
@@ -82,7 +87,7 @@
 		});
     }
 	var repoOptions = [
-			{name: 'SDA', value: 'sda', selected: true} //selected on display
+			{name: 'IU SEAD CLOUD', value: 'sda', selected: true} //selected on display
 		   ],
 		
 		options = {
@@ -95,7 +100,6 @@
 				{type: 'date-range', attributeName: 'date_range', name: 'Date Range'},
 				{type: 'single', attributeName: 'repoName',name: 'Repository', options: repoOptions},
 				{type: 'text', attributeName: 'title', name: 'Title', placeholder: 'type title'},
-				{type: 'text', attributeName: 'doi', name: 'DOI', placeholder: 'type doi value'},
 			]
 		};
 	$('#filter').bootstrapFilter(options);
@@ -107,9 +111,8 @@
 			<b>Creator: </b>{{html Creator}}</br>
 			<b>Abstract: </b>{{html Abstract}}</br>
 			<b>Title: </b>{{html Title}}</br>
-			<b>Identifier: </b>{{html Identifier}}</br>
 			<b>Publication Date: </b>{{html PublicationDate}}</br>
-			<b>Cretaion Date: </b>{{html CreationDate}}</br>
+			<b>Creation Date: </b>{{html CreationDate}}</br>
 			<b>DOI: </b><a href="{{html DOI}}">{{html DOI}}</a>
 		</li>
 	</ul>
