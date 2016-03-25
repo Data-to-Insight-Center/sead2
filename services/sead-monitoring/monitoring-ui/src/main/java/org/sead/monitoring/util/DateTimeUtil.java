@@ -1,6 +1,7 @@
 package org.sead.monitoring.util;
 
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -85,7 +86,21 @@ public class DateTimeUtil {
 
     public static long getScaledTime(long seconds, String scale) {
         long multiple = stringToSeconds.get(scale);
-        return (long)Math.floor((seconds - timezoneOffset) * 1.0 / multiple)*multiple;
+        if(scale.equals(DAY) || scale.equals(HOUR) || scale.equals(MIN) || scale.equals(SEC)) {
+            return (long) Math.floor((seconds - timezoneOffset) * 1.0 / multiple) * multiple;
+        } else {
+            Calendar date = Calendar.getInstance();
+            date.setTime(new Date(seconds*1000));
+            date.set(Calendar.DAY_OF_MONTH, 1);
+            date.set(Calendar.HOUR_OF_DAY, 0);
+            date.set(Calendar.MINUTE, 0);
+            date.set(Calendar.SECOND, 0);
+            date.set(Calendar.MILLISECOND, 0);
+            if(scale.equals(YEAR)) {
+                date.set(Calendar.MONTH, 0);
+            }
+            return date.getTimeInMillis()/1000;
+        }
     }
 
     public static String getDateTime(long scaledSeconds, String scale) {
