@@ -36,13 +36,17 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.CacheControl;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 
 @Path("/researchobjects")
 public class ROSearch {
 
     private MongoCollection<Document> publicationsCollection = null;
     private CacheControl control = new CacheControl();
+    private SimpleDateFormat simpleDateFormat = new SimpleDateFormat("MM/dd/yyyy");
 
     public ROSearch() {
         MongoDatabase db = MongoDB.getServicesDB();
@@ -55,7 +59,7 @@ public class ROSearch {
     @Produces(MediaType.APPLICATION_JSON)
     public Response getAllPublishedROs() {
         Document query = createPublishedFilter().append("Repository", Constants.repoName);
-        return getAllPublishedROs(query);
+        return getAllPublishedROs(query, null, null);
     }
 
     @POST
@@ -88,7 +92,21 @@ public class ROSearch {
             query = query.append("Aggregation.Creator", new Document("$regex", creator).append("$options", "i"));
         }
 
-        return getAllPublishedROs(query);
+        Date start = null;
+        Date end = null;
+        try {
+            if (startDate != null && !"".equals(startDate)) {
+                start = simpleDateFormat.parse(startDate);
+            }
+            if (endDate != null && !"".equals(endDate)) {
+                end = simpleDateFormat.parse(endDate);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            // ignore
+        }
+
+        return getAllPublishedROs(query, start, end);
     }
 
     @GET
@@ -116,7 +134,7 @@ public class ROSearch {
         return Response.ok(document.toJson()).cacheControl(control).build();
     }
 
-    private Response getAllPublishedROs(Document filter) {
+    private Response getAllPublishedROs(Document filter, Date start, Date end) {
         FindIterable<Document> iter = publicationsCollection.find(filter);
         setROProjection(iter);
         MongoCursor<Document> cursor = iter.iterator();
@@ -124,9 +142,24 @@ public class ROSearch {
         while (cursor.hasNext()) {
             Document document = cursor.next();
             reArrangeDocument(document);
-            array.put(JSON.parse(document.toJson()));
+            if (withinDateRange(document.getString("Publication Date"), start, end)) {
+                array.put(JSON.parse(document.toJson()));
+            }
         }
         return Response.ok(array.toString()).cacheControl(control).build();
+    }
+
+    private boolean withinDateRange(String pubDateString, Date start, Date end) {
+        try {
+            Date pubDate = DateFormat.getDateTimeInstance().parse(pubDateString);
+            if ((start != null && start.after(pubDate)) || (end != null && end.before(pubDate))) {
+                return false;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            // ignore
+        }
+        return true;
     }
 
     private Document createPublishedFilter() {
