@@ -1,63 +1,96 @@
 [
-
-{
-  "@context": "http://re3data.org/",
-  "@type": "repository",
-  "orgidentifier": "http://doi.org/xxxxxxx",
-  "repositoryName": "IDEALS",
-  "repositoryURL": "https://www.ideals.illinois.edu/",
-  "institution": "University of Illinois",
-  "subject": "any",
-  "versioning": "no",
-  "dataAccessType": ["open","restricted"],
-  "dataLicenseName": ["other"],
-  "contentType": ["csv", "txt", "xml", "html", "tif", "jp2", "aif", "fla", "ogg", "wav", "avi", "mj2"],
-  "/maxFileSize": {"unit":"MB", "value": 1000}
-},
-
-{
-  "@context": "http://re3data.org/",
-  "@type": "repository",
-  "orgidentifier": "http://doi.org/xxxxxxx",
-  "repositoryName": "ICPSR",
-  "repositoryURL": "https://www.icpsr.umich.edu/icpsrweb/landing.jsp",
-  "institution": "University of Michigan",
-  "subject": "Social and Behavioral Sciences",
-  "versioning": "yes",
-  "dataAccessType": ["open","restricted"],
-  "dataLicenseName": ["other"],
-  "contentType": ["csv"],
-  "/maxFileSize": {"unit":"MB", "value": 2000}
-},
-
-{
-  "@context": "http://re3data.org/",
-  "@type": "repository",
-  "orgidentifier": "http://doi.org/xxxxxxx",
-  "repositoryName": "IU SDA",
-  "repositoryURL": "https://www.indiana.edu",
-  "institution": "Indiana University",
-  "subject": "any",
-  "versioning": "yes",
-  "dataAccessType": ["open","restricted"],
-  "dataLicenseName": ["other"],
-  "contentType": ["any"],
-  "/maxFileSize": {"unit":"MB", "value": 3000}
-},
-
-{
-  "@context": "http://re3data.org/",
-  "@type": "repository",
-  "orgidentifier": "http://doi.org/xxxxxxx",
-  "repositoryName": "D2I",
-  "repositoryURL": "https://www.d2i.indiana.edu",
-  "institution": "Indiana University D2I",
-  "subject": "any",
-  "versioning": "yes",
-  "dataAccessType": ["open","restricted"],
-  "dataLicenseName": ["other"],
-  "contentType": ["csv", "txt", "xml", "html", "tif"],
-  "/maxFileSize": {"unit":"MB", "value": 3000}
-}
-
+  {
+    "@context": [
+      "http://re3data.org/"
+    ],
+    "@type": "repository",
+    "orgidentifier": "String",
+    "repositoryName": "String",
+    "repositoryURL": "String",
+    "institution": "String",
+    "institutionType": "String",
+    "institutionURL": "String",
+    "institutionContact": "String",
+    "description": {
+      "langauge": "String",
+      "content": "String"
+    },
+    "repositoryContact": "String",
+    "missionStatementURL": "String",
+    "subject": "String",
+    "keyword": "String",
+    "versioning": "String",
+    "dataLicense": [
+      {
+        "dataLicenseName": "String",
+        "dataLicenseURL": "String"
+      }
+    ],
+    "dataUpload": [
+      {
+        "dataUploadType": "String",
+        "dataUploadRestriction": "String"
+      }
+    ],
+    "dataDepositAgreement": {
+      "dataDepositAgreementName": "String",
+      "dataDepositAgreementURL": "String"
+    },
+    "Data Mimetypes": [
+      "String"
+    ],
+    "metadataStandardName": "String",
+    "metadataStandardURL": "String",
+    "metadataFields": [
+      "String"
+    ],
+    "api": [
+      {
+        "URL": "String",
+        "apiType": "String"
+      }
+    ],
+    "Metadata Terms": [
+      "String"
+    ],
+    "Max Dataset Size": "String",
+    "Total Size": "String",
+    "Max Collection Depth": "String",
+    "Rights Holder IDs Required": true,
+    "pidSystem": "String",
+    "providerType": "String",
+    "entryDate": "String",
+    "lastUpdate": "String",
+    "size": "String",
+    "enhancedPublication": "yes/no",
+    "databaseAccess": {"databaseAccessType": "String"},
+    "additionalName": "String",
+    "repositoryLanguage": "String",
+    "dataAccess": [
+      {"dataAccessType": "String"},
+      {
+        "dataAccessRestriction": "String",
+        "dataAccessType": "String"
+      },
+      {
+        "dataAccessRestriction": "String",
+        "dataAccessType": "String"
+      },
+      {"dataAccessType": "String"}
+    ],
+    "dataAccessType": [
+      "String",
+      "String"
+    ],
+    "dataLicenseName": ["String"],
+    "Affiliations": [
+      "String",
+      "String"
+    ],
+    "motto": "String",
+    "maxProjectSpaceSize": {
+      "unit": "MB/GB/TB",
+      "value": 1
+    }
+  }
 ]

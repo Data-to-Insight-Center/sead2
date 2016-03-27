@@ -1,17 +1,32 @@
-{				
-  "@context": "http://schema.org/",				
-  "@type": "DataDownload",				
-  "name": "Debris Flow Flume",				
-  "description": "A 4-meter diameter, 80-cm wide rotating debris flow flume was constructed at the University of California Richmond Field Station for studying large-scale granular flow phenomena. This dataset covers the experiments conducted in 2007 and 2008, where the primary goal was to study rates and mechanisms of bedrock erosion by debris flows.",				
-  "sourceOrganization": "Columbia University",  				
-  "author": {				
-    "@type": "Person",				
-    "name": "Hsu, Leslie",				
-    "@id": "http://orcid.org/0000-0002-5353-807X",				
-    "email": "lhsu@ldeo.columbia.edu"				
-  },				
-  "fileSize": {"unit":"MB", "value": 2000},				
-  "contentUrl": "http://sead-vivo.d2i.indiana.edu:8080/sead-vivo/individual/n15603",				
-  "/subject": "Geophysics",	
-  "contentType"	: "tif"		
-}				
+{
+  "@context": [
+    "https://w3id.org/ore/context"
+  ],
+  "Rights Holder": "String",
+  "Aggregation": {
+    "Uploaded By": "String",
+    "Title": "String",
+    "Creation Date": "String",
+    "similarTo": "String",
+    "Creator": ["String"],
+    "Abstract": ["String"],
+    "Identifier": "String",
+    "Publishing Project": "String",
+    "@id": "String"
+  },
+  "Preferences": {
+    "Purpose": "String",
+    "Repository": null
+  },
+  "Aggregation Statistics": {
+    "Data Mimetypes": [
+      "String",
+      "String"
+    ],
+    "Number of Datasets": 1,
+    "Number of Collections": 1,
+    "Max Dataset Size": "String",
+    "Total Size": "String",
+    "Max Collection Depth": "String"
+  }
+}

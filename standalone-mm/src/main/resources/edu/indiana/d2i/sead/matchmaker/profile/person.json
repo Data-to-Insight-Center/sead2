@@ -1,13 +1,16 @@
 [
-{			
-  "@context": "http://schema.org/",			
-  "@type": "Person",			
-  "name": "Hsu, Leslie",			
-  "@id": "http://orcid.org/0000-0002-5353-807X",			
-  "affiliation": "Columbia University",			
-  "jobTitle": "Associate Research Scientist",			
-  "email": "lhsu@ldeo.columbia.edu",			
-  "URL": "https://sites.google.com/site/lhsu000001/",			
-  "codeRepository": "IDEALS"			
-}
+  {
+    "@id": "String",
+    "givenName": "String",
+    "familyName": "String",
+    "PersonalProfileDocument": "String",
+    "affiliation": "String",
+    "@context": {
+      "givenName": "NameSpaceString",
+      "familyName": "NameSpaceString",
+      "email": "NameSpaceString",
+      "affiliation": "NameSpaceString",
+      "PersonalProfileDocument": "NameSpaceString"
+    }
+  }
 ]

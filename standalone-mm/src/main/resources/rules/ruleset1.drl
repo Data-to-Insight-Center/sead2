@@ -3,6 +3,7 @@ package edu.indiana.d2i.sead.matchmaker.ruleset1
 import edu.indiana.d2i.sead.matchmaker.core.*
 import java.util.Set
 import java.util.HashSet
+import java.lang.*
 import java.util.Iterator
 import edu.indiana.d2i.sead.matchmaker.pojo.*;
 import edu.indiana.d2i.sead.matchmaker.custom.ruleset1.*;
@@ -11,41 +12,90 @@ import edu.indiana.d2i.sead.matchmaker.custom.ruleset1.*;
 ////// Maximum Total Size ///////
 
 rule "Maximum Total Size - Metadata check"
+// description: Check whether the 'Maximum Total Size' metadata is present in both Research Object and Repository metadata.//
+	salience 20
 	when
-		Repository(getMaxFileSize().unit == null || getMaxFileSize().value == null) or ResearchObject(fileSize.unit == null || fileSize.value == null)
+		Repository(getTotalSize() == null) or ResearchObject(getAggregationStatistics().getTotalSize() == null)
 		repo: Repository()
 		mml: Ruleset1MatchMakingList()
 	then
-		System.out.println( "Maximum Total Size restriction was not used for " +repo.getRepositoryName());
+		System.out.println("\n---Maximum Total Size restriction was not used for " +repo.getRepositoryName() + "---\n");
 		mml.ruleFired(repo.getRepositoryName(), "Maximum Total Size", "Not used" , "0");
 end
 
 rule "Maximum Total Size - Not matched"
+// description: Check whether the maximum total size of the collection is above the maximum total size accepted by the repository. //
+	salience 20
 	when
-		repo: Repository(getMaxFileSize().unit != null && getMaxFileSize().value != null)
-		researchObject : ResearchObject(fileSize.unit != null && fileSize.value != null)
-		Ruleset1Utility(computeBinaryUnitConverter(repo.MaxFileSize.unit)*repo.MaxFileSize.value < computeBinaryUnitConverter(researchObject.fileSize.unit)*researchObject.fileSize.value)
+		repo: Repository(getTotalSize() != null)
+		researchObject : ResearchObject(getAggregationStatistics().getTotalSize() != null)
+		eval(Double.parseDouble(repo.getTotalSize()) + 1000000 < Double.parseDouble(researchObject.getAggregationStatistics().getTotalSize()))
 		mml: Ruleset1MatchMakingList()
 	then
-		System.out.println("Total size is not acceptable for " +repo.getRepositoryName());
-		mml.ruleFired(repo.getRepositoryName(), "Maximum Total Size", "Total size is not acceptable (<= " + repo.getMaxFileSize().getValue() + " " + repo.getMaxFileSize().getUnit() + ")" , "-1");
+		System.out.println("\n---Total size is not acceptable for " +repo.getRepositoryName() + "---\n");
+		mml.ruleFired(repo.getRepositoryName(), "Maximum Total Size", "Total size is not acceptable (<= " + repo.getTotalSize() + ")" , "-1");
 end
 
 rule "Maximum Total Size - Matched"
+// description: Check whether the maximum total size of the collection is below the maximum total size accepted by the repository. //
+	salience 20
+    when
+        repo : Repository(getTotalSize() != null)
+        researchObject : ResearchObject(getAggregationStatistics().getTotalSize() != null)
+        eval(Double.parseDouble(repo.getTotalSize()) + 1000000 >= Double.parseDouble(researchObject.getAggregationStatistics().getTotalSize()))
+        mml : Ruleset1MatchMakingList()
+        
+    then
+        System.out.println("\n---Total size is acceptable for " +repo.getRepositoryName() + "---\n");
+        mml.ruleFired(repo.getRepositoryName(), "Maximum Total Size", "Total size is acceptable (<= " + repo.getTotalSize() + ")", "1");
+end
+
+
+
+////// Maximum Collection Depth ///////
+
+rule "Maximum Collection Depth - Metadata check"
+// description: Check whether the 'Maximum Collection Depth' metadata is present in both Research Object and Repository metadata.//
+	salience 10
 	when
-        repo: Repository(getMaxFileSize().unit != null && getMaxFileSize().value != null)
-		researchObject : ResearchObject(fileSize.unit != null && fileSize.value != null)
-		Ruleset1Utility(computeBinaryUnitConverter(repo.MaxFileSize.unit)*repo.MaxFileSize.value >= computeBinaryUnitConverter(researchObject.fileSize.unit)*researchObject.fileSize.value)
+		Repository(getMaxCollectionDepth() == null) or ResearchObject(getAggregationStatistics().getMaxCollectionDepth() == null)
+		repo: Repository()
 		mml: Ruleset1MatchMakingList()
 	then
-		System.out.println("Total size is acceptable for " +repo.getRepositoryName());
-		mml.ruleFired(repo.getRepositoryName(), "Maximum Total Size", "Total size is acceptable (<= " + repo.getMaxFileSize().getValue() + " " + repo.getMaxFileSize().getUnit() + ")", "1");
+		System.out.println( "\n---Maximum Collection Depth restriction was not used for " +repo.getRepositoryName() + "---\n");
+		mml.ruleFired(repo.getRepositoryName(), "Maximum Collection Depth", "Not used" , "0");
+end
+
+rule "Maximum Collection Depth - Not matched"
+// description: Check whether the maximum collection depth of the collection is above the maximum collection depth accepted by the repository. //
+	salience 10
+	when
+		repo: Repository(getMaxCollectionDepth() != null)
+		researchObject : ResearchObject(getAggregationStatistics().getMaxCollectionDepth() != null)
+		eval(Integer.parseInt(repo.getMaxCollectionDepth()) < Integer.parseInt(researchObject.getAggregationStatistics().getMaxCollectionDepth()))
+		mml: Ruleset1MatchMakingList()
+	then
+		System.out.println("\n---Collection depth is not acceptable for " +repo.getRepositoryName() + "---\n");
+		mml.ruleFired(repo.getRepositoryName(), "Maximum Collection Depth", "Collection depth is not acceptable (<= " + repo.getMaxCollectionDepth() + ")" , "-1");
+end
+
+rule "Maximum Collection Depth - Matched"
+// description: Check whether the maximum collection depth of the collection is below the maximum collection depth accepted by the repository. //
+	salience 10
+	when
+        repo: Repository(getMaxCollectionDepth() != null)
+		researchObject : ResearchObject(getAggregationStatistics().getMaxCollectionDepth() != null)
+		eval(Integer.parseInt(repo.getMaxCollectionDepth()) >= Integer.parseInt(researchObject.getAggregationStatistics().getMaxCollectionDepth()))
+		mml: Ruleset1MatchMakingList()
+	then
+		System.out.println("\n---Collection depth is acceptable for " +repo.getRepositoryName() + "---\n");
+		mml.ruleFired(repo.getRepositoryName(), "Maximum Collection Depth", "Collection depth is acceptable (<= " + repo.getMaxCollectionDepth() + ")", "1");
 end
 
 
 ////// Acceptable File Types ///////
 
-rule "Acceptable File Types - Metadata check"
+/*rule "Acceptable File Types - Metadata check"
 	when
 	    ResearchObject(contentType == null) or Repository(contentType == null)
 		repo: Repository()
@@ -73,4 +123,8 @@ rule "Acceptable File Types - Matched"
 	then
 		System.out.println("File types in RO are acceptable for " +repo.getRepositoryName());
 		mml.ruleFired(repo.getRepositoryName(), "Acceptable File Types", "Collection only contains acceptable types" , "1");
-end
+end*/
+
+
+
+
