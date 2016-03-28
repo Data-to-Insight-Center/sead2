@@ -79,7 +79,8 @@
 
         //building the selected filters html
         selectedFiltersHtml = buildSelectedFiltersHtml();
-        selectedFilters =  '<div id="selected-filters" class="row" style="padding-bottom: 15px; margin-bottom: 15px;">'+selectedFiltersHtml+'</div>';
+        //selectedFilters =  '<div id="selected-filters" class="row" style="padding-bottom: 15px; margin-bottom: 15px;">'+selectedFiltersHtml+'</div>';
+		selectedFilters =  '';
 
         //building the filters html
         filterInternalHtml = buildFiltersHtml();
@@ -93,8 +94,7 @@
 
         title = '<legend>'+ settings.title+'</legend>';
 
-        return '<div class="row"><i id="show-hide-filter" class="fa fa-chevron-up show-hide-filter-js" style="float: right;"></i></div>' +
-            '<fieldset id="bootstrap-filter">' +
+        return '<fieldset id="bootstrap-filter">' +
             selectedFilters +
             '<div id="filters-and-button">' +
             filterInternalHtml +

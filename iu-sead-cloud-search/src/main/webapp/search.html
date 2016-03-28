@@ -14,6 +14,7 @@
     <link rel="stylesheet" media="all" href="css/search.css">
     <link rel="stylesheet" media="all" href="css/daterangepicker.css">
     <link rel="stylesheet" type="text/css" href="css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
 </head>
 <body>
 
@@ -50,7 +51,6 @@
 
 <script type="text/javascript">
       function sendToServer(data){
-		alert('sending params to server: ' + JSON.stringify(data));
 		var apiprefix = "./ro";
 		if (data.hasOwnProperty('creator_name')){
 			search_creator = data.creator_name.values[0].value;
@@ -81,14 +81,36 @@
 
 		request.done(function (response){
 					console.log("Response from server: " + response);
-					alert(response);
 
-		});
-    }
+		new_arr = JSON.parse(response);
+		$("#CRUDthisTable").empty();
+
+		if(response != "[]"){
+			var new_ros = [];
+
+			for(var i = 0; i < new_arr.length; i++) {
+				var creator= new_arr[i].Creator;
+				var abstract= new_arr[i].Abstract;
+				var title= new_arr[i].Title;
+				var identifier= new_arr[i].Identifier;
+				var pub_date= new_arr[i]["Publication Date"];
+				var create_date= new_arr[i]["Creation Date"];
+				var doi= new_arr[i].DOI;
+
+				new_ros.push( { "Creator":creator, "Abstract": abstract, "Title": title, "Identifier": identifier,
+						"PublicationDate":pub_date, "CreationDate":create_date,"DOI":doi});
+
+				}
+				$("#viewRowTemplate").tmpl(new_ros).appendTo("#CRUDthisTable");
+		}else{
+	$("#viewRowTemplateNull").tmpl(new_ros).appendTo("#CRUDthisTable");
+	}
+	});
+}
 	var repoOptions = [
 			{name: 'IU SEAD CLOUD', value: 'sda', selected: true} //selected on display
 		   ],
-		
+
 		options = {
 			title: 'SEAD Search Filter',
 			dateFormat: this.dateFormat,
@@ -97,7 +119,6 @@
 				{type: 'text', attributeName: 'search_content', name: 'Search Content', placeholder: 'search by any text'},
 				{type: 'text', attributeName: 'creator_name', name: 'Creator Name', placeholder: 'type creator name'},
 				{type: 'date-range', attributeName: 'date_range', name: 'Date Range'},
-				{type: 'single', attributeName: 'repoName',name: 'Repository', options: repoOptions},
 				{type: 'text', attributeName: 'title', name: 'Title', placeholder: 'type title'},
 			]
 		};
@@ -113,6 +134,14 @@
 			<b>Publication Date: </b>{{html PublicationDate}}</br>
 			<b>Creation Date: </b>{{html CreationDate}}</br>
 			<b>DOI: </b><a href="{{html DOI}}">{{html DOI}}</a>
+		</li>
+	</ul>
+	</br>
+</script>
+<script id="viewRowTemplateNull" type="text/x-jquery-tmpl">
+	<ul>
+		<li style="width:600px;color:red;">
+			No Results Found.
 		</li>
 	</ul>
 	</br>

@@ -14,24 +14,11 @@ $(document).ready(function ()
 	}
 	xmlhttp.open("GET", url, true);
 	xmlhttp.send();			
-		
-	//function loadRO(){
-//	$.ajax({
-//			url: apiprefix + "/researchobjects",
-//			type: "GET",
-//			cache: false,
-//			dataType: 'json',
-//			contentType : 'application/json; charset=utf-8',
-//			success: function (data, status, jqXHR) {
-//				alert("Hi");
-//				// do something
-//			 },
-//			 error: function (jqXHR, status) {
-//				 alert("Bye");
-//			 }
-//			});
-//	}
 
+});
+
+$("#filter-search-button").click(function () {
+	$("#CRUDthisTable").empty();
 });		
 	
 function myFunction(response) {
