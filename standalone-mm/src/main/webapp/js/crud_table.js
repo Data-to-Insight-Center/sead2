@@ -63,6 +63,7 @@
             rule.RuleName = row.find('.ruleName').val();
 			rule.LHSFULL = row.find('.lhsFull').val();
             rule.RHS = row.find('.rhs').val();
+            rule.DESC = row.find('.desc').val();
 
             return rule;
         }
@@ -76,6 +77,7 @@
             rule.RuleName = row.find('td:eq(1)').text();
 			rule.LHSFULL = row.find('td:eq(2)').text();
             rule.RHS = row.find('td:eq(3)').text();
+            rule.DESC = row.find('td:eq(4)').text();
 
             return rule;
         }
@@ -123,6 +125,7 @@
 			function myFunction(response) {
 				arr = JSON.parse(response);
 				var rules1 = [];
+
 				for(var i = 0; i < arr.rules.length; i++) {
 					var lhs_ids = [];
 					var lhs_objs = [];
@@ -144,19 +147,83 @@
 					}for (var l=0; l< lhs_objs.length; l++){
 						lhs_obj_val += "&nbsp;" + lhs_objs[l] + "\r\n";
 					}for (var m=0; m< arr.rules[i].lhs.length; m++){
+
+						var str = arr.rules[i].lhs[m].objType;
+						var	reg = /[*|-|+|=|!|<|>]|null| or /ig;
+
+						//fixing a bit
+						var toStr = String(reg);
+						var color = (toStr.replace('\/g', '|')).substring(1);
+
+						//split it baby
+						var colors = color.split("|");
+
+						if (colors.indexOf("+") > -1) {
+							str = str.replace(/[+]/g, '<span style="color:blue;">+</span>');
+						}if (colors.indexOf("-") > -1) {
+							str = str.replace(/[-]/g, '<span style="color:blue;">-</span>');
+						}if (colors.indexOf("=") > -1) {
+							str = str.replace(/[=]/g, '<span style="color:blue;">=</span>');
+						}if (colors.indexOf("!") > -1) {
+							str = str.replace(/[!]/g, '<span style="color:blue;">!</span>');
+						}if (colors.indexOf("<") > -1) {
+							str = str.replace(/[!]/g, '<span style="color:blue;"><</span>');
+						}if (colors.indexOf(">") > -1) {
+							str = str.replace(/[!]/g, '<span style="color:blue;">></span>');
+						}if (colors.indexOf("null") > -1) {
+							str = str.replace(/null/g, '<span style="color:red;">null</span>');
+						}if (colors.indexOf(" or ") > -1) {
+							str = str.replace(/ or /g, '<span style="color:red;"> or </span>');
+						}
+
 						if(arr.rules[i].lhs[m].id == "" || arr.rules[i].lhs[m].id == undefined){
-							lhs_full_val += arr.rules[i].lhs[m].objType + "&nbsp;\r\n".replace("\n", "<br /><br />");
+							lhs_full_val += "<span style='color:#A0522D !important;'>" + str + "</span>&nbsp;\r\n".replace("\n", "<br /><br />");
 						}else{
-							lhs_full_val += arr.rules[i].lhs[m].id + " : " + arr.rules[i].lhs[m].objType + "&nbsp\r\n".replace("\n", "<br /><br />");
+							lhs_full_val += "<span style='color:#FF8C00 !important;'>" + arr.rules[i].lhs[m].id + " </span>: " + "<span style='color:#A0522D !important;'>" + str + "</span>&nbsp\r\n".replace("\n", "<br /><br />");
 						}
 					}
 					var rhs_list = arr.rules[i].rhs[0].rhs_val.slice(1, -1).split(/;,|;/);
 					for(var k = 0; k < rhs_list.length-1; k++){
-						rhs_full_val +=  rhs_list[k].trim() + ";\r\n".replace("\n", "<br /><br />");
+
+						var rhs_str = rhs_list[k].trim();
+						var	rhs_reg = /[*|+|<]|null| or |"(.*?)"/ig;
+
+						var rhs_match = rhs_str.match(/"(.*?)"/);
+
+						var rhstoStr = String(rhs_reg);
+						var rhs_color = (rhstoStr.replace('\/g', '|')).substring(1);
+
+
+						//var str = 'System.out.println("\n---Total size is not acceptable for " +repo.getRepositoryName() + "---\n");';
+						var singleQuoted = $.map(rhs_str.split('"'), function(substr, i) {
+						   return (i % 2) ? substr : null;
+						});
+						var dfdsf ="";
+						for (var col=0; col<singleQuoted.length; col++){
+							dfdsf = singleQuoted[col];
+
+						}
+						alert(dfdsf);
+
+						//split it content
+						var rhs_colors = rhs_color.split("|");
+						if (rhs_colors.indexOf("null") > -1) {
+							rhs_str = rhs_str.replace(/null/g, '<span style="color:red;">null</span>');
+						}if (rhs_colors.indexOf(" or ") > -1) {
+							rhs_str = rhs_str.replace(/ or /g, '<span style="color:red;"> or </span>');
+						}if (rhs_colors.indexOf("+") > -1) {
+							rhs_str = rhs_str.replace(/[+]/g, '<span style="color:blue;">+</span>');
+						}if (rhs_colors.indexOf('"(.*?)"') > -1) {
+							for (var col=0; col<singleQuoted.length; col++){
+								var dfdsf = singleQuoted[col];
+								rhs_str = rhs_str.replace('"' + dfdsf + '"', '<span style="color:#24AD24 !important;">' + '"' + dfdsf + '"' + '</span>');
+							}
+						}
+						rhs_full_val +=  rhs_str + ";\r\n".replace("\n", "<br /><br />");
 					}
 					rules1.push( { "RuleName": arr.rules[i].name, "LHSID": lhs_id_val, "LHSOBJECT": lhs_obj_val,
 					"LHSFULL": lhs_full_val,
-					"RHS": rhs_full_val});
+					"RHS": rhs_full_val, "DESC": arr.rules[i].desc });
 				}
 
 			$("#viewRowTemplate").tmpl(rules1).appendTo("#CRUDthisTable");
@@ -229,14 +296,16 @@
 			var new_rulename = savedData.RuleName;
 			var new_lhs_full = savedData.LHSFULL;
 			var new_rhs = savedData.RHS;
+			var new_desc = savedData.DESC;
 
 			var new_string_rhs = new_rhs.split("\n");
 			var new_string_lhs_full = new_lhs_full.split("\n");
 			var lhs_array = [];
 
             for(var i =0; i < new_string_lhs_full.length; i++){
+				var lhs_full_color = "<span style='color:#A0522D !important;'>" + new_string_lhs_full[i].trim() + "</span>";
                 lhs_array.push({
-                    "lhsFull" : new_string_lhs_full[i].trim()
+                    "lhsFull" : lhs_full_color
                 });
             }
 
@@ -247,16 +316,17 @@
 
 			var J = arr;
 
-			function addRule(lhs_array, name, rhs_val, rule_array) {
+			function addRule(lhs_array, name, rhs_val, desc, rule_array) {
     			rule_array.push({
 					"lhs": lhs_array,
         			"name": name,
-					"rhs": [{"rhs_val":rhs_val}]
+					"rhs": [{"rhs_val":rhs_val}],
+					"desc": desc
     			});
 			}
 
 			for(var b=0; b<1; b++) {
-    			addRule(lhs_array, new_rulename, new_rhs_val, J.rules);
+    			addRule(lhs_array, new_rulename, new_rhs_val, new_desc, J.rules);
 			}
 			var new_arr = J;
 

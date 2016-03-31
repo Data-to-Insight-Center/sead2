@@ -15,7 +15,6 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.kie.api.KieServices;
-import org.kie.api.builder.KieFileSystem;
 import org.kie.api.io.Resource;
 import org.kie.api.io.ResourceType;
 import org.kie.api.runtime.KieContainer;
@@ -33,6 +32,9 @@ import java.util.List;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Created by charmadu on 2/15/16.
@@ -127,7 +129,32 @@ public class RestTest {
                             for (int i = 0; i < val2; i = i + 1) {
                                 JSONObject obj = new JSONObject();
                                 RuleDescr rule = rules_val.get( i );
+
+                                File file = new File(listOfFiles[m].getPath());
+                                FileInputStream fis = new FileInputStream(file);
+                                byte[] data = new byte[(int) file.length()];
+                                fis.read(data);
+                                fis.close();
+
+                                String str = new String(data, "UTF-8");
+
+                                String firstDelim = "rule " + '"' + rule.getName() + '"';
+                                int p1 = str.indexOf(firstDelim);
+                                String lastDelim = "end";
+                                String desc = "";
+                                int p2 = str.indexOf(lastDelim, p1);   // look after start delimiter
+                                if (p1 >= 0 && p2 > p1) {
+                                    String res = str.substring(p1,p2);
+                                    Pattern pattern = Pattern.compile("// description:(.*?)//");
+                                    Matcher matcher = pattern.matcher(res);
+                                    while (matcher.find()) {
+                                        String match_desc = matcher.group(1);
+                                        desc += match_desc.trim();
+                                    }
+                                }
+
                                 obj.put("name", rule.getName());
+                                obj.put("desc", desc);
                                 AndDescr lhs = rule.getLhs();
                                 List<BaseDescr> val4 = lhs.getDescrs();
 
@@ -234,10 +261,11 @@ public class RestTest {
         for (int v = rules.length()-1; v < rules.length(); ++v) {
             JSONObject rule = rules.getJSONObject(v);
             String name = rule.getString("name").trim();
+            String desc = rule.getString("desc").trim();
             JSONArray lhs = rule.getJSONArray("lhs");
             JSONArray rhs = rule.getJSONArray("rhs");
 
-            String new_rule = "\n\nrule " + '"' + name + '"' + "\n" + "    when\n";
+            String new_rule = "\n\nrule " + '"' + name + '"' + "\n" + "// description: " + desc + " //\n" + "    when\n";
                 for (int i = 0; i < lhs.length(); ++i) {
                     JSONObject lh = lhs.getJSONObject(i);
                     String lhsFull = lh.getString("lhsFull");
@@ -254,8 +282,6 @@ public class RestTest {
             }}
 
         new_rule +=    "end\n";
-        KieServices ks = KieServices.Factory.get();
-        KieFileSystem kfs = ks.newKieFileSystem();
 
         ClassLoader classLoader = getClass().getClassLoader();
         File folder = new File(classLoader.getResource("rules").getFile());
@@ -299,7 +325,7 @@ public class RestTest {
                         inStream.close();
                         outStream.close();
 
-                        KieContainer kContainer = ks.getKieClasspathContainer();
+                        KieContainer kContainer = KieServices.Factory.get().getKieClasspathContainer();
                         KieSession kSession = kContainer.newKieSession("ksession-rules");
                         kSession.fireAllRules();
                     }
@@ -378,7 +404,5 @@ public class RestTest {
     public static void main( String args[]) throws Exception {
         RestTest resttest = new RestTest();
         resttest.getRulesList();
-        //resttest.AddNewRule("New Rule Array");
-        //resttest.DeleteRule("Deleting Rule Name");
     }
 }

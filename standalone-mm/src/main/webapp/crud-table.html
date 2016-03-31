@@ -24,6 +24,7 @@
             <th>Rule Name </th>
             <th>LHS Full</th>
             <th>RHS </th>
+            <th>Description </th>
         </tr>
 
         </thead>
@@ -63,11 +64,13 @@
             </td>
 
             <td>
-				<textarea id="field1" name="field1" class="ruleName" rows="3">{{html RuleName}}</textarea></td>
+				<textarea id="field1" name="field1" class="ruleName" rows="3" style="color:#1596B9;">{{html RuleName}}</textarea></td>
 			<td>
-                <textarea id="field2" name="field2" class="lhsFull" rows="6">{{html LHSFULL}}</textarea></td>
+                <textarea id="field2" name="field2" class="lhsFull" rows="6" style="color:#A0522D">{{html LHSFULL}}</textarea></td>
             <td>
-                <textarea id="field3" name="field3" class="rhs" rows="6">{{html RHS}}</textarea></td>
+                <textarea id="field3" name="field3" class="rhs" rows="6" style="color:#24AD24">{{html RHS}}</textarea></td>
+            <td>
+                <textarea id="field4" name="field4" class="desc" rows="6" style="color:#8A2BE2;">{{html DESC}}</textarea></td>
         </tr>
     </script>
 <script id="viewRowTemplate" type="text/x-jquery-tmpl">
@@ -77,9 +80,10 @@
             <span id="delete" name="delete" title="Delete" class="ui-icon ui-icon-trash DeleteRow" style="cursor:pointer">Delete</span>
 			</td>
 
-            <td class="view_ruleName">{{html RuleName}}</td>
-			<td class="view_lhsfull" style="width:250px;">{{html LHSFULL}}</td>
-            <td class="view_rhs">{{html RHS}}</td>
+            <td class="view_ruleName" style="color:#1596B9;">{{html RuleName}}</td>
+			<td class="view_lhsfull">{{html LHSFULL}}</td>
+            <td class="view_rhs" style="color:#000000;">{{html RHS}}</td>
+            <td class="view_desc" style="color:#8A2BE2;">{{html DESC}}</td>
         </tr>
     </script>
 </body>

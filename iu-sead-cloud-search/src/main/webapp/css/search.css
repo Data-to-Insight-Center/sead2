@@ -44,7 +44,7 @@ padding:5px;
 }
 ul {
 list-style-type: none;
-width: 100%;
+width: 750px;
 border-top:groove #008CBA 1px;
 border-bottom:groove #008CBA 1px;
 }ul:nth-child(odd) {

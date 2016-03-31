@@ -134,7 +134,7 @@ table {
     text-align: right;
 }
 .mediumTable tr {
-    color: #797268;
+    color: #000000;
 }
 .mediumTable th {
     color: #4f6b72;
@@ -153,11 +153,11 @@ table {
     border-left: 1px solid #C1DAD7;
     border-bottom: 1px solid #C1DAD7;
     padding: 0.3em 0.3em;
-    background-color: #F5FAFA;
-    color: #797268;
+    background-color: #ffffff;
+    color: #000000;
 }
 .mediumTable tr.even td {
-    background-color: #EEE;
+    background-color: #ffffff;
 }
 .mediumTable tr:hover td,
 .mediumTable tr.even:hover td,
@@ -167,7 +167,7 @@ table {
     color: #000;
 }
 .mediumTable tr.footer {} .mediumTable tr.pager:hover td {
-    background-color: #F5FAFA;
+    background-color: #ffffff;
 }
 .mediumTable tr.pager td table {
     padding: 0px;
@@ -210,6 +210,8 @@ table {
     width: 400px;
 }
 .view_rhs {
+    width: 300px;
+}.view_desc {
     width: 300px;
 }
 .manage {
@@ -306,4 +308,8 @@ h1 {
 	background-repeat: no-repeat;
 	background-position: 10px center;
 	width:18%;
+}#container [word=red]{
+    color:#F00;
+}#container [word=apple]{
+    color:green
 }
