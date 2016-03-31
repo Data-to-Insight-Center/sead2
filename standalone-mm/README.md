@@ -380,43 +380,106 @@ cp target/matchmaker-1.0.0.war CATALINA_HOME/webapps/mm.war
 
 Use matchmaker - REST API
 -----------------
-1) Send a POST request to http://&lt;host&gt;:&lt;port&gt;/mm/rest with the following request as the POST body
+1) Send a POST request to http://&lt;host&gt;:&lt;port&gt;/mm/mm/rest with the following request as the POST body
 ~~~
 {
-    "operation" : "query",
-    "message" : {
-        "@context": "http://schema.org/",
-        "@type": "DataDownload",
-        "name": "Debris Flow Flume",
-        "description": "Sample description",
-        "sourceOrganization": "Columbia University",
-        "author": {
-            "@type": "Person",
-            "name": "Hsu, Leslie",
-            "@id": "http://orcid.org/0000-0002-5353-807X",
-            "email": "lhsu@ldeo.columbia.edu"
-        },
-        "fileSize": {"unit":"MB", "value": 2000},
-        "contentUrl": "http://sead-vivo.d2i.indiana.edu:8080/sead-vivo/individual/n15603",
-        "/subject": "Geophysics",
-        "contentType" : "tif"
+  "operation": "query",
+  "message": {
+    "@context": [
+      "https://w3id.org/ore/context"
+    ],
+    "Rights Holder": "https://sead2-beta.ncsa.illinois.edu/api/users/568acec7f26f437b16cafac4",
+    "Aggregation": {
+      "Uploaded By": "https://sead2-beta.ncsa.illinois.edu/api/users/568acec7f26f437b16cafac4",
+      "Title": "test_dataset1 - new-cur-obj-test",
+      "Creation Date": "04-03-2016",
+      "similarTo": "https://sead2-beta.ncsa.illinois.edu/datasets/56966fc4e4b01d13f5ced4a5",
+      "Creator": ["0000-0001-9351-557X"],
+      "Abstract": ["Its a simple test"],
+      "Identifier": "https://sead2-beta.ncsa.illinois.edu/spaces/curations/56da04d7e4b09d159f672258",
+      "Publishing Project": "https://sead2-beta.ncsa.illinois.edu/spaces/56966fa6e4b01d13f5ced4a3",
+      "@id": "https://sead2-beta.ncsa.illinois.edu/api/curations/56da04d7e4b09d159f672258/ore#aggregation"
+    },
+    "Preferences": {
+      "Purpose": "Testing-Only",
+      "Repository": null
+    },
+    "Aggregation Statistics": {
+      "Data Mimetypes": [
+        "image/png",
+        "text/plain"
+      ],
+      "Number of Datasets": 2,
+      "Number of Collections": 1,
+      "Max Dataset Size": "18317",
+      "Total Size": "11000000",
+      "Max Collection Depth": "2"
     }
+  }
 }
 ~~~
 The result would be;
 ~~~
-{
-"responseID":"null",
-"sucess":true,
-"response":{
-  "IU SDA" : {
-    "weight" : 0,
-    "priority" : 0
+[
+  {
+    "Per Rule Scores": [
+      {
+        "Score": "1",
+        "Message": "Total size is acceptable (<= 10000000000)",
+        "Rule Name": "Maximum Total Size"
+      },
+      {
+        "Score": "-1",
+        "Message": "Collection depth is not acceptable (<= 1)",
+        "Rule Name": "Maximum Collection Depth"
+      }
+    ],
+    "repositoryName": "Inter-university Consortium for Political and Social Research"
   },
-  "D2I" : {
-    "weight" : 0,
-    "priority" : 0
+  {
+    "Per Rule Scores": [
+      {
+        "Score": "1",
+        "Message": "Total size is acceptable (<= 10000000)",
+        "Rule Name": "Maximum Total Size"
+      },
+      {
+        "Score": "1",
+        "Message": "Collection depth is acceptable (<= 10)",
+        "Rule Name": "Maximum Collection Depth"
+      }
+    ],
+    "repositoryName": "SEAD NDS Labs Publisher (Proof-of-Concept)"
+  },
+  {
+    "Per Rule Scores": [
+      {
+        "Score": "1",
+        "Message": "Total size is acceptable (<= 1000000000)",
+        "Rule Name": "Maximum Total Size"
+      },
+      {
+        "Score": "1",
+        "Message": "Collection depth is acceptable (<= 4)",
+        "Rule Name": "Maximum Collection Depth"
+      }
+    ],
+    "repositoryName": "IU SEAD Cloud"
+  },
+  {
+    "Per Rule Scores": [
+      {
+        "Score": "1",
+        "Message": "Total size is acceptable (<= 10000000000)",
+        "Rule Name": "Maximum Total Size"
+      },
+      {
+        "Score": "-1",
+        "Message": "Collection depth is not acceptable (<= 1)",
+        "Rule Name": "Maximum Collection Depth"
+      }
+    ],
+    "repositoryName": "IDEALS"
   }
-}
-}
+]
 ~~~
