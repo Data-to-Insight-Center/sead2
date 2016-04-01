@@ -64,10 +64,18 @@
 			search_title = data.title.values[0].value;
 		}else{
 			search_title = "";
+		}if (data.hasOwnProperty('date_range')){
+			search_date_range = data.date_range.values[0].value;
+			search_start_date = search_date_range.split("-")[0].trim();
+			search_end_date = search_date_range.split("-")[1].trim();
+		}else{
+			search_date_range = "";
+			search_start_date = "";
+			search_end_date = "";
 		}
 
-		var search_json = {"Creator":search_creator, "Start Date":data.date_range.values[0].value.split("-")[0].trim(),
-							"End Date":data.date_range.values[0].value.split("-")[1].trim(), "Search String": search_string,
+		var search_json = {"Creator":search_creator, "Start Date":search_start_date,
+							"End Date":search_end_date, "Search String": search_string,
 							"Title":search_title};
 		var myData=JSON.stringify(search_json);
 		var request = $.ajax({
@@ -124,7 +132,6 @@
 		};
 	$('#filter').bootstrapFilter(options);
 </script>
-
 <script id="viewRowTemplate" type="text/x-jquery-tmpl">
 	<ul>
 		<li>

@@ -137,11 +137,11 @@ table {
     color: #000000;
 }
 .mediumTable th {
-    color: #4f6b72;
+    color: #494949;
     border: 1px solid #C1DAD7;
     letter-spacing: 2px;
     padding: 2px 2px 2px 6px;
-    background: #CAE8EA;
+    background: #A2C9DA;
     text-align: center;
 }
 .mediumTable th[scope=row] {
@@ -242,17 +242,14 @@ h1 {
 #delete,
 #match {
     display: inline-block;
-    padding: 15px 15px;
+    padding: 8px 8px;
     font-size: 12px;
     cursor: pointer;
     text-align: center;
-    text-decoration: none;
     outline: none;
     color: #fff;
     background-color: #008CBA;
-    border: none;
-    border-radius: 15px;
-    box-shadow: 0 9px #999;
+    border-radius: 5px;
     margin-bottom: 20px;
 }
 #add_button:hover,
