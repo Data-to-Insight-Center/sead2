@@ -65,14 +65,15 @@ public class SeadMonService {
     private static final Logger log = Logger.getLogger(SeadMonService.class);
 
     static {
+        MongoDatabase monDB = MongoDB.getMonDB();
         MongoDatabase pdtDB = MongoDB.getPdtDB();
         MongoDatabase dataOneDB = MongoDB.getDataOneDB();
 
         //Collections for Components
-        curbeeCollection = pdtDB.getCollection(MonConstants.Components.CURBEE.getValue());
-        matchmakerCollection = pdtDB.getCollection(MonConstants.Components.MATCHMAKER.getValue());
-        landingPageCollection = pdtDB.getCollection(MonConstants.Components.LANDING_PAGE.getValue());
-        seadCloudCollection = pdtDB.getCollection(MonConstants.Components.IU_SEAD_CLOUD.getValue());
+        curbeeCollection = monDB.getCollection(MonConstants.Components.CURBEE.getValue());
+        matchmakerCollection = monDB.getCollection(MonConstants.Components.MATCHMAKER.getValue());
+        landingPageCollection = monDB.getCollection(MonConstants.Components.LANDING_PAGE.getValue());
+        seadCloudCollection = monDB.getCollection(MonConstants.Components.IU_SEAD_CLOUD.getValue());
 
         publicationsCollection = pdtDB.getCollection(MongoDB.researchObjects);
         dataOneCollection = dataOneDB.getCollection(MongoDB.events);
