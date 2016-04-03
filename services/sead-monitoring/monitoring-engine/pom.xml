@@ -2,10 +2,10 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
     <modelVersion>4.0.0</modelVersion>
-    <artifactId>monitoring-ui</artifactId>
+    <artifactId>monitoring-engine</artifactId>
     <version>2.0.0-SNAPSHOT</version>
-    <packaging>war</packaging>
-    <name>SEAD Monitoring - Web Application</name>
+    <packaging>jar</packaging>
+    <name>SEAD Monitoring - Backend Processor</name>
 
     <parent>
         <groupId>org.sead.va</groupId>
@@ -14,11 +14,6 @@
     </parent>
 
     <dependencies>
-        <dependency>
-            <groupId>org.sead.va</groupId>
-            <artifactId>monitoring-engine</artifactId>
-            <version>2.0.0-SNAPSHOT</version>
-        </dependency>
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
@@ -73,7 +68,7 @@
     </dependencies>
 
     <build>
-        <finalName>sead-mon</finalName>
+        <finalName>sead-mon-engine</finalName>
         <plugins>
             <plugin>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -83,28 +78,6 @@
                     <source>1.6</source>
                     <target>1.6</target>
                 </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-war-plugin</artifactId>
-                <version>2.2</version>
-                <configuration>
-                    <archiveClasses>false</archiveClasses>
-                    <webResources>
-                        <resource>
-                            <filtering>true</filtering>
-                            <directory>${basedir}/src/main/webapp</directory>
-                            <includes>
-                                <include>WEB-INF/web.xml</include>
-                            </includes>
-                        </resource>
-                    </webResources>
-                </configuration>
-                <executions>
-                    <execution>
-                        <phase>prepare-package</phase>
-                    </execution>
-                </executions>
             </plugin>
         </plugins>
 

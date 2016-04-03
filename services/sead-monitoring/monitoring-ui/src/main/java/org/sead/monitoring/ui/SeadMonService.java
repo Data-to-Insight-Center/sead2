@@ -14,11 +14,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- * @author isuriara@indiana.edu
  * @author charmadu@umail.iu.edu
  */
 
-package org.sead.monitoring;
+package org.sead.monitoring.ui;
 
 import com.google.gson.Gson;
 import com.mongodb.BasicDBObject;
@@ -26,17 +25,21 @@ import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoDatabase;
-import com.mongodb.util.JSON;
-import com.sun.jersey.api.client.ClientResponse;
+import org.apache.log4j.Logger;
 import org.bson.Document;
 import org.json.JSONArray;
 import org.json.JSONObject;
-import org.sead.monitoring.util.Constants;
-import org.sead.monitoring.util.LogEvent;
-import org.sead.monitoring.util.MongoDB;
-import org.sead.monitoring.util.DateTimeUtil;
+import org.sead.monitoring.engine.enums.MonConstants;
+import org.sead.monitoring.engine.util.LogEvent;
+import org.sead.monitoring.ui.util.Constants;
+import org.sead.monitoring.ui.util.DataoneLogEvent;
+import org.sead.monitoring.ui.util.DateTimeUtil;
+import org.sead.monitoring.ui.util.MongoDB;
 
-import javax.ws.rs.*;
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.CacheControl;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -46,15 +49,31 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 
 @Path("/")
-public class LogSearch {
+public class SeadMonService {
 
-    private MongoCollection<Document> publicationsCollection = null;
-    private MongoCollection<Document> dataOneCollection = null;
-    private CacheControl control = new CacheControl();
+    private static SimpleDateFormat sdfDate = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
 
-    public LogSearch() {
+    private static MongoCollection<Document> publicationsCollection = null;
+    private static MongoCollection<Document> dataOneCollection = null;
+    private static CacheControl control = new CacheControl();
+
+    private static MongoCollection<Document> curbeeCollection = null;
+    private static MongoCollection<Document> matchmakerCollection = null;
+    private static MongoCollection<Document> landingPageCollection = null;
+    private static MongoCollection<Document> seadCloudCollection = null;
+
+    private static final Logger log = Logger.getLogger(SeadMonService.class);
+
+    static {
         MongoDatabase pdtDB = MongoDB.getPdtDB();
         MongoDatabase dataOneDB = MongoDB.getDataOneDB();
+
+        //Collections for Components
+        curbeeCollection = pdtDB.getCollection(MonConstants.Components.CURBEE.getValue());
+        matchmakerCollection = pdtDB.getCollection(MonConstants.Components.MATCHMAKER.getValue());
+        landingPageCollection = pdtDB.getCollection(MonConstants.Components.LANDING_PAGE.getValue());
+        seadCloudCollection = pdtDB.getCollection(MonConstants.Components.IU_SEAD_CLOUD.getValue());
+
         publicationsCollection = pdtDB.getCollection(MongoDB.researchObjects);
         dataOneCollection = dataOneDB.getCollection(MongoDB.events);
         control.setNoCache(true);
@@ -73,7 +92,6 @@ public class LogSearch {
 
         BasicDBObject andQuery = new BasicDBObject();
         List<BasicDBObject> obj = new ArrayList<BasicDBObject>();
-        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
 
         if (fromDate != null) {
             fromDate = fromDate.replace("+00:00", "Z");
@@ -93,19 +111,19 @@ public class LogSearch {
             andQuery.put("$and", obj);
         }
 
-        List<LogEvent> result = queryLog(dataOneCollection, andQuery, countStr, start);
-        Date startDate = simpleDateFormat.parse(result.get(0).getDate());
-        Date endDate = simpleDateFormat.parse(result.get(result.size() - 1).getDate());
+        List<DataoneLogEvent> result = queryDataoneLog(dataOneCollection, andQuery, countStr, start);
+        Date startDate = sdfDate.parse(result.get(0).getDate());
+        Date endDate = sdfDate.parse(result.get(result.size() - 1).getDate());
         long duration = Math.round((endDate.getTime() - startDate.getTime())*1.0/1000);
         String scale = DateTimeUtil.getTimeScale(duration);
 
         Map<Long, Integer> stats = new HashMap<Long, Integer>();
 
-        for (LogEvent d1log : result) {
-            if (d1log.getSubject() == null || d1log.getNodeIdentifier() == null) {
+        for (DataoneLogEvent d1log : result) {
+            if (d1log.getDate() == null) {
                 continue;
             }
-            Date date = simpleDateFormat.parse(d1log.getDate());
+            Date date = sdfDate.parse(d1log.getDate());
             long seconds = Math.round(date.getTime()*1.0 / 1000);
             long time = DateTimeUtil.getScaledTime(seconds, scale);
 
@@ -129,13 +147,13 @@ public class LogSearch {
 
     public List<LogEvent>  queryLog(MongoCollection collection, BasicDBObject query, String countStr, int start){
 
-        int count = 80;
+        int count = 0;
         if(countStr!=null && !countStr.equals(Constants.INFINITE))
             count = Integer.parseInt(countStr);
         start = start < 0 ? 0 : start;
 
         FindIterable<Document> iter;
-        if(countStr!=null && countStr.equals(Constants.INFINITE)) {
+        if(countStr == null || (countStr!=null && countStr.equals(Constants.INFINITE))) {
             iter = collection.find(query)
                     .skip(start)
                     .sort(new BasicDBObject("date", 1));
@@ -160,96 +178,36 @@ public class LogSearch {
         return logEvents;
     }
 
-    @GET
-    @Path("/")
-    @Produces(MediaType.APPLICATION_JSON)
-    public Response getAllPublishedROs() {
-        FindIterable<Document> iter = publicationsCollection.find(createPublishedFilter()
-                .append("Repository", "sda"));
-        setROProjection(iter);
+    public List<DataoneLogEvent>  queryDataoneLog(MongoCollection collection, BasicDBObject query, String countStr, int start){
+
+        int count = 0;
+        if(countStr!=null && !countStr.equals(Constants.INFINITE))
+            count = Integer.parseInt(countStr);
+        start = start < 0 ? 0 : start;
+
+        FindIterable<Document> iter;
+        if(countStr == null || (countStr!=null && countStr.equals(Constants.INFINITE))) {
+            iter = collection.find(query)
+                    .skip(start)
+                    .sort(new BasicDBObject("date", 1));
+        } else {
+            iter = collection.find(query)
+                    .limit(count)
+                    .skip(start)
+                    .sort(new BasicDBObject("date", 1));
+        }
+        List<DataoneLogEvent> logEvents = new ArrayList<DataoneLogEvent>();
         MongoCursor<Document> cursor = iter.iterator();
-        JSONArray array = new JSONArray();
-        while (cursor.hasNext()) {
-            Document document = cursor.next();
-            reArrangeDocument(document);
-            array.put(JSON.parse(document.toJson()));
+        try {
+            while(cursor.hasNext()) {
+                Document dbobj = cursor.next();
+                //Converting BasicDBObject to a custom Class(LogEvent)
+                DataoneLogEvent logEvent = (new Gson()).fromJson(dbobj.toJson(), DataoneLogEvent.class);
+                logEvents.add(logEvent);
+            }
+        } finally {
+            cursor.close();
         }
-        return Response.ok(array.toString()).cacheControl(control).build();
+        return logEvents;
     }
-
-    @POST
-    @Path("/")
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    public Response getFilteredListOfROs(String filterString) {
-        // TODO: filter
-        return getAllPublishedROs();
-    }
-
-    @GET
-    @Path("/{id}")
-    @Produces(MediaType.APPLICATION_JSON)
-    public Response getRODetails(@PathParam("id") String id) {
-        FindIterable<Document> iter = publicationsCollection.find(createPublishedFilter()
-                .append("Repository", "sda")
-                .append("Aggregation.Identifier", id));
-        if (iter == null) {
-            return Response
-                    .status(ClientResponse.Status.NOT_FOUND)
-                    .entity(new JSONObject().put("Error", "Cannot find RO with id " + id).toString())
-                    .build();
-        }
-        setROProjection(iter);
-        Document document = iter.first();
-        if (document == null) {
-            return Response
-                    .status(ClientResponse.Status.NOT_FOUND)
-                    .entity(new JSONObject().put("Error", "Cannot find RO with id " + id).toString())
-                    .build();
-        }
-        reArrangeDocument(document);
-        return Response.ok(document.toJson()).cacheControl(control).build();
-    }
-
-    private Document createPublishedFilter() {
-        // find only published ROs. there should be a Status with stage=Success
-        Document stage = new Document("stage", "");
-        Document elem = new Document("$elemMatch", stage);
-        return new Document("Status", elem);
-    }
-
-    private void setROProjection(FindIterable<Document> iter) {
-        iter.projection(new Document("Status", 1)
-                .append("Repository", 1)
-                .append("Aggregation.Identifier", 1)
-                .append("Aggregation.Creator", 1)
-                .append("Aggregation.Title", 1)
-                .append("Aggregation.Contact", 1)
-                .append("Aggregation.Abstract", 1)
-                .append("Aggregation.Creation Date", 1)
-                .append("_id", 0));
-    }
-
-    private void reArrangeDocument(Document doc) {
-        // get elements inside Aggregation to top level
-        Document agg = (Document) doc.get("Aggregation");
-        for (String key : agg.keySet()) {
-            doc.append(key, agg.get(key));
-        }
-        doc.remove("Aggregation");
-        // extract doi and remove Status
-        ArrayList<Document> statusArray = (ArrayList<Document>) doc.get("Status");
-        String doi = "Not Found";
-        String pubDate = "Not Found";
-        for (Document status : statusArray) {
-            /*if (Constants.successStage.equals(status.getString("stage"))) {
-                doi = status.getString("message");
-                pubDate = status.getString("date");
-            }*/
-        }
-        doc.append("DOI", doi);
-        doc.append("Publication Date", pubDate);
-        doc.remove("Status");
-    }
-
 }

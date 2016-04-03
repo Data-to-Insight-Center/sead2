@@ -18,7 +18,7 @@
  * @author charmadu@umail.iu.edu
  */
 
-package org.sead.monitoring.util;
+package org.sead.monitoring.ui.util;
 
 import java.io.IOException;
 import java.io.InputStream;

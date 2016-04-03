@@ -20,7 +20,7 @@
  */
 
 
-package org.sead.monitoring.util;
+package org.sead.monitoring.engine.util;
 
 import com.mongodb.MongoClient;
 import com.mongodb.client.MongoDatabase;
@@ -50,5 +50,9 @@ public class MongoDB {
 
     static public MongoDatabase getDataOneDB() {
         return getMongoClientInstance().getDatabase(Constants.dataoneDbName);
+    }
+
+    static public MongoDatabase getMonDB() {
+        return getMongoClientInstance().getDatabase(Constants.monDbName);
     }
 }

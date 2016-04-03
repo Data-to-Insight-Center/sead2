@@ -18,9 +18,9 @@
  * @author charmadu@umail.iu.edu
  */
 
-package org.sead.monitoring.util;
+package org.sead.monitoring.ui.util;
 
-public class LogEvent {
+public class DataoneLogEvent {
 
     String id;
     String eventType;
