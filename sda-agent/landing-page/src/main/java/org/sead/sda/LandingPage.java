@@ -23,21 +23,23 @@ import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
+import org.sead.monitoring.engine.SeadMon;
+import org.sead.monitoring.engine.enums.MonConstants;
 
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URLDecoder;
 import java.util.*;
-
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
-import java.io.BufferedInputStream;
+
 
 /**
  * SDA LandingPage
@@ -57,6 +59,8 @@ public class LandingPage extends HttpServlet {
         	}else{
         		tag = request.getRequestURI().split("/sda/list=")[1];
         	}
+
+            SeadMon.addLog(MonConstants.Components.LANDING_PAGE, tag, MonConstants.EventType.ACCESS);
 
             // here we check whether the BagIt zip file for this RO exists in SDA
             SFTP sftp = new SFTP();

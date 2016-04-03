@@ -30,6 +30,8 @@ import org.sead.workflow.config.SeadWorkflowConfig;
 import org.sead.workflow.context.SeadWorkflowContext;
 import org.sead.workflow.exception.SeadWorkflowException;
 import org.sead.workflow.util.Constants;
+import org.sead.monitoring.engine.SeadMon;
+import org.sead.monitoring.engine.enums.MonConstants;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
@@ -139,6 +141,7 @@ public class SeadWorkflowService {
             System.out.println("-----------------------------------");
             System.out.println("SeadWorkflowService - Respond to publishRO request : " + response);
             System.out.println("-----------------------------------");
+            SeadMon.addLog(MonConstants.Components.CURBEE, id, MonConstants.Status.FAILURE);
             return Response.serverError().entity(response).type(MediaType.APPLICATION_JSON_TYPE).build();
         }
 
@@ -171,6 +174,7 @@ public class SeadWorkflowService {
                 System.out.println("-----------------------------------");
                 System.out.println("SeadWorkflowService - Respond to publishRO request : " + response);
                 System.out.println("-----------------------------------");
+                SeadMon.addLog(MonConstants.Components.CURBEE, id, MonConstants.Status.FAILURE);
                 return Response.serverError().entity(response).type(MediaType.APPLICATION_JSON_TYPE).build();
             }
         }
@@ -179,6 +183,7 @@ public class SeadWorkflowService {
         System.out.println("-----------------------------------");
         System.out.println("SeadWorkflowService - Respond to publishRO request : " + response);
         System.out.println("-----------------------------------");
+        SeadMon.addLog(MonConstants.Components.CURBEE, id, MonConstants.Status.SUCCESS);
         return Response
                 .ok(response)
                 .type(MediaType.APPLICATION_JSON_TYPE)

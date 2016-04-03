@@ -23,7 +23,6 @@ import com.mongodb.BasicDBObject;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
-
 import org.bson.BasicBSONObject;
 import org.bson.Document;
 import org.bson.types.BasicBSONList;
@@ -33,11 +32,12 @@ import org.sead.matchmaker.Matcher;
 import org.sead.matchmaker.MatchmakerConstants;
 import org.sead.matchmaker.RuleResult;
 import org.sead.matchmaker.matchers.*;
+import org.sead.monitoring.engine.SeadMon;
+import org.sead.monitoring.engine.enums.MonConstants;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.ArrayList;
@@ -73,6 +73,9 @@ public class MatchMaker {
         System.out.println("=================");
         System.out.println("MM request : " + matchRequest);
         System.out.println("=================");
+
+        SeadMon.addLog(MonConstants.Components.MATCHMAKER, "ID");
+
         Document request = Document.parse(matchRequest);
 		Document content = (Document) request.get("Aggregation");
 		if (content == null) {
