@@ -58,13 +58,25 @@ public class MatchMakingList {
 	private Logger log;
 
     private static final String REPOSITORY_NAME = "repositoryName";
-    private static final String PER_RULE_SCORE = "Per Rule Scores";
+    private static final String REPOSITORY_ID = "orgidentifier";
+    public static final String PER_RULE_SCORE = "Per Rule Scores";
     private static final String RULE_NAME = "Rule Name";
-    private static final String RULE_SCORE = "Score";
+    public static final String RULE_SCORE = "Score";
     private static final String RULE_MESSAGE = "Message";
 
+    public static final String ATTRIBUTE_TYPE = "Attribute Type";
+    public static final String CRITICAL = "Critical";
+    public static final String NONCRITICAL = "NonCritical";
+
 	//String MatchmakingSchema ="{\"priority\":\"Integer\", \"weight\":\"Integer\"}";
-	
+
+    // map: "orgidentifier" --> [   "orgidentifier" -> "Org. Identifier",
+    //                              "repositoryName" -> "Repository Name",
+    //                              "Per Rule Scores" -> [{ Score -> 1,
+    //                                                      Message -> Total size is acceptable (<= 1000000000),
+    //                                                      Rule Name -> Maximum Total Size,
+    //                                                      Attribute Type -> Critical} ],
+    //                            ]
 	private Map<String, HashMap<String, Object>> candidateList;
 	
 	/*
@@ -79,7 +91,8 @@ public class MatchMakingList {
 			//params.put("priority", PRIORITY_DEFAULT);
 			//params.put("weight", WEIGHT_DEFAULT);
 			//params.put("orgidentifier", repo.path(PRIMARY_KEY).asText());
-			params.put(REPOSITORY_NAME, repo.path(PRIMARY_KEY).asText());
+			params.put(REPOSITORY_NAME, repo.path("repositoryName").asText());
+			params.put(REPOSITORY_ID, repo.path(PRIMARY_KEY).asText());
 			this.candidateList.put(repo.path(PRIMARY_KEY).asText(), params);
 			//System.out.println(repo.toString());
 		}
@@ -155,6 +168,7 @@ public class MatchMakingList {
 	}
 
     public void ruleFired(String candidate, String rule, String message, String score) {
+        log.info("RuleFired -- " + "Rule : " + rule + ", Repository : " + candidate + ", Message : " + message);
         if (this.candidateList.containsKey(candidate)){
             //System.out.println(candidate+" "+weight);
             HashMap<String, Object> repository= this.candidateList.get(candidate);
@@ -162,6 +176,29 @@ public class MatchMakingList {
             ruleScore.put(RULE_NAME, rule);
             ruleScore.put(RULE_MESSAGE, message);
             ruleScore.put(RULE_SCORE, score);
+
+            List<HashMap<String, Object>> ruleScoreList = new ArrayList<HashMap<String, Object>>();
+
+            if(repository.containsKey(PER_RULE_SCORE)){
+                ruleScoreList = (List<HashMap<String, Object>>)repository.get(PER_RULE_SCORE);
+            } else {
+                repository.put(PER_RULE_SCORE, ruleScoreList);
+            }
+            ruleScoreList.add(ruleScore);
+
+        }
+    }
+
+    public void ruleFired(String candidate, String rule, String message, String score, String attributeType) {
+        log.info("RuleFired -- " + "Rule : " + rule + ", Repository : " + candidate + ", Message : " + message + ", Attribute Type : " + attributeType);
+        if (this.candidateList.containsKey(candidate)){
+            //System.out.println(candidate+" "+weight);
+            HashMap<String, Object> repository= this.candidateList.get(candidate);
+            HashMap<String, Object> ruleScore = new HashMap<String, Object>();
+            ruleScore.put(RULE_NAME, rule);
+            ruleScore.put(RULE_MESSAGE, message);
+            ruleScore.put(RULE_SCORE, score);
+            ruleScore.put(ATTRIBUTE_TYPE, attributeType);
 
             List<HashMap<String, Object>> ruleScoreList = new ArrayList<HashMap<String, Object>>();
 

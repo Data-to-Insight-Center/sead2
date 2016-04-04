@@ -173,7 +173,7 @@ public class MetaDriver {
 		String cachedProfileRepositories = this.env.getCachedProfileRepositories();
 		if(cachedProfileRepositories!=null&&cachedProfileRepositories!=""){
 			reposGen.fromPath(cachedProfileRepositories);
-			log.info("RepoList: "+reposGen.getJsonTree().toString());
+			//log.info("RepoList: "+reposGen.getJsonTree().toString());
 			return reposGen.getJsonTree().toString();
 		} else{
 			//TODO: Retrieve repository profiles from PDT
@@ -186,7 +186,7 @@ public class MetaDriver {
 		String cachedProfilePerson = this.env.getCachedProfilePerson();
 		if(cachedProfilePerson!=null&&cachedProfilePerson!=""){
 			personGen.fromPath(cachedProfilePerson);
-			log.info("Person: "+personGen.getJsonTree().get(0).toString());
+			//log.info("Person: "+personGen.getJsonTree().get(0).toString());
 			return personGen.getJsonTree().get(0).toString(); //return the first person, just for test purpose
 		}else {
 			//TODO: Retrieve person profile from PDT, based on person attribute in a researchObject
