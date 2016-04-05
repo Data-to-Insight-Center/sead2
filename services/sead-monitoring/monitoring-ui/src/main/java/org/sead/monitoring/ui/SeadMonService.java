@@ -91,26 +91,7 @@ public class SeadMonService {
                                    @QueryParam("toDate") String toDate) throws ParseException {
         JSONArray jsonArray = new JSONArray();
 
-        BasicDBObject andQuery = new BasicDBObject();
-        List<BasicDBObject> obj = new ArrayList<BasicDBObject>();
-
-        if (fromDate != null) {
-            fromDate = fromDate.replace("+00:00", "Z");
-            obj.add(new BasicDBObject("date", new BasicDBObject("$gte", fromDate)));
-        }
-        if (toDate != null) {
-            toDate = toDate.replace("+00:00", "Z");
-            obj.add(new BasicDBObject("date", new BasicDBObject("$lte", toDate)));
-        }
-        if(pidFilter != null){
-            obj.add(new BasicDBObject("target", URLEncoder.encode(pidFilter)));
-        }
-        if(event != null){
-            obj.add(new BasicDBObject("eventType", event));
-        }
-        if (obj.size() != 0) {
-            andQuery.put("$and", obj);
-        }
+        BasicDBObject andQuery = generateAndQuery(fromDate, toDate, pidFilter, event);
 
         List<DataoneLogEvent> result = queryDataoneLog(dataOneCollection, andQuery, countStr, start);
         Date startDate = sdfDate.parse(result.get(0).getDate());
@@ -146,7 +127,148 @@ public class SeadMonService {
         return Response.ok(jsonArray.toString()).build();
     }
 
-    public List<LogEvent>  queryLog(MongoCollection collection, BasicDBObject query, String countStr, int start){
+    @GET
+    @Path("/curbee")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getCurbeeData(@QueryParam("start") int start,
+                                   @QueryParam("count") String countStr,
+                                   @QueryParam("event") String event,
+                                   @QueryParam("pidFilter") String pidFilter,
+                                   @QueryParam("fromDate") String fromDate,
+                                   @QueryParam("toDate") String toDate) throws ParseException {
+        JSONArray jsonArray = new JSONArray();
+
+        BasicDBObject andQuery = generateAndQuery(fromDate, toDate, pidFilter, event);
+
+        List<LogEvent> result = queryLog(curbeeCollection, andQuery, countStr, start);
+        Date startDate = sdfDate.parse(result.get(0).getDate());
+        Date endDate = sdfDate.parse(result.get(result.size() - 1).getDate());
+        long duration = Math.round((endDate.getTime() - startDate.getTime())*1.0/1000);
+        String scale = DateTimeUtil.getTimeScale(duration);
+
+        Map<Long, Integer> stats = new HashMap<Long, Integer>();
+
+        for (LogEvent d1log : result) {
+            if (d1log.getDate() == null) {
+                continue;
+            }
+            Date date = sdfDate.parse(d1log.getDate());
+            long seconds = Math.round(date.getTime()*1.0 / 1000);
+            long time = DateTimeUtil.getScaledTime(seconds, scale);
+
+            if(stats.get(time) == null) {
+                stats.put(time, 1);
+            } else{
+                int count = stats.get(time);
+                stats.put(time, ++count);
+            }
+        }
+
+        for(Long date: stats.keySet()){
+            JSONObject dataObject = new JSONObject();
+            dataObject.put("date", DateTimeUtil.getDateTime(date, scale));
+            dataObject.put("count", stats.get(date));
+            jsonArray.put(dataObject);
+        }
+
+        return Response.ok(jsonArray.toString()).build();
+    }
+
+    @GET
+    @Path("/matchmaker")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getMatchmakerData(@QueryParam("start") int start,
+                                  @QueryParam("count") String countStr,
+                                  @QueryParam("event") String event,
+                                  @QueryParam("pidFilter") String pidFilter,
+                                  @QueryParam("fromDate") String fromDate,
+                                  @QueryParam("toDate") String toDate) throws ParseException {
+        JSONArray jsonArray = new JSONArray();
+
+        BasicDBObject andQuery = generateAndQuery(fromDate, toDate, pidFilter, event);
+
+        List<LogEvent> result = queryLog(matchmakerCollection, andQuery, countStr, start);
+        Date startDate = sdfDate.parse(result.get(0).getDate());
+        Date endDate = sdfDate.parse(result.get(result.size() - 1).getDate());
+        long duration = Math.round((endDate.getTime() - startDate.getTime())*1.0/1000);
+        String scale = DateTimeUtil.getTimeScale(duration);
+
+        Map<Long, Integer> stats = new HashMap<Long, Integer>();
+
+        for (LogEvent d1log : result) {
+            if (d1log.getDate() == null) {
+                continue;
+            }
+            Date date = sdfDate.parse(d1log.getDate());
+            long seconds = Math.round(date.getTime()*1.0 / 1000);
+            long time = DateTimeUtil.getScaledTime(seconds, scale);
+
+            if(stats.get(time) == null) {
+                stats.put(time, 1);
+            } else{
+                int count = stats.get(time);
+                stats.put(time, ++count);
+            }
+        }
+
+        for(Long date: stats.keySet()){
+            JSONObject dataObject = new JSONObject();
+            dataObject.put("date", DateTimeUtil.getDateTime(date, scale));
+            dataObject.put("count", stats.get(date));
+            jsonArray.put(dataObject);
+        }
+
+        return Response.ok(jsonArray.toString()).build();
+    }
+
+    @GET
+    @Path("/iuseadAccess")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getIUseadData(@QueryParam("start") int start,
+                                  @QueryParam("count") String countStr,
+                                  @QueryParam("event") String event,
+                                  @QueryParam("pidFilter") String pidFilter,
+                                  @QueryParam("fromDate") String fromDate,
+                                  @QueryParam("toDate") String toDate) throws ParseException {
+        JSONArray jsonArray = new JSONArray();
+
+        BasicDBObject andQuery = generateAndQuery(fromDate, toDate, pidFilter, event);
+
+        List<LogEvent> result = queryLog(landingPageCollection, andQuery, countStr, start);
+        Date startDate = sdfDate.parse(result.get(0).getDate());
+        Date endDate = sdfDate.parse(result.get(result.size() - 1).getDate());
+        long duration = Math.round((endDate.getTime() - startDate.getTime())*1.0/1000);
+        String scale = DateTimeUtil.getTimeScale(duration);
+
+        Map<Long, Integer> stats = new HashMap<Long, Integer>();
+
+        for (LogEvent d1log : result) {
+            if (d1log.getDate() == null) {
+                continue;
+            }
+            Date date = sdfDate.parse(d1log.getDate());
+            long seconds = Math.round(date.getTime()*1.0 / 1000);
+            long time = DateTimeUtil.getScaledTime(seconds, scale);
+
+            if(stats.get(time) == null) {
+                stats.put(time, 1);
+            } else{
+                int count = stats.get(time);
+                stats.put(time, ++count);
+            }
+        }
+
+        for(Long date: stats.keySet()){
+            JSONObject dataObject = new JSONObject();
+            dataObject.put("date", DateTimeUtil.getDateTime(date, scale));
+            dataObject.put("count", stats.get(date));
+            jsonArray.put(dataObject);
+        }
+
+        return Response.ok(jsonArray.toString()).build();
+    }
+
+    public List<LogEvent> queryLog(MongoCollection collection, BasicDBObject query, String countStr, int start){
 
         int count = 0;
         if(countStr!=null && !countStr.equals(Constants.INFINITE))
@@ -210,5 +332,30 @@ public class SeadMonService {
             cursor.close();
         }
         return logEvents;
+    }
+
+    private BasicDBObject generateAndQuery(String fromDate, String toDate, String pidFilter, String event) {
+        BasicDBObject andQuery = new BasicDBObject();
+        List<BasicDBObject> obj = new ArrayList<BasicDBObject>();
+
+        if (fromDate != null) {
+            fromDate = fromDate.replace("+00:00", "Z");
+            obj.add(new BasicDBObject("date", new BasicDBObject("$gte", fromDate)));
+        }
+        if (toDate != null) {
+            toDate = toDate.replace("+00:00", "Z");
+            obj.add(new BasicDBObject("date", new BasicDBObject("$lte", toDate)));
+        }
+        if(pidFilter != null){
+            obj.add(new BasicDBObject("target", URLEncoder.encode(pidFilter)));
+        }
+        if(event != null){
+            obj.add(new BasicDBObject("eventType", event));
+        }
+        if (obj.size() != 0) {
+            andQuery.put("$and", obj);
+        }
+
+        return andQuery;
     }
 }
