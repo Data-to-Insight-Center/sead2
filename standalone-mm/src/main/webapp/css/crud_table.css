@@ -137,7 +137,6 @@ table {
     color: #000000;
 }
 .mediumTable th {
-    color: #494949;
     border: 1px solid #C1DAD7;
     letter-spacing: 2px;
     padding: 2px 2px 2px 6px;
@@ -228,7 +227,7 @@ textarea.rhs {
 }
 a:hover,
 a:active {
-    background-color: #cc9900;
+    background-color: #c2c2c2;
 }
 h1 {
     border-bottom: 3px solid #3b5998;

@@ -3,59 +3,77 @@
 <head>
     <title></title>
     <link href="css/crud_table.css" rel="stylesheet" />
+    <link rel="stylesheet" href="css/jquery_ui.css">
     <script type="text/javascript" src="js/jquery.min.js"></script>
     <script type="text/javascript" src="js/json2.js"></script>
     <script type="text/javascript" src="js/jquery.tmpl.js"></script>
     <script type="text/javascript" src="js/crud_table.js"></script>
-
+    <script type="text/javascript" src="js/jquery_ui.js"></script>
+    <script>
+  $(function() {
+    $( "#tabs" ).tabs();
+  });
+  </script>
 </head>
 <body>
-<div class="container" style="margin:50px">
-    <div style="height:10px;">&nbsp;</div>
+
+<div class="container" style="margin:30px">
     <h1>Match Maker Rules Management Admin UI</h1>
     <div style="height:20px;">&nbsp;</div>
-    <div><span id="add_button" name="add" title="add" class="ui-icon ui-icon-pencil AddRow" style="cursor:pointer">Add New Rule</span></div>
-    <div style="height:10px;">&nbsp;</div>
-    <table id="CRUDthisTable" class="mediumTable">
-        <thead>
 
-        <tr class="rowHeader">
-            <th>Manage</th>
-            <th>Rule Name </th>
-            <th>LHS Full</th>
-            <th>RHS </th>
-            <th>Description </th>
-        </tr>
-
-        </thead>
-        <tbody>
-        </tbody>
-        <tfoot>
-
-        </tfoot>
-    </table>
-</div>
-
-<div class="container" style="margin:50px">
-    <h1>Match Maker Comparision</h1>
-    <div id="error"></div>
-    <div id="success"></div>
-    <div width="100%">
-        <div style="float:left">
-            <h2><br/>Match Maker</h2>
-            <form enctype="application/json" id="form">
-                <textarea name="content" style="height:400px;width:600px;" id="inputText" placeholder="PUT YOUR JSON CODE HERE"></textarea>
-                <br>
-                <input id="match" type="submit" name="submit" value="Match" />
-            </form>
+    <div id="tabs">
+        <div>
+            <ul>
+                <li><a href="#tabs-1">Rules Table</a></li>
+                <li><a href="#tabs-2">Enum Table</a></li>
+            </ul>
         </div>
-        <div style="float:left" class="vertical_line"></div>
-        <div style="float:left">
-            <h2><br/>Response Code</h2>
-            <textarea style="height:400px;width:500px;" id="match_response" placeholder="MATCH MAKER RESPONSE DETAIL"></textarea>
+        <div id="tabs-1">
+            <div style="margin-top:20px"><span id="add_button" name="add" title="add" class="ui-icon ui-icon-pencil AddRow" style="cursor:pointer">Add New Rule</span></div>
+            <div style="height:10px;">&nbsp;</div>
+            <table id="CRUDthisTable" class="mediumTable">
+                <thead>
+
+                <tr class="rowHeader">
+                    <th>Manage</th>
+                    <th>Rule Name </th>
+                    <th>LHS Full</th>
+                    <th>RHS </th>
+                    <th>Description </th>
+                </tr>
+
+                </thead>
+                <tbody>
+                </tbody>
+                <tfoot>
+
+                </tfoot>
+            </table>
+            <h1 style="padding-top:40px;">Match Maker Comparision</h1>
+            <div id="error"></div>
+            <div id="success"></div>
+            <div width="100%">
+                <div style="float:left">
+                    <h2><br/>Match Maker</h2>
+                    <form enctype="application/json" id="form">
+                        <textarea name="content" style="height:400px;width:450px;" id="inputText" placeholder="PUT YOUR JSON CODE HERE"></textarea>
+                        <br>
+                        <input id="match" type="submit" name="submit" value="Match" />
+                    </form>
+                </div>
+                <div style="float:left" class="vertical_line"></div>
+                <div style="float:left">
+                    <h2><br/>Response Code</h2>
+                    <textarea style="height:400px;width:450px;" id="match_response" placeholder="MATCH MAKER RESPONSE DETAIL"></textarea>
+                </div>
+            </div>
+        </div>
+        <div id="tabs-2">
+            <div id="enum" style="margin-top:20px"></div>
         </div>
     </div>
 </div>
+
 <script id="editRowTemplate" type="text/x-jquery-tmpl">
         <tr class="editRow">
             <td class="manage">

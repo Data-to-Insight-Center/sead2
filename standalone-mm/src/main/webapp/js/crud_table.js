@@ -13,7 +13,6 @@
 		$(document).ready(function () {
 			$('#match').click(function () {
 				var send = document.getElementById('inputText').value;
-				//alert(send);
 				$.ajax({
 					url: apiprefix + "/rest",
 
@@ -26,7 +25,6 @@
 
 					error: function (jqXHR, status) {
 						document.getElementById("error").innerHTML = '<div id="error_output">Ooops!!! Invalid Json Code.</div>';
-						//alert(JSON.stringify(jqXHR));
 					}
 				});
 				return false;
@@ -105,7 +103,6 @@
                 alert('You have a row in Edit mode, please save or cancel the row changes before you continue.');
                 return true;
             }
-
             return false;
         }
 
@@ -117,10 +114,40 @@
 			xmlhttp.onreadystatechange=function() {
     			if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
         			myFunction(xmlhttp.responseText);
+					enumDisplay(xmlhttp.responseText);
     			}
 			}
 				xmlhttp.open("GET", url, true);
 				xmlhttp.send();
+
+			function enumDisplay(response){
+				var total_arr = JSON.parse(response);
+				var enum_arr = total_arr.enum;
+				var enum_out = "<table><th>Enum Name</th><th>Enum Attribute</th><th>Enum value</th><th>Enum Type</Manage>";
+
+				for(var enum_size = 0; enum_size < enum_arr.length; enum_size++) {
+					var new_enum_attr = enum_arr[enum_size].attr.split(",");
+					var new_enum_type = enum_arr[enum_size].type.split(",");
+					enum_out += "<tr><td>" + enum_arr[enum_size].name + "</td><td>";
+
+					for (var q=0; q < new_enum_attr.length; q++){
+						var enum_attr = new_enum_attr[q].split("(")[0];
+						enum_out += enum_attr + "</br>";
+					}
+					enum_out += "</td><td>";
+					for (var l=0; l < new_enum_attr.length; l++){
+						var enum_val = new_enum_attr[l].split("(")[1].slice(0,-1);
+						enum_out += enum_val + "</br>";
+					}
+					enum_out += "</td><td>";
+					for (var t=0; t < new_enum_type.length; t++){
+						enum_out += new_enum_type[t] + "</br>";
+					}
+					enum_out += "</td></tr>";
+				}
+				enum_out += "</table>";
+				document.getElementById("enum").innerHTML = enum_out;
+			}
 
 			function myFunction(response) {
 				arr = JSON.parse(response);
@@ -155,7 +182,7 @@
 						var toStr = String(reg);
 						var color = (toStr.replace('\/g', '|')).substring(1);
 
-						//split it baby
+						//split it content
 						var colors = color.split("|");
 
 						if (colors.indexOf("+") > -1) {
@@ -187,23 +214,18 @@
 
 						var rhs_str = rhs_list[k].trim();
 						var	rhs_reg = /[*|+|<]|null| or |"(.*?)"/ig;
-
 						var rhs_match = rhs_str.match(/"(.*?)"/);
 
 						var rhstoStr = String(rhs_reg);
 						var rhs_color = (rhstoStr.replace('\/g', '|')).substring(1);
 
-
-						//var str = 'System.out.println("\n---Total size is not acceptable for " +repo.getRepositoryName() + "---\n");';
 						var singleQuoted = $.map(rhs_str.split('"'), function(substr, i) {
 						   return (i % 2) ? substr : null;
 						});
-						var dfdsf ="";
+						var rhs_string ="";
 						for (var col=0; col<singleQuoted.length; col++){
-							dfdsf = singleQuoted[col];
-
+							rhs_string = singleQuoted[col];
 						}
-						alert(dfdsf);
 
 						//split it content
 						var rhs_colors = rhs_color.split("|");
@@ -242,7 +264,6 @@
 			var output = $("#editRowTemplate").tmpl(data).html();
 
 			$('#CRUDthisTable tbody').prepend('<tr class="editRow">' + output + '</tr>');
-			//var $rowEdit = $('#CRUDthisTable tbody tr.editRow');
 
 			$('#CRUDthisTable tbody tr:first')[0].scrollIntoView();
 		});
@@ -262,9 +283,6 @@
 			rowRemovedContents = $('#CRUDthisTable tbody tr').eq(row).html();
 
 			$('#CRUDthisTable tbody tr').eq(row).after('<tr class="editRow">' + output + '</tr>');
-		 	//var applyDateDefault = $('#ApplyDateDefault').val();
-
-			//var $editRow = $('#CRUDthisTable tbody tr.editRow');
 
 			$('#CRUDthisTable tbody tr').eq(row).remove();
 		});
@@ -272,9 +290,6 @@
 		$('.SaveRow').live('click', function(e)
 		{
 			// Good place to add validation, don't allow save until the row has valid data!
-			// var isValid = ValidateNestedControls("#CRUDthisTable");
-			// if (!isValid)
-			//     return;
 			var savedData = GetEditRowObject();
 
 			var row = $(this).parent().parent().parent().children().index($(this).parent().parent());
@@ -303,7 +318,7 @@
 			var lhs_array = [];
 
             for(var i =0; i < new_string_lhs_full.length; i++){
-				var lhs_full_color = "<span style='color:#A0522D !important;'>" + new_string_lhs_full[i].trim() + "</span>";
+				var lhs_full_color = new_string_lhs_full[i].trim();
                 lhs_array.push({
                     "lhsFull" : lhs_full_color
                 });

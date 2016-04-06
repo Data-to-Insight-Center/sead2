@@ -126,17 +126,47 @@ public class RestTest {
                         List<RuleDescr> rules_val = packageDescr.getRules();
                         int val2 = packageDescr.getRules().size();
 
+                        File file = new File(listOfFiles[m].getPath());
+                        FileInputStream fis = new FileInputStream(file);
+                        byte[] data = new byte[(int) file.length()];
+                        fis.read(data);
+                        fis.close();
+
+                        JSONArray enumArray = new JSONArray();
+                        root.put("enum", enumArray);
+                        String str = new String(data, "UTF-8");
+
+                        String firstEnum = "declare enum ";
+                        int e1 = str.indexOf(firstEnum);
+                        String lastEnum = "rule ";
+                        int e2 = str.indexOf(lastEnum, e1);   // look after start delimiter
+                        if (e1 >= 0 && e2 > e1) {
+                            String enum_res = str.substring(e1,e2);
+                            Pattern pattern = Pattern.compile("declare enum (.*?)\n");
+                            Matcher matcher = pattern.matcher(enum_res);
+                            Pattern pattern1 = Pattern.compile("\n  (.*?);");
+                            Matcher matcher1 = pattern1.matcher(enum_res);
+                            Pattern pattern2 = Pattern.compile("value : (.*?)\n");
+                            Matcher matcher2 = pattern2.matcher(enum_res);
+
+                            while (matcher.find()) {
+                                JSONObject obj1 = new JSONObject();
+                                String enum_name_list = matcher.group(1).trim();
+                                obj1.put("name", enum_name_list);
+                                if(matcher1.find()) {
+                                    String enum_attr_list = matcher1.group(1).trim();
+                                    obj1.put("attr", enum_attr_list);
+                                }if(matcher2.find()) {
+                                    String enum_type_list = matcher2.group(1).trim();
+                                    obj1.put("type", enum_type_list);
+                                }
+                                enumArray.put(obj1);
+                            }
+                        }
+
                             for (int i = 0; i < val2; i = i + 1) {
                                 JSONObject obj = new JSONObject();
                                 RuleDescr rule = rules_val.get( i );
-
-                                File file = new File(listOfFiles[m].getPath());
-                                FileInputStream fis = new FileInputStream(file);
-                                byte[] data = new byte[(int) file.length()];
-                                fis.read(data);
-                                fis.close();
-
-                                String str = new String(data, "UTF-8");
 
                                 String firstDelim = "rule " + '"' + rule.getName() + '"';
                                 int p1 = str.indexOf(firstDelim);
