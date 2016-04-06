@@ -176,7 +176,7 @@
 					}for (var m=0; m< arr.rules[i].lhs.length; m++){
 
 						var str = arr.rules[i].lhs[m].objType;
-						var	reg = /[*|-|+|=|!|<|>]|null| or /ig;
+						var	reg = /[*|-|=|!|+|<|>]|null| or | < | > | >/ig;
 
 						//fixing a bit
 						var toStr = String(reg);
@@ -184,29 +184,31 @@
 
 						//split it content
 						var colors = color.split("|");
-
-						if (colors.indexOf("+") > -1) {
-							str = str.replace(/[+]/g, '<span style="color:blue;">+</span>');
-						}if (colors.indexOf("-") > -1) {
-							str = str.replace(/[-]/g, '<span style="color:blue;">-</span>');
+						var new_str = str;
+						if (colors.indexOf("-") > -1) {
+							new_str = new_str.replace(/[-]/g, '<span style="color:blue;">-</span>');
 						}if (colors.indexOf("=") > -1) {
-							str = str.replace(/[=]/g, '<span style="color:blue;">=</span>');
+							new_str = new_str.replace(/[=]/g, '<span style="color:blue;">=</span>');
 						}if (colors.indexOf("!") > -1) {
-							str = str.replace(/[!]/g, '<span style="color:blue;">!</span>');
-						}if (colors.indexOf("<") > -1) {
-							str = str.replace(/[!]/g, '<span style="color:blue;"><</span>');
-						}if (colors.indexOf(">") > -1) {
-							str = str.replace(/[!]/g, '<span style="color:blue;">></span>');
+							new_str = new_str.replace(/[!]/g, '<span style="color:blue;">!</span>');
+						}if (colors.indexOf("+") > -1) {
+							new_str = new_str.replace(/[+]/g, '<span style="color:blue;">+</span>');
 						}if (colors.indexOf("null") > -1) {
-							str = str.replace(/null/g, '<span style="color:red;">null</span>');
+							new_str = new_str.replace(/null/g, '<span style="color:red;">null</span>');
 						}if (colors.indexOf(" or ") > -1) {
-							str = str.replace(/ or /g, '<span style="color:red;"> or </span>');
+							new_str = new_str.replace(/ or /g, '<span style="color:red;"> or </span>');
+						}if (colors.indexOf(" < ") > -1) {
+							new_str = new_str.replace(/ < /g, '<span style="color:blue;"> < </span>');
+						}if (colors.indexOf(" > ") > -1) {
+							new_str = new_str.replace(/ > /g, '<span style="color:blue;"> > </span>');
+						}if (colors.indexOf(" >") > -1) {
+							new_str = new_str.replace(/ >/g, '<span style="color:blue;"> ></span>');
 						}
 
 						if(arr.rules[i].lhs[m].id == "" || arr.rules[i].lhs[m].id == undefined){
-							lhs_full_val += "<span style='color:#A0522D !important;'>" + str + "</span>&nbsp;\r\n".replace("\n", "<br /><br />");
+							lhs_full_val += "<span style='color:#A0522D !important;'>" + new_str + "</span>&nbsp;\r\n".replace("\n", "<br /><br />");
 						}else{
-							lhs_full_val += "<span style='color:#FF8C00 !important;'>" + arr.rules[i].lhs[m].id + " </span>: " + "<span style='color:#A0522D !important;'>" + str + "</span>&nbsp\r\n".replace("\n", "<br /><br />");
+							lhs_full_val += "<span style='color:#FF8C00 !important;'>" + arr.rules[i].lhs[m].id + " </span>: " + "<span style='color:#A0522D !important;'>" + new_str + "</span>&nbsp\r\n".replace("\n", "<br /><br />");
 						}
 					}
 					var rhs_list = arr.rules[i].rhs[0].rhs_val.slice(1, -1).split(/;,|;/);
@@ -214,7 +216,6 @@
 
 						var rhs_str = rhs_list[k].trim();
 						var	rhs_reg = /[*|+|<]|null| or |"(.*?)"/ig;
-						var rhs_match = rhs_str.match(/"(.*?)"/);
 
 						var rhstoStr = String(rhs_reg);
 						var rhs_color = (rhstoStr.replace('\/g', '|')).substring(1);
@@ -236,9 +237,9 @@
 						}if (rhs_colors.indexOf("+") > -1) {
 							rhs_str = rhs_str.replace(/[+]/g, '<span style="color:blue;">+</span>');
 						}if (rhs_colors.indexOf('"(.*?)"') > -1) {
-							for (var col=0; col<singleQuoted.length; col++){
-								var dfdsf = singleQuoted[col];
-								rhs_str = rhs_str.replace('"' + dfdsf + '"', '<span style="color:#24AD24 !important;">' + '"' + dfdsf + '"' + '</span>');
+							for (var new_col=0; new_col<singleQuoted.length; new_col++){
+								var rhs_single = singleQuoted[new_col];
+								rhs_str = rhs_str.replace('"' + rhs_single + '"', '<span style="color:#24AD24 !important;">' + '"' + rhs_single + '"' + '</span>');
 							}
 						}
 						rhs_full_val +=  rhs_str + ";\r\n".replace("\n", "<br /><br />");

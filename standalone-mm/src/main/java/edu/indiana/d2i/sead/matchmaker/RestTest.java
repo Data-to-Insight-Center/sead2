@@ -277,6 +277,20 @@ public class RestTest {
                 }
                 lhs_array.put(objj);
 
+            }else{
+                String lhs_identifier = null;
+                String lhs_objtype = "eval";
+                String lhs_const_val = (String) ((EvalDescr) arrayObject).getContent();
+
+                objj.put("id", lhs_identifier);
+                objj.put("objType", lhs_objtype +"("+lhs_const_val+")");
+                if(lhs_identifier == null){
+                    objj.put("lhsFull", lhs_objtype +"("+lhs_const_val+")");
+                }else{
+                    objj.put("lhsFull", lhs_identifier + ":" + lhs_objtype +"("+lhs_const_val+")");
+                }
+                lhs_array.put(objj);
+
             }
         }
     }
