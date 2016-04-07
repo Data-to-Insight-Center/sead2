@@ -18,33 +18,40 @@
 </head>
 <body>
 
-<header id="masthead" class="site-header clearfix">
-    <div id="header-text-nav-wrap" class="clearfix">
-        <!-- #header-logo-image -->
-        <div id="header-left-section">
-            <div id="header-logo-image">
-                <a href="#" title="SEAD" rel="home"><img
-                        src="http://sead-data.net/wp-content/uploads/2014/06/logo.png"
-                        alt="SEAD"></a>
-            </div>
-        </div>
+<div style="display : inline-block; padding: 10px 20px 5px 0px;width:100%;">
+    <div align="left">
+        <span class="helper"></span>
+        <img align="left" style="width: 30%;height: 30%;padding:0px 0px 10px 50px;"" src="http://brand.iu.edu/img/signatures/indiana-university/indiana-university">
     </div>
-</header>
+    <div align="right">
+        <span class="helper"></span>
+        <img align="right" style="width: 35%;padding:30px 10px 0px 0px;" src="http://sead-data.net/wp-content/uploads/2014/06/logo.png">
+    </div>
+</div>
+<div>
+    <div style="float: right; font-size:14px;padding:0px 45px 0px 0px;">
+        <a href="http://seadva.d2i.indiana.edu:8081/landing-page/home.html">IU SEAD Cloud</a>
+    </div>
+    <div style="float: right; font-size:14px;padding:0px 20px 0px 0px;"><a href="#"> | </a></div>
+    <div style="float: right; font-size:14px;padding:0px 20px 0px 0px;">
+        <a href="http://sead-data.net/">SEAD</a>
+    </div>
+</div>
+<div style="width:100%;">
+    <div id="nav">
+        <h4 style="color:#3b5998">Search & Filter By Below Options: </h4>
+        <div id="filter"></div>
+    </div>
+    <div id="middle"></div>
 
-<div id="nav">
-    <h4 style="color:#3b5998">Search & Filter By Below Options: </h4>
-    <div id="filter"></div>
+    <div id="section">
+        <h1 style="color:#3b5998;padding:10px 0px 0px 0px;""><u>IU SEAD Cloud Search</u></h1>
+        <h3 style="color:#3b5998">Search Results:</h3>
+        <table id="CRUDthisTable" class="mediumTable"></table>
+    </div>
 </div>
 
-<div id="middle"></div>
-
-<div id="section">
-    <h1 style="color:#3b5998"><u>IU SEAD Cloud Search</u></h1>
-    <h3 style="color:#3b5998">Search Results:</h3>
-    <table id="CRUDthisTable" class="mediumTable"></table>
-</div>
-
-<div id="footer">
+<div id="footer" style="width:100%">
     <p>SEAD is funded by the National Science Foundation under cooperative agreement #OCI0940824.</p>
 </div>
 </body>
@@ -97,15 +104,41 @@
 			var new_ros = [];
 
 			for(var i = 0; i < new_arr.length; i++) {
+
 				var creator= new_arr[i].Creator;
+				var new_creator = "";
+				if($.isArray(creator)) {
+					for (var c=0; c < creator.length; c++){
+						if (c=creator.length-1){
+							new_creator += creator[c];
+						}else{
+							new_creator += creator[c] + ",\n";
+						}
+					}
+				} else {
+					new_creator = creator;
+				}
+
 				var abstract= new_arr[i].Abstract;
+				var new_abstract = "";
+				if($.isArray(abstract)) {
+					for (var a=0; c < abstract.length; a++){
+						if (a=abstract.length-1){
+							new_abstract += abstract[a];
+						}else{
+							new_abstract += abstract[a] + ",\n";
+						}
+					}
+				} else {
+					new_abstract = abstract;
+				}
 				var title= new_arr[i].Title;
 				var identifier= new_arr[i].Identifier;
 				var pub_date= new_arr[i]["Publication Date"];
 				var create_date= new_arr[i]["Creation Date"];
 				var doi= new_arr[i].DOI;
 
-				new_ros.push( { "Creator":creator, "Abstract": abstract, "Title": title, "Identifier": identifier,
+				new_ros.push( { "Creator":new_creator, "Abstract": new_abstract, "Title": title, "Identifier": identifier,
 						"PublicationDate":pub_date, "CreationDate":create_date,"DOI":doi});
 
 				}
@@ -124,10 +157,10 @@
 			dateFormat: this.dateFormat,
 			searchClickedCallback: sendToServer,
 			filterParameters: [
-				{type: 'text', attributeName: 'search_content', name: 'Search Content', placeholder: 'search by any text'},
-				{type: 'text', attributeName: 'creator_name', name: 'Creator Name', placeholder: 'type creator name'},
+				{type: 'text', attributeName: 'search_content', name: 'Search Content', placeholder: 'search by any text', id: 'Sead', autocomplete: 'on'},
+				{type: 'text', attributeName: 'creator_name', name: 'Creator Name', placeholder: 'type creator name', id: 'Leslie', autocomplete: 'on'},
 				{type: 'date-range', attributeName: 'date_range', name: 'Date Range'},
-				{type: 'text', attributeName: 'title', name: 'Title', placeholder: 'type title'},
+				{type: 'text', attributeName: 'title', name: 'Title', placeholder: 'type title', id: 'Bedrock Strength Measurements', autocomplete: 'on'},
 			]
 		};
 	$('#filter').bootstrapFilter(options);

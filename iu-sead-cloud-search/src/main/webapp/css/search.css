@@ -19,32 +19,29 @@ padding:5px 0px 0px 0px;
 #nav {
 line-height:30px;
 background-color:#eeeeee;
-width:33%;
 height:800px;
+width:33%;
 float:left;
-padding:5px;	      
+padding:5px;
 }#middle{
 line-height:30px;
 background-color:#ffffff;
 width:3%;
 height:800px;
 float:left;
-padding:5px;	      
+padding:5px;
 }
 #section {
-width:63%;
-float:left; 	 
 }
 #footer {
 background-color:#0b5ca3;
 color:white;
 clear:both;
 text-align:center;
-padding:5px;	 	 
+padding:5px;
 }
 ul {
 list-style-type: none;
-width: 750px;
 border-top:groove #008CBA 1px;
 border-bottom:groove #008CBA 1px;
 }ul:nth-child(odd) {
@@ -81,7 +78,7 @@ padding:10px !important;
 .empty{
 height:0px !important;
 }
-/* =HEADER 
+/* =HEADER
 ----------------------------------------------- */
 #masthead {
     margin:auto;
@@ -118,7 +115,7 @@ height:0px !important;
 }
 #site-title a {
 	color: #444444;
-	font-size: 36px;	
+	font-size: 36px;
 }
 h1#site-title {
 	padding-bottom: 5px;
@@ -153,7 +150,7 @@ h1#site-title {
 	width: 100%;
 }
 
-/* =HEADER INFO TEXT 
+/* =HEADER INFO TEXT
 ----------------------------------------------- */
 .small-info-text {
 	float: left;
@@ -165,4 +162,6 @@ h1#site-title {
 	font-size: 12px;
 	color: #555555;
 	margin-bottom: 0;
+}#CRUDthisTable{
+	width:62% !important;
 }

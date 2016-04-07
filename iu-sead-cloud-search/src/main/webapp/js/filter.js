@@ -87,9 +87,8 @@
 
         if (filterModal.settings.showSearchButton) {
             searchButton = '<div class="clearfix"></div>' +
-            '<div class="row" style="float: right; margin-top: 20px;">' +
-            '<button id="filter-search-button" style="padding: 10px 20px" class="btn btn-lg btn-block btn-success">Search</button>' +
-            '</div> ';
+            '<div class="row" style="float: left; margin-top: 20px;"><button id="filter-clear-button" style="padding: 10px 10px;" class="btn btn-lg btn-block btn-success">Clear All</button></div>' + '&nbsp' +
+            '<div class="row" style="float: right; margin-top: 20px;"><button id="filter-search-button" style="padding: 10px 20px;" class="btn btn-lg btn-block btn-success">Search</button></div>';
         }
 
         title = '<legend>'+ settings.title+'</legend>';
@@ -155,7 +154,7 @@
             value = filterModal.selectedFilterParameters[parameter.attributeName].values[0].value
         }
 
-        return '<input style="margin: 5px 0" class="form-control text-input-js" value="'+value+'" placeholder="'+ (parameter.placeholder || name) + '">';
+        return '<div id="texttype"><input style="margin: 0px 0" class="form-control" autocomplete=' + (parameter.autocomplete || name) + ' value="'+value+'" placeholder="'+ (parameter.placeholder || name) + '"><span style="color:grey; font-size:12px;padding:0px 0px 0px 5px;"> Ex: ' + (parameter.id || name) + '</span></div>';
     }
 
     function renderDateRange(parameter){
@@ -165,8 +164,8 @@
             value = filterModal.selectedFilterParameters[parameter.attributeName].values[0].value
         }
 
-        return '<div id="daterange" style="float: left; margin: 5px 0;" class="selectbox active">'  +
-            '<input type="text" data-time-picker="true" value="'+value+'" name="'+dateRangeName+'" style="width: 200px;" placeholder="start date - end date" 	class="form-control text-input-js">' +
+        return '<div id="daterange" style="float: left; margin: 0px 0;" class="selectbox active">'  +
+            '<input type="text" data-time-picker="true" value="'+value+'" name="'+dateRangeName+'" style="width: 200px;" placeholder="start date - end date" 	class="form-control text-input-js">' + '<p style="color:grey; font-size:11px;padding:0px 0px 0px 5px;"> Ex: 01/04/2016 - 04/04/2016 [mm/dd/yyyy]</p>' +
             '</div>';
     }
 
@@ -489,7 +488,8 @@
 
     /////////////// Events Binding here  ////////////////////
     function bindFilterClicks(){
-        bindSearchClicked();
+        bindClearClicked();
+		bindSearchClicked();
         bindMultiPopup();
         bindSingleClick();
         bindRemoveSelectedFilter();
@@ -622,6 +622,13 @@
         return {name: name, value: value};
     }
 
+	function bindClearClicked() {
+
+        $('#filter-clear-button').on('click', function(){
+			$('#texttype input').val('');
+			$('#daterange input').val('');
+        });
+    }
 
     function bindSearchClicked() {
 
