@@ -36,6 +36,8 @@ public class Constants {
 	public static String oreDbName;
 	public static String repoName;
 
+	public static String pdtURL;
+
 	public static String successStage = "Success";
 
 	static {
@@ -59,5 +61,6 @@ public class Constants {
 		mongoOrePort = Integer.parseInt(props.getProperty("mongo.ore.port", "27018"));
 		oreDbName = props.getProperty("ore.db.name", "sead-ore");
 		repoName = props.getProperty("repository.name", "sda");
+		pdtURL = props.getProperty("pdt.url");
 	}
 }

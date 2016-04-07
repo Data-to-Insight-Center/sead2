@@ -24,7 +24,9 @@ import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.util.JSON;
+import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
+import com.sun.jersey.api.client.WebResource;
 import org.bson.Document;
 import org.iu.sead.cloud.util.Constants;
 import org.iu.sead.cloud.util.MongoDB;
@@ -37,6 +39,8 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.CacheControl;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -48,11 +52,13 @@ public class ROSearch {
     private MongoCollection<Document> publicationsCollection = null;
     private CacheControl control = new CacheControl();
     private SimpleDateFormat simpleDateFormat = new SimpleDateFormat("MM/dd/yyyy");
+    WebResource pdtResource;
 
     public ROSearch() {
         MongoDatabase db = MongoDB.getServicesDB();
         publicationsCollection = db.getCollection(MongoDB.researchObjects);
         control.setNoCache(true);
+        pdtResource = Client.create().resource(Constants.pdtURL);
     }
 
     @GET
@@ -60,7 +66,7 @@ public class ROSearch {
     @Produces(MediaType.APPLICATION_JSON)
     public Response getAllPublishedROs() {
         Document query = createPublishedFilter().append("Repository", Constants.repoName);
-        return getAllPublishedROs(query, null, null);
+        return getAllPublishedROs(query, null, null, null);
     }
 
     @POST
@@ -90,12 +96,6 @@ public class ROSearch {
             query = query.append("Aggregation.Title", new Document("$regex", title).append("$options", "i"));
         }
 
-        // TODO: Search in people collection for person names
-        if (creator != null && !"".equals(creator)) {
-            // regex for creator
-            query = query.append("Aggregation.Creator", new Document("$regex", creator).append("$options", "i"));
-        }
-
         Date start = null;
         Date end = null;
         try {
@@ -110,7 +110,7 @@ public class ROSearch {
             // ignore
         }
 
-        return getAllPublishedROs(query, start, end);
+        return getAllPublishedROs(query, start, end, "(?i)(.*)" + creator + "(.*)");
     }
 
     @GET
@@ -138,7 +138,7 @@ public class ROSearch {
         return Response.ok(document.toJson()).cacheControl(control).build();
     }
 
-    private Response getAllPublishedROs(Document filter, Date start, Date end) {
+    private Response getAllPublishedROs(Document filter, Date start, Date end, String creatorRegex) {
         FindIterable<Document> iter = publicationsCollection.find(filter);
         setROProjection(iter);
         MongoCursor<Document> cursor = iter.iterator();
@@ -146,11 +146,30 @@ public class ROSearch {
         while (cursor.hasNext()) {
             Document document = cursor.next();
             reArrangeDocument(document);
-            if (withinDateRange(document.getString("Publication Date"), start, end)) {
+            if (withinDateRange(document.getString("Publication Date"), start, end) &&
+                    creatorMatch(document.get("Creator"), creatorRegex)) {
                 array.put(JSON.parse(document.toJson()));
             }
         }
         return Response.ok(array.toString()).cacheControl(control).build();
+    }
+
+    private boolean creatorMatch(Object creator, String creatorRegex) {
+        if (creator == null || creatorRegex == null) {
+            return true;
+        }
+        if (creator instanceof String) {
+            return ((String) creator).matches(creatorRegex);
+        } else if (creator instanceof ArrayList) {
+            ArrayList<String> creators = (ArrayList<String>) creator;
+            for (String cr : creators) {
+                if (cr.matches(creatorRegex)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+        return true;
     }
 
     private boolean withinDateRange(String pubDateString, Date start, Date end) {
@@ -201,9 +220,63 @@ public class ROSearch {
                 pubDate = status.getString("date");
             }
         }
+        // fixing DOIs which are not URLs
+        if (!doi.startsWith("http")) {
+            doi = "http://dx.doi.org/" + doi.substring(doi.indexOf(':') + 1);
+        }
         doc.append("DOI", doi);
         doc.append("Publication Date", pubDate);
+
+        // resolve creator if ID is provided
+        Object creator = doc.get("Creator");
+        if (creator instanceof String) {
+            String creatorId = doc.getString("Creator");
+            doc.put("Creator", getPersonName(creatorId));
+        } else if (creator instanceof ArrayList) {
+            ArrayList<String> creatorIds = (ArrayList<String>) creator;
+            ArrayList<String> creatorNames = new ArrayList<String>();
+            for (String id : creatorIds) {
+                creatorNames.add(getPersonName(id));
+            }
+            doc.remove("Creator");
+            doc.put("Creator", creatorNames);
+        }
+
         doc.remove("Status");
+    }
+
+    private String getPersonName(String creator) {
+        String personProfile = getPersonProfile(creator);
+        if (personProfile == null) {
+            return creator;
+        } else {
+            JSONObject profile = new JSONObject(personProfile);
+            String givenName = profile.getString("givenName");
+            String familyName = profile.getString("familyName");
+            if (givenName == null && familyName == null) {
+                return creator;
+            }
+            String fullName = (givenName == null ? "" : givenName) + " " + (familyName == null ? "" : familyName);
+            return fullName.trim();
+        }
+    }
+
+    private String getPersonProfile(String personID) {
+        String encodedID;
+        try {
+            encodedID = URLEncoder.encode(personID, "UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+            return null;
+        }
+        ClientResponse response = pdtResource.path("people/" + encodedID)
+                .accept(MediaType.APPLICATION_JSON)
+                .type(MediaType.APPLICATION_JSON).get(ClientResponse.class);
+        if (response.getStatus() == 200) {
+            return response.getEntity(String.class);
+        } else {
+            return null;
+        }
     }
 
 }
