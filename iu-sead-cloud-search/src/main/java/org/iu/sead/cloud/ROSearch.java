@@ -25,12 +25,13 @@ import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.util.JSON;
 import com.sun.jersey.api.client.ClientResponse;
-
 import org.bson.Document;
 import org.iu.sead.cloud.util.Constants;
 import org.iu.sead.cloud.util.MongoDB;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.sead.monitoring.engine.SeadMon;
+import org.sead.monitoring.engine.enums.MonConstants;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.CacheControl;
@@ -67,6 +68,9 @@ public class ROSearch {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Response getFilteredListOfROs(String filterString) {
+
+        SeadMon.addLog(MonConstants.Components.IU_SEAD_CLOUD_SEARCH, "ID", MonConstants.EventType.ACCESS);
+
         JSONObject filter = new JSONObject(filterString);
         String creator = filter.getString("Creator");
         String startDate = filter.getString("Start Date");

@@ -25,7 +25,7 @@ public class MonConstants {
     public enum Components {
         CURBEE("curbee"),
         LANDING_PAGE("landingPage"),
-        IU_SEAD_CLOUD("iuSeadCloud"),
+        IU_SEAD_CLOUD_SEARCH("iuSeadCloudSearch"),
         MATCHMAKER("matchmaker");
 
         Components(String value) {

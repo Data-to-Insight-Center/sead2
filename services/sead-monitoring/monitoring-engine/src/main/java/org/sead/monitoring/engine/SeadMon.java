@@ -58,7 +58,7 @@ public class SeadMon {
         curbeeCollection = monDB.getCollection(MonConstants.Components.CURBEE.getValue());
         matchmakerCollection = monDB.getCollection(MonConstants.Components.MATCHMAKER.getValue());
         landingPageCollection = monDB.getCollection(MonConstants.Components.LANDING_PAGE.getValue());
-        seadCloudCollection = monDB.getCollection(MonConstants.Components.IU_SEAD_CLOUD.getValue());
+        seadCloudCollection = monDB.getCollection(MonConstants.Components.IU_SEAD_CLOUD_SEARCH.getValue());
 
         publicationsCollection = pdtDB.getCollection(MongoDB.researchObjects);
         dataOneCollection = dataOneDB.getCollection(MongoDB.events);
@@ -108,7 +108,7 @@ public class SeadMon {
                 matchmakerCollection.insertOne(document);
             } else if(component.equals(MonConstants.Components.LANDING_PAGE)){
                 landingPageCollection.insertOne(document);
-            } else if(component.equals(MonConstants.Components.IU_SEAD_CLOUD)){
+            } else if(component.equals(MonConstants.Components.IU_SEAD_CLOUD_SEARCH)){
                 seadCloudCollection.insertOne(document);
             }
         } catch (Exception e) {
