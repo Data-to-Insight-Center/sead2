@@ -294,6 +294,7 @@ public class LandingPage extends HttpServlet {
             	OutputStream outStream = response.getOutputStream();
 	            if (newURL.equals(title)){
 	            	//download tar file
+                    SeadMon.addLog(MonConstants.Components.LANDING_PAGE, title, MonConstants.EventType.DOWNLOAD);
 	            	System.out.println("SDA download path: " + target);
 		            byte[] buffer = new byte[4096];
 		            int bytesRead;
