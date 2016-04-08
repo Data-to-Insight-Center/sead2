@@ -19,10 +19,11 @@ padding:5px 0px 0px 0px;
 #nav {
 line-height:30px;
 background-color:#eeeeee;
-height:800px;
+height:600px;
 width:33%;
 float:left;
 padding:5px;
+border-radious:14px;
 }#middle{
 line-height:30px;
 background-color:#ffffff;
