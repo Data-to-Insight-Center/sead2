@@ -31,7 +31,13 @@ function myFunction(response) {
 		var new_creator = "";
 		if($.isArray(creator)) {
 			for (var c=0; c < creator.length; c++){
-				creator_results.push('<span>' + creator[c] + '</br></span>');
+				var creator_str;
+                if(c==creator.length-1) {
+                    creator_str = '<span>' + creator[c] + '</span>';
+                    } else {
+                        creator_str = '<span>' + creator[c] + '</br></span>';
+                        }
+                creator_results.push(creator_str);
 			}
 			new_creator += creator_results.join("");
 		} else {
@@ -44,7 +50,13 @@ function myFunction(response) {
 		var new_abstract = "";
 		if($.isArray(abstract)) {
 			for (var a=0; a < abstract.length; a++){
-				abstract_results.push('<span>' + abstract[a] + '</br></span>');
+				var abstract_str;
+                if(a==abstract.length-1) {
+                    abstract_str = '<span>' + abstract[a] + '</span>';
+                    } else {
+                        abstract_str = '<span>' + abstract[a] + '</br></span>';
+                        }
+                abstract_results.push(abstract_str);
 			}
 			new_abstract += abstract_results.join("");
 		} else {
