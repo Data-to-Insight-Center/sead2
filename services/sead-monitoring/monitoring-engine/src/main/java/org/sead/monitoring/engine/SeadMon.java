@@ -20,18 +20,25 @@
 package org.sead.monitoring.engine;
 
 import com.google.gson.Gson;
+import com.mongodb.BasicDBObject;
+import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoDatabase;
 import org.apache.log4j.Logger;
 import org.bson.Document;
 import org.sead.monitoring.engine.enums.MonConstants;
+import org.sead.monitoring.engine.util.Constants;
+import org.sead.monitoring.engine.util.DataoneLogEvent;
 import org.sead.monitoring.engine.util.LogEvent;
 import org.sead.monitoring.engine.util.MongoDB;
 
 import javax.ws.rs.Path;
 import javax.ws.rs.core.CacheControl;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 @Path("/")
 public class SeadMon {
@@ -98,7 +105,7 @@ public class SeadMon {
         indexLog(component, logEvent);
     }
 
-    public static void indexLog(MonConstants.Components component, LogEvent logEvent){
+    private static void indexLog(MonConstants.Components component, LogEvent logEvent){
         try {
             Gson gson = new Gson();
             Document document = Document.parse(gson.toJson(logEvent));
@@ -114,5 +121,122 @@ public class SeadMon {
         } catch (Exception e) {
             log.error("Error while saving event to MongoDB :" + e.getMessage());
         }
+    }
+
+    public static List<LogEvent> queryCurbeeLogs(MonConstants.Status status, String id, Date fromDate, Date toDate) {
+        BasicDBObject andQuery = generateAndQuery(fromDate, toDate, id, null, status);
+        return queryLog(curbeeCollection, andQuery, null, 0);
+    }
+
+    public static List<LogEvent> queryMMLogs(Date fromDate, Date toDate) {
+        BasicDBObject andQuery = generateAndQuery(fromDate, toDate, null, null, null);
+        return queryLog(matchmakerCollection, andQuery, null, 0);
+    }
+
+    public static List<LogEvent> queryLandingPageLogs(MonConstants.EventType event, String id, Date fromDate, Date toDate) {
+        BasicDBObject andQuery = generateAndQuery(fromDate, toDate, id, event, null);
+        return queryLog(landingPageCollection, andQuery, null, 0);
+    }
+
+    public static List<LogEvent> queryIUSeadCloudSearchLogs(Date fromDate, Date toDate) {
+        BasicDBObject andQuery = generateAndQuery(fromDate, toDate, null, null, null);
+        return queryLog(seadCloudCollection, andQuery, null, 0);
+    }
+
+    public static List<DataoneLogEvent> queryDataoneLogs(Date fromDate, Date toDate) {
+        BasicDBObject andQuery = generateAndQuery(fromDate, toDate, null, null, null);
+        return queryDataoneLog(dataOneCollection, andQuery, null, 0);
+    }
+
+    private static List<LogEvent> queryLog(MongoCollection collection, BasicDBObject query, String countStr, int start){
+
+        int count = 0;
+        if(countStr!=null && !countStr.equals(Constants.INFINITE))
+            count = Integer.parseInt(countStr);
+        start = start < 0 ? 0 : start;
+
+        FindIterable<Document> iter;
+        if(countStr == null || (countStr!=null && countStr.equals(Constants.INFINITE))) {
+            iter = collection.find(query)
+                    .skip(start)
+                    .sort(new BasicDBObject("date", 1));
+        } else {
+            iter = collection.find(query)
+                    .limit(count)
+                    .skip(start)
+                    .sort(new BasicDBObject("date", 1));
+        }
+        List<LogEvent> logEvents = new ArrayList<LogEvent>();
+        MongoCursor<Document> cursor = iter.iterator();
+        try {
+            while(cursor.hasNext()) {
+                Document dbobj = cursor.next();
+                //Converting BasicDBObject to a custom Class(LogEvent)
+                LogEvent logEvent = (new Gson()).fromJson(dbobj.toJson(), LogEvent.class);
+                logEvents.add(logEvent);
+            }
+        } finally {
+            cursor.close();
+        }
+        return logEvents;
+    }
+
+    private static List<DataoneLogEvent> queryDataoneLog(MongoCollection collection, BasicDBObject query, String countStr, int start){
+
+        int count = 0;
+        if(countStr!=null && !countStr.equals(Constants.INFINITE))
+            count = Integer.parseInt(countStr);
+        start = start < 0 ? 0 : start;
+
+        FindIterable<Document> iter;
+        if(countStr == null || (countStr!=null && countStr.equals(Constants.INFINITE))) {
+            iter = collection.find(query)
+                    .skip(start)
+                    .sort(new BasicDBObject("date", 1));
+        } else {
+            iter = collection.find(query)
+                    .limit(count)
+                    .skip(start)
+                    .sort(new BasicDBObject("date", 1));
+        }
+        List<DataoneLogEvent> logEvents = new ArrayList<DataoneLogEvent>();
+        MongoCursor<Document> cursor = iter.iterator();
+        try {
+            while(cursor.hasNext()) {
+                Document dbobj = cursor.next();
+                //Converting BasicDBObject to a custom Class(LogEvent)
+                DataoneLogEvent logEvent = (new Gson()).fromJson(dbobj.toJson(), DataoneLogEvent.class);
+                logEvents.add(logEvent);
+            }
+        } finally {
+            cursor.close();
+        }
+        return logEvents;
+    }
+
+    private static BasicDBObject generateAndQuery(Date fromDate, Date toDate, String id, MonConstants.EventType event, MonConstants.Status status) {
+        BasicDBObject andQuery = new BasicDBObject();
+        List<BasicDBObject> obj = new ArrayList<BasicDBObject>();
+
+        if (fromDate != null) {
+            obj.add(new BasicDBObject("date", new BasicDBObject("$gte", sdfDate.format(fromDate))));
+        }
+        if (toDate != null) {
+            obj.add(new BasicDBObject("date", new BasicDBObject("$lte", sdfDate.format(toDate))));
+        }
+        if(id != null){
+            obj.add(new BasicDBObject("id", id));
+        }
+        if(event != null){
+            obj.add(new BasicDBObject("eventType", event.getValue()));
+        }
+        if(status != null){
+            obj.add(new BasicDBObject("status", status.getValue()));
+        }
+        if (obj.size() != 0) {
+            andQuery.put("$and", obj);
+        }
+
+        return andQuery;
     }
 }

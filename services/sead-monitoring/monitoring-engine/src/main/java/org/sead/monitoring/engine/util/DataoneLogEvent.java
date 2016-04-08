@@ -18,7 +18,7 @@
  * @author charmadu@umail.iu.edu
  */
 
-package org.sead.monitoring.ui.util;
+package org.sead.monitoring.engine.util;
 
 public class DataoneLogEvent {
 

@@ -59,6 +59,11 @@ public class LogEvent {
         this.status = status;
     }
 
-
+    public String toString() {
+        return  "ID : " + getId() + "\n" +
+                "Event Type : " + getEventType() + "\n" +
+                "Date : " + getDate() + "\n" +
+                "Status : " + getStatus() + "\n";
+    }
 
 }

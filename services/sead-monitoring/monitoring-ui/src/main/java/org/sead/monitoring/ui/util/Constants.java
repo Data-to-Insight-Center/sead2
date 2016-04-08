@@ -26,14 +26,6 @@ import java.util.Properties;
 
 public class Constants {
 
-	public static String mongoHost;
-	public static int mongoPort;
-
-	public static String pdtDbName;
-	public static String monDbName;
-    public static String dataoneDbName;
-    public final static String INFINITE = "inf";
-
 	static {
 		try {
 			loadConfigurations();
@@ -47,10 +39,5 @@ public class Constants {
 				.getResourceAsStream("./default.properties");
 		Properties props = new Properties();
 		props.load(inputStream);
-		mongoHost = props.getProperty("mongo.host", "localhost");
-		mongoPort = Integer.parseInt(props.getProperty("mongo.port", "27017"));
-		monDbName = props.getProperty("mon.db.name", "sead-mon");
-        dataoneDbName = props.getProperty("dataone.db.name", "sead-dataone");
-		pdtDbName = props.getProperty("pdt.db.name", "sead-pdt");
 	}
 }
