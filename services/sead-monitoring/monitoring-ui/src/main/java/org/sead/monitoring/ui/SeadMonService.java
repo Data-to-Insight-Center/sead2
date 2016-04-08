@@ -60,7 +60,7 @@ public class SeadMonService {
     private static MongoCollection<Document> curbeeCollection = null;
     private static MongoCollection<Document> matchmakerCollection = null;
     private static MongoCollection<Document> landingPageCollection = null;
-    private static MongoCollection<Document> seadCloudCollection = null;
+    private static MongoCollection<Document> seadCloudSearchCollection = null;
 
     private static final Logger log = Logger.getLogger(SeadMonService.class);
 
@@ -73,7 +73,7 @@ public class SeadMonService {
         curbeeCollection = monDB.getCollection(MonConstants.Components.CURBEE.getValue());
         matchmakerCollection = monDB.getCollection(MonConstants.Components.MATCHMAKER.getValue());
         landingPageCollection = monDB.getCollection(MonConstants.Components.LANDING_PAGE.getValue());
-        seadCloudCollection = monDB.getCollection(MonConstants.Components.IU_SEAD_CLOUD_SEARCH.getValue());
+        seadCloudSearchCollection = monDB.getCollection(MonConstants.Components.IU_SEAD_CLOUD_SEARCH.getValue());
 
         publicationsCollection = pdtDB.getCollection(MongoDB.researchObjects);
         dataOneCollection = dataOneDB.getCollection(MongoDB.events);
@@ -222,7 +222,7 @@ public class SeadMonService {
     }
 
     @GET
-    @Path("/iuseadAccess")
+    @Path("/landingPage")
     @Produces(MediaType.APPLICATION_JSON)
     public Response getIUseadData(@QueryParam("start") int start,
                                   @QueryParam("count") String countStr,
