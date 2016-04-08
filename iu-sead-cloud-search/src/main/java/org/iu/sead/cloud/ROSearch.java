@@ -75,7 +75,7 @@ public class ROSearch {
     @Produces(MediaType.APPLICATION_JSON)
     public Response getFilteredListOfROs(String filterString) {
 
-        SeadMon.addLog(MonConstants.Components.IU_SEAD_CLOUD_SEARCH, "ID", MonConstants.EventType.ACCESS);
+        SeadMon.addLog(MonConstants.Components.IU_SEAD_CLOUD_SEARCH, "ID");
 
         JSONObject filter = new JSONObject(filterString);
         String creator = filter.getString("Creator");
