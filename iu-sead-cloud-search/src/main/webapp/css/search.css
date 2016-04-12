@@ -44,10 +44,10 @@ list-style-type: none;
 border-top:groove #008CBA 1px;
 border-bottom:groove #008CBA 1px;
 }ul:nth-child(odd) {
-background-color: #f4f6f8;
+background-color: #f4f6f8 !important;
 }
 ul:nth-child(even) {
-background-color: #000000 !important;
+background-color: #f4f6f8 !important;
 }
 h3 {
 font: bold 20px/1.5 Helvetica, Verdana, sans-serif;
@@ -161,6 +161,17 @@ h1#site-title {
 	font-size: 12px;
 	color: #555555;
 	margin-bottom: 0;
-}#CRUDthisTable{
-	width:62% !important;
+}#CRUDthisTable {
+    float: right;
+    width: 64% !important;
+}#page_navigation a{
+	padding:3px;
+	border:1px solid gray;
+	margin:2px;
+	color:black;
+	text-decoration:none
+}
+.active_page{
+	background:darkblue;
+	color:white !important;
 }

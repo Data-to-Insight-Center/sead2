@@ -4,6 +4,7 @@ var apiprefix = "./ro";
 $(document).ready(function ()
 	{
 		//loadRO();
+	bool_pagination = true;
 	var xmlhttp = new XMLHttpRequest();
 	var url = apiprefix + "/researchobjects";
 
@@ -13,17 +14,17 @@ $(document).ready(function ()
 		}
 	}
 	xmlhttp.open("GET", url, true);
-	xmlhttp.send();			
+	xmlhttp.send();
 
 });
 
 $("#filter-search-button").click(function () {
 	$("#CRUDthisTable").empty();
-});		
-	
+});
+
 function myFunction(response) {
 	arr = JSON.parse(response);
-	var ros = [];
+	ros = [];
 	
 	for(var i = 0; i < arr.length; i++) {
 		var creator_results = Array();
