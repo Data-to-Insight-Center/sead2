@@ -19,11 +19,108 @@
     <script type="text/javascript">
 	$.noConflict();
 	$(document).ready(function($){
+
+	var curr_url = window.location.href ;
+	if(curr_url.indexOf("search.html?q=") > -1){
+
+		var search_string = curr_url.split("=")[1];
+		var search_creator = "";
+		var search_start_date = "";
+		var search_end_date = "";
+		var search_title = "";
+		var search_json = {"Creator":search_creator, "Start Date":search_start_date,
+									"End Date":search_end_date, "Search String": search_string,
+									"Title":search_title};
+
+		var myData=JSON.stringify(search_json);
+		var request = $.ajax({
+						url: apiprefix + "/researchobjects",
+						type: "post",
+						data: myData,
+						cache: false,
+						dataType: 'text',
+						contentType : 'application/json'
+						});
+
+		request.done(function (response){
+					console.log("Response from server: " + response);
+
+		new_arr = JSON.parse(response);
+		$("#CRUDthisTable").empty();
+
+		if(response != "[]"){
+			var new_ros = [];
+
+			for(var i = 0; i < new_arr.length; i++) {
+
+				var creator_results = Array();
+				var creator= new_arr[i].Creator;
+				var new_creator = "";
+				if($.isArray(creator)) {
+					for (var c=0; c < creator.length; c++){
+						var creator_str;
+                        if(c==creator.length-1) {
+                            creator_str = '<span>' + creator[c] + '</span>';
+                            } else {
+                                creator_str = '<span>' + creator[c] + '</br></span>';
+                                }
+                        creator_results.push(creator_str);
+					}
+					new_creator += creator_results.join("");
+				} else {
+					new_creator += creator;
+				}
+				var new_creator_out = new_creator;
+
+				var abstract_results = Array();
+				var abstract= new_arr[i].Abstract;
+				var new_abstract = "";
+				if($.isArray(abstract)) {
+					for (var a=0; a < abstract.length; a++){
+						var abstract_str;
+                        if(a==abstract.length-1) {
+                            abstract_str = '<span>' + abstract[a] + '</span>';
+                            } else {
+                                abstract_str = '<span>' + abstract[a] + '</br></span>';
+                                }
+                        abstract_results.push(abstract_str);
+					}
+					new_abstract += abstract_results.join("");
+				} else {
+					new_abstract += abstract;
+				}
+				var new_abstract_out = new_abstract;
+
+				var title= new_arr[i].Title;
+				var identifier= new_arr[i].Identifier;
+				var pub_date= new_arr[i]["Publication Date"];
+				var create_date= new_arr[i]["Creation Date"];
+				var doi= new_arr[i].DOI;
+
+				new_ros.push( { "Creator":new_creator_out, "Abstract": new_abstract_out, "Title": title, "Identifier": identifier,
+						"PublicationDate":pub_date, "CreationDate":create_date, "DOI":doi});
+
+				}
+				$("#viewRowTemplate").tmpl(new_ros).appendTo("#CRUDthisTable");
+
+		}else{
+		$("#viewRowTemplateNull").tmpl(new_ros).appendTo("#CRUDthisTable");
+		//$("#page_navigation").hide();
+	}
+		pagination();
+		$("input:text").first().val(search_string);
+		var res_html = document.getElementById("CRUDthisTable").innerHTML + pagination();
+		var res_title = document.title;
+		var url_path = '/iu-sead-cloud-search/search.html';
+		window.history.pushState({"html":res_html,"pageTitle":res_title},"", url_path);
+	});
+	}
 	setTimeout(function() {
 	if (bool_pagination){
 		pagination();
-		}}, 50);
+		}}, 800);
 	});
+
 
 function pagination(){
 	//how much items per page to show
@@ -108,19 +205,19 @@ function go_to_page(page_num){
 </script>
 </head>
 <body>
-<div  style="width:1000px;margin: 0 auto;padding: 10px 0;" >
-    <div style="display : inline-block; padding: 15px 20px 5px 20px;width:100%;">
+<div  style="width:1000px;margin: 0 auto;" >
+    <div style="display : inline-block; padding: 15px 0px 15px 0px;width:100%;">
         <div align="left">
             <span class="helper"></span>
-            <img align="left" style="width: 30%;" src="images/indiana-university-logo.png" alt="Indiana University">
+            <img align="left" style="width: 273px;height:91px" src="images/indiana-university-logo.png" alt="Indiana University">
         </div>
         <div align="right">
             <span class="helper"></span>
-            <img align="right" style="width: 40%;" src="images/sead-logo.png" alt="SEAD">
+            <img align="right" style="width: 364px;height:51px" src="images/sead-logo.png" alt="SEAD">
         </div>
     </div>
     <div>
-        <div style="float: right; font-size:14px;padding:0px 30px 0px 0px;">
+        <div style="float: right; font-size:14px;">
             <a href="http://seadva.d2i.indiana.edu:8081/landing-page/home.html">IU SEAD Cloud</a>
         </div>
         <div style="float: right; font-size:14px;padding:0px 20px 0px 0px;"><a href="#"> | </a></div>
@@ -138,10 +235,10 @@ function go_to_page(page_num){
         <div id="section">
             <h2 style="color:#3b5998;padding:10px 0px 0px 0px;"><u>IU SEAD Cloud Search</u></h2>
             <h3 style="color:#3b5998">Search Results:</h3>
+            <div id="page_navigation" style="float:right;padding:10px 0px 15px 0px;"></div>
             <input type="hidden" id="current_page"/>
             <input type="hidden" id="show_per_page"/>
             <div id="CRUDthisTable" class="mediumTable"></div>
-            <div id="page_navigation"></div>
             <br/>
         </div>
     </div>
@@ -253,26 +350,22 @@ function go_to_page(page_num){
 
 				}
 				$("#viewRowTemplate").tmpl(new_ros).appendTo("#CRUDthisTable");
-				pagination();
+
 		}else{
 	$("#viewRowTemplateNull").tmpl(new_ros).appendTo("#CRUDthisTable");
-	$( "#page_navigation" ).hide();
+	//$("#page_navigation").hide();
 	}
-
+	pagination();
 	});
 }
-	var repoOptions = [
-			{name: 'IU SEAD CLOUD', value: 'sda', selected: true} //selected on display
-		   ],
-
 		options = {
 			title: 'SEAD Search Filter',
 			dateFormat: this.dateFormat,
 			searchClickedCallback: sendToServer,
 			filterParameters: [
-				{type: 'text', attributeName: 'search_content', name: 'Search Content', placeholder: 'search by any text', id: 'IFRI', autocomplete: 'on'},
+				{type: 'text', attributeName: 'search_content', name: 'Search Across All Fields', placeholder: 'search across all fields', id: 'IFRI', autocomplete: 'on'},
 				{type: 'text', attributeName: 'creator_name', name: 'Creator Name', placeholder: 'type creator name', id: 'Leslie', autocomplete: 'on'},
-				{type: 'date-range', attributeName: 'date_range', name: 'Date Range'},
+				{type: 'date-range', attributeName: 'date_range', name: 'Publication Date Range'},
 				{type: 'text', attributeName: 'title', name: 'Title', placeholder: 'type title', id: 'Bedrock Strength Measurements', autocomplete: 'on'},
 			]
 		};
@@ -299,12 +392,8 @@ function go_to_page(page_num){
 					<td>{{html PublicationDate}}</td>
 				</tr>
 				<tr valign="top" style="line-height:1.5;">
-					<th style="width: 135px">Creation Date</th>
-					<td>{{html CreationDate}}</td>
-				</tr>
-				<tr valign="top" style="line-height:1.5;">
 					<th style="width: 135px">DOI</th>
-					<td><a href="{{html DOI}}">{{html DOI}}</a></td>
+					<td><a href="{{html DOI}}" target="blank">{{html DOI}}</a></td>
 				</tr>
 			</table>
 		</li>

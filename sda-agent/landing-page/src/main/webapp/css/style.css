@@ -1,5 +1,5 @@
 /* General Reset */
-html, body, div, span, applet, object, iframe, h1, h2, h3, h4, h5, h6, p, blockquote, pre, a, abbr, acronym, address, big, cite, code, del, dfn, em, font, img, ins, kbd, q, s, samp, small, strike, strong, sub, sup, tt, var, b, u, i, center, dl, dt, dd, ol, ul, li, fieldset, form, label, legend, table, caption, tbody, tfoot, thead, tr, th, td, hr, button {
+html, body, div, span, applet, object, iframe, h1, h2, h3, h4, h5, h6, p, blockquote, pre, a, abbr, acronym, address, big, cite, code, del, dfn, em, font, img, ins, kbd, q, s, samp, small, strike, strong, sub, sup, tt, var, b, u, i, center, dl, dt, dd, ol, ul, li, fieldset, form, label, legend, table, caption, tbody, tfoot, thead, tr, th, td, hr {
 	margin:0;
 	padding:0;
 	border:0;
@@ -346,6 +346,71 @@ a.btn:hover{
 
 .showContent {
     height: auto;
+}#custom-search-form {
+	margin:0;
+	margin-top: 5px;
+	padding: 0;
 }
+#custom-search-form .search-query {
+	padding-right: 3px;
+	padding-right: 4px \9;
+	padding-left: 3px;
+	padding-left: 4px \9;
+	margin-bottom: 0;
+	-webkit-border-radius: 3px;
+	-moz-border-radius: 3px;
+	border-radius: 3px;
+	-webkit-transition: width  0.2s ease-in-out;
+	-moz-transition:width  0.2s ease-in-out;
+	-o-transition: width  0.2s ease-in-out;
+	transition: width  0.2s ease-in-out;
+}
+#custom-search-form button {
+	border: 0;
+	background: none;
+	padding: 2px 5px;
+	margin-top: 2px;
+	position: relative;
+	left: -28px;
+	margin-bottom: 0;
+	-webkit-border-radius: 3px;
+	-moz-border-radius: 3px;
+	border-radius: 3px;
+}  
+#search {
+float: right;
+margin-top: 9px;
+}
+.btn-primary-advance a:hover{
+	color:#337ab7;
+}.btn-primary-advance a:active{
+	color:#ffffff;
+}
+.btn-primary-advance a{
+	color:#008cba;
+}.search_button {
+	-webkit-border-radius: 5px; 
+    -moz-border-radius: 5px; 
+    background-color: #008cba;
+    border: none;
+    color: white;
+    padding: 6px 6px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 12px;
+    margin: 2px 2px;
+    cursor: pointer;
+}.search_button:hover{
+    background-color: #337ab7;
+}.search_textbox { 
+    -webkit-border-radius: 5px; 
+    -moz-border-radius: 5px; 
+    border-radius: 5px; 
+    border: 1px solid #848484; 
+    outline:0; 
+    height:25px; 
+    width: 325px; 
+ }
 
 /*----end footer content----*/

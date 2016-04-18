@@ -26,9 +26,12 @@
 
 
 <div id="wrapper" align = "center">
-    <div style="display : inline-block" class="container">
-        <div style="width: 70%;">
-            <img align="right" src="http://brand.iu.edu/img/signatures/indiana-university/indiana-university" style="position: relative; float: right; width: 28%; height: 19%">
+    <div style="display : inline-block;padding: 15px 45px 15px 45px;" class="container">
+        <div>
+            <img align="left" src="http://brand.iu.edu/img/signatures/indiana-university/indiana-university" style="width: 273px;height:91px">
+        </div>
+        <div>
+            <img align="right" src="http://sead-data.net/wp-content/uploads/2014/06/logo.png" style="width: 364px;height:51px">
         </div>
 	</div>
 	<div>

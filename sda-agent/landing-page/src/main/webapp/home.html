@@ -8,6 +8,13 @@
     <link href="css/style.css" rel="stylesheet" type="text/css">
     <script src="js/jquery.min.js"></script>
 </head>
+<script type="text/javascript">
+function searchFunction() {
+var apiprefix = "./ro";
+var search_val = document.getElementById("mySearch").value;
+window.location.href = '/iu-sead-cloud-search/search.html?q=' + search_val;
+}
+</script>
 <body>
 
 <div id="wrapper">
@@ -35,6 +42,17 @@
                 <p>IU SEAD Cloud is supported by the team from the IU <a href="http://d2i.indiana.edu">Data to Insight Center</a>. It accepts data from any SEAD-affiliated user. To become a SEAD user, you will need to create an account and set up a project space. Visit <a href="http://sead-data.net/help/">SEAD help pages</a> to learn how to do that.</p>
                 <br>
             </div>
+            
+            <div class="span12" style="float:left;padding: 0px 5px 0px 0px;">
+                <div>
+                    <input type="search" class="search-query mac-style search_textbox" placeholder="Type any keyword, name or DOI" id="mySearch">
+                    <button type="submit" onclick="searchFunction()" class="search_button">Search</button>
+                    <button type="button" class="btn-primary-advance" data-toggle="collapse" data-target="#filter-panel">
+                   	<span class="glyphicon glyphicon-cog"></span> <a href="/iu-sead-cloud-search/search.html">Advanced Search </a></button>
+                    <p style="color:grey; font-size:12px;">Ex: IFRI, Leslie, http://dx.doi.org/10.5967/M0XG9P4P</p>
+                </div>
+			</div>
+            <br/><br/><br/><br/>
 
             <div class="common_content">
                 <div>
