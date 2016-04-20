@@ -69,6 +69,14 @@ public class ROSearch {
         return getAllPublishedROs(query, null, null, null);
     }
 
+    @GET
+    @Path("/mostdownloaded")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getROsWithDownloadCount() {
+        Document query = createPublishedFilter().append("Repository", Constants.repoName);
+        return getMostDownloadedROs(query);
+    }
+
     @POST
     @Path("/")
     @Consumes(MediaType.APPLICATION_JSON)
@@ -154,6 +162,25 @@ public class ROSearch {
         return Response.ok(array.toString()).cacheControl(control).build();
     }
 
+    private Response getMostDownloadedROs(Document filter) {
+        FindIterable<Document> iter = publicationsCollection.find(filter);
+        setROProjection(iter);
+        MongoCursor<Document> cursor = iter.iterator();
+        JSONArray array = new JSONArray();
+        while (cursor.hasNext()) {
+            Document document = cursor.next();
+            Document agg = (Document) document.get("Aggregation");
+            int downloads = SeadMon.queryLandingPageLogs(MonConstants.EventType.DOWNLOAD, agg.getString("Identifier"), null, null).size();
+            if (downloads == 0) {
+                downloads = SeadMon.queryLandingPageLogs(MonConstants.EventType.DOWNLOAD, agg.getString("Title"), null, null).size();
+            }
+            reArrangeDocument(document);
+            document.append("Downloads", "" + downloads);
+            array.put(JSON.parse(document.toJson()));
+        }
+        return Response.ok(array.toString()).cacheControl(control).build();
+    }
+
     private boolean creatorMatch(Object creator, String creatorRegex) {
         if (creator == null || creatorRegex == null) {
             return true;
@@ -195,6 +222,7 @@ public class ROSearch {
     private void setROProjection(FindIterable<Document> iter) {
         iter.projection(new Document("Status", 1)
                 .append("Repository", 1)
+                .append("Aggregation.Identifier", 1)
                 .append("Aggregation.Creator", 1)
                 .append("Aggregation.Title", 1)
                 .append("Aggregation.Contact", 1)
@@ -210,6 +238,7 @@ public class ROSearch {
             doc.append(key, agg.get(key));
         }
         doc.remove("Aggregation");
+        doc.remove("Identifier");
         // extract doi and remove Status
         ArrayList<Document> statusArray = (ArrayList<Document>) doc.get("Status");
         String doi = "Not Found";
