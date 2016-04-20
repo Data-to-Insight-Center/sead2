@@ -3,7 +3,6 @@ var apiprefix = "./ro";
 
 $(document).ready(function ()
 	{
-		//loadRO();
 	bool_pagination = true;
 	var xmlhttp = new XMLHttpRequest();
 	var url = apiprefix + "/researchobjects";
@@ -25,7 +24,12 @@ $("#filter-search-button").click(function () {
 function myFunction(response) {
 	var curr_url = window.location.href;
 	if (curr_url.indexOf("search.html?q=") > -1){
-		var search_result = null;
+		var search_string = curr_url.split("=")[1];
+		$("input:text").first().val(search_string);
+		var res_html = document.getElementById("CRUDthisTable").innerHTML + pagination();
+		var res_title = document.title;
+		var url_path = '/iu-sead-cloud-search/search.html';
+		window.history.pushState({"html":res_html,"pageTitle":res_title},"", url_path);
 	}else{
 		arr = JSON.parse(response);
 		ros = [];
