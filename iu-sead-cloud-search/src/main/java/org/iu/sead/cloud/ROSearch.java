@@ -96,7 +96,7 @@ public class ROSearch {
         Document query = createPublishedFilter().append("Repository", Constants.repoName);
         if (searchString != null && !"".equals(searchString)) {
             // doing a text search in entire RO using the given search string
-            query = query.append("$text", new Document("$search", searchString));
+            query = query.append("$text", new Document("$search", "\"" + searchString + "\""));
         }
 
         if (title != null && !"".equals(title)) {
