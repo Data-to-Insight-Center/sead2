@@ -141,7 +141,7 @@ public class C3PRPubRequestFacade {
 		}
 	}
 
-	JSONObject getPublicationRequest() {
+	public JSONObject getPublicationRequest() {
 		if (request == null) {
 			String c3prServer = props.getProperty("c3pr.address");
 			HttpGet getPubRequest;

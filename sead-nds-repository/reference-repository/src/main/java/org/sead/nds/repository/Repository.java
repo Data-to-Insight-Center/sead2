@@ -40,31 +40,35 @@ public class Repository {
 	private static String repoID = null;
 	private static Properties props;
 	private static String dataPath = null;
+	private static boolean allowUpdates = false;
 
-    public Repository() {
-    }
-
-    public static void init(Properties properties) {
-        props = properties;
-        repoID = props.getProperty("repo.ID", "bob");
-		dataPath = props.getProperty("repo.datapath", "./test2");
+	public Repository() {
 	}
 
-    private static Properties loadProperties() {
-        Properties props = new Properties();
-        try {
-            props.load(Repository.class
-                    .getResourceAsStream("repository.properties"));
-            log.trace(props.toString());
-        } catch (IOException e) {
-            log.warn("Could not read repositories.properties file");
-        }
-        return props;
-    }
+	public static void init(Properties properties) {
+		props = properties;
+		repoID = props.getProperty("repo.ID", "bob");
+		dataPath = props.getProperty("repo.datapath", "./test2");
+		allowUpdates = (props.getProperty("repo.allowupdates"))
+				.equalsIgnoreCase("true") ? true : false;
+
+	}
+
+	private static Properties loadProperties() {
+		Properties props = new Properties();
+		try {
+			props.load(Repository.class
+					.getResourceAsStream("repository.properties"));
+			log.trace(props.toString());
+		} catch (IOException e) {
+			log.warn("Could not read repositories.properties file");
+		}
+		return props;
+	}
 
 	public static void main(String[] args) {
 		PropertyConfigurator.configure("./log4j.properties");
-        init(loadProperties());
+		init(loadProperties());
 
 		if (args.length == 1) {
 
@@ -101,6 +105,25 @@ public class Repository {
 			throws EZIDException {
 		String target = Repository.getLandingPage(bagID);
 		log.debug("DOI Landing Page: " + target);
+		String existingID = null;
+		if (RO.getPublicationRequest().getJSONObject("Preferences")
+				.has("External Identifier")) {
+			existingID = RO.getPublicationRequest()
+					.getJSONObject("Preferences")
+					.getString("External Identifier");
+			if (existingID.startsWith("http://dx.doi.org/")) {
+				existingID = existingID
+						.substring("http://dx.doi.org/".length());
+			} else if (existingID.startsWith("doi:")) {
+				existingID = existingID.substring("doi:".length());
+			}
+			if (existingID != null && !allowUpdates) {
+				// FixMe - should we fail instead of going forward with a new
+				// ID?
+				log.warn("User requested an update to an existing ID, which is not allowed: Ingoring update request.");
+			}
+		}
+
 		String creators = RO.getCreatorsString(RO.normalizeValues(RO
 				.getOREMap().getJSONObject("describes").get("Creator")));
 
@@ -133,16 +156,32 @@ public class Repository {
 				permanent = false;
 			}
 		}
-	
+
 		ezid.login(props.getProperty("doi.user"), props.getProperty("doi.pwd"));
 		String shoulder = (permanent) ? props.getProperty("doi.shoulder.prod")
 				: props.getProperty("doi.shoulder.test");
-		String doi = ezid.mintIdentifier(shoulder, metadata);
-		//Should be true
-		if(doi.startsWith("doi:")) {
+		String doi = null;
+		existingID = "doi:" + existingID;
+		if ((existingID != null) && (existingID.contains(shoulder))
+				&& allowUpdates) {
+			log.debug("Updating metadata for: " + existingID);
+			ezid.setMetadata(existingID, metadata);
+			doi = existingID;
+		} else if ((existingID == null) || !allowUpdates) {
+			log.debug("Generating new ID with shoulder: " + shoulder);
+			doi = ezid.mintIdentifier(shoulder, metadata);
+		} else {
+			log.warn("Request to update an existing DOI that does not match requested shoulder: "
+					+ existingID + " : " + shoulder);
+			throw new EZIDException(
+					"Cannot update doi due to shoulder conflict");
+		}
+		// Should be true
+		if (doi.startsWith("doi:")) {
 			doi = doi.substring(4);
 		}
-		log.debug("Generated DOI: http://dx.doi.org/" + doi);
+		log.debug("Generated/Updated DOI: http://dx.doi.org/" + doi);
+
 		return "http://dx.doi.org/" + doi;
 	}
 
