@@ -227,7 +227,7 @@ public class ROSearch {
                 .append("Aggregation.Title", 1)
                 .append("Aggregation.Contact", 1)
                 .append("Aggregation.Abstract", 1)
-                .append("Aggregation.Creation Date", 1)
+//                .append("Aggregation.Creation Date", 1)
                 .append("_id", 0));
     }
 
@@ -277,7 +277,7 @@ public class ROSearch {
     private String getPersonName(String creator) {
         String personProfile = getPersonProfile(creator);
         if (personProfile == null) {
-            return creator;
+            return removeVivo(creator);
         } else {
             JSONObject profile = new JSONObject(personProfile);
             String givenName = profile.getString("givenName");
@@ -306,6 +306,14 @@ public class ROSearch {
         } else {
             return null;
         }
+    }
+
+    private String removeVivo(String s) {
+        int i = s.indexOf(": http");
+        if (i > -1) {
+            s = s.substring(0, i).trim();
+        }
+        return s;
     }
 
 }
