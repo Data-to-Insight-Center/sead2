@@ -21,17 +21,16 @@ package org.sead.sda;
 
 import com.jcraft.jsch.*;
 
-import java.io.InputStream;
 import java.util.Properties;
 import java.util.Vector;
 
-public class SFTP {
+public class Sftp {
 
     private Session session;
     private Channel channel;
     private ChannelSftp channelSftp;
 
-    public SFTP() {
+    public Sftp() {
         connectSessionAndChannel();
     }
 
@@ -91,21 +90,6 @@ public class SFTP {
 
     }
 
-    public InputStream downloadFile(String filePath) {
-
-        int tryNum = 1;
-
-        try {
-            InputStream input = channelSftp.get(filePath);
-            return input;
-        } catch (SftpException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-            return null;
-        }
-
-    }
-
     public boolean doesFileExist(String filePath) {
         try {
             Vector vals = channelSftp.ls(filePath);
@@ -116,4 +100,48 @@ public class SFTP {
         }
     }
 
+    public Stat listFiles(String filePath, Stat stat) {
+
+        String prefix = "|" ;
+        for (int i = 0; i < stat.getTab(); i++)
+            prefix += " |";
+        try {
+            Vector vals = channelSftp.ls(filePath);
+            int maxTab = stat.getTab();
+            double size = 0;
+            long noOfFiles = 0;
+            for (Object fileref : vals) {
+                ChannelSftp.LsEntry file = (ChannelSftp.LsEntry) fileref;
+                if (file.getAttrs().isDir()) {
+                    if (!file.getFilename().equals(".") && !file.getFilename().equals("..")) {
+                        //System.out.println(prefix + "_" + file.getFilename());
+                        Stat newStat = new Stat();
+                        newStat.setTab(stat.getTab() + 1);
+                        listFiles(filePath + "/" + file.getFilename(), newStat);
+                        if (newStat.getTab() > maxTab) {
+                            maxTab = newStat.getTab();
+                        }
+                        size += newStat.getSize();
+                        noOfFiles += newStat.getNoOfFiles();
+                    }
+                    continue;
+                }
+                noOfFiles++;
+                //System.out.println(prefix + "_" + file.getFilename() + " | " + file.getAttrs().getSize()*1.0/(1024*1024));
+                //System.out.println(prefix + "_" + file.getFilename());
+                size += file.getAttrs().getSize() * 1.0 / (1024 * 1024);
+            }
+            stat.setNoOfFiles(noOfFiles);
+            stat.setTab(maxTab);
+            stat.setSize(size);
+            if (vals.size() != 0) {
+                stat.setSuccess(true);
+            }
+            return stat;
+        } catch (SftpException e) {
+            // ignore exception as we know this is because the file is not there. just return false
+            stat.setSuccess(false);
+            return stat;
+        }
+    }
 }
