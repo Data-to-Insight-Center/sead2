@@ -101,17 +101,20 @@ public class LandingPage extends HttpServlet {
             // extract properties from ORE
             JSONArray status = (JSONArray) cp.get(keyMapList.get("Status".toLowerCase()));
             String doi = "No DOI Found";             // handle this as an exception
+            String pubDate = null;
             for (Object st : status) {
                 JSONObject jsonStatus = (JSONObject) st;
                 String stage = (String) jsonStatus.get("stage");
                 if ("Success".equals(stage)) {
                     doi = (String) jsonStatus.get("message");
+                    pubDate = (String) jsonStatus.get("date");
                 }
             }
             roProperties.put("DOI", Arrays.asList(doi));
+            roProperties.put("Publication Date", Arrays.asList(pubDate));
             roProperties.put("Full Metadata", Arrays.asList(Constants.landingPage + "/metadata/" + tag + "/oremap"));
             addROProperty("Creator", describes, roProperties);
-            addROProperty("Publication Date", describes, roProperties);
+//            addROProperty("Publication Date", describes, roProperties);
             addROProperty("Title", describes, roProperties);
             addROProperty("Abstract", describes, roProperties);
             addROProperty("Contact", describes, roProperties);

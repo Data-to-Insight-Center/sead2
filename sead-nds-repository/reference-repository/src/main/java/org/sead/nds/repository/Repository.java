@@ -164,6 +164,9 @@ public class Repository {
 		existingID = "doi:" + existingID;
 		if ((existingID != null) && (existingID.contains(shoulder))
 				&& allowUpdates) {
+			//Enhancement: Retrieve metadata first and find current landing page for this DOI - can then 
+			//decide what to do, e.g. to move/remove the old version, do something other than a 404 for the old landigng URL, etc.
+			
 			log.debug("Updating metadata for: " + existingID);
 			ezid.setMetadata(existingID, metadata);
 			doi = existingID;

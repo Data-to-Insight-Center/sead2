@@ -15,7 +15,7 @@
     </parent>
 
     <build>
-        <finalName>ndsrepository</finalName>
+        <finalName>ndslandingpage</finalName>
         <plugins>
             <plugin>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -50,7 +50,19 @@
             </plugin>
         </plugins>
     </build>
-
+  
+  <repositories>
+    <repository>
+      <id>refrepo.local</id>
+      <name>refrepo</name>
+      <url>file:${project.basedir}/../reference-repository/repo</url>
+    </repository>
+    <!-- Replace local repo with dataone when they update to 1.0.2 <repository> 
+      <id>dataone.org</id> <url>http://dev-testing.dataone.org/maven</url> <releases> 
+      <enabled>true</enabled> </releases> <snapshots> <enabled>true</enabled> </snapshots> 
+      </repository> -->
+  </repositories>
+  
     <dependencies>
         <dependency>
             <groupId>org.apache.commons</groupId>
@@ -60,14 +72,6 @@
         <dependency>
             <groupId>log4j</groupId>
             <artifactId>log4j</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.googlecode.json-simple</groupId>
-            <artifactId>json-simple</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.jcraft</groupId>
-            <artifactId>jsch</artifactId>
         </dependency>
         <dependency>
             <groupId>commons-net</groupId>
@@ -96,10 +100,6 @@
             <artifactId>bagit</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.xeustechnologies</groupId>
-            <artifactId>jtar</artifactId>
-        </dependency>
-        <dependency>
             <groupId>org.json</groupId>
             <artifactId>json</artifactId>
         </dependency>
@@ -117,6 +117,10 @@
             <version>3.1.0</version>
             <scope>provided</scope>
         </dependency>
+            <dependency>
+      <groupId>org.sead</groupId>
+      <artifactId>ref-repo</artifactId>
+    </dependency>
     </dependencies>
 
     <dependencyManagement>
@@ -125,16 +129,6 @@
                 <groupId>log4j</groupId>
                 <artifactId>log4j</artifactId>
                 <version>1.2.17</version>
-            </dependency>
-            <dependency>
-                <groupId>com.googlecode.json-simple</groupId>
-                <artifactId>json-simple</artifactId>
-                <version>1.1</version>
-            </dependency>
-            <dependency>
-                <groupId>com.jcraft</groupId>
-                <artifactId>jsch</artifactId>
-                <version>0.1.50</version>
             </dependency>
             <dependency>
                 <groupId>commons-net</groupId>
@@ -162,11 +156,6 @@
                 <version>4.9.0</version>
             </dependency>
             <dependency>
-                <groupId>org.xeustechnologies</groupId>
-                <artifactId>jtar</artifactId>
-                <version>1.1</version>
-            </dependency>
-            <dependency>
                 <groupId>org.json</groupId>
                 <artifactId>json</artifactId>
                 <version>20140107</version>
@@ -182,6 +171,12 @@
                 <artifactId>commons-lang3</artifactId>
                 <version>3.4</version>
             </dependency>
+                  <dependency>
+        <groupId>org.sead</groupId>
+        <artifactId>ref-repo</artifactId>
+        <version>1.0</version>
+        <type>jar</type>
+      </dependency>
         </dependencies>
     </dependencyManagement>
 
