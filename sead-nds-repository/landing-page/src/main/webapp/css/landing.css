@@ -1,27 +1,32 @@
 .mline>div {
 	display: inline;
-	font-size: 20px;
+	font-size: 14px;
 	margin: 5px;
 }
 
 .mlabel {
 	font-weight: bold;
 	margin-right: 10px;
+	text-align: right;
 }
 
 #ro>div {
-	font-size: 30px;
+	font-size: 20px;
 	font-weight: bold;
 }
 
 #heading {
-	font-size: 24px;
-	background-color: rgb(51, 136, 255);
+	font-size: 18px;
+	background-color:#0b5ca3;
 	padding: 10px;
+	color: #fff;
 }
 
-#page-wrapper {
+#page-wrapper,
+#header-logo-image,
+#wrapper {
 	width: 1200px;
+	margin: 0 auto
 }
 
 #actions>div {
@@ -31,4 +36,14 @@
 
 .notes>div {
 	font-size: 14px;
+}
+
+a:link,
+a:visited {
+	text-decoration: underline;
+	color: #0B5CA3;
+}
+
+#header-logo-image img {
+	width: 300px
 }
