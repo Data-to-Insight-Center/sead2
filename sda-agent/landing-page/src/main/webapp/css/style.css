@@ -404,6 +404,7 @@ margin-top: 9px;
 }.search_button:hover{
     background-color: #337ab7;
 }.search_textbox { 
+	-webkit-appearance: none;
     -webkit-border-radius: 5px; 
     -moz-border-radius: 5px; 
     border-radius: 5px; 
