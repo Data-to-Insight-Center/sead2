@@ -28,10 +28,10 @@
 <div id="wrapper" align = "center">
     <div style="display : inline-block;padding: 15px 45px 15px 45px;" class="container">
         <div>
-            <img align="left" src="http://brand.iu.edu/img/signatures/indiana-university/indiana-university" style="width: 273px;height:91px">
+            <a href="https://www.indiana.edu/" target="_blank"><img align="left" src="http://brand.iu.edu/img/signatures/indiana-university/indiana-university" style="width: 273px;height:91px"></a>
         </div>
         <div>
-            <img align="right" src="http://sead-data.net/wp-content/uploads/2014/06/logo.png" style="width: 364px;height:51px">
+            <a href="http://sead-data.net/" target="_blank"><img align="right" src="http://sead-data.net/wp-content/uploads/2014/06/logo.png" style="width: 364px;height:51px"></a>
         </div>
 	</div>
 	<div>
