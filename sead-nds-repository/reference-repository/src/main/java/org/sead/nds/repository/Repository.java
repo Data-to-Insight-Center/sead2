@@ -161,9 +161,11 @@ public class Repository {
 		String shoulder = (permanent) ? props.getProperty("doi.shoulder.prod")
 				: props.getProperty("doi.shoulder.test");
 		String doi = null;
-		existingID = "doi:" + existingID;
+		
 		if ((existingID != null) && (existingID.contains(shoulder))
 				&& allowUpdates) {
+			
+			existingID = "doi:" + existingID;
 			//Enhancement: Retrieve metadata first and find current landing page for this DOI - can then 
 			//decide what to do, e.g. to move/remove the old version, do something other than a 404 for the old landigng URL, etc.
 			
