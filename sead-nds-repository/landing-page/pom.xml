@@ -4,8 +4,8 @@
 
     <modelVersion>4.0.0</modelVersion>
     <artifactId>sead-nds-landing-page</artifactId>
-    <version>0.9-SNAPSHOT</version>
-    <name>SEAD NDS Repository landing page</name>
+    <version>1.0-SNAPSHOT</version>
+    <name>SEAD Reference Repository Landing Page</name>
     <packaging>war</packaging>
 
     <parent>
@@ -174,7 +174,7 @@
                   <dependency>
         <groupId>org.sead</groupId>
         <artifactId>ref-repo</artifactId>
-        <version>1.0</version>
+        <version>1.0.1</version>
         <type>jar</type>
       </dependency>
         </dependencies>

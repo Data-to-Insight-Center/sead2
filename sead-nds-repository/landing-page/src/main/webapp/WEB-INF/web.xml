@@ -15,7 +15,7 @@
 		<servlet-class>com.sun.jersey.spi.container.servlet.ServletContainer</servlet-class>
 		<init-param>
 			<param-name>com.sun.jersey.config.property.packages</param-name>
-			<param-value>org.sead.nds.repository;org.codehaus.jackson.jaxrs</param-value>
+			<param-value>org.sead.nds.landingpage;org.codehaus.jackson.jaxrs</param-value>
 		</init-param>
 		<init-param>
 			<param-name>com.sun.jersey.api.json.POJOMappingFeature</param-name>

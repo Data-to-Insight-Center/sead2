@@ -38,6 +38,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.StreamingOutput;
 
 import org.apache.commons.codec.digest.DigestUtils;
@@ -60,6 +61,7 @@ public class RepoServices {
 	private static final Logger log = Logger.getLogger(RepoServices.class);
 	
 	public RepoServices() {
+		Repository.init();
 		log.debug("Repo Services Created");
 	}
 
@@ -106,6 +108,9 @@ public class RepoServices {
 		String bagNameRoot = id.replaceAll("\\W+", "_");
 		log.debug(bagNameRoot);
 		File result = new File(path, bagNameRoot + ".zip");
+		if(!result.exists()) {
+			return Response.status(Status.NOT_FOUND).build();
+		}
 		try {
 			final ZipFile zf = new ZipFile(result);
 			log.debug(bagNameRoot
