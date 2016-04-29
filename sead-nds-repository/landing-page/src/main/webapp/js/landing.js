@@ -26,7 +26,14 @@ seadData.getMapAjax = function() {
 
 seadData.buildGrid = function(map) {
 	$('#Title').append(map.describes.Title);
-	$('#Date').append(map.describes["Creation Date"]);
+
+	var pubdate = map["Publication Date"];
+	if (pubdate == null) {
+		// Backwards compatibility - use map creation date if pub date is not
+		// recorded by repo.
+		pubdate = map["Creation Date"];
+	}
+	$('#Date').append(pubdate);
 
 	$('#contacts').append(seadData.formatPeople(map.describes.Contact));
 	$('#abstract').append(map.describes.Abstract);
@@ -34,15 +41,49 @@ seadData.buildGrid = function(map) {
 	var p = seadData.formatPeople(map.describes.Creator);
 	$('#creators').append(p);
 	$('#ID').append(
-			$('<a/>').attr('href', map.describes["External Identifier"]).text(
-					map.describes["External Identifier"]));
+			$('<div/>').text(map.describes["External Identifier"]));
 	$('#keywords').append(seadData.formatKeywords(map.describes.Keyword));
+	var lic = map.describes.License;
 	var lic = map.describes.License;
 	if (lic != null) {
 		if (lic.startsWith("http")) {
-			$('#license').append($('<a/>').attr('href', lic).text(lic));
-		} else {
-			$('#license').append(lic);
+			var i = lic.indexOf('://creativecommons.org/licenses/');
+			if (i != -1) {
+				var type = lic.substring(i
+						+ '://creativecommons.org/licenses/'.length);
+				var end = type.indexOf("/");
+				if (end != -1) {
+				}
+				type = type.substring(0, end);
+				$('#license').append(
+						$('<a/>').attr('href', lic).attr('target','_blank').append(
+								$('<img/>').attr('src',
+										'./images/' + type + ".png").attr(
+										'alt', 'CC-' + type)));
+			} else {
+				i = lic.indexOf('://creativecommons.org/publicdomain/zero/1.0');
+				if (i != -1) {
+					$('#license').append(
+							$('<a/>').attr('href', lic).attr('target','_blank').append(
+									$('<img/>')
+											.attr('src', './images/zero.png')
+											.attr('alt', 'CC0')));
+				} else {
+					i = lic
+							.indexOf('://creativecommons.org/publicdomain/mark/1.0');
+					if (i != -1) {
+						$('#license').append(
+								$('<a/>').attr('href', lic).attr('target','_blank').append(
+										$('<img/>').attr('src',
+												'./images/publicdomain.png')
+												.attr('alt',
+														'Public Domain Mark')));
+					} else {
+						$('#license').append(
+								$('<a/>').attr('href', lic).text(lic));
+					}
+				}
+			}
 		}
 	}
 	$("#datatable").append(
@@ -70,33 +111,25 @@ seadData.buildGrid = function(map) {
 		similar = similar.substring(0, similar.indexOf('/resteasy'));
 		liveCopy = similar + '#collection?uri=' + liveCopy;
 	}
+	$('#project').attr('href', map.describes["Publishing Project"]).text(
+			map.describes["Publishing Project Name"]);
 
-	$('#livecopy').prepend(
-			$('<a/>').attr('href', liveCopy).text(map.describes.Title));
+	$('#livecopy').attr('href', liveCopy).attr('target','_blank');
 	$('#actions').append(
 			($('<a/>').attr('href', './api/researchobjects/' + seadData.getId()
-					+ '/bag')).attr('download',
+					+ '/bag')).attr('target','_blank').attr('download',
 					seadData.getId().replace(/\W+/g, "_") + '.zip').append(
 					$('<div/>').attr('id', 'download').attr('class',
-							'btn btn-primary col-xs-3').text(
-							'Download Archived Publication')));
+							'btn btn-primary col-xs-6').text(
+							'Download Whole Publication')));
 	$('#actions').append(
 			($('<a/>').attr('href', './api/researchobjects/' + seadData.getId()
-					+ '/meta/oremap.jsonld.txt')).attr('download',
+					+ '/meta/oremap.jsonld.txt')).attr('target','_blank').attr('download',
 					seadData.getId().replace(/\W+/g, "_") + 'oremap.json')
 					.append(
 							$('<div/>').attr('id', 'map').attr('class',
-									'btn btn-default col-xs-3').text(
-									'Download ORE Map File')));
-	$('#actions').append(
-			($('<a/>').attr('href', './api/researchobjects/' + seadData.getId()
-					+ '/meta/bag-info.txt')).attr('download',
-					seadData.getId().replace(/\W+/g, "_") + '.bag-info.txt')
-					.append(
-							$('<div/>').attr('id', 'info').attr('class',
-									'btn btn-default col-xs-3').text(
-									'Download BagIT Info File')));
-
+									'btn btn-primary col-xs-6').text(
+									'Download Metadata Only')));
 }
 
 seadData.formatPeople = function(people) {
@@ -146,7 +179,7 @@ seadData.formatPerson = function(person) {
 				title = person.email;
 			}
 			return $('<div>').html(
-					'<a href="' + person['@id'] + '" title="' + title + '">'
+					'<a href="' + person['@id'] + '" target= "_blank" title="' + title + '">'
 							+ person.familyName + ', ' + person.givenName
 							+ '</a>');
 		}
@@ -160,7 +193,26 @@ seadData.init = function() {
 	seadData.getMapAjax()).done(function(map) {
 
 		seadData.buildGrid(map);
+	}).fail(function(xhr, textStatus, errorThrown) {
+		seadData.problem(xhr, textStatus, errorThrown);
 	});
+}
+
+seadData.problem = function(xhr, textStatus, errorThrown) {
+	if (xhr.status == '404') {
+		$('#Title')
+				.append(
+						"<p>No Data Found for this identifier: "
+								+ seadData.getId()
+								+ "</p><p>Please use the Contact link below if you believe this is an error.</p>");
+	} else if (xhr.status == '500') {
+		$('#Title')
+				.append(
+						"<p>Server Error for this identifier: "
+								+ seadData.getId()
+								+ "</p><p>Please use the Contact link below to report this problem.</p>");
+	}
+
 }
 
 seadData.init();
@@ -217,10 +269,10 @@ seadData.isCollection = function isCollection(item) {
 		return true;
 	var type = item['@type'];
 	if (typeof type == 'string') {
-		return (type === "http://cet.ncsa.uiuc.edu/2007/Collection");
+		return ((type === "http://cet.ncsa.uiuc.edu/2007/Collection")||(type === 'http://cet.ncsa.uiuc.edu/2016/Folder'));
 	} else {
 		for (var i = 0; i < type.length; i++) {
-			if (type[i] === "http://cet.ncsa.uiuc.edu/2007/Collection")
+			if ((type[i] === "http://cet.ncsa.uiuc.edu/2007/Collection")||(type === 'http://cet.ncsa.uiuc.edu/2016/Folder'))
 				return true;
 		}
 	}
@@ -248,7 +300,7 @@ function getDataRow(parentId, childId, name, uri, size) {
 	newRow.append($('<td/>').append(
 			$('<span/>').addClass('file').append(
 					$('<a/>').attr('href',
-							'./api/researchobjects/' + id + '/data/' + uri)
+							'./api/researchobjects/' + id + '/data/' + uri).attr('target','_blank')
 							.html(name))));
 	newRow.append($('<td/>').html(filesize(parseInt(size), {
 		base : 10
