@@ -58,12 +58,35 @@
                         	List<String> vals = properties.get(key);
                     %>
                     <tr>
-                        <td style="width: 20%"><b><%= key%></b></td>
-                            <td>
+                        <td style="width: 20%"><b><%= key%></b></td>                        	
+                            <td> 
                             <%
                             int count=0;
                             for(String val :vals){
-                                count++;%>
+                                count++;
+								
+								if(key.equals("Full Metadata")) { %>
+                                	<div style="float: left;width:62%;word-wrap: break-word;"><%
+                                    if (val.startsWith("http")) {
+                                %>
+                                    <a href="<%= val%>"><%= val%></a>
+                                <%
+                                    } else {
+                                %>
+                                    <%= val%>
+                                <%
+                                    }
+                                    if(count != vals.size()) {
+                                    %>
+                                    </br>
+                                    <%
+                                    }
+                                %></a></div>
+									<div style="float:right;width:36%;valign:top;font-size:10.5px;color:#666666;"><b>(Note: Full metadata is in JSON-LD format. To view it properly download a formatting plugin for your browser such as JSON-View)</b></div>
+                                	<% continue;
+                            	}
+								%>
+                                
                                 <%
                                     if (val.startsWith("http")) {
                                 %>
@@ -79,7 +102,8 @@
                                     </br>
                                     <%
                                     }
-                                %>
+                                %>                               
+                                                       
                             <%}%>
 	                        </td>
 	              		<% } %>
