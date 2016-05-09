@@ -23,8 +23,6 @@
 	String sdaUrl = (String) request.getAttribute("landingPageUrl") + "/home.html";
 %>
 
-
-
 <div id="wrapper" align = "center">
     <div style="display : inline-block;padding: 15px 45px 15px 45px;" class="container">
         <div>
@@ -82,7 +80,7 @@
                                     <%
                                     }
                                 %></a></div>
-									<div style="float:right;width:36%;valign:top;font-size:10.5px;color:#666666;"><b>(Note: Full metadata is in JSON-LD format. To view it properly download a formatting plugin for your browser such as JSON-View)</b></div>
+									<div style="float:right;width:36%;valign:top;font-size:11.5px;color:#757575;"><b><i>(Note: Full metadata is in JSON-LD format. To view it properly download a formatting plugin for your browser such as JSON-View)</b></i></div>
                                 	<% continue;
                             	}
 								%>
