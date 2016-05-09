@@ -49,8 +49,10 @@ public class Repository {
 	public Repository() {
 	}
 
-	public static void init() {
-		props = loadProperties();
+    // Important: SDA Agent also uses this Repository class and passes it's own properties.
+    // therefore don't load properties inside the init method.
+	public static void init(Properties properties) {
+		props = properties;
 		repoID = props.getProperty("repo.ID", "bob");
 		dataPath = props.getProperty("repo.datapath", "./test2");
 		allowUpdates = (props.getProperty("repo.allowupdates", "false"))
@@ -80,7 +82,7 @@ public class Repository {
 
 	public static void main(String[] args) {
 		PropertyConfigurator.configure("./log4j.properties");
-		init();
+		init(loadProperties());
 
 		if (args.length == 1) {
 
