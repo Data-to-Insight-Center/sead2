@@ -30,6 +30,7 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map.Entry;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipException;
 
@@ -52,7 +53,7 @@ public class BagGenerator {
 
 	private static final Logger log = Logger.getLogger(BagGenerator.class);
 
-	private ParallelScatterZipCreator scatterZipCreator = new ParallelScatterZipCreator();
+	private ParallelScatterZipCreator scatterZipCreator = new ParallelScatterZipCreator(Executors.newFixedThreadPool(Repository.getNumThreads()));
 	private ScatterZipOutputStream dirs = null;
 
 	private JSONArray aggregates = null;
@@ -183,9 +184,6 @@ public class BagGenerator {
 		createFileFromString(bagName + "/bagit.txt",
 				"BagIt-Version: 0.97\nTag-File-Character-Encoding: UTF-8");
 
-		// Generate DOI:
-		oremap.getJSONObject("describes").put("External Identifier",
-				Repository.createDOIForRO(bagID, RO));
 		if (oremap.getJSONObject("describes").has("Creator")) {
 			aggregation.put(
 					"Creator",
@@ -198,6 +196,15 @@ public class BagGenerator {
 					RO.expandPeople(RO.normalizeValues(oremap.getJSONObject(
 							"describes").get("Contact"))));
 		}
+		
+		// Generate DOI:
+		oremap.getJSONObject("describes").put("External Identifier",
+				Repository.createDOIForRO(bagID, RO));
+
+		oremap.getJSONObject("describes").put("Publication Date",
+				new SimpleDateFormat("yyyy-MM-dd").format(Calendar
+						.getInstance().getTime()));
+
 
 		Object context = oremap.get("@context");
 		// FixMe - should test that these labels don't have a different
@@ -212,6 +219,10 @@ public class BagGenerator {
 		if (!isInContext(context, "External Identifier")) {
 			addToContext(context, "External Identifier",
 					"http://purl.org/dc/terms/identifier");
+		}
+		if (!isInContext(context, "Publication Date")) {
+			addToContext(context, "Publication Date",
+					"http://purl.org/dc/terms/issued");
 		}
 
 		// Serialize oremap itself (pretty printed) - SEAD recommendation

@@ -41,6 +41,8 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.BasicCookieStore;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.impl.cookie.BasicClientCookie;
 import org.apache.http.util.EntityUtils;
 import org.apache.log4j.Logger;
@@ -53,18 +55,19 @@ public class C3PRPubRequestFacade {
 	private static final Logger log = Logger
 			.getLogger(C3PRPubRequestFacade.class);
 	BasicCookieStore cookieStore = new BasicCookieStore();
-	private int timeout = 5;
+	private int timeout = 30;
 	private RequestConfig config = RequestConfig.custom()
-	  .setConnectTimeout(timeout * 1000)
-	  .setConnectionRequestTimeout(timeout * 1000)
-	  .setSocketTimeout(timeout * 1000).build();
-	
-	private CloseableHttpClient client = HttpClientBuilder.create()
-			.setDefaultCookieStore(cookieStore).setDefaultRequestConfig(config).build();
+			.setConnectTimeout(timeout * 1000)
+			.setConnectionRequestTimeout(timeout * 1000)
+			.setSocketTimeout(timeout * 1000).build();
+
+	private PoolingHttpClientConnectionManager cm = new PoolingHttpClientConnectionManager();
+	private CloseableHttpClient client;
+			
 	Properties props = null;
 	String RO_ID = null;
 	String bearerToken = null;
-	
+
 	public static final String SUCCESS_STAGE = "Success";
 	public static final String FAILURE_STAGE = "Failure";
 	public static final String PENDING_STAGE = "Pending";
@@ -76,6 +79,10 @@ public class C3PRPubRequestFacade {
 	public C3PRPubRequestFacade(String RO_ID, Properties props) {
 		this.RO_ID = RO_ID;
 		this.props = props;
+		cm.setDefaultMaxPerRoute(Repository.getNumThreads());
+		cm.setMaxTotal(Repository.getNumThreads()>20 ? Repository.getNumThreads():20);
+		client = HttpClients.custom().setConnectionManager(cm).setDefaultCookieStore(cookieStore).setDefaultRequestConfig(config)
+				.build();
 	}
 
 	private String proxyIfNeeded(String urlString) {
@@ -100,17 +107,18 @@ public class C3PRPubRequestFacade {
 		if (o != null) {
 			if (o instanceof JSONArray) {
 				for (int i = 0; i < ((JSONArray) o).length(); i++) {
-                    String type = ((JSONArray) o).getString(i).trim();
-                    if ("http://cet.ncsa.uiuc.edu/2007/Collection".equals(type) ||
-                            "http://cet.ncsa.uiuc.edu/2016/Folder".equals(type)) {
+					String type = ((JSONArray) o).getString(i).trim();
+					if ("http://cet.ncsa.uiuc.edu/2007/Collection".equals(type)
+							|| "http://cet.ncsa.uiuc.edu/2016/Folder"
+									.equals(type)) {
 						return true;
 					}
 					// Check for Clowder type
 				}
 			} else if (o instanceof String) {
-                String type = ((String) o).trim();
-                if ("http://cet.ncsa.uiuc.edu/2007/Collection".equals(type) ||
-                        "http://cet.ncsa.uiuc.edu/2016/Folder".equals(type)) {
+				String type = ((String) o).trim();
+				if ("http://cet.ncsa.uiuc.edu/2007/Collection".equals(type)
+						|| "http://cet.ncsa.uiuc.edu/2016/Folder".equals(type)) {
 					return true;
 				}
 				// Check for Clowder type
@@ -277,7 +285,8 @@ public class C3PRPubRequestFacade {
 						log.trace("Retrieved: " + uri);
 						return response.getEntity().getContent();
 					}
-					log.debug("Status: " + response.getStatusLine().getStatusCode());
+					log.debug("Status: "
+							+ response.getStatusLine().getStatusCode());
 				} catch (ClientProtocolException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
@@ -288,7 +297,7 @@ public class C3PRPubRequestFacade {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
-				
+
 				return null;
 			}
 		};
@@ -358,7 +367,8 @@ public class C3PRPubRequestFacade {
 						log.trace("Adding unexpanded person: " + people[i]);
 						peopleArray.put(people[i]);
 					}
-					//Required to avoid some calls hanging in execute() even though we do not reuse the HttpGet object
+					// Required to avoid some calls hanging in execute() even
+					// though we do not reuse the HttpGet object
 					getPerson.reset();
 
 				} catch (UnsupportedEncodingException e1) {
@@ -372,11 +382,28 @@ public class C3PRPubRequestFacade {
 					e.printStackTrace();
 				} catch (IllegalArgumentException ia) {
 					ia.printStackTrace();
-				} 
+				}
 			}
 			log.debug("Expansion complete");
 		}
 		return peopleArray;
+	}
+
+	public String[] flattenPeople(JSONArray creators) {
+
+		ArrayList<String> creatorList = new ArrayList<String>();
+		for (int i = 0; i < creators.length(); i++) {
+			Object o = creators.get(i);
+			if (o instanceof String) {
+				creatorList.add((String) o);
+			} else if (o instanceof JSONObject) {
+				JSONObject jo = (JSONObject) o;
+				creatorList.add((jo.getString("givenName")
+						+ jo.getString("familyName") + "("
+						+ jo.getString("@id") + ")"));
+			}
+		}
+		return creatorList.toArray(new String[creatorList.size()]);
 	}
 
 	boolean echoToConsole = false;
@@ -409,13 +436,12 @@ public class C3PRPubRequestFacade {
 				cookieStore.addCookie(cookie);
 			}
 			postStatus.addHeader("accept", MediaType.APPLICATION_JSON);
-			String statusString = "{\"reporter\":\""
-					+ Repository.getID() + "\", \"stage\":\"" + stage
-					+ "\", \"message\":\"" + message + "\"}";
+			String statusString = "{\"reporter\":\"" + Repository.getID()
+					+ "\", \"stage\":\"" + stage + "\", \"message\":\""
+					+ message + "\"}";
 			StringEntity status = new StringEntity(statusString);
 			log.trace("Status: " + statusString);
-			postStatus.addHeader("content-type",
-					MediaType.APPLICATION_JSON);
+			postStatus.addHeader("content-type", MediaType.APPLICATION_JSON);
 			postStatus.setEntity(status);
 
 			CloseableHttpResponse response = client.execute(postStatus);
@@ -427,11 +453,13 @@ public class C3PRPubRequestFacade {
 						+ response.getStatusLine().getStatusCode());
 			}
 			// Must consume entity to allow connection to be released
-			// If this line is not here, the third try to send status will result in a 
-			// org.apache.http.conn.ConnectionPoolTimeoutException: Timeout waiting for connection from pool
+			// If this line is not here, the third try to send status will
+			// result in a
+			// org.apache.http.conn.ConnectionPoolTimeoutException: Timeout
+			// waiting for connection from pool
 			// (or a blocked call/hund program if timeouts weren't set
 			EntityUtils.consumeQuietly(response.getEntity());
-			
+
 		} catch (UnsupportedEncodingException e) {
 			// TODO Auto-generated catch block
 			log.error("Error posting status.", e);
@@ -445,12 +473,12 @@ public class C3PRPubRequestFacade {
 		} catch (IOException e) {
 			log.error("Error posting status.", e);
 			e.printStackTrace();
-		} catch(Exception e) {
+		} catch (Exception e) {
 			log.error("Odd Error posting status.", e);
 			e.printStackTrace();
 
 		}
-		
+
 		if (echoToConsole) {
 			System.out
 					.println("*********************Status Message******************************");
@@ -461,4 +489,5 @@ public class C3PRPubRequestFacade {
 					.println("*****************************************************************");
 		}
 	}
+
 }

@@ -27,11 +27,13 @@ import java.util.Properties;
 
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import edu.ucsb.nceas.ezid.EZIDException;
 import edu.ucsb.nceas.ezid.EZIDService;
 import edu.ucsb.nceas.ezid.profile.DataCiteProfile;
+import edu.ucsb.nceas.ezid.profile.DataCiteProfileResourceTypeValues;
 import edu.ucsb.nceas.ezid.profile.InternalProfile;
 
 public class Repository {
@@ -42,16 +44,26 @@ public class Repository {
 	private static String dataPath = null;
 	private static boolean allowUpdates = false;
 
+	private static int numThreads;
+
 	public Repository() {
 	}
 
-	public static void init(Properties properties) {
-		props = properties;
+	public static void init() {
+		props = loadProperties();
 		repoID = props.getProperty("repo.ID", "bob");
 		dataPath = props.getProperty("repo.datapath", "./test2");
 		allowUpdates = (props.getProperty("repo.allowupdates"))
 				.equalsIgnoreCase("true") ? true : false;
-
+		numThreads = Runtime.getRuntime().availableProcessors();
+		if (props.getProperty("repo.numthreads") != null) {
+			numThreads = Integer.parseInt(props.getProperty("repo.numthreads"));
+		}
+		log.debug("Using " + numThreads + " threads");
+	}
+	
+	public static int getNumThreads() {
+		return numThreads;
 	}
 
 	private static Properties loadProperties() {
@@ -68,7 +80,7 @@ public class Repository {
 
 	public static void main(String[] args) {
 		PropertyConfigurator.configure("./log4j.properties");
-		init(loadProperties());
+		init();
 
 		if (args.length == 1) {
 
@@ -124,15 +136,18 @@ public class Repository {
 			}
 		}
 
-		String creators = RO.getCreatorsString(RO.normalizeValues(RO
+		// After people expansion, we know that "Creator" is a JSONArray
+		String creators = RO.getCreatorsString(RO.flattenPeople((JSONArray) RO
 				.getOREMap().getJSONObject("describes").get("Creator")));
+
+		log.debug("Creators for DOI: " + creators);
 
 		HashMap<String, String> metadata = new LinkedHashMap<String, String>();
 		metadata.put(InternalProfile.TARGET.toString(), target);
 		metadata.put(DataCiteProfile.TITLE.toString(), ((JSONObject) RO
 				.getOREMap().get("describes")).getString("Title"));
 		metadata.put(DataCiteProfile.CREATOR.toString(), creators);
-		String rightsholderString = "SEAD (http://sead-data.net";
+		String rightsholderString = "SEAD (http://sead-data.net)";
 		if (RO.getPublicationRequest().has("Rights Holder")) {
 			rightsholderString = RO.getPublicationRequest().getString(
 					"Rights Holder")
@@ -143,6 +158,12 @@ public class Repository {
 		metadata.put(DataCiteProfile.PUBLISHER.toString(), rightsholderString);
 		metadata.put(DataCiteProfile.PUBLICATION_YEAR.toString(),
 				String.valueOf(Calendar.getInstance().get(Calendar.YEAR)));
+		// An RO is generically a DataCite Collection, but based on their
+		// definition and example,
+		// using Dataset, even when the RO has data + documentation is
+		// OK/preferred.
+		metadata.put(DataCiteProfile.RESOURCE_TYPE.toString(),
+				DataCiteProfileResourceTypeValues.DATASET.toString());
 
 		EZIDService ezid = new EZIDService(props.getProperty("ezid.url"));
 
@@ -161,14 +182,16 @@ public class Repository {
 		String shoulder = (permanent) ? props.getProperty("doi.shoulder.prod")
 				: props.getProperty("doi.shoulder.test");
 		String doi = null;
-		
+
 		if ((existingID != null) && (existingID.contains(shoulder))
 				&& allowUpdates) {
-			
+
 			existingID = "doi:" + existingID;
-			//Enhancement: Retrieve metadata first and find current landing page for this DOI - can then 
-			//decide what to do, e.g. to move/remove the old version, do something other than a 404 for the old landigng URL, etc.
-			
+			// Enhancement: Retrieve metadata first and find current landing
+			// page for this DOI - can then
+			// decide what to do, e.g. to move/remove the old version, do
+			// something other than a 404 for the old landigng URL, etc.
+
 			log.debug("Updating metadata for: " + existingID);
 			ezid.setMetadata(existingID, metadata);
 			doi = existingID;
