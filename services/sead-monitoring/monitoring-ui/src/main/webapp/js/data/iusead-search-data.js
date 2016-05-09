@@ -1,13 +1,13 @@
 $(document).ready(function (){
 
    $.ajax({
-        url: "./../log/landingPage",
+        url: "./../log/iucloudsearch",
         type: "get",
         contentType : 'application/json',
         success: function (result){
               var data=JSON.stringify(result);
               Morris.Line({
-                  element: 'morris-curbee-line-chart',
+                  element: 'morris-sead-search-line-chart',
                   data: result,
                   xkey: 'date',
                   ykeys: ['count'],

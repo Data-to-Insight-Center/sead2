@@ -232,4 +232,49 @@ public class SeadMonService {
         return Response.ok(jsonArray.toString()).build();
     }
 
+
+    @GET
+    @Path("/iucloudsearch")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getIUseadCloudSearchData(@QueryParam("start") int start,
+                                  @QueryParam("count") String countStr,
+                                  @QueryParam("event") String event,
+                                  @QueryParam("pidFilter") String pidFilter,
+                                  @QueryParam("fromDate") String fromDate,
+                                  @QueryParam("toDate") String toDate) throws ParseException {
+        JSONArray jsonArray = new JSONArray();
+
+        List<LogEvent> result = SeadMon.queryIUSeadCloudSearchLogs(null, null);
+        Date startDate = sdfDate.parse(result.get(0).getDate());
+        Date endDate = sdfDate.parse(result.get(result.size() - 1).getDate());
+        long duration = Math.round((endDate.getTime() - startDate.getTime())*1.0/1000);
+        String scale = DateTimeUtil.getTimeScale(duration);
+
+        Map<Long, Integer> stats = new HashMap<Long, Integer>();
+
+        for (LogEvent d1log : result) {
+            if (d1log.getDate() == null) {
+                continue;
+            }
+            Date date = sdfDate.parse(d1log.getDate());
+            long seconds = Math.round(date.getTime()*1.0 / 1000);
+            long time = DateTimeUtil.getScaledTime(seconds, scale);
+
+            if(stats.get(time) == null) {
+                stats.put(time, 1);
+            } else{
+                int count = stats.get(time);
+                stats.put(time, ++count);
+            }
+        }
+
+        for(Long date: stats.keySet()){
+            JSONObject dataObject = new JSONObject();
+            dataObject.put("date", DateTimeUtil.getDateTime(date, scale));
+            dataObject.put("count", stats.get(date));
+            jsonArray.put(dataObject);
+        }
+
+        return Response.ok(jsonArray.toString()).build();
+    }
 }
