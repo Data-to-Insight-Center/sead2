@@ -15,6 +15,7 @@
         <module>services/sead-monitoring</module>
         <module>va-workflow</module>
         <module>sead-doi-service</module>
+        <module>sead-nds-repository</module>
         <module>sda-agent</module>
         <module>metadata-gen</module> 
         <module>sead-matchmaker</module>
@@ -22,7 +23,6 @@
         <module>sead-api</module>
         <module>sead-dataone</module>
         <module>services/dataone-api</module>
-        <module>sead-nds-repository</module>
         <module>iu-sead-cloud-search</module>
   </modules>
 

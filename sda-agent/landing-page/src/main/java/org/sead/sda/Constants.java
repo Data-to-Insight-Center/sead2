@@ -29,6 +29,7 @@ public class Constants {
     public static String sdaPath;
     public static String allResearchObjects;
     public static String landingPage;
+    public static String pdtURL;
 
     static {
         try {
@@ -53,6 +54,7 @@ public class Constants {
         sdaPath = properties.getProperty("sda.path");
         allResearchObjects = properties.getProperty("all.research.objects");
         landingPage = properties.getProperty("landing.page");
+        pdtURL = properties.getProperty("pdt.url");
     }
 
 }

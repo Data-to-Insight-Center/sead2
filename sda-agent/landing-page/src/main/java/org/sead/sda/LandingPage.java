@@ -19,6 +19,9 @@
 
 package org.sead.sda;
 
+import com.sun.jersey.api.client.Client;
+import com.sun.jersey.api.client.ClientResponse;
+import com.sun.jersey.api.client.WebResource;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.json.simple.JSONArray;
@@ -31,11 +34,10 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.BufferedInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import javax.ws.rs.core.MediaType;
+import java.io.*;
 import java.net.URLDecoder;
+import java.net.URLEncoder;
 import java.util.*;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -367,13 +369,21 @@ public class LandingPage extends HttpServlet {
 	            if (valJSON instanceof JSONArray) {
 	                for(int i=0; i < ((JSONArray) valJSON).size() ; i++) {
 	                    if (((JSONArray) valJSON).get(i) != null) {
-	                        list.add(((JSONArray) valJSON).get(i).toString());
-	                    }
+                            if (propertyName.equals("Creator") || propertyName.equals("Contact")) {
+                                list.add(getPersonName(((JSONArray) valJSON).get(i).toString()));
+                            } else {
+                                list.add(((JSONArray) valJSON).get(i).toString());
+                            }
+                        }
 	                }
 	                properties.put(propertyName,list);
 	            } else {
-	                list.add(valJSON.toString());
-	                properties.put(propertyName, list);
+                    if (propertyName.equals("Creator") || propertyName.equals("Contact")) {
+                        list.add(getPersonName(valJSON.toString()));
+                    } else {
+                        list.add(valJSON.toString());
+                    }
+                    properties.put(propertyName, list);
 	            }
 	        } 
     	}else{
@@ -418,6 +428,50 @@ public class LandingPage extends HttpServlet {
     		}
     	}
 
-    } 
+    }
+
+    private String getPersonName(String creator) {
+        String personProfile = getPersonProfile(creator);
+        if (personProfile == null) {
+            return removeVivo(creator);
+        } else {
+            org.json.JSONObject profile = new org.json.JSONObject(personProfile);
+            String givenName = profile.getString("givenName");
+            String familyName = profile.getString("familyName");
+            if (givenName == null && familyName == null) {
+                return creator;
+            }
+            String fullName = (givenName == null ? "" : givenName) + " " + (familyName == null ? "" : familyName);
+            return fullName.trim();
+        }
+    }
+
+    private String getPersonProfile(String personID) {
+        String encodedID;
+        try {
+            encodedID = URLEncoder.encode(personID, "UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+            return null;
+        }
+
+        WebResource pdtResource = Client.create().resource(Constants.pdtURL);
+        ClientResponse response = pdtResource.path("people/" + encodedID)
+                .accept(MediaType.APPLICATION_JSON)
+                .type(MediaType.APPLICATION_JSON).get(ClientResponse.class);
+        if (response.getStatus() == 200) {
+            return response.getEntity(String.class);
+        } else {
+            return null;
+        }
+    }
+
+    private String removeVivo(String s) {
+        int i = s.indexOf(": http");
+        if (i > -1) {
+            s = s.substring(0, i).trim();
+        }
+        return s;
+    }
 
 }

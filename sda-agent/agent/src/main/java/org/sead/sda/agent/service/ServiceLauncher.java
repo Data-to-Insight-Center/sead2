@@ -63,7 +63,7 @@ public class ServiceLauncher {
             // assumes there's a log4j.properties file in the running directory
             PropertyConfigurator.configure("./log4j.properties");
             PropertiesReader.init(args[0]);
-            Repository.init(PropertiesReader.properties);
+            Repository.init();
             ServiceLauncher.start();
             if (!ServiceLauncher.startShimCalls()) {
                 System.out.println("Agent Server shutting down...");
