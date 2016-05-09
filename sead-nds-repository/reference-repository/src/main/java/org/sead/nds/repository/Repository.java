@@ -53,7 +53,7 @@ public class Repository {
 		props = loadProperties();
 		repoID = props.getProperty("repo.ID", "bob");
 		dataPath = props.getProperty("repo.datapath", "./test2");
-		allowUpdates = (props.getProperty("repo.allowupdates"))
+		allowUpdates = (props.getProperty("repo.allowupdates", "false"))
 				.equalsIgnoreCase("true") ? true : false;
 		numThreads = Runtime.getRuntime().availableProcessors();
 		if (props.getProperty("repo.numthreads") != null) {
