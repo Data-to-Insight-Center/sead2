@@ -5,9 +5,9 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.seadva.metadatagen.metagen.BaseMetadataGen;
 
-import java.net.HttpURLConnection;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
-import java.net.URLConnection;
 
 
 public class OREMetadataGen extends BaseMetadataGen {
@@ -189,6 +189,24 @@ public class OREMetadataGen extends BaseMetadataGen {
 
     private boolean head(String url)  {
         try {
+            URL urlCon = new URL(url);
+            InputStream inputStream = urlCon.openStream();
+            // Read in the first byte from the url.
+            int size = 1;
+            byte[] data = new byte[size];
+            int length = inputStream.read(data);
+            if (length == 1) {
+                //System.out.println("Success");
+                return true;
+            } else {
+                System.out.println("FAIL  : Cannot retrieve data from URL " + url);
+                return false;
+            }
+        } catch (IOException e) {
+            System.out.println("FAIL  : Exception thrown while calling the URL " + url + ", Error message : " + e.getMessage());
+            return false;
+        }
+        /*try {
             URLConnection conn = new URL(url).openConnection();
             conn.connect();
 
@@ -207,6 +225,6 @@ public class OREMetadataGen extends BaseMetadataGen {
         } catch (Exception e) {
             System.out.println("FAIL  : " + url + ", exception thrown while calling the URL");
             return false;
-        }
+        }*/
     }
 }
