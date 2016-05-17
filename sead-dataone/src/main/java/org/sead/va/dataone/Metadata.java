@@ -139,6 +139,17 @@ public class Metadata {
                 metadata.setChecksum(checksum);
             }
 
+            if (metaInfo.has(Constants.OBSOLETED_BY)) {
+                Identifier obsoletedBy = new Identifier();
+                obsoletedBy.setValue((String)metaInfo.get(Constants.OBSOLETED_BY));
+                metadata.setObsoletedBy(obsoletedBy);
+            }
+            if (metaInfo.has(Constants.OBSOLETES)) {
+                Identifier obsoletes = new Identifier();
+                obsoletes.setValue((String)metaInfo.get(Constants.OBSOLETES));
+                metadata.setObsoletes(obsoletes);
+            }
+
         } else {
             throw new NotFoundException(errorMsg);
         }

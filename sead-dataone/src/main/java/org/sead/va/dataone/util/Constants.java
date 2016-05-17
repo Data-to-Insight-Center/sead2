@@ -46,6 +46,17 @@ public class Constants {
     public final static String FIXITY_FORMAT = "fixityFormat";
     public final static String FIXITY_VAL = "fixityValue";
     public final static String INFINITE = "inf";
+    public final static String OBSOLETED_BY = "obsoletedBy";
+    public final static String OBSOLETES = "obsoletes";
+
+    //Synchronization schedule
+    public static String SYNC_YEAR;
+    public static String SYNC_MONTH;
+    public static String SYNC_MDAY;
+    public static String SYNC_WDAY;
+    public static String SYNC_HOUR;
+    public static String SYNC_MIN;
+    public static String SYNC_SEC;
 
 
     public static String dataonDbName;
@@ -91,6 +102,29 @@ public class Constants {
             }
             if (name.equals("base.url")) {
                 BASE_URL = value;
+            }
+
+            //Synchronization schedule
+            if (name.equals("year")) {
+                SYNC_YEAR = value;
+            }
+            if (name.equals("month")) {
+                SYNC_MONTH = value;
+            }
+            if (name.equals("day.of.month")) {
+                SYNC_MDAY = value;
+            }
+            if (name.equals("day.of.week")) {
+                SYNC_WDAY = value;
+            }
+            if (name.equals("hour")) {
+                SYNC_HOUR = value;
+            }
+            if (name.equals("minute")) {
+                SYNC_MIN = value;
+            }
+            if (name.equals("second")) {
+                SYNC_SEC = value;
             }
         }
     }
