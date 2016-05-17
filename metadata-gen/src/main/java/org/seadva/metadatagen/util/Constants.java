@@ -4,7 +4,6 @@ import org.apache.commons.io.IOUtils;
 
 import java.io.IOException;
 import java.io.StringWriter;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -16,6 +15,7 @@ public class Constants {
     public static String bagPath;
     public static String pdtURL;
     public static String dataoneURL;
+    public static boolean validateDownloadLinks;
 
     public static String FORMAT_IANA_SCHEME = "http://www.iana.org/assignments/media-types/";
     public static String titleTerm = "http://purl.org/dc/terms/title";
@@ -65,6 +65,9 @@ public class Constants {
                 }
                 if (name.equals("dataone.url")) {
                     dataoneURL = value;
+                }
+                if (name.equals("validate.download.links")) {
+                    validateDownloadLinks = Boolean.parseBoolean(value);
                 }
             }
 

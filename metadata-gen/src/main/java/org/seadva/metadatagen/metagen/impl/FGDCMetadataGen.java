@@ -102,7 +102,7 @@ public class FGDCMetadataGen extends BaseMetadataGen {
 
         Set<String>  creators = new HashSet<String>();
         if(aggregation.get(CREATOR) instanceof String){
-            String creator = getCreator((String) aggregation.get(CREATOR));
+            String creator = getPerson((String) aggregation.get(CREATOR));
             if(!creator.equals("")){
                 creators.add(creator);
                 creatorsList.add(creator);
@@ -112,7 +112,7 @@ public class FGDCMetadataGen extends BaseMetadataGen {
         } else if(aggregation.get(CREATOR) instanceof ArrayList) {
             ArrayList list = (ArrayList)aggregation.get(CREATOR);
             for(Object creator : list){
-                String creatorFullName = getCreator(creator.toString());
+                String creatorFullName = getPerson(creator.toString());
                 if(!creatorFullName.equals("")){
                     creators.add(creatorFullName);
                     creatorsList.add(creatorFullName);
@@ -122,13 +122,23 @@ public class FGDCMetadataGen extends BaseMetadataGen {
             }
         }
 
-        Set<String>  contacts = new HashSet<String>();
-        if(aggregation.get(CONTACT) instanceof String){
-            contacts.add(aggregation.get(CONTACT).toString());
-        } else if(aggregation.get(CONTACT) instanceof ArrayList) {
-            ArrayList list = (ArrayList)aggregation.get(CONTACT);
-            for(Object contact : list){
-                contacts.add(contact.toString());
+        Set<String> contacts = new HashSet<String>();
+        if (aggregation.get(CONTACT) instanceof String) {
+            String contact = getPerson((String) aggregation.get(CONTACT));
+            if (!contact.equals("")) {
+                contacts.add(contact);
+            } else {
+                contacts.add((String) aggregation.get(CONTACT));
+            }
+        } else if (aggregation.get(CONTACT) instanceof ArrayList) {
+            ArrayList list = (ArrayList) aggregation.get(CONTACT);
+            for (Object contactObject : list) {
+                String contact = getPerson(contactObject.toString());
+                if (!contact.equals("")) {
+                    contacts.add(contact);
+                } else {
+                    contacts.add(contactObject.toString());
+                }
             }
         }
 
@@ -296,7 +306,7 @@ public class FGDCMetadataGen extends BaseMetadataGen {
 
     }
 
-    private String getCreator(String id) {
+    private String getPerson(String id) {
         String creator = "";
         ClientResponse response = pdtWebService.path("people/" + URLEncoder.encode(id))
                 .accept("application/json")

@@ -4,10 +4,12 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.seadva.metadatagen.metagen.BaseMetadataGen;
+import org.seadva.metadatagen.util.Constants;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.net.URLConnection;
 
 
 public class OREMetadataGen extends BaseMetadataGen {
@@ -21,6 +23,7 @@ public class OREMetadataGen extends BaseMetadataGen {
     public static String SIMILAR_TO = "similarTo";
     public static String HAS_PART = "Has Part";
     public static String IDENTIFIER = "Identifier";
+    public static String SIZE = "Size";
 
     private String errorMsg = null;
 
@@ -142,7 +145,9 @@ public class OREMetadataGen extends BaseMetadataGen {
 
             String identifier = (String)partObject.get(IDENTIFIER);
 
-            if(partObject.has(SIMILAR_TO) && !validateDownloadLink(partObject.get(SIMILAR_TO))) {
+            double size = partObject.has(SIZE) && partObject.get(SIZE) instanceof String ? Double.parseDouble((String) partObject.get(SIZE)) : -1;
+
+            if(size > 0 && Constants.validateDownloadLinks && partObject.has(SIMILAR_TO) && !validateDownloadLink(partObject.get(SIMILAR_TO))) {
                 System.out.println(OREMetadataGen.class.getName() + " : ORE has invalid download link to file with identifier : '" + identifier + "' ");
                 this.errorMsg = "ORE has invalid download link to file with identifier : '" + identifier + "' ";
                 return false;
@@ -190,7 +195,10 @@ public class OREMetadataGen extends BaseMetadataGen {
     private boolean head(String url)  {
         try {
             URL urlCon = new URL(url);
-            InputStream inputStream = urlCon.openStream();
+            URLConnection con = urlCon.openConnection();
+            con.setConnectTimeout(0);
+            InputStream inputStream = con.getInputStream();
+
             // Read in the first byte from the url.
             int size = 1;
             byte[] data = new byte[size];
