@@ -23,6 +23,7 @@ import org.dataone.service.types.v1.*;
 import org.jibx.runtime.JiBXException;
 import org.sead.va.dataone.util.Constants;
 import org.sead.va.dataone.util.LogEvent;
+import org.sead.va.dataone.util.NotFoundException;
 import org.sead.va.dataone.util.SeadQueryService;
 
 import javax.servlet.http.HttpServletRequest;

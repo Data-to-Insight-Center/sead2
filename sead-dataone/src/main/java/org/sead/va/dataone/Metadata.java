@@ -16,17 +16,17 @@
 
 package org.sead.va.dataone;
 
+import com.mongodb.BasicDBObject;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
+import com.mongodb.util.JSON;
 import org.bson.Document;
 import org.dataone.service.types.v1.*;
 import org.jibx.runtime.JiBXException;
 import org.json.JSONObject;
-import org.sead.va.dataone.util.Constants;
-import org.sead.va.dataone.util.LogEvent;
-import org.sead.va.dataone.util.MongoDB;
-import org.sead.va.dataone.util.SeadQueryService;
+import org.sead.va.dataone.util.*;
+import org.sead.va.dataone.util.NotFoundException;
 import org.xml.sax.SAXException;
 
 import javax.servlet.http.HttpServletRequest;
@@ -197,6 +197,25 @@ public class Metadata {
         SeadQueryService.dataOneLogService.indexLog(readEvent);
 
         return Response.ok(SeadQueryService.marshal(metadata)).build();
+    }
+
+    @PUT
+    @Produces(MediaType.APPLICATION_XML)
+    public Response updateMetadata(@Context HttpServletRequest request,
+                                   @HeaderParam("user-agent") String userAgent,
+                                   @QueryParam("pid") String objectId,
+                                   @QueryParam("sysmeta") String systemMetadata) {
+
+        BasicDBObject metaInfo = (BasicDBObject) JSON.parse(systemMetadata);
+        BasicDBObject newMetaInfo = new BasicDBObject().append("$set",
+                new BasicDBObject().append(Constants.META_INFO, metaInfo));
+
+        fgdcCollection.updateOne(new BasicDBObject().append(Constants.META_INFO + "." + Constants.FGDC_ID, URLEncoder.encode(objectId)), newMetaInfo);
+        return Response
+                .status(Response.Status.OK)
+                .entity("true")
+                .type(MediaType.APPLICATION_XML)
+                .build();
     }
 
 }

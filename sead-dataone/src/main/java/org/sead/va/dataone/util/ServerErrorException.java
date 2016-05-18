@@ -14,19 +14,18 @@
  * limitations under the License.
 */
 
-package org.sead.va.dataone;
+package org.sead.va.dataone.util;
 
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-public class NotFoundException extends WebApplicationException {
-     public NotFoundException(String message) {
-
+public class ServerErrorException extends WebApplicationException {
+     public ServerErrorException(String message) {
          super(Response
-                 .status(Response.Status.NOT_FOUND)
-                 .header("DataONE-Exception-Name", "NotFound")
-                 .header("DataOne-Exception-Description", "The specified object does not exist on this node.")
+                 .status(Response.Status.INTERNAL_SERVER_ERROR)
+                 .header("DataONE-Exception-Name", "InternalServerError")
+                 .header("DataOne-Exception-Description", "Internal Server Error.")
                  .entity(message)
                  .type(MediaType.APPLICATION_XML)
                  .build());
