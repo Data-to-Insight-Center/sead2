@@ -16,6 +16,8 @@
 
 package org.sead.va.dataone;
 
+import org.sead.va.dataone.util.Constants;
+
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.MediaType;
@@ -30,8 +32,9 @@ public class Error {
 
     @POST
     public Response getError(String message) {
-        Email emailSender = new Email("gmail", "xxx@gmail.com", "pwd-xxx");
-        emailSender.sendEmail("mailing list-l@indiana.edu", "Error", message);
+        System.out.println("DataONE MN API - Error : " + message);
+        Email emailSender = new Email("gmail", Constants.emailUsername, Constants.emailPassword);
+        emailSender.sendEmail(Constants.emailUsername, "DataONE MN API - Error Message", message);
         return Response
                 .status(Response.Status.OK)
                 .entity("true")
