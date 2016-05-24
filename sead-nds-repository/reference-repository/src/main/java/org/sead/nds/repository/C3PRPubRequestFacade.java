@@ -63,7 +63,7 @@ public class C3PRPubRequestFacade {
 
 	private PoolingHttpClientConnectionManager cm = new PoolingHttpClientConnectionManager();
 	private CloseableHttpClient client;
-			
+
 	Properties props = null;
 	String RO_ID = null;
 	String bearerToken = null;
@@ -80,9 +80,11 @@ public class C3PRPubRequestFacade {
 		this.RO_ID = RO_ID;
 		this.props = props;
 		cm.setDefaultMaxPerRoute(Repository.getNumThreads());
-		cm.setMaxTotal(Repository.getNumThreads()>20 ? Repository.getNumThreads():20);
-		client = HttpClients.custom().setConnectionManager(cm).setDefaultCookieStore(cookieStore).setDefaultRequestConfig(config)
-				.build();
+		cm.setMaxTotal(Repository.getNumThreads() > 20 ? Repository
+				.getNumThreads() : 20);
+		client = HttpClients.custom().setConnectionManager(cm)
+				.setDefaultCookieStore(cookieStore)
+				.setDefaultRequestConfig(config).build();
 	}
 
 	private String proxyIfNeeded(String urlString) {
@@ -276,28 +278,40 @@ public class C3PRPubRequestFacade {
 
 		return new InputStreamSupplier() {
 			public InputStream get() {
-				try {
-					HttpGet getMap = createNewGetRequest(new URI(uri), null);
-					log.trace("Retrieving: " + uri);
-					CloseableHttpResponse response;
-					response = client.execute(getMap);
-					if (response.getStatusLine().getStatusCode() == 200) {
-						log.trace("Retrieved: " + uri);
-						return response.getEntity().getContent();
+				int tries = 0;
+				while (tries < 3) {
+					try {
+						HttpGet getMap = createNewGetRequest(new URI(uri), null);
+						log.trace("Retrieving: " + uri);
+						CloseableHttpResponse response;
+						response = client.execute(getMap);
+						if (response.getStatusLine().getStatusCode() == 200) {
+							log.trace("Retrieved: " + uri);
+							return response.getEntity().getContent();
+						}
+						log.debug("Status: "
+								+ response.getStatusLine().getStatusCode());
+						tries++;
+					} catch (ClientProtocolException e) {
+						tries += 3;
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					} catch (IOException e) {
+						// Retry if this is a potentially temporary error such
+						// as a timeout
+						tries++;
+						log.warn("Attempt# " + tries
+								+ " : Unable to retrieve file: " + uri, e);
+						if (tries == 3) {
+							log.error("Final attempt failed for " + uri);
+						}
+						e.printStackTrace();
+					} catch (URISyntaxException e) {
+						tries += 3;
+						// TODO Auto-generated catch block
+						e.printStackTrace();
 					}
-					log.debug("Status: "
-							+ response.getStatusLine().getStatusCode());
-				} catch (ClientProtocolException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				} catch (IOException e) {
-					log.error("Unable to retrieve file: " + uri, e);
-					e.printStackTrace();
-				} catch (URISyntaxException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
 				}
-
 				return null;
 			}
 		};
