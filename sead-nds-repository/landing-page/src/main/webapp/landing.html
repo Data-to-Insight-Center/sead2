@@ -7,10 +7,19 @@
 <link href="css/jquery.treetable.css" rel="stylesheet" media="screen">
 <link href="css/jquery.treetable.theme.default.css" rel="stylesheet"
 	media="screen">
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+  ga('create', <our code>, 'auto');
+  ga('send', 'pageview');
+
+</script>
 
 
-
-<title>SEAD NDS Repository</title>
+<title>SEAD Reference Repository</title>
 </head>
 <body>
 
@@ -18,6 +27,9 @@
 	<script
 		src="//ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
 	<script src="bootstrap/js/bootstrap.js"></script>
+
+	<script src="js/ajax-loading.js"></script>
+<script src="js/he.js"></script>
 	<script src="js/landing.js"></script>
 	<script src="js/filesize.min.js"></script>
 
@@ -84,9 +96,10 @@
 					<div class='mlabel col-xs-3'>Data Source:</div>
 					<div class='col-xs-6 notes'>
 						<div>
-							This data was published through the <a id='project' target='_blank'></a> Project
-							Space operated by <a href="http://sead-data.net" target='_blank'>SEAD</a>. It is
-							a version of a <a id='livecopy'>live data collection</a> that may
+							This data was published through the <a id='project'
+								target='_blank'></a> Project Space operated by <a
+								href="http://sead-data.net" target='_blank'>SEAD</a>. It is a
+							version of a <a id='livecopy'>live data collection</a> that may
 							have additional published versions or have been updated since
 							publication.While the live copy and/or the Project Space may be
 							accessed controlled, and may not exist as long as this published
@@ -101,20 +114,25 @@
 
 								<div class="topic">Download Formatting:</div>
 								This data publication is archived as a single <a
-									href="https://commons.apache.org/proper/commons-compress/zip.html" target='_blank'>Zip</a>
-								file, formatted according to the <a
-									href="https://tools.ietf.org/html/draft-kunze-bagit-11" target='_blank'>BagIT
-									specification</a>, with metadata documented according to the Open
-								Archives Initiative Object Reuse and Exchange (<a
-									href="https://www.openarchives.org/ore/" target='_blank'>ORE</a>) specification
-								(<a href="http://www.openarchives.org/ore/0.9/jsonld" target='_blank'>serialized
-									as JSON-LD</a>, integrated with BagIT according to the <a
-									href="http://jenkins-1.dataone.org/documentation/unstable/API-Documentation-development/design/DataPackage.html#package-serialization-using-bagit" target='_blank'>convention</a>
-								developed within the <a href="http://dataone.org" target='_blank'>DataOne
-									project</a>.)
+									href="https://commons.apache.org/proper/commons-compress/zip.html"
+									target='_blank'>Zip</a> file, formatted according to the <a
+									href="https://tools.ietf.org/html/draft-kunze-bagit-11"
+									target='_blank'>BagIT specification</a>, with metadata
+								documented according to the Open Archives Initiative Object
+								Reuse and Exchange (<a href="https://www.openarchives.org/ore/"
+									target='_blank'>ORE</a>) specification (<a
+									href="http://www.openarchives.org/ore/0.9/jsonld"
+									target='_blank'>serialized as JSON-LD</a>, integrated with
+								BagIT according to the <a
+									href="http://jenkins-1.dataone.org/documentation/unstable/API-Documentation-development/design/DataPackage.html#package-serialization-using-bagit"
+									target='_blank'>convention</a> developed within the <a
+									href="http://dataone.org" target='_blank'>DataOne project</a>.)
 							</div>
 						</div>
 					</div>
 				</div>
+			</div>
+		</div>
+	</div>
 </body>
 </html>
