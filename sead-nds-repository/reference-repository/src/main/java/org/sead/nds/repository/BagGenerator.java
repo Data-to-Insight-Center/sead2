@@ -451,7 +451,7 @@ public class BagGenerator {
 
 				if (child.has("SHA1 Hash")) {
 					if (hashtype != null && !hashtype.equals("SHA1 Hash")) {
-						log.warn("Multiple has values in use - not supported");
+						log.warn("Multiple hash values in use - not supported");
 					}
 					hashtype = "SHA1 Hash";
 					if (sha1Map.containsValue(child.getString("SHA1 Hash"))) {

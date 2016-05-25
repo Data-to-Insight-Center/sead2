@@ -72,7 +72,7 @@ public class Repository {
 		return numThreads;
 	}
 
-	private static Properties loadProperties() {
+	public static Properties loadProperties() {
 		Properties props = new Properties();
 		try {
 			props.load(Repository.class
