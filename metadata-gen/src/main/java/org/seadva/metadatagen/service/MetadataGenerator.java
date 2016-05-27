@@ -36,6 +36,7 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
+import java.net.URI;
 import java.net.URISyntaxException;
 
 /**
@@ -165,8 +166,17 @@ public class MetadataGenerator {
                     .type("application/json")
                     .post(ClientResponse.class, oreMapDocument.toJson().toString());
 
-            if(postResponse.getStatus() == 200) {
+            if(postResponse.getStatus() == 200 && !oreMetadataGen.getSkipValidation()) {
                 return Response.ok(new JSONObject().put("id", mapId).toString()).build();
+            } else if(postResponse.getStatus() == 200 && oreMetadataGen.getSkipValidation()) {
+                try {
+                    return Response.created(new URI(newMapURL))
+                            .entity(new JSONObject().put("id", mapId).put("warning", oreMetadataGen.getErrorMsg()).toString())
+                            .build();
+                } catch (URISyntaxException e) {
+                    System.out.println(MetadataGenerator.class.getName() + ": Error while persisting OREMap : " + e.getMessage());
+                    return Response.serverError().build();
+                }
             } else {
                 System.out.println(MetadataGenerator.class.getName() + ": Error while persisting OREMap in PDT - Response : " + postResponse.getStatus());
                 return Response.serverError().build();

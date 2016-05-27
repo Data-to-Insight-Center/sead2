@@ -8,6 +8,7 @@ import org.seadva.metadatagen.util.Constants;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.net.URLConnection;
 
@@ -26,9 +27,15 @@ public class OREMetadataGen extends BaseMetadataGen {
     public static String SIZE = "Size";
 
     private String errorMsg = null;
+    private boolean skipValidation;
 
     public OREMetadataGen() {
         errorMsg = "";
+        skipValidation = false;
+    }
+
+    public boolean getSkipValidation() {
+        return skipValidation;
     }
 
     public String getErrorMsg() {
@@ -147,10 +154,16 @@ public class OREMetadataGen extends BaseMetadataGen {
 
             double size = partObject.has(SIZE) && partObject.get(SIZE) instanceof String ? Double.parseDouble((String) partObject.get(SIZE)) : -1;
 
-            if(size > 0 && Constants.validateDownloadLinks && partObject.has(SIMILAR_TO) && !validateDownloadLink(partObject.get(SIMILAR_TO))) {
-                System.out.println(OREMetadataGen.class.getName() + " : ORE has invalid download link to file with identifier : '" + identifier + "' ");
-                this.errorMsg = "ORE has invalid download link to file with identifier : '" + identifier + "' ";
-                return false;
+            if(size > 0 && Constants.validateDownloadLinks && partObject.has(SIMILAR_TO)) {
+                if(!validateDownloadLink(partObject.get(SIMILAR_TO))) {
+                    System.out.println(OREMetadataGen.class.getName() + " : ORE has invalid download link to file with identifier : '" + identifier + "' ");
+                    this.errorMsg = "ORE has invalid download link to file with identifier : '" + identifier + "' ";
+                    return false;
+                } else if(this.skipValidation == true) {
+                    System.out.println(OREMetadataGen.class.getName() + " : ORE has a file download link that is not working at the moment : '" + partObject.get(SIMILAR_TO) + "' ");
+                    this.errorMsg = "ORE has a file download link that is not working at the moment : '" + partObject.get(SIMILAR_TO) + "' ";
+                    break;
+                }
             }
         }
 
@@ -196,13 +209,14 @@ public class OREMetadataGen extends BaseMetadataGen {
         try {
             URL urlCon = new URL(url);
             URLConnection con = urlCon.openConnection();
-            con.setConnectTimeout(0);
+            con.setConnectTimeout(5000);
             InputStream inputStream = con.getInputStream();
 
             // Read in the first byte from the url.
             int size = 1;
             byte[] data = new byte[size];
             int length = inputStream.read(data);
+            inputStream.close();
             if (length == 1) {
                 //System.out.println("Success");
                 return true;
@@ -212,6 +226,10 @@ public class OREMetadataGen extends BaseMetadataGen {
             }
         } catch (IOException e) {
             System.out.println("FAIL  : Exception thrown while calling the URL " + url + ", Error message : " + e.getMessage());
+            if(e instanceof SocketTimeoutException){
+                this.skipValidation = true;
+                return true;
+            }
             return false;
         }
         /*try {
