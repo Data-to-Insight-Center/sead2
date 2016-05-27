@@ -1,5 +1,37 @@
 var seadData = {};
 var id = null;
+var uriRoot = "./api/researchobjects/";
+
+var loading = $.loading({
+	// wrap div
+	// set the loading html wrap tag id
+	id : 'ajaxLoading',
+	// wrap tag z-index
+	zIndex : '1000',
+	// wrap tag background
+	background : 'rgba(0, 0, 0, 0.0)',
+	// min show time
+	minTime : 200,
+	// wrap tag border-radius
+	radius : '4px',
+	// wrap width
+	width : '85px',
+	height : '85px',
+
+	// loading img/gif
+	imgPath : 'images/ajax-loader.svg',
+	imgWidth : '180px',
+	imgHeight : '180px',
+
+	// loading text
+	tip : 'loading...',
+	// text font size
+	fontSize : '14px',
+	// text font color
+	fontColor : '#fff'
+});
+
+$body = $("body");
 
 seadData.getId = function() {
 	if (id == null) {
@@ -14,37 +46,32 @@ seadData.getId = function() {
 	return decodeURIComponent(id);
 }
 
-seadData.getMapAjax = function() {
+seadData.getDescAjax = function() {
 
 	return $.ajax({
 		type : "GET",
 		timeout : '10000',
-		url : "./api/researchobjects/" + seadData.getId(),
+		url : uriRoot + seadData.getId() + "/metadata",
 		dataType : "json"
 	});
 }
 
-seadData.buildGrid = function(map) {
-	$('#Title').append(map.describes.Title);
+seadData.buildGrid = function(describes) {
+	$('#Title').append(describes.Title);
 
-	var pubdate = map["Publication Date"];
-	if (pubdate == null) {
-		// Backwards compatibility - use map creation date if pub date is not
-		// recorded by repo.
-		pubdate = map["Creation Date"];
-	}
+	var pubdate = describes["Publication Date"];
+
 	$('#Date').append(pubdate);
 
-	$('#contacts').append(seadData.formatPeople(map.describes.Contact));
-	$('#abstract').append(map.describes.Abstract);
+	$('#contacts').append(seadData.formatPeople(describes.Contact));
+	$('#abstract').append($('<pre/>').text(he.decode(describes.Abstract)));
 
-	var p = seadData.formatPeople(map.describes.Creator);
+	var p = seadData.formatPeople(describes.Creator);
 	$('#creators').append(p);
-	$('#ID').append(
-			$('<div/>').text(map.describes["External Identifier"]));
-	$('#keywords').append(seadData.formatKeywords(map.describes.Keyword));
-	var lic = map.describes.License;
-	var lic = map.describes.License;
+	$('#ID').append($('<div/>').text(describes["External Identifier"]));
+	$('#keywords').append(seadData.formatKeywords(describes.Keyword));
+	var lic = describes.License;
+
 	if (lic != null) {
 		if (lic.startsWith("http")) {
 			var i = lic.indexOf('://creativecommons.org/licenses/');
@@ -56,24 +83,27 @@ seadData.buildGrid = function(map) {
 				}
 				type = type.substring(0, end);
 				$('#license').append(
-						$('<a/>').attr('href', lic).attr('target','_blank').append(
-								$('<img/>').attr('src',
-										'./images/' + type + ".png").attr(
-										'alt', 'CC-' + type)));
+						$('<a/>').attr('href', lic).attr('target', '_blank')
+								.append(
+										$('<img/>').attr('src',
+												'./images/' + type + ".png")
+												.attr('alt', 'CC-' + type)));
 			} else {
 				i = lic.indexOf('://creativecommons.org/publicdomain/zero/1.0');
 				if (i != -1) {
 					$('#license').append(
-							$('<a/>').attr('href', lic).attr('target','_blank').append(
-									$('<img/>')
-											.attr('src', './images/zero.png')
-											.attr('alt', 'CC0')));
+							$('<a/>').attr('href', lic)
+									.attr('target', '_blank').append(
+											$('<img/>').attr('src',
+													'./images/zero.png').attr(
+													'alt', 'CC0')));
 				} else {
 					i = lic
 							.indexOf('://creativecommons.org/publicdomain/mark/1.0');
 					if (i != -1) {
 						$('#license').append(
-								$('<a/>').attr('href', lic).attr('target','_blank').append(
+								$('<a/>').attr('href', lic).attr('target',
+										'_blank').append(
 										$('<img/>').attr('src',
 												'./images/publicdomain.png')
 												.attr('alt',
@@ -93,40 +123,43 @@ seadData.buildGrid = function(map) {
 					.append($('<tbody/>')));
 	// Using timeout Allows metadata to display
 	setTimeout(function() {
-		seadData.loadChildren(map.describes, map.describes, null,
-				map.describes.Title);
+		loading.open();
+		seadData.loadChildren(describes, null, describes.Title);
 		activateTable();
-	}, 2);
+		loading.close();
+	}, 1);
 	// seadData.calcTotalSize(map.describes.aggregates);
 	// seadData.calcTotalSize(map.describes.aggregates);
-	var liveCopy = map.describes["Is Version Of"];
+	var liveCopy = describes["Is Version Of"];
 	// Clowder build 113 kludge
 	if (liveCopy == null) {
-		liveCopy = map.describes["Is Version of"];
+		liveCopy = describes["Is Version of"];
 	}
 
 	// 1.5 Kludge
 	if (!liveCopy.startsWith('http')) {
-		var similar = map.describes.similarTo;
+		var similar = describes.similarTo;
 		similar = similar.substring(0, similar.indexOf('/resteasy'));
 		liveCopy = similar + '#collection?uri=' + liveCopy;
 	}
-	$('#project').attr('href', map.describes["Publishing Project"]).text(
-			map.describes["Publishing Project Name"]);
+	$('#project').attr('href', describes["Publishing Project"]).text(
+			describes["Publishing Project Name"]);
 
-	$('#livecopy').attr('href', liveCopy).attr('target','_blank');
+	$('#livecopy').attr('href', liveCopy).attr('target', '_blank');
 	$('#actions').append(
-			($('<a/>').attr('href', './api/researchobjects/' + seadData.getId()
-					+ '/bag')).attr('target','_blank').attr('download',
+			($('<a/>').attr('href', uriRoot + seadData.getId() + '/bag')).attr(
+					'target', '_blank').attr('download',
 					seadData.getId().replace(/\W+/g, "_") + '.zip').append(
 					$('<div/>').attr('id', 'download').attr('class',
 							'btn btn-primary col-xs-6').text(
 							'Download Whole Publication')));
 	$('#actions').append(
-			($('<a/>').attr('href', './api/researchobjects/' + seadData.getId()
-					+ '/meta/oremap.jsonld.txt')).attr('target','_blank').attr('download',
-					seadData.getId().replace(/\W+/g, "_") + 'oremap.json')
-					.append(
+			($('<a/>').attr('href', uriRoot + seadData.getId()
+					+ '/meta/oremap.jsonld.txt')).attr('target', '_blank')
+					.attr(
+							'download',
+							seadData.getId().replace(/\W+/g, "_")
+									+ 'oremap.json').append(
 							$('<div/>').attr('id', 'map').attr('class',
 									'btn btn-primary col-xs-6').text(
 									'Download Metadata Only')));
@@ -179,21 +212,28 @@ seadData.formatPerson = function(person) {
 				title = person.email;
 			}
 			return $('<div>').html(
-					'<a href="' + person['@id'] + '" target= "_blank" title="' + title + '">'
-							+ person.familyName + ', ' + person.givenName
-							+ '</a>');
+					'<a href="' + person['@id'] + '" target= "_blank" title="'
+							+ title + '">' + person.familyName + ', '
+							+ person.givenName + '</a>');
 		}
 	}
 }
+
+var aggTitle = "";
 
 seadData.init = function() {
 
 	$.when(
 
-	seadData.getMapAjax()).done(function(map) {
+	seadData.getDescAjax()).done(
+			function(describes) {
+				// Analytics tracking
+				aggTitle = describes.Title;
+				ga('send', 'event', aggTitle + '::' + seadData.getId(),
+						'View Publication', describes.Title);
 
-		seadData.buildGrid(map);
-	}).fail(function(xhr, textStatus, errorThrown) {
+				seadData.buildGrid(describes);
+			}).fail(function(xhr, textStatus, errorThrown) {
 		seadData.problem(xhr, textStatus, errorThrown);
 	});
 }
@@ -217,51 +257,51 @@ seadData.problem = function(xhr, textStatus, errorThrown) {
 
 seadData.init();
 
-seadData.loadChildren = function loadChildren(agg, parent, parentid, parentpath) {
-	var children = parent["Has Part"];
+seadData.getChildAjax = function(id) {
+
+	return $.ajax({
+		async : true,
+		type : "GET",
+		timeout : '150000',
+		url : uriRoot + seadData.getId() + '/metadata/'
+				+ encodeURIComponent(id),
+		dataType : "json"
+	});
+}
+
+seadData.loadChildren = function loadChildren(agg, parentid, parentPath) {
+	var children = agg["Has Part"];
 	if (Array.isArray(children)) {
 		for (var i = 0; i < children.length; i++) {
-			var child = $.grep(agg.aggregates, function(e) {
-				return e['Identifier'] === children[i];
-			});
-			child = child[0];
-			if (seadData.isCollection(child)) {
-				$('#datatable tbody').append(
-						getCollectionRow(parentid, i, child.Title,
-								child.Identifier));
-				var newId = i;
-				if (parentid != null) {
-					newId = parentid + '-' + newId;
-				}
-				seadData.loadChildren(agg, child, newId, parentpath + '%2F'
-						+ child.Title);
-
-			} else {
-
-				var fileSize = child.Size;
-
-				// Clowder Build 113 kludge
-				if (fileSize == null) {
-					fileSize = child.size;
-				}
-				$('#datatable tbody').append(
-						getDataRow(parentid, i, child.Title, parentpath + '%2F'
-								+ child.Title, fileSize));
-			}
+			seadData.loadChild(agg, children[i], i, parentid, parentPath);
 
 		}
+
 	}
 
 }
 
-seadData.calcTotalSize = function calcTotalSize(list) {
-	var total = 0;
-	for (var i = 0; i < list.length; i++) {
-		if (list[i].hasOwnProperty("Size")) {
-			total += parseInt(list[i].Size);
+seadData.loadChild = function loadChild(agg, childId, id, parentid, parentpath) {
+	for (var j = 0; j < agg.aggregates.length; j++) {
+		if (agg.aggregates[j].Identifier == childId) {
+			var child = agg.aggregates[j];
+			if (seadData.isCollection(child)) {
+				$('#datatable tbody').append(
+						getCollectionRow(parentid, id, child.Title,
+								child.Identifier, parentpath));
+			} else {
+				var fileSize = child.Size;
+				// Clowder Build 113
+				// kludge
+				if (fileSize == null) {
+					fileSize = child.size;
+				}
+				$('#datatable tbody').append(
+						getDataRow(parentid, id, child.Title, parentpath
+								+ '%2F' + child.Title, fileSize));
+			}
 		}
 	}
-	alert(total);
 }
 
 seadData.isCollection = function isCollection(item) {
@@ -269,10 +309,11 @@ seadData.isCollection = function isCollection(item) {
 		return true;
 	var type = item['@type'];
 	if (typeof type == 'string') {
-		return ((type === "http://cet.ncsa.uiuc.edu/2007/Collection")||(type === 'http://cet.ncsa.uiuc.edu/2016/Folder'));
+		return ((type === "http://cet.ncsa.uiuc.edu/2007/Collection") || (type === 'http://cet.ncsa.uiuc.edu/2016/Folder'));
 	} else {
 		for (var i = 0; i < type.length; i++) {
-			if ((type[i] === "http://cet.ncsa.uiuc.edu/2007/Collection")||(type === 'http://cet.ncsa.uiuc.edu/2016/Folder'))
+			if ((type[i] === "http://cet.ncsa.uiuc.edu/2007/Collection")
+					|| (type === 'http://cet.ncsa.uiuc.edu/2016/Folder'))
 				return true;
 		}
 	}
@@ -295,20 +336,27 @@ function getDataRow(parentId, childId, name, uri, size) {
 	}
 
 	var id = seadData.getId();
-	// id = id.replace(/\W+/g, "_");
+
+	// with Analytics tracking
 
 	newRow.append($('<td/>').append(
 			$('<span/>').addClass('file').append(
 					$('<a/>').attr('href',
-							'./api/researchobjects/' + id + '/data/' + uri).attr('target','_blank')
+							'./api/researchobjects/' + id + '/data/' + uri)
+							.attr('target', '_blank').attr(
+									"onclick",
+									"ga('send', 'event', '" + aggTitle + '::'
+											+ id + "', 'File Download', '" + id
+											+ "/data/" + uri + "');")
 							.html(name))));
+
 	newRow.append($('<td/>').html(filesize(parseInt(size), {
 		base : 10
 	})));
 	return (newRow);
 }
 
-function getCollectionRow(parentId, childId, name, uri, size) {
+function getCollectionRow(parentId, childId, name, uri, parentpath) {
 	var newRow = $('<tr/>');
 	if (parentId != null) {
 		childId = parentId + '-' + childId;
@@ -317,9 +365,9 @@ function getCollectionRow(parentId, childId, name, uri, size) {
 	if (parentId != null) {
 		newRow.attr('data-tt-parent-id', parentId);
 	}
-	newRow
-			.append($('<td/>').append(
-					$('<span/>').addClass('folder').text(name)));
+	newRow.append($('<td/>').append(
+			$('<span/>').addClass('folder').attr('iid', uri).attr('path',
+					parentpath + '%2F' + name).text(name)));
 	newRow.append($('<td/>').html('--'));
 	// return newRow;
 	return newRow.add($('<tr/>').attr('data-tt-id', childId + "-0").attr(
@@ -328,9 +376,93 @@ function getCollectionRow(parentId, childId, name, uri, size) {
 
 function activateTable() {
 	var table = $('#datatable table');
-	table.treetable({
-		expandable : true
+	table
+			.treetable({
+				expandable : true,
+				onNodeCollapse : function() {
+					var node = this;
+					table.treetable("unloadBranch", node);
+				},
+				onNodeExpand : function() {
+					loading.open();
+					var node = this;
+					var code = node.row[0].innerHTML;
+					var test = code.substring(code.indexOf('iid') + 5);
+					var tagID = test.substring(0, test.indexOf('"'));
+					var pathString = code.substring(code.indexOf('path') + 6);
+					var parentpath = pathString.substring(0, pathString
+							.indexOf('"'));
 
-	});
+					$
+							.when(seadData.getChildAjax(tagID))
+							.done(
+									function(aggresource) {
 
+										table.treetable("unloadBranch", node);
+										// Analytics tracking
+										ga('send', 'event', aggTitle + '::'
+												+ seadData.getId(),
+												'View Contents',
+												aggresource.Title + '::'
+														+ tagID);
+
+										var rows = $();
+										var children = aggresource["Has Part"];
+										if (Array.isArray(children)) {
+											for (var i = children.length - 1; i >= 0; i--) {
+												var child = $
+														.grep(
+																aggresource.aggregates,
+																function(e) {
+																	return e['Identifier'] === children[i];
+																});
+												child = child[0];
+												if (seadData
+														.isCollection(child)) {
+													var newrow = getCollectionRow(
+															node.id, i,
+															child.Title,
+															child.Identifier,
+															parentpath);
+													rows = rows.add(newrow);
+												} else {
+													var fileSize = child.Size;
+													// Clowder Build 113
+													// kludge
+													if (fileSize == null) {
+														fileSize = child.size;
+													}
+													rows = rows
+															.add(getDataRow(
+																	node.id,
+																	i,
+																	child.Title,
+																	parentpath
+																			+ '%2F'
+																			+ child.Title,
+																	fileSize));
+												}
+												if (i % 100 == 0) {
+													$(
+															'#datatable table tr[data-tt-id="'
+																	+ node.id
+																	+ '"]')
+															.after(rows);
+													$('#datatable table')
+															.treetable(
+																	"loadBranch",
+																	node, rows);
+													rows = $();
+												}
+											}
+										}
+										loading.close();
+									}).fail(
+									function(xhr, textStatus, errorThrown) {
+										seadData.problem(xhr, textStatus,
+												errorThrown);
+									});
+				}
+
+			});
 }

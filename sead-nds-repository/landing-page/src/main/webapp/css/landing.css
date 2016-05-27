@@ -62,4 +62,54 @@ a:visited {
 #license a img {
 height: 40px;
 }
+//Loading spinner
+/* Start by setting display:none to make this hidden.
+   Then we position it in relation to the viewport window
+   with position:fixed. Width, height, top and left speak
+   speak for themselves. Background we set to 80% white with
+   our animation centered, and no-repeating */
+.modal {
+    display:    none;
+    position:   fixed;
+    z-index:    1000;
+    top:        0;
+    left:       0;
+    height:     100%;
+    width:      100%;
+    background: rgba( 255, 255, 255, .8 ) 
+                url('http://sampsonresume.com/labs/pIkfp.gif') 
+                50% 50% 
+                no-repeat;
+}
 
+/* When the body has the loading class, we turn
+   the scrollbar off with overflow:hidden */
+body.loading {
+    overflow: hidden;   
+}
+
+/* Anytime the body has the loading class, our
+   modal element will be visible */
+body.loading .modal {
+    display: block;
+}
+
+#abstract pre {
+    background-color: #f5f5f5;
+    font-size: 14px;
+    color: #444;
+    border: none;
+     font-family: "lato";
+    padding: 4px;
+    line-height: 18px;
+    word-break: break-word;
+    word-wrap: break-word;
+    white-space: pre-wrap;
+    overflow: auto;
+    max-height:400px;
+}
+
+#datatable {
+overflow:auto;
+max-height: 600px;
+}

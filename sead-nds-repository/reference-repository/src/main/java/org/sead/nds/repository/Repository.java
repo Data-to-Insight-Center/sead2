@@ -53,8 +53,12 @@ public class Repository {
     // therefore don't load properties inside the init method.
 	public static void init(Properties properties) {
 		props = properties;
-		repoID = props.getProperty("repo.ID", "bob");
-		dataPath = props.getProperty("repo.datapath", "./test2");
+		repoID = props.getProperty("repo.ID");
+		dataPath = props.getProperty("repo.datapath");
+		
+		if((repoID ==null) || (dataPath==null)) {
+			log.error("Unable to find repoId and dataPath in proporties file");
+		}
 		allowUpdates = (props.getProperty("repo.allowupdates", "false"))
 				.equalsIgnoreCase("true") ? true : false;
 		numThreads = Runtime.getRuntime().availableProcessors();
@@ -68,7 +72,7 @@ public class Repository {
 		return numThreads;
 	}
 
-	private static Properties loadProperties() {
+	public static Properties loadProperties() {
 		Properties props = new Properties();
 		try {
 			props.load(Repository.class
