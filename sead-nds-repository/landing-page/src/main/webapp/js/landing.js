@@ -46,17 +46,43 @@ seadData.getId = function() {
 	return decodeURIComponent(id);
 }
 
-seadData.getDescAjax = function() {
+seadData.getAggregationAjax = function() {
 
 	return $.ajax({
 		type : "GET",
-		timeout : '10000',
+		timeout : '15000',
 		url : uriRoot + seadData.getId() + "/metadata",
 		dataType : "json"
 	});
 }
 
+seadData.getDescriptionOnlyAjax = function() {
+
+	return $.ajax({
+		type : "GET",
+		timeout : '15000',
+		url : uriRoot + seadData.getId(),
+		dataType : "json"
+	});
+}
+
+seadData.getRepositoryInfoAjax = function() {
+
+	return $.ajax({
+		type : "GET",
+		timeout : '15000',
+		url : "./api/repository",
+		dataType : "json"
+	});
+}
+
 seadData.buildGrid = function(describes) {
+	seadData.fillInMetadata(describes);
+	seadData.addDataTable(describes);
+	seadData.addDownloadLinks(describes);
+}
+
+seadData.fillInMetadata = function(describes) {
 	$('#Title').append(describes.Title);
 
 	var pubdate = describes["Publication Date"];
@@ -116,6 +142,9 @@ seadData.buildGrid = function(describes) {
 			}
 		}
 	}
+}
+
+seadData.addDataTable = function(describes) {
 	$("#datatable").append(
 			$('<table/>').addClass("treetable").append(
 					$('<thead/>').append(
@@ -128,6 +157,9 @@ seadData.buildGrid = function(describes) {
 		activateTable();
 		loading.close();
 	}, 1);
+}
+
+seadData.addDownloadLinks = function(describes) {
 	// seadData.calcTotalSize(map.describes.aggregates);
 	// seadData.calcTotalSize(map.describes.aggregates);
 	var liveCopy = describes["Is Version Of"];
@@ -225,32 +257,85 @@ seadData.init = function() {
 
 	$.when(
 
-	seadData.getDescAjax()).done(
+	seadData.getAggregationAjax()).done(
 			function(describes) {
 				// Analytics tracking
 				aggTitle = describes.Title;
 				ga('send', 'event', aggTitle + '::' + seadData.getId(),
-						'View Publication', describes.Title);
+						'View Publication', aggTitle);
 
 				seadData.buildGrid(describes);
 			}).fail(function(xhr, textStatus, errorThrown) {
 		seadData.problem(xhr, textStatus, errorThrown);
 	});
+	seadData.getRepositoryInfoAjax().done(
+			function(repojson) {
+				$('title').text(repojson.repositoryName);
+				$('#heading').text(repojson.repositoryName);
+				$('#about').text("About: " + repojson.repositoryName);
+				$('#repo').text(repojson.repositoryName).attr('href',
+						repojson.repositoryURL);
+				if (repojson.subject) {
+					$('#subject').text(repojson.subject);
+				}
+				if (repojson.institution) {
+					$('#institution').text(repojson.institution);
+				}
+				if (repojson.description) {
+					alert(repojson.description);
+					if (repojson.description.content) {
+						$('repodesc').text(repojson.description.content);
+					} else {
+						$('repodesc').text(repojson.description);
+					}
+				}
+
+			});
+
 }
 
 seadData.problem = function(xhr, textStatus, errorThrown) {
 	if (xhr.status == '404') {
 		$('#Title')
 				.append(
-						"<p>No Data Found for this identifier: "
+						"<div class='warning'><p>No Data Found for this identifier: "
 								+ seadData.getId()
-								+ "</p><p>Please use the Contact link below if you believe this is an error.</p>");
+								+ "</p><p>Please use the Repository Contact link at the bottom if you believe this is an error.</p></div>");
 	} else if (xhr.status == '500') {
 		$('#Title')
 				.append(
-						"<p>Server Error for this identifier: "
+						"<div class='warning'><p>Server Error for this identifier: "
 								+ seadData.getId()
-								+ "</p><p>Please use the Contact link below to report this problem.</p>");
+								+ "</p><p>Please use the Repository Contact link at the bottom to report this problem.</p></div>");
+	} else if (textStatus == "timeout") {
+
+		seadData
+				.getDescriptionOnlyAjax()
+				.done(
+						function(describes) {
+							// Analytics tracking
+							aggTitle = describes.Title;
+							ga('send', 'event', aggTitle + '::'
+									+ seadData.getId(),
+									'View Publication Description', aggTitle);
+
+							seadData.fillInMetadata(describes);
+							$('#datatable')
+									.html(
+											"<div class='warning'><p>The server is busy temporarily and cannot retrieve the Content Listing for this publication."
+													+ "</p><p>If refreshing this page does not solve the issue, please use the Repository Contact link at the bottom to report this problem.</p></div>");
+
+							seadData.addDownloadLinks(describes);
+						})
+				.fail(
+						function(xhr, textStatus, errorThrown) {
+							$('#Title')
+									.append(
+											"<div class='warning'><p>The server is too busy to respond: "
+													+ seadData.getId()
+													+ "</p><p>If this occurs more than once, please use the Repository Contact link at the bottom to report this problem.</p></div>");
+
+						});
 	}
 
 }

@@ -113,3 +113,17 @@ body.loading .modal {
 overflow:auto;
 max-height: 600px;
 }
+
+.warning {
+	color: red;
+	font-size: 14px;
+	border: 1px;
+}
+
+
+#institution, #subject {
+margin-left: 20px;
+color: darkgreen;
+margin-top: 4px;
+margin-bottom: 4px;
+}
