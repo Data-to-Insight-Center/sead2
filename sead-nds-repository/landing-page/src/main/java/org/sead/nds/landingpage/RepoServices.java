@@ -70,10 +70,14 @@ import java.util.ArrayList;
 import java.util.zip.ZipException;
 
 /**
- * RepoServices manages the RESTful interface to the published data packages stored as Zip files. It generates the landing page for a given DOI
- * and, based on the landing URL, finds the corresponding zip and extracts the relevant data/metadata. To help with this, it extracts a short 
- * description file that includes just the top-level description and top-level children from the oremap, and an index defining the offsets, 
- * within the oremap file, for the json description for each AggregatedResource (e.g. a collection or dataset (1.5) or Dataset/File (2.0). 
+ * RepoServices manages the RESTful interface to the published data packages
+ * stored as Zip files. It generates the landing page for a given DOI and, based
+ * on the landing URL, finds the corresponding zip and extracts the relevant
+ * data/metadata. To help with this, it extracts a short description file that
+ * includes just the top-level description and top-level children from the
+ * oremap, and an index defining the offsets, within the oremap file, for the
+ * json description for each AggregatedResource (e.g. a collection or dataset
+ * (1.5) or Dataset/File (2.0).
  *
  */
 
@@ -85,16 +89,47 @@ public class RepoServices {
 	static ObjectMapper mapper = new ObjectMapper();
 
 	public RepoServices() {
-		//Reads config file from the same dir as this class
-		Repository.init();
+		// Reads config file from the same dir as this class
+		Repository.init(Repository.loadProperties());
 		log.debug("Repo Services Created");
 	}
 
+	
 	/*
-	 * @Path("/researchobjects") 
+	 * @Path("/researchobjects")
 	 * 
 	 * Returns the base landingpage html
+	 */
+
+	@Path("/repository")
+	@Produces(MediaType.APPLICATION_JSON)
+	@GET
+	public Response getRepositoryInfo() {
+		String id = Repository.getID();
+		String SEADServicesURL = Repository.getC3PRAddress();
+		URI repoInfo=null;
+		try {
+			repoInfo = new URI(SEADServicesURL + "api/repositories/"
+					+ URLEncoder.encode(id, "UTF-8"));
+
+		} catch (URISyntaxException e) {
+			log.warn(e.getMessage() + " id: " + id);
+		} catch (UnsupportedEncodingException e) {
+			log.warn("UTF-8 not supported");
+		}
+		if(repoInfo==null) {
+			log.debug("Unable to refer to repository info @ c3pr");
+			return Response.status(com.sun.jersey.api.client.ClientResponse.Status.INTERNAL_SERVER_ERROR).build();
+		}
+		log.debug("Referring to : " + repoInfo.toString());
+		return Response.temporaryRedirect(repoInfo).build();
+
+	}
+	
+	/*
+	 * @Path("/researchobjects")
 	 * 
+	 * Returns the base landingpage html
 	 */
 
 	@Path("/researchobjects/{id}")
@@ -110,28 +145,30 @@ public class RepoServices {
 			log.warn(e.getMessage() + " id: " + id);
 		} catch (UnsupportedEncodingException e) {
 			log.warn("UTF-8 not supported");
-	 	}
+		}
 		log.debug("Referring to : " + landingPage.toString());
+		//Fairly permanent, but using temporary to keep the permanent html and json URLs for the RO the same...
 		return Response.temporaryRedirect(landingPage).build();
 
 	}
 
 	/*
-	 * @Path("/researchobjects/{id}") 
+	 * @Path("/researchobjects/{id}")
 	 * 
 	 * Returns the description file for the Aggregation
-	 * @deprecated - /researchobjects/{id}/metadata returns this plus the top level of children - that method is now used instead of this one
+	 * 
+	 * @deprecated - /researchobjects/{id}/metadata returns this plus the top
+	 * level of children - that method is now used instead of this one
 	 */
 
-	
 	@Path("/researchobjects/{id}")
 	@Produces(MediaType.APPLICATION_JSON)
 	@GET
 	public Response getAggregationSummary(@PathParam(value = "id") String id) {
-
+		log.warn("Call to old method: /researchobjects/" + id);
 		File descFile;
 		try {
-			//get or generate this file
+			// get or generate this file
 			descFile = getDescFile(id);
 		} catch (Exception e1) {
 			log.error(e1.getLocalizedMessage(), e1);
@@ -157,18 +194,18 @@ public class RepoServices {
 	}
 
 	/*
-	 * @Path("/researchobjects/{id}/metadata") 
+	 * @Path("/researchobjects/{id}/metadata")
 	 * 
-	 * Returns the description for the Aggregation (the Aggregation metadata and the descriptions of the AggregatedResources at the 
-	 * top-level(direct children listed in 'HasPart')
-	 * 
+	 * Returns the description for the Aggregation (the Aggregation metadata and
+	 * the descriptions of the AggregatedResources at the top-level(direct
+	 * children listed in 'HasPart')
 	 */
-	
+
 	@Path("/researchobjects/{id}/metadata")
 	@Produces(MediaType.APPLICATION_JSON)
 	@GET
 	public Response getResourceMetadata(@PathParam(value = "id") String id) {
-
+		try {
 		String path = getDataPathTo(id);
 		String bagNameRoot = getBagNameRoot(id);
 
@@ -177,27 +214,34 @@ public class RepoServices {
 			return Response.status(Status.NOT_FOUND).build();
 		}
 
-		log.debug(bagNameRoot + "/oremap.jsonld.txt");
-		ZipFile zf = null;
+		log.debug(result.getAbsolutePath());
+		//ZipFile zf = null;
 		try {
 			// Check for index files
 			File indexFile = getIndexFile(id);
-
-			zf = new ZipFile(result);
+			//Note: This step can be VERY slow when something is being published on the same disk - minutes for a large file
+			//If you don't see the "Zipfile created" message in the log, look at disk I/O...
+			final ZipFile zf = new ZipFile(result);
+			log.debug("Zipfile created");
 			ZipArchiveEntry archiveEntry1 = zf.getEntry(bagNameRoot
 					+ "/oremap.jsonld.txt");
-
+			log.trace("Can read : " + zf.canReadEntryData(archiveEntry1));
 			// Find/open base ORE map file
 			// Note - limited to maxint size for oremap file size
-
 			final CountingInputStream cis = new CountingInputStream(
 					new BufferedInputStream(zf.getInputStream(archiveEntry1),
 							Math.min((int) archiveEntry1.getSize(), 1000000)));
-
 			JsonNode resultNode = getAggregation(id, indexFile, cis, true,
 					archiveEntry1.getSize());
 			if (resultNode == null) {
 				log.warn("Null item returned");
+			}
+			if (zf != null) {
+				try {
+					zf.close();
+				} catch (IOException io) {
+					log.warn("IO error on zf close: " + io.getMessage());
+				}
 			}
 			return Response.ok(resultNode.toString()).build();
 		} catch (JsonParseException e) {
@@ -209,30 +253,39 @@ public class RepoServices {
 			e.printStackTrace();
 			return Response.serverError().entity(e.getMessage()).build();
 		} finally {
-			if (zf != null) {
+/*			if (zf != null) {
 				try {
 					zf.close();
 				} catch (IOException io) {
 					log.warn("IO error on zf close: " + io.getMessage());
 				}
 			}
+			*/
+		}
+		} catch (Exception e ) {
+			log.error(e.getMessage() + e.getStackTrace().toString());
+			return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+		} catch (Throwable t) {
+			log.error(t.getLocalizedMessage()+ t.getStackTrace().toString());
+			return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 		}
 	}
+
 	/*
-	 * @Path("/researchobjects/{id}/metadata/{did}") 
+	 * @Path("/researchobjects/{id}/metadata/{did}")
 	 * 
-	 * Returns the description for the AggregationResource within the {id} Aggregation 
-	 * (the AggregatedResource metadata and the descriptions of the AggregatedResources directly within it
-	 * (direct children listed in 'HasPart'))
-	 * 
+	 * Returns the description for the AggregationResource within the {id}
+	 * Aggregation (the AggregatedResource metadata and the descriptions of the
+	 * AggregatedResources directly within it (direct children listed in
+	 * 'HasPart'))
 	 */
-	
+
 	@Path("/researchobjects/{id}/metadata/{did}")
 	@Produces(MediaType.APPLICATION_JSON)
 	@GET
 	public Response getResourceSummary(@PathParam(value = "id") String id,
 			@PathParam(value = "did") String dataID) {
-
+		log.debug("Getting " + dataID + " from " + id);
 		String path = getDataPathTo(id);
 		String bagNameRoot = getBagNameRoot(id);
 
@@ -281,12 +334,12 @@ public class RepoServices {
 	}
 
 	/*
-	 * @Path("/researchobjects/{id}/data/{relpath}") 
+	 * @Path("/researchobjects/{id}/data/{relpath}")
 	 * 
-	 * Returns the data file (any file within the /data directory) at the given path within the {id} publication
-	 * 
+	 * Returns the data file (any file within the /data directory) at the given
+	 * path within the {id} publication
 	 */
-	
+
 	@Path("/researchobjects/{id}/data/{relpath}")
 	@Produces(MediaType.APPLICATION_OCTET_STREAM)
 	@GET
@@ -321,13 +374,12 @@ public class RepoServices {
 	}
 
 	/*
-	 * @Path("/researchobjects/{id}/meta/{relpath}") 
+	 * @Path("/researchobjects/{id}/meta/{relpath}")
 	 * 
-	 * Returns the metadata file (a file not in the /data dir) at the given path within the {id} publication
-	 * 
+	 * Returns the metadata file (a file not in the /data dir) at the given path
+	 * within the {id} publication
 	 */
 
-	
 	@Path("/researchobjects/{id}/meta/{relpath}")
 	@Produces(MediaType.APPLICATION_OCTET_STREAM)
 	@GET
@@ -342,8 +394,9 @@ public class RepoServices {
 			final ZipFile zf = new ZipFile(result);
 
 			log.debug(bagNameRoot + "/" + metadatapath);
-			//Don't let this call be used to get data from the data dir
-			if(metadatapath.startsWith("data")|| metadatapath.startsWith("/data")) {
+			// Don't let this call be used to get data from the data dir
+			if (metadatapath.startsWith("data")
+					|| metadatapath.startsWith("/data")) {
 				return Response.status(Status.BAD_REQUEST).build();
 			}
 			ZipArchiveEntry archiveEntry1 = zf.getEntry(bagNameRoot + "/"
@@ -372,7 +425,7 @@ public class RepoServices {
 
 		String path = getDataPathTo(id);
 		String bagNameRoot = getBagNameRoot(id);
-		
+
 		File result = new File(path, bagNameRoot + ".zip");
 		try {
 			final InputStream inputStream = FileUtils.openInputStream(result);
@@ -392,7 +445,8 @@ public class RepoServices {
 		}
 	}
 
-	//Calculate the path to the zip in the file system based in the base path and the 2 level hash subdurectory scheme
+	// Calculate the path to the zip in the file system based in the base path
+	// and the 2 level hash subdurectory scheme
 	private String getDataPathTo(String id) {
 		String pathString = DigestUtils.sha1Hex(id);
 		String path = Repository.getDataPath();
@@ -403,14 +457,15 @@ public class RepoServices {
 		return path;
 	}
 
-	//Calculate the bagName by replacing non-chars with _ (e.g. the ,:/ chars in our normal tag ids) 
+	// Calculate the bagName by replacing non-chars with _ (e.g. the ,:/ chars
+	// in our normal tag ids)
 	private String getBagNameRoot(String id) {
 		String bagNameRoot = id.replaceAll("\\W+", "_");
 		log.debug(bagNameRoot);
 		return bagNameRoot;
 	}
 
-	//Get the description file or trigger its generation
+	// Get the description file or trigger its generation
 	private File getDescFile(String id) throws ZipException, IOException {
 		String path = getDataPathTo(id);
 		String bagNameRoot = getBagNameRoot(id);
@@ -427,14 +482,15 @@ public class RepoServices {
 
 			generateIndex(roInputStream, descFile, indexFile);
 			ZipFile.closeQuietly(zf);
+			log.debug("Created desc/index files");
 		} else {
-			log.debug("Desc and Index exist");
+			log.trace("Desc and Index exist");
 		}
 		return descFile;
 
 	}
 
-	//Get the index file or trigger its generation
+	// Get the index file or trigger its generation
 	private File getIndexFile(String id) throws ZipException, IOException {
 		String path = getDataPathTo(id);
 		String bagNameRoot = getBagNameRoot(id);
@@ -453,13 +509,11 @@ public class RepoServices {
 			generateIndex(roInputStream, descFile, indexFile);
 			ZipFile.closeQuietly(zf);
 		} else {
-			log.debug("Desc and Index exist");
+			log.trace("Desc and Index exist");
 		}
 		return indexFile;
 
 	}
-
-
 
 	private JsonNode getAggregation(String id, File indexFile,
 			CountingInputStream cis, boolean withChildren, Long oreFileSize)
@@ -506,7 +560,7 @@ public class RepoServices {
 			log.debug(e.getMessage());
 		}
 
-		log.debug(resultNode.toString());
+		log.trace(resultNode.toString());
 		if ((resultNode.has("Has Part")) && withChildren) {
 
 			resultNode = getChildren(resultNode, indexFile, cis, oreFileSize,
@@ -514,32 +568,26 @@ public class RepoServices {
 		} else {
 			resultNode.remove("aggregates");
 		}
-		/*
-		 * if (args[2] != null) { long offset2 = Long.parseLong(args[2]);
-		 * sbc.position(offset2); b.clear(); sbc.read(b);
-		 * 
-		 * InputStream is2 = new ByteArrayInputStream(b.array());
-		 * 
-		 * JsonNode node2 = mapper.readTree(is2);
-		 * System.out.println(node2.toString()); is2.close(); }
-		 */
+		log.debug("Aggregation retrieved");
 		return resultNode;
 	}
 
-	//Get the first item, before the entries and offsets lists are created (they are used to get children efficiently) 
+	// Get the first item, before the entries and offsets lists are created
+	// (they are used to get children efficiently)
 	private JsonNode getItem(String item, File indexFile,
 			CountingInputStream cis, boolean withChildren, long oreFileSize)
 			throws JsonParseException, JsonMappingException, IOException {
 		return getItem(item, indexFile, cis, withChildren, oreFileSize, 0,
 				null, null);
 	}
-	
-	//Get an item as a child using the existing (if not null) entries and offset lists
+
+	// Get an item as a child using the existing (if not null) entries and
+	// offset lists
 	private JsonNode getItem(String item, File indexFile,
 			CountingInputStream cis, boolean withChildren, Long oreFileSize,
 			long curOffset, ArrayList<String> entries, ArrayList<Long> offsets)
 			throws JsonParseException, JsonMappingException, IOException {
-		log.debug("Getting: " + item + " with starting offset: " + curOffset);
+		log.trace("Getting: " + item + " with starting offset: " + curOffset);
 
 		long curPos = curOffset;
 
@@ -552,7 +600,7 @@ public class RepoServices {
 			JsonParser jp = f.createParser(fis);
 
 			JsonToken current;
-			log.debug("Reading Index file");
+			log.trace("Reading Index file");
 			current = jp.nextToken(); // Start object
 
 			while ((current = jp.nextToken()) != null) {
@@ -589,12 +637,12 @@ public class RepoServices {
 			estSize = (int) (oreFileSize - offsets.get(index));
 		}
 		curPos += skipTo(cis, curPos, offsets.get(index));
-		log.debug("Current Pos updated to : " + curPos);
+		log.trace("Current Pos updated to : " + curPos);
 		b = new byte[estSize];
 		bytesRead = cis.read(b);
-		log.debug("Read " + bytesRead + " bytes");
+		log.trace("Read " + bytesRead + " bytes");
 		if (bytesRead == estSize) {
-			log.debug("Read: " + new String(b));
+			log.trace("Read: " + new String(b));
 			InputStream is = new ByteArrayInputStream(b);
 			// mapper seems to be OK ignoring a last char such as a comma after
 			// the object/tree
@@ -606,9 +654,9 @@ public class RepoServices {
 			}
 
 			curPos += bytesRead;
-			log.debug("curPos: " + curPos + " : count: " + cis.getByteCount());
+			log.trace("curPos: " + curPos + " : count: " + cis.getByteCount());
 
-			log.debug(resultNode.toString());
+			log.trace(resultNode.toString());
 			if ((resultNode.has("Has Part")) && withChildren) {
 				resultNode = getChildren(resultNode, indexFile, cis,
 						oreFileSize, curPos, entries, offsets);
@@ -631,7 +679,7 @@ public class RepoServices {
 
 	}
 
-	//Get all direct child nodes
+	// Get all direct child nodes
 	private ObjectNode getChildren(ObjectNode resultNode, File indexFile,
 			CountingInputStream cis, Long oreFileSize, long curPos,
 			ArrayList<String> entries, ArrayList<Long> offsets)
@@ -652,27 +700,29 @@ public class RepoServices {
 			aggregates.add(getItem(name, indexFile, cis, false, oreFileSize,
 					curPos, entries, offsets));
 			curPos = cis.getByteCount();
-			log.debug("curPos updated to " + curPos + " after reading: " + name);
+			log.trace("curPos updated to " + curPos + " after reading: " + name);
 
 		}
-		log.debug("Child Ids: " + childIds.toString());
+		log.trace("Child Ids: " + childIds.toString());
 		resultNode.set("aggregates", aggregates);
 		return resultNode;
 
 	}
 
-	//Skip forward as needed through the oremap to find the next child
-	//FixMe - it is not required that AgggegatedResources in the oremap are in the same relative order as they are listed in the dcterms:hasPart
-	// list. If backwards skips are seen, we need to order the children according to their relative offsets before attempting to retrieve them.
+	// Skip forward as needed through the oremap to find the next child
+	// FixMe - it is not required that AgggegatedResources in the oremap are in
+	// the same relative order as they are listed in the dcterms:hasPart
+	// list. If backwards skips are seen, we need to order the children
+	// according to their relative offsets before attempting to retrieve them.
 	private static long skipTo(CountingInputStream cis, long curPos, Long long1)
 			throws IOException {
-		log.debug("Skipping to : " + long1.longValue());
+		log.trace("Skipping to : " + long1.longValue());
 		long offset = long1.longValue() - curPos;
 		if (offset < 0) {
 			log.error("Backwards jump attempted");
 			throw new IOException("Backward Skip: failed");
 		}
-		log.debug("At: " + curPos + " going forward by " + offset);
+		log.trace("At: " + curPos + " going forward by " + offset);
 		long curskip = 0;
 		while (curskip < offset) {
 			long inc = cis.skip(offset - curskip);
@@ -685,19 +735,13 @@ public class RepoServices {
 		return offset;
 	}
 
-	//Create the index file by parsing the oremap
+	// Create the index file by parsing the oremap
 	private static void generateIndex(InputStream ro, File descFile,
 			File indexFile) throws JsonParseException, IOException {
 
+		log.debug("Generating desc and index files");
 		JsonFactory f = new MappingJsonFactory(); // reading
 		JsonParser jp = f.createParser(ro);
-		/*
-		 * JsonNode node = jp.readValueAsTree(); if (node.isArray()) { int i =
-		 * 0; while (node.has(i)) { JsonNode child = node.get(i);
-		 * System.out.println(child.get("field1").asText());
-		 * System.out.println(child.get("field2").asText()); i++; } }
-		 * System.out.println(node.asText());
-		 */
 
 		JsonGenerator generator = new JsonFactory().createGenerator(descFile,
 				JsonEncoding.UTF8);
@@ -711,7 +755,7 @@ public class RepoServices {
 			if (current.equals(JsonToken.FIELD_NAME)) {
 				String fName = jp.getText();
 				if (fName.equals("describes")) {
-					log.debug("describes");
+					log.trace("describes");
 					while (((current = jp.nextToken()) != null)) {
 						if (jp.isExpectedStartObjectToken()) {
 							generator.setCodec(new ObjectMapper());
@@ -730,20 +774,20 @@ public class RepoServices {
 									current = jp.nextToken(); // Get to start of
 																// value
 									if (!name.equals("aggregates")) {
-										log.debug("Writing: " + name);
+										log.trace("Writing: " + name);
 										generator.writeFieldName(name);
 										generator.writeTree(jp
 												.readValueAsTree());
 									} else {
 										report(jp, current);
-										log.debug("Skipping?");
+										log.trace("Skipping?");
 										if (current.isStructStart()) {
 											indexChildren(indexFile, jp);
 											// jp.skipChildren();
 										} else {
 											log.warn("Was Not Struct start!");
 										}
-										log.debug("Hit aggregates");
+										log.trace("Hit aggregates");
 
 									}
 								}
@@ -753,18 +797,6 @@ public class RepoServices {
 
 							generator.close();
 						}
-
-						/*
-						 * if ((!(current.equals(JsonToken.FIELD_NAME))) ||
-						 * (!(jp.getText().equals("aggregates")))) {
-						 * 
-						 * report(jp, current); } else { current =
-						 * jp.nextToken(); report(jp, current);
-						 * System.out.println("Skipping?"); if
-						 * (current.isStructStart()) { jp.skipChildren(); }
-						 * System.out.println("Hit aggregates"); }
-						 */
-						// report(jp, current);
 					}
 				}
 			}
@@ -808,12 +840,12 @@ public class RepoServices {
 
 	}
 
-	//debug output useful in testing parsing
+	// debug output useful in testing parsing
 	private static void report(JsonParser jp, JsonToken token) {
 		boolean struct = token.isStructStart() || token.isStructEnd();
 		try {
 			String tag = struct ? token.asString() : jp.getText();
-			log.debug("Tag: " + tag);
+			log.trace("Tag: " + tag);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -821,7 +853,7 @@ public class RepoServices {
 
 		long currentOffset = jp.getCurrentLocation().getByteOffset();
 		long tokenOffset = jp.getTokenLocation().getByteOffset();
-		log.debug("Cur: " + currentOffset + " tok: " + tokenOffset);
+		log.trace("Cur: " + currentOffset + " tok: " + tokenOffset);
 	}
 
 }
