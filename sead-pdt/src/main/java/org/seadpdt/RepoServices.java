@@ -117,8 +117,9 @@ public class RepoServices {
 	@Path("/{id}")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response getRepositoryProfile(@PathParam("id") String id) {
-		FindIterable<Document> iter = repositoriesCollection.find(new Document(
-				"orgidentifier", id));
+        Document query = new Document();
+        query.append("orgidentifier", new Document("$regex",id).append("$options","i"));
+        FindIterable<Document> iter = repositoriesCollection.find(query);
 		if (iter.first() != null) {
 			Document document = iter.first();
 			document.remove("_id");
