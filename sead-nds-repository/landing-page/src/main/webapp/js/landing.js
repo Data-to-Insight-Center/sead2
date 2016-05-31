@@ -268,29 +268,65 @@ seadData.init = function() {
 			}).fail(function(xhr, textStatus, errorThrown) {
 		seadData.problem(xhr, textStatus, errorThrown);
 	});
-	seadData.getRepositoryInfoAjax().done(
-			function(repojson) {
-				$('title').text(repojson.repositoryName);
-				$('#heading').text(repojson.repositoryName);
-				$('#about').text("About: " + repojson.repositoryName);
-				$('#repo').text(repojson.repositoryName).attr('href',
-						repojson.repositoryURL);
-				if (repojson.subject) {
-					$('#subject').text(repojson.subject);
-				}
-				if (repojson.institution) {
-					$('#institution').text(repojson.institution);
-				}
-				if (repojson.description) {
-					alert(repojson.description);
-					if (repojson.description.content) {
-						$('repodesc').text(repojson.description.content);
-					} else {
-						$('repodesc').text(repojson.description);
-					}
-				}
+	seadData
+			.getRepositoryInfoAjax()
+			.done(
+					function(repojson) {
+						$('title').text(repojson.repositoryName);
+						$('#heading').text(repojson.repositoryName);
+						$('#about').text("About: " + repojson.repositoryName);
+						$('#repo').text(repojson.repositoryName).attr('href',
+								repojson.repositoryURL);
+			             if(repojson.subject) {
+                             if(typeof repojson.subject === 'string') {
+                             $('#subject').text(repojson.subject);
+                             } else {
+                             $('#subject').text(repojson.subject.join(', '));
 
-			});
+                             }
+
+						if (repojson.institution) {
+							$('#institution').text(repojson.institution);
+						}
+						if (repojson.description) {
+							alert(repojson.description);
+							if (repojson.description.content) {
+								$('repodesc')
+										.text(repojson.description.content);
+							} else {
+								$('repodesc').text(repojson.description);
+							}
+						}
+						if (repojson.repositoryContact) {
+							$('#repocontact').text(repojson.repositoryContact);
+							if (repositoryContact.indexOf('@')) {
+								$('#repocontact')
+										.append(
+												$('<a/>')
+														.text(
+																repojson.repositoryName)
+														.attr(
+																'href',
+																'mailto:'
+																		+ reposjson.repositoryContact));
+							} else {
+								$('#repocontact')
+										.append(
+												$('<a/>')
+														.text(
+																repojson.repositoryName)
+														.attr(
+																'href',
+																repojson.repositoryContact));
+							}
+
+						} else {
+							$('#repocontact').append(
+									$('<a/>').text('SEAD').attr('href',
+											'mailto:SEADdatanet@umich.edu'));
+						}
+
+					});
 
 }
 
