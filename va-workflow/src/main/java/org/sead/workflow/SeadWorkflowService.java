@@ -112,7 +112,7 @@ public class SeadWorkflowService {
     @POST
     @Path("/publishRO")
     @Produces("application/json")
-    public javax.ws.rs.core.Response publishRO(String ro, @QueryParam("requestUrl") String requestURL) throws InterruptedException {
+    public javax.ws.rs.core.Response publishRO(String ro, @QueryParam("requestUrl") String requestURL) throws InterruptedException, JSONException {
 
         System.out.println("-----------------------------------");
         System.out.println("SeadWorkflowService - publishRO : Input RO : " + ro);
@@ -179,13 +179,21 @@ public class SeadWorkflowService {
             }
         }
 
-        response = "{\"response\": \"success\", \"message\": \"Research Object was published successfully\"}";
+        JSONObject responseObject = new JSONObject();
+        responseObject.put("response", "success");
+        if (context.getProperty(Constants.VALIDATION_ERROR) == null) {
+            responseObject.put("message", "Research Object was published successfully");
+        } else {
+            responseObject.put("message", "Research Object was published successfully [Warning : "
+                    + context.getProperty(Constants.VALIDATION_ERROR) + "]");
+        }
+
         System.out.println("-----------------------------------");
-        System.out.println("SeadWorkflowService - Respond to publishRO request : " + response);
+        System.out.println("SeadWorkflowService - Respond to publishRO request : " + responseObject.toString());
         System.out.println("-----------------------------------");
         SeadMon.addLog(MonConstants.Components.CURBEE, id, MonConstants.Status.SUCCESS);
         return Response
-                .ok(response)
+                .ok(responseObject.toString())
                 .type(MediaType.APPLICATION_JSON_TYPE)
                 .build();
     }

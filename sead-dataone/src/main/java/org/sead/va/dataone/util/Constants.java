@@ -58,6 +58,10 @@ public class Constants {
     public static String SYNC_MIN;
     public static String SYNC_SEC;
 
+    //email credentials
+    public static String emailUsername;
+    public static String emailPassword;
+
 
     public static String dataonDbName;
 
@@ -125,6 +129,14 @@ public class Constants {
             }
             if (name.equals("second")) {
                 SYNC_SEC = value;
+            }
+
+            //email credentials
+            if (name.equals("email.username")) {
+                emailUsername = value;
+            }
+            if (name.equals("email.password")) {
+                emailPassword = value;
             }
         }
     }

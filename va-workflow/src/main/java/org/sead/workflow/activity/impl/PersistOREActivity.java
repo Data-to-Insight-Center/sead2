@@ -69,13 +69,19 @@ public class PersistOREActivity extends AbstractWorkflowActivity {
 
         if(response.getStatus() == 200 || response.getStatus() == 201){
             String oreId = null;
+            String warning = null;
             try {
-                oreId = new JSONObject(response.getEntity(String.class)).get("id").toString();
+                JSONObject responseObject = new JSONObject(response.getEntity(String.class));
+                oreId = responseObject.get("id").toString();
+                warning = responseObject.has("warning") ? responseObject.get("warning").toString() : null;
             } catch (JSONException e) {
                 e.printStackTrace();
             }
             context.addProperty(Constants.ORE_ID, oreId);
             System.out.println(PersistOREActivity.class.getName() + " : ORE successfully saved in DB, ORE ID - " + oreId);
+            if(warning != null) {
+                context.addProperty(Constants.VALIDATION_ERROR, warning);
+            }
         } else if(response.getStatus() == 400) {
             throw new SeadWorkflowException("Error occurred while persisting ORE " + context.getCollectionId()
                     + " - " + response.getEntity(new GenericType<String>() {}).toString());
