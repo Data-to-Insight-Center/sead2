@@ -222,4 +222,8 @@ public class Repository {
 	public static String getID() {
 		return repoID;
 	}
+	
+	public static String getC3PRAddress() {
+		return props.getProperty("c3pr.address");
+	}
 }
