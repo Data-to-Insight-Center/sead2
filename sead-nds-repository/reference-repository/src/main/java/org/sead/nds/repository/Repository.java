@@ -36,6 +36,8 @@ import edu.ucsb.nceas.ezid.profile.DataCiteProfile;
 import edu.ucsb.nceas.ezid.profile.DataCiteProfileResourceTypeValues;
 import edu.ucsb.nceas.ezid.profile.InternalProfile;
 
+import org.sead.nds.repository.util.ReferenceLinkRewriter;
+
 public class Repository {
 
 	private static final Logger log = Logger.getLogger(Repository.class);
@@ -93,6 +95,7 @@ public class Repository {
 			BagGenerator bg;
 			C3PRPubRequestFacade RO = new C3PRPubRequestFacade(args[0], props);
 			bg = new BagGenerator(RO);
+			bg.setLinkRewriter(new ReferenceLinkRewriter(props.getProperty("repo.landing.base")));
 			// FixMe - use repo.ID from properties file (possibly in repo class
 			if (bg.generateBag(args[0])) {
 				RO.sendStatus(
@@ -111,8 +114,7 @@ public class Repository {
 	}
 
 	static public String getLandingPage(String bagName) {
-		return props.getProperty("repo.landing.base",
-				"http://bobdiscountdatashack.com/howabout/") + bagName;
+		return props.getProperty("repo.landing.base") + bagName;
 	}
 
 	static public String getDataPath() {
