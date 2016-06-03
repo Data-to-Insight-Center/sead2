@@ -277,26 +277,26 @@ seadData.init = function() {
 						$('#about').text("About: " + repojson.repositoryName);
 						$('#repo').text(repojson.repositoryName).attr('href',
 								repojson.repositoryURL);
-			             if(repojson.subject) {
-                             if(typeof repojson.subject === 'string') {
-                             $('#subject').text(repojson.subject);
-                             } else {
-                             $('#subject').text(repojson.subject.join(', '));
+						if (repojson.subject) {
+							if (typeof repojson.subject === 'string') {
+								$('#subject').text(repojson.subject);
+							} else {
+								$('#subject').text(repojson.subject.join(', '));
 
-                             }
-
+							}
+						}
 						if (repojson.institution) {
 							$('#institution').text(repojson.institution);
 						}
 						if (repojson.description) {
-							alert(repojson.description);
 							if (repojson.description.content) {
-								$('repodesc')
-										.text(repojson.description.content);
+								$('#repodesc').append(
+										repojson.description.content);
 							} else {
-								$('repodesc').text(repojson.description);
+								$('#repodesc').append(repojson.description);
 							}
 						}
+
 						if (repojson.repositoryContact) {
 							$('#repocontact').text(repojson.repositoryContact);
 							if (repositoryContact.indexOf('@')) {
@@ -308,7 +308,7 @@ seadData.init = function() {
 														.attr(
 																'href',
 																'mailto:'
-																		+ reposjson.repositoryContact));
+																		+ repojson.repositoryContact));
 							} else {
 								$('#repocontact')
 										.append(
