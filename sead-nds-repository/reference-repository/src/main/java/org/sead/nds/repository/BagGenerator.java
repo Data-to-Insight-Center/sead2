@@ -48,6 +48,8 @@ import org.apache.log4j.Logger;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.sead.nds.repository.util.FileUtils;
+import org.sead.nds.repository.util.LinkRewriter;
+import org.sead.nds.repository.util.NoOpLinkRewriter;
 
 public class BagGenerator {
 
@@ -71,9 +73,16 @@ public class BagGenerator {
 
 	private C3PRPubRequestFacade RO = null;
 	private JSONObject pubRequest = null;
+	private String bagID = null;
+	
+	private LinkRewriter linkRewriter = new NoOpLinkRewriter();
 	
 	public BagGenerator(C3PRPubRequestFacade ro) {
 		RO = ro;
+	}
+	
+	public void setLinkRewriter(LinkRewriter newRewriter) {
+		linkRewriter=newRewriter;
 	}
 
 	/*
@@ -109,7 +118,7 @@ public class BagGenerator {
             aggregation.put("Access Rights", accessRights);
         }
 
-		String bagID = aggregation.getString("Identifier");
+		bagID = aggregation.getString("Identifier");
 		String bagName = bagID;
 		try {
 			// Create valid filename from identifier and extend path with
@@ -225,6 +234,8 @@ public class BagGenerator {
 					"http://purl.org/dc/terms/issued");
 		}
 
+		oremap.put("@id",linkRewriter.rewriteOREMapLink(oremap.getString("@id"), bagID));
+		aggregation.put("@id", linkRewriter.rewriteAggregationLink(aggregation.getString("@id"), bagID));
 		// Serialize oremap itself (pretty printed) - SEAD recommendation
 		// (DataOne distributes metadata files within the bag
 		// FixMe - add missing hash values if needed and update context
@@ -446,8 +457,7 @@ public class BagGenerator {
 				dataCount++;
 				// Check for nulls!
 				pidMap.put(child.getString("Identifier"), childPath);
-
-				// Check for nulls!
+				child.put("similarTo", linkRewriter.rewriteDataLink(dataUrl, child.getString("@id"), bagID, childPath));
 
 				if (child.has("SHA1 Hash")) {
 					if (hashtype != null && !hashtype.equals("SHA1 Hash")) {
