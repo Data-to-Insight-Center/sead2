@@ -2,35 +2,6 @@ var seadData = {};
 var id = null;
 var uriRoot = "./api/researchobjects/";
 
-var loading = $.loading({
-	// wrap div
-	// set the loading html wrap tag id
-	id : 'ajaxLoading',
-	// wrap tag z-index
-	zIndex : '1000',
-	// wrap tag background
-	background : 'rgba(0, 0, 0, 0.0)',
-	// min show time
-	minTime : 200,
-	// wrap tag border-radius
-	radius : '4px',
-	// wrap width
-	width : '85px',
-	height : '85px',
-
-	// loading img/gif
-	imgPath : 'images/ajax-loader.svg',
-	imgWidth : '180px',
-	imgHeight : '180px',
-
-	// loading text
-	tip : 'loading...',
-	// text font size
-	fontSize : '14px',
-	// text font color
-	fontColor : '#fff'
-});
-
 $body = $("body");
 
 seadData.getId = function() {
@@ -77,9 +48,10 @@ seadData.getRepositoryInfoAjax = function() {
 }
 
 seadData.buildGrid = function(describes) {
-	seadData.fillInMetadata(describes);
+
 	seadData.addDataTable(describes);
-	seadData.addDownloadLinks(describes);
+	$('.loading').hide();
+
 }
 
 seadData.fillInMetadata = function(describes) {
@@ -142,6 +114,40 @@ seadData.fillInMetadata = function(describes) {
 			}
 		}
 	}
+
+	var stats = describes['Aggregation Statistics'];
+	if (stats != null) {
+		var statdiv = $('<div/>').attr("id", "stats");
+		statdiv.append($('<div/>').append(
+				"Total Size (unzipped): "
+						+ filesize(parseInt(stats["Total Size"]), {
+							base : 10
+						})));
+		statdiv.append($('<div/>').append(
+				"Number of Files: " + stats["Number of Datasets"]));
+		statdiv.append($('<div/>').append(
+				"Largest File: "
+						+ filesize(parseInt(stats["Max Dataset Size"]), {
+							base : 10
+						})));
+		statdiv.append($('<div/>').append(
+				"Number of Folders: " + stats["Number of Collections"]));
+		statdiv.append($('<div/>').append(
+				"Longest Folder Path: "
+						+ (parseInt(stats["Max Collection Depth"]) + 1)));
+		var types = stats["Data Mimetypes"];
+		if (Array.isArray(types)) {
+			var typestring = "";
+			for (var i = 0; i < types.length; i++) {
+				typestring = typestring + types[i];
+				if (i < types.length - 1) {
+					typestring = typestring + ", ";
+				}
+			}
+		}
+		statdiv.append($('<div/>').append("Data Mimetypes: " + typestring));
+		$('#contents').prepend(statdiv);
+	}
 }
 
 seadData.addDataTable = function(describes) {
@@ -152,16 +158,14 @@ seadData.addDataTable = function(describes) {
 					.append($('<tbody/>')));
 	// Using timeout Allows metadata to display
 	setTimeout(function() {
-		loading.open();
 		seadData.loadChildren(describes, null, describes.Title);
 		activateTable();
-		loading.close();
+		$('.loading').hide();
 	}, 1);
 }
 
 seadData.addDownloadLinks = function(describes) {
-	// seadData.calcTotalSize(map.describes.aggregates);
-	// seadData.calcTotalSize(map.describes.aggregates);
+
 	var liveCopy = describes["Is Version Of"];
 	// Clowder build 113 kludge
 	if (liveCopy == null) {
@@ -254,10 +258,20 @@ seadData.formatPerson = function(person) {
 var aggTitle = "";
 
 seadData.init = function() {
+	$('.loading').show();
+	$.when(seadData.getDescriptionOnlyAjax()).done(
+			function(describes) {
+				// Analytics tracking
+				aggTitle = describes.Title;
+				ga('send', 'event', aggTitle + '::' + seadData.getId(),
+						'View Publication', aggTitle);
 
-	$.when(
-
-	seadData.getAggregationAjax()).done(
+				seadData.fillInMetadata(describes);
+				seadData.addDownloadLinks(describes);
+			}).fail(function(xhr, textStatus, errorThrown) {
+		seadData.problem(xhr, textStatus, errorThrown);
+	});
+	$.when(seadData.getAggregationAjax()).done(
 			function(describes) {
 				// Analytics tracking
 				aggTitle = describes.Title;
@@ -331,6 +345,7 @@ seadData.init = function() {
 }
 
 seadData.problem = function(xhr, textStatus, errorThrown) {
+	$('.loading').hide();
 	if (xhr.status == '404') {
 		$('#Title')
 				.append(
@@ -345,33 +360,10 @@ seadData.problem = function(xhr, textStatus, errorThrown) {
 								+ "</p><p>Please use the Repository Contact link at the bottom to report this problem.</p></div>");
 	} else if (textStatus == "timeout") {
 
-		seadData
-				.getDescriptionOnlyAjax()
-				.done(
-						function(describes) {
-							// Analytics tracking
-							aggTitle = describes.Title;
-							ga('send', 'event', aggTitle + '::'
-									+ seadData.getId(),
-									'View Publication Description', aggTitle);
-
-							seadData.fillInMetadata(describes);
-							$('#datatable')
-									.html(
-											"<div class='warning'><p>The server is busy temporarily and cannot retrieve the Content Listing for this publication."
-													+ "</p><p>If refreshing this page does not solve the issue, please use the Repository Contact link at the bottom to report this problem.</p></div>");
-
-							seadData.addDownloadLinks(describes);
-						})
-				.fail(
-						function(xhr, textStatus, errorThrown) {
-							$('#Title')
-									.append(
-											"<div class='warning'><p>The server is too busy to respond: "
-													+ seadData.getId()
-													+ "</p><p>If this occurs more than once, please use the Repository Contact link at the bottom to report this problem.</p></div>");
-
-						});
+		$('#datatable')
+				.html(
+						"<div class='warning'><p>The server is busy temporarily and cannot retrieve the Content Listing for this publication."
+								+ "</p><p>If refreshing this page does not solve the issue, please use the Repository Contact link at the bottom to report this problem.</p></div>");
 	}
 
 }
@@ -505,7 +497,8 @@ function activateTable() {
 					table.treetable("unloadBranch", node);
 				},
 				onNodeExpand : function() {
-					loading.open();
+					$('.loading').show();
+
 					var node = this;
 					var code = node.row[0].innerHTML;
 					var test = code.substring(code.indexOf('iid') + 5);
@@ -577,7 +570,7 @@ function activateTable() {
 												}
 											}
 										}
-										loading.close();
+										$('.loading').hide();
 									}).fail(
 									function(xhr, textStatus, errorThrown) {
 										seadData.problem(xhr, textStatus,

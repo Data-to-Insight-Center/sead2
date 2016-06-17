@@ -10,7 +10,6 @@
 	text-align: right;
 }
 
-
 #ro>div {
 	font-size: 20px;
 	font-weight: bold;
@@ -18,16 +17,13 @@
 
 #heading {
 	font-size: 18px;
-	background-color:#0b5ca3;
+	background-color: #0b5ca3;
 	padding: 10px;
 	color: #fff;
 	text-align: center;
-	
 }
 
-#page-wrapper,
-#header-logo-image,
-#wrapper {
+#page-wrapper, #header-logo-image, #wrapper {
 	width: 1200px;
 	margin: 0 auto
 }
@@ -40,12 +36,10 @@
 }
 
 .notes {
-        color: lightslategray;
+	color: lightslategray;
 }
 
-
-a:link,
-a:visited {
+a:link, a:visited {
 	text-decoration: underline;
 	color: #0B5CA3;
 }
@@ -55,71 +49,70 @@ a:visited {
 }
 
 .topic {
-    font-weight: bold;
-    display: inline;
+	font-weight: bold;
+	display: inline;
 }
 
 #license a img {
-height: 40px;
+	height: 40px;
 }
-//Loading spinner
-/* Start by setting display:none to make this hidden.
+
+//
+Loading spinner /* Start by setting display:none to make this hidden.
    Then we position it in relation to the viewport window
    with position:fixed. Width, height, top and left speak
    speak for themselves. Background we set to 80% white with
-   our animation centered, and no-repeating */
+   our animation centered, and no-repeating */ 
 .modal {
-    display:    none;
-    position:   fixed;
-    z-index:    1000;
-    top:        0;
-    left:       0;
-    height:     100%;
-    width:      100%;
-    background: rgba( 255, 255, 255, .8 ) 
-                url('http://sampsonresume.com/labs/pIkfp.gif') 
-                50% 50% 
-                no-repeat;
+	display: none;
+	position: fixed;
+	z-index: 1000;
+	top: 0;
+	left: 0;
+	height: 100%;
+	width: 100%;
+	background: rgba(255, 255, 255, .8)
+		url('http://sampsonresume.com/labs/pIkfp.gif') 50% 50% no-repeat;
 }
 
 /* When the body has the loading class, we turn
    the scrollbar off with overflow:hidden */
 body.loading {
-    overflow: hidden;   
+	overflow: hidden;
 }
 
 /* Anytime the body has the loading class, our
    modal element will be visible */
 body.loading .modal {
-    display: block;
+	display: block;
 }
 
 #abstract pre {
-    background-color: #f5f5f5;
-    font-size: 14px;
-    color: #444;
-    border: none;
-     font-family: "lato";
-    padding: 4px;
-    line-height: 18px;
-    word-break: break-word;
-    word-wrap: break-word;
-    white-space: pre-wrap;
-    overflow: auto;
-    max-height:400px;
+	background-color: #f5f5f5;
+	font-size: 14px;
+	color: #444;
+	border: none;
+	font-family: "lato";
+	padding: 4px;
+	line-height: 18px;
+	word-break: break-word;
+	word-wrap: break-word;
+	white-space: pre-wrap;
+	overflow: auto;
+	max-height: 400px;
 }
 
 #datatable {
 overflow:auto;
 max-height: 600px;
+min-height:200px;
+background-color:lemonchiffon;
+margin-bottom:10px;
 }
 
-.warning {
-	color: red;
-	font-size: 14px;
-	border: 1px;
+#datatable>p {
+margin: 10px;
 }
-
 
 #institution, #subject {
 margin-left: 20px;
@@ -127,3 +120,30 @@ color: darkgreen;
 margin-top: 4px;
 margin-bottom: 4px;
 }
+#stats {
+font-weight: bold;
+margin-bottom: 10px;
+}
+/* Absolute Center Spinner */
+.loading {
+  position: relative;
+  z-index: 999;
+  height: 2em;
+  width: 2em;
+  overflow: show;
+  margin: auto;
+  top:100px;
+}
+
+/* Transparent Overlay */
+.loading:before {
+  content: '';
+  display: block;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0,0,0,0.1);
+}
+

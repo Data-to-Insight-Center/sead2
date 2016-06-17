@@ -89,71 +89,74 @@
 
 					<div class='mlabel col-xs-3'>Contents:</div>
 					<div class='notes col-xs-6'>
-						<div>Individual files can be downloaded through the links
-							below. The buttons below allow retrieval of the entire
-							publication package or the complete metadata document,
-							respectively.</div>
-
+						<div id='contents'>
+							<div>Individual files can be downloaded through the links
+								below. The buttons below allow retrieval of the entire
+								publication package or the complete metadata document,
+								respectively.</div>
+						</div>
+						<div class='loading '>Loading Contents ...</div>
 						<div id='datatable'></div>
 						<div id='actions'></div>
 					</div>
 				</div>
-				<div class='mline row'>
-					<div class='mlabel col-xs-3'>Data Source:</div>
-					<div class='col-xs-6 notes'>
-						<div>
-							This data was published through the <a id='project'
-								target='_blank'></a> Project Space operated by <a
-								href="http://sead-data.net" target='_blank'>SEAD</a>. It is a
-							version of a <a id='livecopy'>live data collection</a> that may
-							have additional published versions or have been updated since
-							publication.While the live copy and/or the Project Space may be
-							accessed controlled, and may not exist as long as this published
-							version, you can explore these links to see if updated
-							information or related data publications exist.
-						</div>
+			</div>
+			<div class='mline row'>
+				<div class='mlabel col-xs-3'>Data Source:</div>
+				<div class='col-xs-6 notes'>
+					<div>
+						This data was published through the <a id='project'
+							target='_blank'></a> Project Space operated by <a
+							href="http://sead-data.net" target='_blank'>SEAD</a>. It is a
+						version of a <a id='livecopy'>live data collection</a> that may
+						have additional published versions or have been updated since
+						publication.While the live copy and/or the Project Space may be
+						accessed controlled, and may not exist as long as this published
+						version, you can explore these links to see if updated information
+						or related data publications exist.
 					</div>
-					<div class='mline row'>
-						<div id='about' class='mlabel col-xs-3'>Repository
-							Information:</div>
-						<div class='mline row notes'>
-							<div class='col-xs-6'>
-								<div>
-									<div class="topic">Download Formatting:</div>
-									This data publication is archived as a single <a
-										href="https://commons.apache.org/proper/commons-compress/zip.html"
-										target='_blank'>Zip</a> file, formatted according to the <a
-										href="https://tools.ietf.org/html/draft-kunze-bagit-11"
-										target='_blank'>BagIT specification</a>, with metadata
-									documented according to the Open Archives Initiative Object
-									Reuse and Exchange (<a href="https://www.openarchives.org/ore/"
-										target='_blank'>ORE</a>) specification (<a
-										href="http://www.openarchives.org/ore/0.9/jsonld"
-										target='_blank'>serialized as JSON-LD</a>, integrated with
-									BagIT according to the <a
-										href="http://jenkins-1.dataone.org/documentation/unstable/API-Documentation-development/design/DataPackage.html#package-serialization-using-bagit"
-										target='_blank'>convention</a> developed within the <a
-										href="http://dataone.org" target='_blank'>DataOne project</a>.)
-								</div>
-								<div>
-									<div class='topic'>Repository Info:</div>
-									The <a id="repo"></a> is managed by:
-									<div id="institution"></div>
-									and provides provides services for data in the subject area(s):
-									<div id='subject'></div>
-								</div>
-								<div id="repodesc">
-									<div class='topic'>Repository Description:</div>
-								</div>
-								<div id='repocontact'>
-									<div class='topic'>Contact:</div>
-								</div>
+				</div>
+				<div class='mline row'>
+					<div id='about' class='mlabel col-xs-3'>Repository
+						Information:</div>
+					<div class='mline row notes'>
+						<div class='col-xs-6'>
+							<div>
+								<div class="topic">Download Formatting:</div>
+								This data publication is archived as a single <a
+									href="https://commons.apache.org/proper/commons-compress/zip.html"
+									target='_blank'>Zip</a> file, formatted according to the <a
+									href="https://tools.ietf.org/html/draft-kunze-bagit-11"
+									target='_blank'>BagIT specification</a>, with metadata
+								documented according to the Open Archives Initiative Object
+								Reuse and Exchange (<a href="https://www.openarchives.org/ore/"
+									target='_blank'>ORE</a>) specification (<a
+									href="http://www.openarchives.org/ore/0.9/jsonld"
+									target='_blank'>serialized as JSON-LD</a>, integrated with
+								BagIT according to the <a
+									href="http://jenkins-1.dataone.org/documentation/unstable/API-Documentation-development/design/DataPackage.html#package-serialization-using-bagit"
+									target='_blank'>convention</a> developed within the <a
+									href="http://dataone.org" target='_blank'>DataOne project</a>.)
+							</div>
+							<div>
+								<div class='topic'>Repository Info:</div>
+								The <a id="repo"></a> is managed by:
+								<div id="institution"></div>
+								and provides provides services for data in the subject area(s):
+								<div id='subject'></div>
+							</div>
+							<div id="repodesc">
+								<div class='topic'>Repository Description:</div>
+							</div>
+							<div id='repocontact'>
+								<div class='topic'>Contact:</div>
 							</div>
 						</div>
 					</div>
 				</div>
 			</div>
 		</div>
+	</div>
 	</div>
 </body>
 </html>
