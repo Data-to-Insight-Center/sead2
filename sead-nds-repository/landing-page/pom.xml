@@ -79,7 +79,6 @@
 		<dependency>
 			<groupId>commons-io</groupId>
 			<artifactId>commons-io</artifactId>
-			<version>2.5</version>
 		</dependency>
 		<dependency>
 			<groupId>commons-codec</groupId>
@@ -93,10 +92,6 @@
 		<dependency>
 			<groupId>com.sun.jersey</groupId>
 			<artifactId>jersey-server</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>gov.loc</groupId>
-			<artifactId>bagit</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.json</groupId>
@@ -124,6 +119,10 @@
 			<groupId>com.fasterxml.jackson.core</groupId>
 			<artifactId>jackson-databind</artifactId>
 			<version>2.7.4</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.httpcomponents</groupId>
+			<artifactId>httpclient</artifactId>
 		</dependency>
 	</dependencies>
 
@@ -155,11 +154,6 @@
 				<version>1.8</version>
 			</dependency>
 			<dependency>
-				<groupId>gov.loc</groupId>
-				<artifactId>bagit</artifactId>
-				<version>4.9.0</version>
-			</dependency>
-			<dependency>
 				<groupId>org.json</groupId>
 				<artifactId>json</artifactId>
 				<version>20140107</version>
@@ -180,6 +174,11 @@
 				<artifactId>ref-repo</artifactId>
 				<version>1.0.7</version>
 				<type>jar</type>
+			</dependency>
+			<dependency>
+				<groupId>org.apache.httpcomponents</groupId>
+				<artifactId>httpclient</artifactId>
+				<version>4.5.2</version>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>
