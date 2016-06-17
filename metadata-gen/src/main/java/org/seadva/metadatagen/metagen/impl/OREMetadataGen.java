@@ -8,9 +8,7 @@ import org.seadva.metadatagen.util.Constants;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.SocketTimeoutException;
-import java.net.URL;
-import java.net.URLConnection;
+import java.net.*;
 
 
 public class OREMetadataGen extends BaseMetadataGen {
@@ -152,7 +150,19 @@ public class OREMetadataGen extends BaseMetadataGen {
 
             String identifier = (String)partObject.get(IDENTIFIER);
 
-            double size = partObject.has(SIZE) && partObject.get(SIZE) instanceof String ? Double.parseDouble((String) partObject.get(SIZE)) : -1;
+            double size = -1;
+
+            if(partObject.has(SIZE) ) {
+                if(partObject.get(SIZE) instanceof String) {
+                    size = Double.parseDouble((String) partObject.get(SIZE));
+                } else if(partObject.get(SIZE) instanceof Integer) {
+                    size = (double)partObject.getInt(SIZE);
+                } else if(partObject.get(SIZE) instanceof Double) {
+                    size = partObject.getDouble(SIZE);
+                } else if(partObject.get(SIZE) instanceof Long) {
+                    size = (double)partObject.getLong(SIZE);
+                }
+            }
 
             if(size > 0 && Constants.validateDownloadLinks && partObject.has(SIMILAR_TO)) {
                 if(!validateDownloadLink(partObject.get(SIMILAR_TO))) {
@@ -205,7 +215,21 @@ public class OREMetadataGen extends BaseMetadataGen {
         return isNotNull;
     }
 
-    private boolean head(String url)  {
+    private boolean head(String url) {
+
+        try {
+            HttpURLConnection connection = (HttpURLConnection) new URL(url).openConnection();
+            connection.setConnectTimeout(2000);
+            connection.setReadTimeout(2000);
+            connection.setRequestMethod("HEAD");
+            int responseCode = connection.getResponseCode();
+            if (responseCode == 200) {
+                return true;
+            }
+        } catch (IOException e) {
+            //e.printStackTrace();
+        }
+
         try {
             URL urlCon = new URL(url);
             URLConnection con = urlCon.openConnection();
@@ -232,25 +256,5 @@ public class OREMetadataGen extends BaseMetadataGen {
             }
             return false;
         }
-        /*try {
-            URLConnection conn = new URL(url).openConnection();
-            conn.connect();
-
-            if (conn instanceof HttpURLConnection) {
-                int code = ((HttpURLConnection)conn).getResponseCode();
-                if (code < 200 || code >= 300) {
-                    System.out.println("FAIL  : " + url + ", status : " + code);
-                    return false;
-                }
-            } else {
-                System.out.println("FAIL  : " + url + ", not a valid URL");
-                return false;
-            }
-            System.out.println("FOUND : " + url);
-            return true;
-        } catch (Exception e) {
-            System.out.println("FAIL  : " + url + ", exception thrown while calling the URL");
-            return false;
-        }*/
     }
 }
