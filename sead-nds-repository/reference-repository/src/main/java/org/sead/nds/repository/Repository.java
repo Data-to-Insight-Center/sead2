@@ -51,14 +51,15 @@ public class Repository {
 	public Repository() {
 	}
 
-    // Important: SDA Agent also uses this Repository class and passes it's own properties.
-    // therefore don't load properties inside the init method.
+	// Important: SDA Agent also uses this Repository class and passes it's own
+	// properties.
+	// therefore don't load properties inside the init method.
 	public static void init(Properties properties) {
 		props = properties;
 		repoID = props.getProperty("repo.ID");
 		dataPath = props.getProperty("repo.datapath");
-		
-		if((repoID ==null) || (dataPath==null)) {
+
+		if ((repoID == null) || (dataPath == null)) {
 			log.error("Unable to find repoId and dataPath in proporties file");
 		}
 		allowUpdates = (props.getProperty("repo.allowupdates", "false"))
@@ -69,7 +70,7 @@ public class Repository {
 		}
 		log.debug("Using " + numThreads + " threads");
 	}
-	
+
 	public static int getNumThreads() {
 		return numThreads;
 	}
@@ -95,20 +96,40 @@ public class Repository {
 			BagGenerator bg;
 			C3PRPubRequestFacade RO = new C3PRPubRequestFacade(args[0], props);
 			bg = new BagGenerator(RO);
-			bg.setLinkRewriter(new ReferenceLinkRewriter(props.getProperty("repo.landing.base")));
+			bg.setLinkRewriter(new ReferenceLinkRewriter(props
+					.getProperty("repo.landing.base")));
 			// FixMe - use repo.ID from properties file (possibly in repo class
-			if (bg.generateBag(args[0])) {
+			if (bg.generateBag(args[0], false)) {
 				RO.sendStatus(
-						C3PRPubRequestFacade.SUCCESS_STAGE,
+						PubRequestFacade.SUCCESS_STAGE,
 						RO.getOREMap().getJSONObject("describes")
 								.getString("External Identifier"));
 			} else {
 				RO.sendStatus(
-						C3PRPubRequestFacade.FAILURE_STAGE,
+						PubRequestFacade.FAILURE_STAGE,
+						"Processing of this request has failed and no further attempts to process this request will be made. Please contact the repository for further information.");
+			}
+		} else if (args.length == 2) {
+			BagGenerator bg;
+			RefRepoPubRequestFacade RO = new RefRepoPubRequestFacade(args[1],
+					args[0], props);
+			bg = new BagGenerator(RO);
+			bg.setLinkRewriter(new ReferenceLinkRewriter(props
+					.getProperty("repo.landing.base")));
+			// FixMe - use repo.ID from properties file (possibly in repo class
+			if (bg.generateBag(args[1], true)) {
+				RO.sendStatus(
+						PubRequestFacade.SUCCESS_STAGE,
+						RO.getOREMap().getJSONObject("describes")
+								.getString("External Identifier"));
+			} else {
+				RO.sendStatus(
+						PubRequestFacade.FAILURE_STAGE,
 						"Processing of this request has failed and no further attempts to process this request will be made. Please contact the repository for further information.");
 			}
 		} else {
-			System.out.println("Usage: <RO Identifier>");
+			System.out
+					.println("Usage: <optional local pubRequest file (JSON document)> <RO Identifier>");
 		}
 		System.exit(0);
 	}
@@ -145,8 +166,10 @@ public class Repository {
 		}
 
 		// After people expansion, we know that "Creator" is a JSONArray
-		String creators = RO.getCreatorsString(RO.flattenPeople((JSONArray) RO
-				.getOREMap().getJSONObject("describes").get("Creator")));
+		String creators = C3PRPubRequestFacade
+				.getCreatorsString(C3PRPubRequestFacade
+						.flattenPeople((JSONArray) RO.getOREMap()
+								.getJSONObject("describes").get("Creator")));
 
 		log.debug("Creators for DOI: " + creators);
 
@@ -224,7 +247,7 @@ public class Repository {
 	public static String getID() {
 		return repoID;
 	}
-	
+
 	public static String getC3PRAddress() {
 		return props.getProperty("c3pr.address");
 	}

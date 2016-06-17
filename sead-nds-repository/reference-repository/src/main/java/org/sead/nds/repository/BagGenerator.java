@@ -28,6 +28,7 @@ import java.util.Calendar;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.Set;
 import java.util.Map.Entry;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
@@ -55,7 +56,8 @@ public class BagGenerator {
 
 	private static final Logger log = Logger.getLogger(BagGenerator.class);
 
-	private ParallelScatterZipCreator scatterZipCreator = new ParallelScatterZipCreator(Executors.newFixedThreadPool(Repository.getNumThreads()));
+	private ParallelScatterZipCreator scatterZipCreator = new ParallelScatterZipCreator(
+			Executors.newFixedThreadPool(Repository.getNumThreads()));
 	private ScatterZipOutputStream dirs = null;
 
 	private JSONArray aggregates = null;
@@ -75,14 +77,16 @@ public class BagGenerator {
 	private JSONObject pubRequest = null;
 	private String bagID = null;
 	
+	private boolean usetemp=false;
+
 	private LinkRewriter linkRewriter = new NoOpLinkRewriter();
-	
+
 	public BagGenerator(C3PRPubRequestFacade ro) {
 		RO = ro;
 	}
-	
+
 	public void setLinkRewriter(LinkRewriter newRewriter) {
-		linkRewriter=newRewriter;
+		linkRewriter = newRewriter;
 	}
 
 	/*
@@ -100,23 +104,29 @@ public class BagGenerator {
 		File tmp = File.createTempFile("sead-scatter-dirs", "tmp");
 		dirs = ScatterZipOutputStream.fileBased(tmp);
 
-		if (((JSONObject) RO.getPublicationRequest().get("Preferences"))
-				.has("License")) {
-			license = ((JSONObject) RO.getPublicationRequest().get(
-					"Preferences")).getString("License");
+		if (((JSONObject) pubRequest.get("Preferences")).has("License")) {
+			license = ((JSONObject) pubRequest.get("Preferences"))
+					.getString("License");
 
 		}
 		JSONObject oremap = RO.getOREMap();
 		JSONObject aggregation = oremap.getJSONObject("describes");
 
+		// Transfer statistics to oremap for preservation - note that the #
+		// files, totalsize are checked after the zip is written
+		// so any error will be recorded in the zip, but caught in the log.
+		// Other elements are not curently checked.
+		JSONObject aggStats = ((JSONObject) pubRequest
+				.get("Aggregation Statistics"));
+		aggregation.put("Aggregation Statistics", aggStats);
+
 		aggregation.put("License", license);
-        // check whether Access Rights set, if so, add it to aggregation
-        if (((JSONObject) RO.getPublicationRequest().get("Preferences"))
-                .has("Access Rights")) {
-            String accessRights = ((JSONObject) RO.getPublicationRequest().get(
-                    "Preferences")).getString("Access Rights");
-            aggregation.put("Access Rights", accessRights);
-        }
+		// check whether Access Rights set, if so, add it to aggregation
+		if (((JSONObject) pubRequest.get("Preferences")).has("Access Rights")) {
+			String accessRights = ((JSONObject) pubRequest.get("Preferences"))
+					.getString("Access Rights");
+			aggregation.put("Access Rights", accessRights);
+		}
 
 		bagID = aggregation.getString("Identifier");
 		String bagName = bagID;
@@ -205,37 +215,41 @@ public class BagGenerator {
 					RO.expandPeople(RO.normalizeValues(oremap.getJSONObject(
 							"describes").get("Contact"))));
 		}
-		
+
 		// Generate DOI:
 		oremap.getJSONObject("describes").put("External Identifier",
 				Repository.createDOIForRO(bagID, RO));
 
-		oremap.getJSONObject("describes").put("Publication Date",
+		oremap.getJSONObject("describes").put(
+				"Publication Date",
 				new SimpleDateFormat("yyyy-MM-dd").format(Calendar
 						.getInstance().getTime()));
-
 
 		Object context = oremap.get("@context");
 		// FixMe - should test that these labels don't have a different
 		// definition (currently we're just checking to see if they a
 		// already defined)
-		if (!isInContext(context, "License")) {
-			addToContext(context, "License", "http://purl.org/dc/terms/license");
-		}
-        if (!isInContext(context, "Access Rights")) {
-            addToContext(context, "Access Rights", "http://purl.org/dc/terms/accessRights");
-        }
-		if (!isInContext(context, "External Identifier")) {
-			addToContext(context, "External Identifier",
-					"http://purl.org/dc/terms/identifier");
-		}
-		if (!isInContext(context, "Publication Date")) {
-			addToContext(context, "Publication Date",
-					"http://purl.org/dc/terms/issued");
+		addIfNeeded(context, "License", "http://purl.org/dc/terms/license");
+		addIfNeeded(context, "Access Rights",
+				"http://purl.org/dc/terms/accessRights");
+		addIfNeeded(context, "External Identifier",
+				"http://purl.org/dc/terms/identifier");
+		addIfNeeded(context, "Publication Date",
+				"http://purl.org/dc/terms/issued");
+
+		// Aggregation Statistics
+		// For keys in Agg Stats:
+		for (String key : ((Set<String>) aggStats.keySet())) {
+			addIfNeeded(context, key,
+					getURIForKey(pubRequest.get("@context"), key));
 		}
 
-		oremap.put("@id",linkRewriter.rewriteOREMapLink(oremap.getString("@id"), bagID));
-		aggregation.put("@id", linkRewriter.rewriteAggregationLink(aggregation.getString("@id"), bagID));
+		oremap.put("@id",
+				linkRewriter.rewriteOREMapLink(oremap.getString("@id"), bagID));
+		aggregation.put(
+				"@id",
+				linkRewriter.rewriteAggregationLink(
+						aggregation.getString("@id"), bagID));
 		// Serialize oremap itself (pretty printed) - SEAD recommendation
 		// (DataOne distributes metadata files within the bag
 		// FixMe - add missing hash values if needed and update context
@@ -293,14 +307,25 @@ public class BagGenerator {
 
 	}
 
-	public boolean generateBag(String bagName) {
+	public boolean generateBag(String bagName, boolean temp) {
+		usetemp = temp;
 		FileOutputStream bagFileOS = null;
 		try {
-			File bagFile = createBagFile(bagName);
+			File origBagFile = createBagFile(bagName);
+			File bagFile = origBagFile;
+			if(usetemp) { 
+			bagFile = new File(bagFile.getAbsolutePath()+".tmp");
+			log.debug("Writing to: " + bagFile.getAbsolutePath());
+			}
 			// Create an output stream backed by the file
 			bagFileOS = new FileOutputStream(bagFile);
 			if (generateBag(bagFileOS)) {
 				validateBagFile(bagFile);
+				if(usetemp) {
+					log.debug("Moving tmp zip");
+					origBagFile.delete();
+					bagFile.renameTo(origBagFile);
+				}
 				return true;
 			} else {
 				return false;
@@ -343,10 +368,12 @@ public class BagGenerator {
 	private void validateBagFile(File bagFile) throws IOException {
 		// Run a confirmation test - should verify all files and hashes
 		ZipFile zf = new ZipFile(bagFile);
-		//Check files calculates the hashes and file sizes and reports on whether hashes are correct
-		//The file sizes are added to totalDataSize which is compared with the stats sent in the request
+		// Check files calculates the hashes and file sizes and reports on
+		// whether hashes are correct
+		// The file sizes are added to totalDataSize which is compared with the
+		// stats sent in the request
 		checkFiles(sha1Map, zf);
-		
+
 		log.debug("Data Count: " + dataCount);
 		log.debug("Data Size: " + totalDataSize);
 		// Check stats
@@ -363,6 +390,12 @@ public class BagGenerator {
 		}
 
 		zf.close();
+	}
+
+	private void addIfNeeded(Object context, String key, String uri) {
+		if (!isInContext(context, key)) {
+			addToContext(context, key, uri);
+		}
 	}
 
 	private boolean addToContext(Object context, String label, String predicate) {
@@ -393,6 +426,23 @@ public class BagGenerator {
 			}
 		}
 		return false;
+	}
+
+	private String getURIForKey(Object context, String key) {
+		String uri = null;
+		if (context instanceof JSONArray) {
+			for (int i = 0; i < ((JSONArray) context).length(); i++) {
+				uri = getURIForKey(((JSONArray) context).get(i), key);
+				if (uri != null) {
+					return uri;
+				}
+			}
+		} else if (context instanceof JSONObject) {
+			if (((JSONObject) context).has(key)) {
+				uri = ((JSONObject) context).getString(key);
+			}
+		}
+		return uri;
 	}
 
 	public static String getValidName(String bagName)
@@ -457,7 +507,10 @@ public class BagGenerator {
 				dataCount++;
 				// Check for nulls!
 				pidMap.put(child.getString("Identifier"), childPath);
-				child.put("similarTo", linkRewriter.rewriteDataLink(dataUrl, child.getString("@id"), bagID, childPath));
+				child.put(
+						"similarTo",
+						linkRewriter.rewriteDataLink(dataUrl,
+								child.getString("@id"), bagID, childPath));
 
 				if (child.has("SHA1 Hash")) {
 					if (hashtype != null && !hashtype.equals("SHA1 Hash")) {
@@ -680,7 +733,7 @@ public class BagGenerator {
 		info.append(WordUtils.wrap(
 				getSingleValue(map.getJSONObject("describes"), "Abstract"), 78,
 				CRLF + " ", true));
-		
+
 		info.append(CRLF);
 
 		info.append("Bagging-Date: ");
@@ -713,23 +766,27 @@ public class BagGenerator {
 		return info.toString();
 
 	}
-	
-	/** Kludge - handle when a single string is sent as an array of 1 string and,
-	 * for cases where multiple values are sent when only one is expected, create
-	 * a concatenated string so that information is not lost. 
+
+	/**
+	 * Kludge - handle when a single string is sent as an array of 1 string and,
+	 * for cases where multiple values are sent when only one is expected,
+	 * create a concatenated string so that information is not lost.
 	 * 
-	 * @param parent - the root json object
-	 * @param key - the key to find a value(s) for
+	 * @param parent
+	 *            - the root json object
+	 * @param key
+	 *            - the key to find a value(s) for
 	 * @return - a single string
 	 */
 	String getSingleValue(JSONObject parent, String key) {
-        String val = "";
-        if(parent.get(key) instanceof String){
-            val = parent.get(key).toString();
-        } else if(parent.get(key) instanceof ArrayList) {
-            val = StringUtils.join(((ArrayList)parent.get(key)).toArray(), ",");
-            log.warn("Multiple values found for: " + key + ": " + val);
-        }
-        return val;
+		String val = "";
+		if (parent.get(key) instanceof String) {
+			val = parent.get(key).toString();
+		} else if (parent.get(key) instanceof ArrayList) {
+			val = StringUtils
+					.join(((ArrayList) parent.get(key)).toArray(), ",");
+			log.warn("Multiple values found for: " + key + ": " + val);
+		}
+		return val;
 	}
 }

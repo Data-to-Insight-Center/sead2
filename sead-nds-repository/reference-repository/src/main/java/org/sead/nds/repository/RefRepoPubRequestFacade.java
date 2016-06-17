@@ -18,6 +18,9 @@
 
 package org.sead.nds.repository;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
@@ -26,23 +29,17 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLEncoder;
-import java.util.ArrayList;
 import java.util.Properties;
 
 import javax.ws.rs.core.MediaType;
 
 import org.apache.commons.compress.parallel.InputStreamSupplier;
-import org.apache.http.client.config.RequestConfig;
+import org.apache.commons.io.IOUtils;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.BasicCookieStore;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.impl.cookie.BasicClientCookie;
 import org.apache.http.util.EntityUtils;
 import org.apache.log4j.Logger;
@@ -50,109 +47,55 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-public class C3PRPubRequestFacade extends PubRequestFacade {
+/**
+ * This class overrides the method to retrieve a pub request (allowing
+ * reprocessing of an existing request with new Preferences and/or updated
+ * oremap URL), e.g. to generate a new test DOI without re-retrieving all of the
+ * data from the space.
+ * 
+ * @author Jim
+ *
+ */
+public class RefRepoPubRequestFacade extends C3PRPubRequestFacade {
 
 	private static final Logger log = Logger
-			.getLogger(C3PRPubRequestFacade.class);
-	BasicCookieStore cookieStore = new BasicCookieStore();
-	private int timeout = 30;
-	private RequestConfig config = RequestConfig.custom()
-			.setConnectTimeout(timeout * 1000)
-			.setConnectionRequestTimeout(timeout * 1000)
-			.setSocketTimeout(timeout * 1000).build();
+			.getLogger(RefRepoPubRequestFacade.class);
 
-	private PoolingHttpClientConnectionManager cm = new PoolingHttpClientConnectionManager();
-	protected CloseableHttpClient client;
+	private String requestFilePath = null;
 
-	Properties props = null;
-	String RO_ID = null;
-	String bearerToken = null;
-
-	protected JSONObject request = null;
-	protected JSONObject oremap = null;
-
-	public C3PRPubRequestFacade(String RO_ID, Properties props) {
-		this.RO_ID = RO_ID;
-		this.props = props;
-		cm.setDefaultMaxPerRoute(Repository.getNumThreads());
-		cm.setMaxTotal(Repository.getNumThreads() > 20 ? Repository
-				.getNumThreads() : 20);
-		client = HttpClients.custom().setConnectionManager(cm)
-				.setDefaultCookieStore(cookieStore)
-				.setDefaultRequestConfig(config).build();
+	public RefRepoPubRequestFacade(String RO_ID, String requestPath,
+			Properties props) {
+		super(RO_ID, props);
+		requestFilePath = requestPath;
 	}
 
-	protected String proxyIfNeeded(String urlString) {
-
-		if (props.containsKey("JSESSIONID")) {
-			return props.getProperty("c3pr.address")
-					+ urlString.substring(urlString.indexOf("api"));
-		} else {
-			return urlString;
-		}
-	}
-
+	// Currently, only the Preferences and Aggregation Statistics items are
+	// used, so they are the only parts (along with an appropriate @context
+	// needed in the request...
 	public JSONObject getPublicationRequest() {
-		if (request == null) {
-			String c3prServer = props.getProperty("c3pr.address");
-			HttpGet getPubRequest;
+		File request = new File(requestFilePath);
+		if (request.exists()) {
+
 			try {
-				log.debug("Retrieving: " + c3prServer + "api/researchobjects/"
-						+ URLEncoder.encode(RO_ID, "UTF-8"));
-				getPubRequest = new HttpGet(c3prServer + "api/researchobjects/"
-						+ URLEncoder.encode(RO_ID, "UTF-8"));
-
-				if (props.containsKey("JSESSIONID")) {
-					// Proxy Mode
-					log.debug("Adding: " + props.getProperty("JSESSIONID"));
-
-					BasicClientCookie cookie = new BasicClientCookie(
-							"JSESSIONID", props.getProperty("JSESSIONID"));
-					URL c3pr = new URL(c3prServer);
-
-					cookie.setDomain(c3pr.getHost());
-					cookie.setPath("/");
-					cookie.setSecure(c3pr.getProtocol().equalsIgnoreCase(
-							"https") ? true : false);
-					cookieStore.addCookie(cookie);
-				}
-				getPubRequest.addHeader("accept", "application/json");
-
-				CloseableHttpResponse response = client.execute(getPubRequest);
-
-				if (response.getStatusLine().getStatusCode() == 200) {
-					String mapString = EntityUtils.toString(response
-							.getEntity());
-					log.trace(mapString);
-					request = new JSONObject(mapString);
-
-				}
-			} catch (UnsupportedEncodingException e1) {
+				return new JSONObject(IOUtils.toString(new FileInputStream(
+						request), "UTF-8"));
+			} catch (JSONException e) {
 				// TODO Auto-generated catch block
-				e1.printStackTrace();
-			} catch (ClientProtocolException e) {
+				e.printStackTrace();
+			} catch (FileNotFoundException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			} catch (IOException e) {
-				log.error("Unable to retrieve pub request document", e);
+				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-
-			// Set the bearerToekn for any calls to the originating space
-			// related to
-			// this RO
-			if (request.has("Bearer Token")) {
-				bearerToken = request.getString("Bearer Token");
-			} else if (props.containsKey("bearertoken.default")) {
-				bearerToken = props.getProperty("bearertoken.default");
-			}
 		}
-		return request;
+		return null;
 	}
 
 	private URI getOREMapURI() {
 		try {
-			return new URI(proxyIfNeeded(request.getJSONObject("Aggregation")
+			return new URI(proxyIfNeeded(getPublicationRequest().getJSONObject("Aggregation")
 					.getString("@id")));
 		} catch (JSONException e) {
 			e.printStackTrace();
@@ -166,9 +109,9 @@ public class C3PRPubRequestFacade extends PubRequestFacade {
 	public JSONObject getOREMap() {
 		if (oremap == null) {
 
-			log.debug("Retreiving: " + getOREMapURI().toString());
+			log.debug("Retrieving: " + getOREMapURI().toString());
 			HttpGet getMap = createNewGetRequest(getOREMapURI(),
-					MediaType.APPLICATION_JSON);
+					MediaType.APPLICATION_OCTET_STREAM);
 			try {
 				CloseableHttpResponse response = client.execute(getMap);
 
@@ -216,13 +159,16 @@ public class C3PRPubRequestFacade extends PubRequestFacade {
 	}
 
 	InputStreamSupplier getInputStreamSupplier(final String uri) {
+		
+		//FIXME - remove once done processing bad maps: Backward compat
+		final String newuri=uri.replaceAll(" ", "%20");
 
 		return new InputStreamSupplier() {
 			public InputStream get() {
 				int tries = 0;
 				while (tries < 3) {
 					try {
-						HttpGet getMap = createNewGetRequest(new URI(uri), null);
+						HttpGet getMap = createNewGetRequest(new URI(newuri), null);
 						log.trace("Retrieving: " + uri);
 						CloseableHttpResponse response;
 						response = client.execute(getMap);
