@@ -153,11 +153,8 @@ public class Repository {
 					.getJSONObject("Preferences")
 					.getString("External Identifier");
 			if (existingID.startsWith("http://dx.doi.org/")) {
-				existingID = existingID
-						.substring("http://dx.doi.org/".length());
-			} else if (existingID.startsWith("doi:")) {
-				existingID = existingID.substring("doi:".length());
-			}
+				existingID = "doi:" + existingID.substring("http://dx.doi.org/".length());
+			} 
 			if (existingID != null && !allowUpdates) {
 				// FixMe - should we fail instead of going forward with a new
 				// ID?
@@ -217,7 +214,7 @@ public class Repository {
 		if ((existingID != null) && (existingID.contains(shoulder))
 				&& allowUpdates) {
 
-			existingID = "doi:" + existingID;
+
 			// Enhancement: Retrieve metadata first and find current landing
 			// page for this DOI - can then
 			// decide what to do, e.g. to move/remove the old version, do
