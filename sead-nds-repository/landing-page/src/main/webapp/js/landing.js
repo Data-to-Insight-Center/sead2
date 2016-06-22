@@ -313,7 +313,7 @@ seadData.init = function() {
 
 						if (repojson.repositoryContact) {
 							$('#repocontact').text(repojson.repositoryContact);
-							if (repositoryContact.indexOf('@')) {
+							if (repojson.repositoryContact.indexOf('@')) {
 								$('#repocontact')
 										.append(
 												$('<a/>')
