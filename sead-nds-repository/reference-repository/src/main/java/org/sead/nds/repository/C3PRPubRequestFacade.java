@@ -223,7 +223,7 @@ public class C3PRPubRequestFacade extends PubRequestFacade {
 				while (tries < 3) {
 					try {
 						HttpGet getMap = createNewGetRequest(new URI(uri), null);
-						log.trace("Retrieving: " + uri);
+						log.trace("Retrieving " + tries + ": " + uri);
 						CloseableHttpResponse response;
 						response = client.execute(getMap);
 						if (response.getStatusLine().getStatusCode() == 200) {
@@ -233,6 +233,7 @@ public class C3PRPubRequestFacade extends PubRequestFacade {
 						log.debug("Status: "
 								+ response.getStatusLine().getStatusCode());
 						tries++;
+					
 					} catch (ClientProtocolException e) {
 						tries += 3;
 						// TODO Auto-generated catch block
@@ -242,7 +243,7 @@ public class C3PRPubRequestFacade extends PubRequestFacade {
 						// as a timeout
 						tries++;
 						log.warn("Attempt# " + tries
-								+ " : Unable to retrieve file: " + uri, e);
+							+ " : Unable to retrieve file: " + uri, e);
 						if (tries == 3) {
 							log.error("Final attempt failed for " + uri);
 						}
@@ -253,6 +254,7 @@ public class C3PRPubRequestFacade extends PubRequestFacade {
 						e.printStackTrace();
 					}
 				}
+				log.error("Could not read: " + uri);
 				return null;
 			}
 		};
