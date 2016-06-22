@@ -6,23 +6,20 @@ import java.io.FileNotFoundException;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.Paths;
-
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 import javax.servlet.annotation.WebListener;
 
-import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.compress.utils.IOUtils;
 import org.apache.log4j.Logger;
 import org.sead.nds.repository.Repository;
 
 import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+//WebListener works in tomcat7/servlets3 but not in tomcat6/servlets2.5
 @WebListener
 public class RepoContextListener implements ServletContextListener {
 
@@ -38,10 +35,15 @@ public class RepoContextListener implements ServletContextListener {
 	@Override
 	public void contextInitialized(ServletContextEvent arg0) {
 		// Reads config file from the same dir as this class
+		try {
 		Repository.init(Repository.loadProperties());
 		log.debug("Repo Context Initializing");
 		checkPublications();
 		log.info("Reference Repository Context Initialized");
+		} catch (Exception e) {
+			log.error("Exception during Context initiaization: " + e.getLocalizedMessage() );
+			e.printStackTrace();
+		}
 	}
 
 	private void checkPublications() {

@@ -6,6 +6,14 @@
 
 	<display-name>SEAD Reference Repository</display-name>
 
+   <!-- Listener needed for Tomcat6/servlets 2.5>
+   <  -->
+   <listener>
+        <listener-class>
+             org.sead.nds.landingpage.RepoContextListener
+        </listener-class>
+   </listener>
+
   <servlet>
     <servlet-name>Log4JInitServlet</servlet-name>
     <servlet-class>org.sead.nds.landingpage.util.Log4JInitServlet</servlet-class>

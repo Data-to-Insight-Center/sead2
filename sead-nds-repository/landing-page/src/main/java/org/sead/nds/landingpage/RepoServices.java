@@ -95,6 +95,15 @@ public class RepoServices {
 	public RepoServices() {
 	}
 
+	/*
+	 * BackwardCompatibility - Tomcat 6 seems to require that Repository be initialized in this
+	 * class even though it is initialized in the RepoContextListener class in
+	 * the same app It does not appear that this is needed in Tomcat 7 ...
+	 */
+	static {
+		Repository.init(Repository.loadProperties());
+	}
+
 	/**
 	 * @Path("/researchobjects")
 	 * 
@@ -268,7 +277,7 @@ public class RepoServices {
 		map = new File(path, bagNameRoot + ".oremap.jsonld.txt");
 		if (!map.exists()) {
 			createMap(map, path, bagNameRoot);
-			
+
 		}
 		return map;
 	}
