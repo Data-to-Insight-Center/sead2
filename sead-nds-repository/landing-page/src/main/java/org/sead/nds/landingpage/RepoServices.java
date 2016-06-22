@@ -22,12 +22,16 @@
 package org.sead.nds.landingpage;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.file.Paths;
 
@@ -89,43 +93,45 @@ public class RepoServices {
 	static ObjectMapper mapper = new ObjectMapper();
 
 	public RepoServices() {
-		// Reads config file from the same dir as this class
-		Repository.init(Repository.loadProperties());
-		log.debug("Repo Services Created");
 	}
 
-	
-	/*
+	/**
 	 * @Path("/researchobjects")
 	 * 
-	 * Returns the base landingpage html
+	 *                           Returns the base landingpage html
 	 */
-
 	@Path("/repository")
 	@Produces(MediaType.APPLICATION_JSON)
 	@GET
 	public Response getRepositoryInfo() {
 		String id = Repository.getID();
 		String SEADServicesURL = Repository.getC3PRAddress();
-		URI repoInfo=null;
+		URL repoInfo = null;
 		try {
-			repoInfo = new URI(SEADServicesURL + "api/repositories/"
+			repoInfo = new URL(SEADServicesURL + "api/repositories/"
 					+ URLEncoder.encode(id, "UTF-8"));
+			// Make a connect to the server
+			log.debug("Connecting to: " + repoInfo.toString());
+			HttpURLConnection conn = null;
+			conn = (HttpURLConnection) repoInfo.openConnection();
 
-		} catch (URISyntaxException e) {
-			log.warn(e.getMessage() + " id: " + id);
-		} catch (UnsupportedEncodingException e) {
-			log.warn("UTF-8 not supported");
-		}
-		if(repoInfo==null) {
-			log.debug("Unable to refer to repository info @ c3pr");
-			return Response.status(com.sun.jersey.api.client.ClientResponse.Status.INTERNAL_SERVER_ERROR).build();
-		}
-		log.debug("Referring to : " + repoInfo.toString());
-		return Response.temporaryRedirect(repoInfo).build();
+			conn.setDoInput(true);
+			conn.setUseCaches(false);
+			InputStream is = conn.getInputStream();
 
+			return Response.ok(is).build();
+
+		} catch (MalformedURLException e) {
+			log.error("Bad Repo URL");
+		} catch (IOException e) {
+			log.warn("Could not contact c3pr: " + repoInfo.toString());
+		}
+		log.debug("Unable to refer to repository info @ c3pr");
+		return Response
+				.status(com.sun.jersey.api.client.ClientResponse.Status.INTERNAL_SERVER_ERROR)
+				.build();
 	}
-	
+
 	/*
 	 * @Path("/researchobjects")
 	 * 
@@ -147,7 +153,8 @@ public class RepoServices {
 			log.warn("UTF-8 not supported");
 		}
 		log.debug("Referring to : " + landingPage.toString());
-		//Fairly permanent, but using temporary to keep the permanent html and json URLs for the RO the same...
+		// Fairly permanent, but using temporary to keep the permanent html and
+		// json URLs for the RO the same...
 		return Response.temporaryRedirect(landingPage).build();
 
 	}
@@ -157,15 +164,15 @@ public class RepoServices {
 	 * 
 	 * Returns the description file for the Aggregation
 	 * 
-	 * @deprecated - /researchobjects/{id}/metadata returns this plus the top
-	 * level of children - that method is now used instead of this one
+	 * /researchobjects/{id}/metadata returns this plus the top level of
+	 * children
 	 */
 
 	@Path("/researchobjects/{id}")
 	@Produces(MediaType.APPLICATION_JSON)
 	@GET
 	public Response getAggregationSummary(@PathParam(value = "id") String id) {
-		log.warn("Call to old method: /researchobjects/" + id);
+
 		File descFile;
 		try {
 			// get or generate this file
@@ -205,7 +212,6 @@ public class RepoServices {
 	@Produces(MediaType.APPLICATION_JSON)
 	@GET
 	public Response getResourceMetadata(@PathParam(value = "id") String id) {
-		try {
 		String path = getDataPathTo(id);
 		String bagNameRoot = getBagNameRoot(id);
 
@@ -215,34 +221,22 @@ public class RepoServices {
 		}
 
 		log.debug(result.getAbsolutePath());
-		//ZipFile zf = null;
+		CountingInputStream cis = null;
 		try {
 			// Check for index files
 			File indexFile = getIndexFile(id);
-			//Note: This step can be VERY slow when something is being published on the same disk - minutes for a large file
-			//If you don't see the "Zipfile created" message in the log, look at disk I/O...
-			final ZipFile zf = new ZipFile(result);
-			log.debug("Zipfile created");
-			ZipArchiveEntry archiveEntry1 = zf.getEntry(bagNameRoot
-					+ "/oremap.jsonld.txt");
-			log.trace("Can read : " + zf.canReadEntryData(archiveEntry1));
+			File oremap = getOREMapFile(id);
 			// Find/open base ORE map file
 			// Note - limited to maxint size for oremap file size
-			final CountingInputStream cis = new CountingInputStream(
-					new BufferedInputStream(zf.getInputStream(archiveEntry1),
-							Math.min((int) archiveEntry1.getSize(), 1000000)));
+			cis = new CountingInputStream(new BufferedInputStream(
+					new FileInputStream(oremap), Math.min(
+							(int) oremap.length(), 1000000)));
 			JsonNode resultNode = getAggregation(id, indexFile, cis, true,
-					archiveEntry1.getSize());
+					oremap.length());
 			if (resultNode == null) {
 				log.warn("Null item returned");
 			}
-			if (zf != null) {
-				try {
-					zf.close();
-				} catch (IOException io) {
-					log.warn("IO error on zf close: " + io.getMessage());
-				}
-			}
+
 			return Response.ok(resultNode.toString()).build();
 		} catch (JsonParseException e) {
 			log.error(e);
@@ -253,21 +247,7 @@ public class RepoServices {
 			e.printStackTrace();
 			return Response.serverError().entity(e.getMessage()).build();
 		} finally {
-/*			if (zf != null) {
-				try {
-					zf.close();
-				} catch (IOException io) {
-					log.warn("IO error on zf close: " + io.getMessage());
-				}
-			}
-			*/
-		}
-		} catch (Exception e ) {
-			log.error(e.getMessage() + e.getStackTrace().toString());
-			return Response.status(Status.INTERNAL_SERVER_ERROR).build();
-		} catch (Throwable t) {
-			log.error(t.getLocalizedMessage()+ t.getStackTrace().toString());
-			return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+			IOUtils.closeQuietly(cis);
 		}
 	}
 
@@ -279,6 +259,47 @@ public class RepoServices {
 	 * AggregatedResources directly within it (direct children listed in
 	 * 'HasPart'))
 	 */
+
+	private File getOREMapFile(String id) {
+		File map = null;
+		String path = getDataPathTo(id);
+		String bagNameRoot = getBagNameRoot(id);
+
+		map = new File(path, bagNameRoot + ".oremap.jsonld.txt");
+		if (!map.exists()) {
+			createMap(map, path, bagNameRoot);
+			
+		}
+		return map;
+	}
+
+	protected static void createMap(File map, String path, String bagNameRoot) {
+		ZipFile zf = null;
+		try {
+			log.info("Caching oremap: " + map.getPath());
+			// Note: This step can be VERY slow when something is being
+			// published on the same disk - minutes for a large file
+			// If you don't see the "Zipfile opened" message in the log,
+			// look at disk I/O...
+			File result = new File(path, bagNameRoot + ".zip");
+			zf = new ZipFile(result);
+			log.debug("Zipfile opened");
+			ZipArchiveEntry archiveEntry1 = zf.getEntry(bagNameRoot
+					+ "/oremap.jsonld.txt");
+			InputStream source = zf.getInputStream(archiveEntry1);
+			OutputStream sink = new FileOutputStream(map);
+			IOUtils.copy(source, sink);
+			IOUtils.closeQuietly(source);
+			IOUtils.closeQuietly(sink);
+			log.debug("ORE Map written: " + result.getCanonicalPath());
+		} catch (Exception e) {
+			log.error("Cannot read zipfile to create cached oremap: "
+					+ map.getPath());
+			e.printStackTrace();
+		} finally {
+			ZipFile.closeQuietly(zf);
+		}
+	}
 
 	@Path("/researchobjects/{id}/metadata/{did}")
 	@Produces(MediaType.APPLICATION_JSON)
@@ -293,26 +314,23 @@ public class RepoServices {
 		if (!result.exists()) {
 			return Response.status(Status.NOT_FOUND).build();
 		}
-		ZipFile zf = null;
+		CountingInputStream cis = null;
 		try {
 			File indexFile = getIndexFile(id);
 
-			zf = new ZipFile(result);
-			ZipArchiveEntry archiveEntry1 = zf.getEntry(bagNameRoot
-					+ "/oremap.jsonld.txt");
-
 			// Find/open base ORE map file
 			// Note - limited to maxint size for oremap file size
-
-			final CountingInputStream cis = new CountingInputStream(
-					new BufferedInputStream(zf.getInputStream(archiveEntry1),
-							Math.min((int) archiveEntry1.getSize(), 1000000)));
+			File map = getOREMapFile(id);
+			cis = new CountingInputStream(new BufferedInputStream(
+					new FileInputStream(map), Math.min((int) map.length(),
+							1000000)));
 
 			JsonNode resultNode = getItem(dataID, indexFile, cis, true,
-					archiveEntry1.getSize());
+					map.length());
 			if (resultNode == null) {
 				log.warn("Null item returned");
 			}
+
 			return Response.ok(resultNode.toString()).build();
 		} catch (JsonParseException e) {
 			log.error(e);
@@ -323,13 +341,7 @@ public class RepoServices {
 			e.printStackTrace();
 			return Response.serverError().entity(e.getMessage()).build();
 		} finally {
-			if (zf != null) {
-				try {
-					zf.close();
-				} catch (IOException io) {
-					log.warn("IO err on zf close: " + io.getMessage());
-				}
-			}
+			IOUtils.closeQuietly(cis);
 		}
 	}
 
@@ -362,7 +374,9 @@ public class RepoServices {
 				public void write(OutputStream os) throws IOException,
 						WebApplicationException {
 					IOUtils.copy(inputStream, os);
-					zf.close();
+					IOUtils.closeQuietly(inputStream);
+					IOUtils.closeQuietly(os);
+					ZipFile.closeQuietly(zf);
 				}
 			};
 
@@ -407,7 +421,9 @@ public class RepoServices {
 				public void write(OutputStream os) throws IOException,
 						WebApplicationException {
 					IOUtils.copy(inputStream, os);
-					zf.close();
+					IOUtils.closeQuietly(inputStream);
+					IOUtils.closeQuietly(os);
+					ZipFile.closeQuietly(zf);
 				}
 			};
 
@@ -446,8 +462,8 @@ public class RepoServices {
 	}
 
 	// Calculate the path to the zip in the file system based in the base path
-	// and the 2 level hash subdurectory scheme
-	private String getDataPathTo(String id) {
+	// and the 2 level hash subdirectory scheme
+	protected static String getDataPathTo(String id) {
 		String pathString = DigestUtils.sha1Hex(id);
 		String path = Repository.getDataPath();
 		// Two level hash-based distribution o files
@@ -471,17 +487,11 @@ public class RepoServices {
 		String bagNameRoot = getBagNameRoot(id);
 		File descFile = new File(path, bagNameRoot + ".desc.json");
 		if (!descFile.exists()) {
-			File result = new File(path, bagNameRoot + ".zip");
-
-			final ZipFile zf = new ZipFile(result);
-			ZipArchiveEntry archiveEntry1 = zf.getEntry(bagNameRoot
-					+ "/oremap.jsonld.txt");
-
-			final InputStream roInputStream = zf.getInputStream(archiveEntry1);
+			final InputStream roInputStream = new FileInputStream(
+					getOREMapFile(id));
 			File indexFile = new File(path, bagNameRoot + ".index.json");
-
 			generateIndex(roInputStream, descFile, indexFile);
-			ZipFile.closeQuietly(zf);
+			IOUtils.closeQuietly(roInputStream);
 			log.debug("Created desc/index files");
 		} else {
 			log.trace("Desc and Index exist");
@@ -495,19 +505,12 @@ public class RepoServices {
 		String path = getDataPathTo(id);
 		String bagNameRoot = getBagNameRoot(id);
 		File indexFile = new File(path, bagNameRoot + ".index.json");
-
 		if (!indexFile.exists()) {
-			File result = new File(path, bagNameRoot + ".zip");
-
-			final ZipFile zf = new ZipFile(result);
-			ZipArchiveEntry archiveEntry1 = zf.getEntry(bagNameRoot
-					+ "/oremap.jsonld.txt");
-
-			final InputStream roInputStream = zf.getInputStream(archiveEntry1);
+			final InputStream roInputStream = new FileInputStream(
+					getOREMapFile(id));
 			File descFile = new File(path, bagNameRoot + ".desc.json");
-
 			generateIndex(roInputStream, descFile, indexFile);
-			ZipFile.closeQuietly(zf);
+			IOUtils.closeQuietly(roInputStream);
 		} else {
 			log.trace("Desc and Index exist");
 		}
@@ -545,20 +548,12 @@ public class RepoServices {
 				offsets.add(offset);
 			}
 		}
-		try {
-			fis.close();
-		} catch (Exception e) {
-			log.debug(e.getMessage());
-		}
+		IOUtils.closeQuietly(fis);
 
 		File descFile = getDescFile(id);
 		InputStream is = new FileInputStream(descFile);
 		ObjectNode resultNode = (ObjectNode) mapper.readTree(is);
-		try {
-			is.close();
-		} catch (Exception e) {
-			log.debug(e.getMessage());
-		}
+		IOUtils.closeQuietly(is);
 
 		log.trace(resultNode.toString());
 		if ((resultNode.has("Has Part")) && withChildren) {
@@ -736,7 +731,7 @@ public class RepoServices {
 	}
 
 	// Create the index file by parsing the oremap
-	private static void generateIndex(InputStream ro, File descFile,
+	protected static void generateIndex(InputStream ro, File descFile,
 			File indexFile) throws JsonParseException, IOException {
 
 		log.debug("Generating desc and index files");

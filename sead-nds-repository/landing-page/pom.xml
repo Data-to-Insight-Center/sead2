@@ -66,7 +66,7 @@
 		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-compress</artifactId>
-			<version>1.10</version>
+			<version>1.11</version>
 		</dependency>
 		<dependency>
 			<groupId>log4j</groupId>
@@ -172,7 +172,7 @@
 			<dependency>
 				<groupId>org.sead</groupId>
 				<artifactId>ref-repo</artifactId>
-				<version>1.0.7</version>
+				<version>1.0.9</version>
 				<type>jar</type>
 			</dependency>
 			<dependency>
