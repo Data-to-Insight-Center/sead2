@@ -62,12 +62,13 @@ seadData.fillInMetadata = function(describes) {
 	$('#Date').append(pubdate);
 
 	$('#contacts').append(seadData.formatPeople(describes.Contact));
-	$('#abstract').append($('<pre/>').text(he.decode(describes.Abstract)));
+	$('#abstract').append(
+			$('<pre/>').append(formatStringOrArray(describes.Abstract)));
 
 	var p = seadData.formatPeople(describes.Creator);
 	$('#creators').append(p);
 	$('#ID').append($('<div/>').text(describes["External Identifier"]));
-	$('#keywords').append(seadData.formatKeywords(describes.Keyword));
+	$('#keywords').append(seadData.formatStringOrArray(describes.Keyword));
 	var lic = describes.License;
 
 	if (lic != null) {
@@ -214,25 +215,27 @@ seadData.formatPeople = function(people) {
 	return p;
 }
 
-seadData.formatKeywords = function(keywords) {
+seadData.formatStringOrArray = function(words) {
 	var p;
-	if (Array.isArray(keywords)) {
-		p = $('<div>');
-		for (var i = 0; i < keywords.length; i++) {
-			var k = keywords[i];
-			// Kludge for 1.5 until it removes tag ID info
-			// var index = k.indexOf("tag:cet.ncsa.uiuc.edu,2008:/tag#");
-			// if (index != -1) {
-			// k = k.substring(index + 32);
-			// k = k.replace(/\+/g, ' ');
-			// }
-			if (i > 0) {
-				k = ", " + k;
+	if (words != null) {
+		if (Array.isArray(words)) {
+			p = $('<div>');
+			for (var i = 0; i < words.length; i++) {
+				var k = words[i];
+				// Kludge for 1.5 until it removes tag ID info
+				// var index = k.indexOf("tag:cet.ncsa.uiuc.edu,2008:/tag#");
+				// if (index != -1) {
+				// k = k.substring(index + 32);
+				// k = k.replace(/\+/g, ' ');
+				// }
+				if (i > 0) {
+					k = ", " + k;
+				}
+				p.text(p.text() + k);
 			}
-			p.text(p.text() + k);
+		} else {
+			p = words;
 		}
-	} else {
-		p = keywords;
 	}
 	return p;
 }
