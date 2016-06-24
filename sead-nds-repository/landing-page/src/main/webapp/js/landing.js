@@ -315,7 +315,7 @@ seadData.init = function() {
 						}
 
 						if (repojson.repositoryContact) {
-							$('#repocontact').text(repojson.repositoryContact);
+
 							if (repojson.repositoryContact.indexOf('@')) {
 								$('#repocontact')
 										.append(
@@ -326,7 +326,8 @@ seadData.init = function() {
 																'href',
 																'mailto:'
 																		+ repojson.repositoryContact));
-							} else {
+							} else if (repojson.repositoryContact
+									.indexOf('://')) {
 								$('#repocontact')
 										.append(
 												$('<a/>')
@@ -335,6 +336,10 @@ seadData.init = function() {
 														.attr(
 																'href',
 																repojson.repositoryContact));
+							} else {
+								$('#repocontact').append(
+										$('<div/>').text(
+												repojson.repositoryContact));
 							}
 
 						} else {
