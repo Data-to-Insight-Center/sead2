@@ -1,4 +1,4 @@
-package org.sead.nds.landingpage;
+package org.sead.repositories.reference;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -86,7 +86,7 @@ public class RepoContextListener implements ServletContextListener {
 							File mapFile = new File(bagPathRoot
 									+ ".oremap.jsonld.txt");
 							if (!mapFile.exists()) {
-								RepoServices.createMap(mapFile, f2.getPath(),
+								RefRepository.createMap(mapFile, f2.getPath(),
 										bagNameRoot);
 							}
 							if (!descFile.exists() || !indexFile.exists()) {
@@ -95,7 +95,7 @@ public class RepoContextListener implements ServletContextListener {
 								InputStream mapStream = null;
 								try {
 									mapStream = new FileInputStream(mapFile);
-									RepoServices.generateIndex(mapStream,
+									RefRepository.generateIndex(mapStream,
 											descFile, indexFile);
 								} catch (FileNotFoundException e) {
 									log.error(bagNameRoot + ": "
@@ -127,7 +127,7 @@ public class RepoContextListener implements ServletContextListener {
 										descFile, JsonNode.class);
 								String idString = rootNode.get("Identifier")
 										.textValue();
-								String correctPath = RepoServices
+								String correctPath = RefRepository
 										.getDataPathTo(idString);
 								if (!f2.equals(new File(correctPath))) {
 									log.warn("Publication id: " + idString

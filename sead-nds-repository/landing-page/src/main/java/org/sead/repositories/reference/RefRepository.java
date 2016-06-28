@@ -19,7 +19,7 @@
  * 
  */
 
-package org.sead.nds.landingpage;
+package org.sead.repositories.reference;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -52,7 +52,15 @@ import org.apache.commons.compress.utils.IOUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.input.CountingInputStream;
 import org.apache.log4j.Logger;
+import org.apache.log4j.PropertyConfigurator;
+import org.json.JSONObject;
+import org.sead.nds.repository.BagGenerator;
+import org.sead.nds.repository.C3PRPubRequestFacade;
+import org.sead.nds.repository.PubRequestFacade;
+import org.sead.nds.repository.RefRepoLocalPubRequestFacade;
 import org.sead.nds.repository.Repository;
+import org.sead.repositories.reference.util.RefLocalContentProvider;
+import org.sead.repositories.reference.util.ReferenceLinkRewriter;
 
 import com.fasterxml.jackson.core.JsonEncoding;
 import com.fasterxml.jackson.core.JsonFactory;
@@ -71,37 +79,171 @@ import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
 import java.util.ArrayList;
+import java.util.Scanner;
 import java.util.zip.ZipException;
 
 /**
- * RepoServices manages the RESTful interface to the published data packages
- * stored as Zip files. It generates the landing page for a given DOI and, based
- * on the landing URL, finds the corresponding zip and extracts the relevant
- * data/metadata. To help with this, it extracts a short description file that
- * includes just the top-level description and top-level children from the
- * oremap, and an index defining the offsets, within the oremap file, for the
- * json description for each AggregatedResource (e.g. a collection or dataset
- * (1.5) or Dataset/File (2.0).
+ * RefRepository generates new data publications and manages the RESTful
+ * interface to the published data packages stored as Zip files. It generates
+ * the landing page for a given DOI and, based on the landing URL, finds the
+ * corresponding zip and extracts the relevant data/metadata. To help with this,
+ * it extracts the oremap and a short description file that includes just the
+ * top-level description and top-level children from the oremap, and an index
+ * defining the offsets, within the oremap file, for the json description for
+ * each AggregatedResource (e.g. a collection or dataset (1.5) or Dataset/File
+ * (2.0).
  *
  */
 
 @Path("/")
-public class RepoServices {
+public class RefRepository extends Repository {
 
-	private static final Logger log = Logger.getLogger(RepoServices.class);
+	private static final Logger log = Logger.getLogger(RefRepository.class);
 
 	static ObjectMapper mapper = new ObjectMapper();
 
-	public RepoServices() {
+	public RefRepository() {
 	}
 
 	/*
-	 * BackwardCompatibility - Tomcat 6 seems to require that Repository be initialized in this
-	 * class even though it is initialized in the RepoContextListener class in
-	 * the same app It does not appear that this is needed in Tomcat 7 ...
+	 * BackwardCompatibility - Tomcat 6 seems to require that Repository be
+	 * initialized in this class even though it is initialized in the
+	 * RepoContextListener class in the same app It does not appear that this is
+	 * needed in Tomcat 7 ...
 	 */
 	static {
 		Repository.init(Repository.loadProperties());
+	}
+
+	public static void main(String[] args) {
+		PropertyConfigurator.configure("./log4j.properties");
+		init(loadProperties());
+
+		if (args.length == 1) {
+
+			BagGenerator bg;
+			C3PRPubRequestFacade RO = new C3PRPubRequestFacade(args[0],
+					getProps());
+
+			bg = new BagGenerator(RO);
+			// Request human approval if needed - will send a fail status and
+			// exit if request is denied
+			String repub = handleRepub(RO, bg);
+			bg.setLinkRewriter(new ReferenceLinkRewriter(getProps()
+					.getProperty("repo.landing.base")));
+			// FixMe - use repo.ID from properties file (possibly in repo class
+			if (bg.generateBag(args[0], false)) {
+				RO.sendStatus(
+						PubRequestFacade.SUCCESS_STAGE,
+						RO.getOREMap().getJSONObject("describes")
+								.getString("External Identifier"));
+				System.out
+						.println("Publication was successful. New publication is in: "
+								+ RefRepository.getDataPathTo(args[0]));
+				if (repub != null) {
+					System.out
+							.println("New Publication was intended to replace "
+									+ repub);
+					System.out.println("Old publication is in "
+							+ RefRepository.getDataPathTo(repub)
+							+ " and could now be deleted.");
+				}
+			} else {
+				RO.sendStatus(
+						PubRequestFacade.FAILURE_STAGE,
+						"Processing of this request has failed and no further attempts to process this request will be made. Please contact the repository for further information.");
+			}
+		} else if (args.length == 2) {
+			BagGenerator bg;
+			RefRepoLocalPubRequestFacade RO = new RefRepoLocalPubRequestFacade(
+					args[1], args[0], getProps());
+
+			bg = new BagGenerator(RO);
+			// Request human approval if needed - will send a fail and exit if
+			// request is denied
+			String repub = handleRepub(RO, bg);
+			bg.setLinkRewriter(new ReferenceLinkRewriter(getProps()
+					.getProperty("repo.landing.base")));
+			// FixMe - use repo.ID from properties file (possibly in repo class
+			if (bg.generateBag(args[1], true)) {
+				RO.sendStatus(
+						PubRequestFacade.SUCCESS_STAGE,
+						RO.getOREMap().getJSONObject("describes")
+								.getString("External Identifier"));
+				System.out
+						.println("Publication was successful. New publication is in: "
+								+ RefRepository.getDataPathTo(args[0]));
+				if (repub != null) {
+					System.out
+							.println("New Publication was intended to replace "
+									+ repub);
+					System.out.println("Old publication is in "
+							+ RefRepository.getDataPathTo(repub)
+							+ " and could now be deleted.");
+				}
+
+			} else {
+				RO.sendStatus(
+						PubRequestFacade.FAILURE_STAGE,
+						"Processing of this request has failed and no further attempts to process this request will be made. Please contact the repository for further information.");
+			}
+		} else {
+			System.out
+					.println("Usage: <optional local pubRequest file (JSON document)> <RO Identifier>");
+		}
+		System.exit(0);
+	}
+
+	private static String handleRepub(C3PRPubRequestFacade RO, BagGenerator bg) {
+		String repub = null;
+		JSONObject request = RO.getPublicationRequest();
+		JSONObject prefs = request.getJSONObject("Preferences");
+		if (prefs.has("External Identifier")) {
+			String extIdPref = prefs.getString("External Identifier");
+			System.out.println("This publication is intended to replace "
+					+ extIdPref);
+			System.out.println("Proceed (Y/N)?: ");
+			Scanner input = new Scanner(System.in);
+			if (!input.next().equalsIgnoreCase("y")) {
+				input.close();
+				RO.sendStatus(
+						PubRequestFacade.FAILURE_STAGE,
+						"This request has been denied as a replacement for the existing publication: "
+								+ extIdPref
+								+ ". Please contact the repository for further information.");
+				System.exit(0);
+			} else {
+				if (prefs.has("alternateOf")) {
+
+					// Add a LocalContent class
+
+					String oldRO_ID = prefs.getString("alternateOf");
+					log.info("Looking at: " + oldRO_ID + " for local content.");
+					RefLocalContentProvider ref = new RefLocalContentProvider(
+							oldRO_ID, Repository.getProps());
+					if(ref.getHashType()!=null) {
+						
+					bg.setLocalContentProvider(ref);
+					repub = oldRO_ID;
+					} else {
+						System.out.println("Original RO not found/has no usable hash entries: " + getDataPathTo(oldRO_ID));
+						System.out.println("Proceed (using remote content)? {Y/N}: ");
+						if (!input.next().equalsIgnoreCase("y")) {
+							input.close();
+							RO.sendStatus(
+									PubRequestFacade.FAILURE_STAGE,
+									"This request has been denied as a replacement for an existing publication: "
+											+ extIdPref
+											+ ". Please contact the repository for further information.");
+							System.exit(0);
+						}			
+						
+					}
+				}
+			}
+			input.close();
+		}
+		return repub;
 	}
 
 	/**
@@ -366,34 +508,47 @@ public class RepoServices {
 	@GET
 	public Response getDatafile(@PathParam(value = "id") String id,
 			@PathParam(value = "relpath") String datapath) {
-
 		String path = getDataPathTo(id);
-		String bagNameRoot = getBagNameRoot(id);
 
+		String bagNameRoot = getBagNameRoot(id);
 		File result = new File(path, bagNameRoot + ".zip");
+		StreamingOutput stream = null;
 		try {
 			final ZipFile zf = new ZipFile(result);
+			final InputStream inputStream = getFileInputStream(zf, bagNameRoot
+					+ "/data/" + datapath);
 
-			log.debug(bagNameRoot + "/data/" + datapath);
-			ZipArchiveEntry archiveEntry1 = zf.getEntry(bagNameRoot + "/data/"
-					+ datapath);
-			final InputStream inputStream = zf.getInputStream(archiveEntry1);
+			if (inputStream != null) {
 
-			StreamingOutput stream = new StreamingOutput() {
-				public void write(OutputStream os) throws IOException,
-						WebApplicationException {
-					IOUtils.copy(inputStream, os);
-					IOUtils.closeQuietly(inputStream);
-					IOUtils.closeQuietly(os);
-					ZipFile.closeQuietly(zf);
-				}
-			};
-
-			return Response.ok(stream).build();
+				stream = new StreamingOutput() {
+					public void write(OutputStream os) throws IOException,
+							WebApplicationException {
+						IOUtils.copy(inputStream, os);
+						IOUtils.closeQuietly(inputStream);
+						IOUtils.closeQuietly(os);
+						ZipFile.closeQuietly(zf);
+					}
+				};
+			}
 		} catch (IOException e) {
+			log.error(e.getLocalizedMessage());
 			e.printStackTrace();
+		}
+		if (stream == null) {
 			return Response.serverError().build();
 		}
+
+		return Response.ok(stream).build();
+	}
+
+	public static InputStream getFileInputStream(ZipFile zf, String internalPath)
+			throws ZipException, IOException {
+		log.debug("Retrieving: " + internalPath);
+		ZipArchiveEntry archiveEntry1 = zf.getEntry(internalPath);
+		if (archiveEntry1 != null) {
+			return zf.getInputStream(archiveEntry1);
+		}
+		return null;
 	}
 
 	/*
@@ -408,25 +563,26 @@ public class RepoServices {
 	@GET
 	public Response getMetadatafile(@PathParam(value = "id") String id,
 			@PathParam(value = "relpath") String metadatapath) {
-
 		String path = getDataPathTo(id);
-		String bagNameRoot = getBagNameRoot(id);
 
+		String bagNameRoot = getBagNameRoot(id);
 		File result = new File(path, bagNameRoot + ".zip");
+
+		// Don't let this call be used to get data from the data dir
+		if (metadatapath.startsWith("data") || metadatapath.startsWith("/data")) {
+			return Response.status(Status.BAD_REQUEST).build();
+		}
+		StreamingOutput stream = null;
 		try {
 			final ZipFile zf = new ZipFile(result);
 
-			log.debug(bagNameRoot + "/" + metadatapath);
-			// Don't let this call be used to get data from the data dir
-			if (metadatapath.startsWith("data")
-					|| metadatapath.startsWith("/data")) {
-				return Response.status(Status.BAD_REQUEST).build();
+			final InputStream inputStream = getFileInputStream(zf, bagNameRoot
+					+ "/" + metadatapath);
+			if (inputStream == null) {
+				return Response.serverError().build();
 			}
-			ZipArchiveEntry archiveEntry1 = zf.getEntry(bagNameRoot + "/"
-					+ metadatapath);
-			final InputStream inputStream = zf.getInputStream(archiveEntry1);
 
-			StreamingOutput stream = new StreamingOutput() {
+			stream = new StreamingOutput() {
 				public void write(OutputStream os) throws IOException,
 						WebApplicationException {
 					IOUtils.copy(inputStream, os);
@@ -435,12 +591,16 @@ public class RepoServices {
 					ZipFile.closeQuietly(zf);
 				}
 			};
-
-			return Response.ok(stream).build();
 		} catch (IOException e) {
+			log.error(e.getLocalizedMessage());
 			e.printStackTrace();
+		}
+		if (stream == null) {
 			return Response.serverError().build();
 		}
+
+		return Response.ok(stream).build();
+
 	}
 
 	@Path("/researchobjects/{id}/bag")
@@ -472,7 +632,7 @@ public class RepoServices {
 
 	// Calculate the path to the zip in the file system based in the base path
 	// and the 2 level hash subdirectory scheme
-	protected static String getDataPathTo(String id) {
+	public static String getDataPathTo(String id) {
 		String pathString = DigestUtils.sha1Hex(id);
 		String path = Repository.getDataPath();
 		// Two level hash-based distribution o files
@@ -484,10 +644,8 @@ public class RepoServices {
 
 	// Calculate the bagName by replacing non-chars with _ (e.g. the ,:/ chars
 	// in our normal tag ids)
-	private String getBagNameRoot(String id) {
-		String bagNameRoot = id.replaceAll("\\W+", "_");
-		log.debug(bagNameRoot);
-		return bagNameRoot;
+	public static String getBagNameRoot(String id) {
+		return BagGenerator.getValidName(id);
 	}
 
 	// Get the description file or trigger its generation

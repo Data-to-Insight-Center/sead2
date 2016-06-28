@@ -1,4 +1,4 @@
-package org.sead.nds.landingpage.util;
+package org.sead.repositories.reference.util;
 
 //From http://www.avajava.com/tutorials/lessons/how-do-i-initialize-log4j-in-a-web-application.html 
 
