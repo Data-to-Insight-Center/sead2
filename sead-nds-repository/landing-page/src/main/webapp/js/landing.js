@@ -63,7 +63,7 @@ seadData.fillInMetadata = function(describes) {
 
 	$('#contacts').append(seadData.formatPeople(describes.Contact));
 	$('#abstract').append(
-			$('<pre/>').append(formatStringOrArray(describes.Abstract)));
+			$('<pre/>').append(seadData.formatStringOrArray(describes.Abstract)));
 
 	var p = seadData.formatPeople(describes.Creator);
 	$('#creators').append(p);
