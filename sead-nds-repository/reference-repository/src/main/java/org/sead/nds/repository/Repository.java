@@ -24,9 +24,7 @@ import java.util.Calendar;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Properties;
-
 import org.apache.log4j.Logger;
-import org.apache.log4j.PropertyConfigurator;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -36,17 +34,15 @@ import edu.ucsb.nceas.ezid.profile.DataCiteProfile;
 import edu.ucsb.nceas.ezid.profile.DataCiteProfileResourceTypeValues;
 import edu.ucsb.nceas.ezid.profile.InternalProfile;
 
-import org.sead.nds.repository.util.ReferenceLinkRewriter;
-
 public class Repository {
 
-	private static final Logger log = Logger.getLogger(Repository.class);
+	static final Logger log = Logger.getLogger(Repository.class);
 	private static String repoID = null;
 	private static Properties props;
 	private static String dataPath = null;
 	private static boolean allowUpdates = false;
 
-	private static int numThreads;
+	static int numThreads;
 
 	public Repository() {
 	}
@@ -75,6 +71,22 @@ public class Repository {
 		return numThreads;
 	}
 
+	public static Properties getProps() {
+		return props;
+	}
+
+	public static boolean getAllowUpdates() {
+		return allowUpdates;
+	}
+
+	public static String getRepoID() {
+		return repoID;
+	}
+
+	static public String getDataPath() {
+		return dataPath;
+	}
+	
 	public static Properties loadProperties() {
 		Properties props = new Properties();
 		try {
@@ -87,64 +99,15 @@ public class Repository {
 		return props;
 	}
 
-	public static void main(String[] args) {
-		PropertyConfigurator.configure("./log4j.properties");
-		init(loadProperties());
-
-		if (args.length == 1) {
-
-			BagGenerator bg;
-			C3PRPubRequestFacade RO = new C3PRPubRequestFacade(args[0], props);
-			bg = new BagGenerator(RO);
-			bg.setLinkRewriter(new ReferenceLinkRewriter(props
-					.getProperty("repo.landing.base")));
-			// FixMe - use repo.ID from properties file (possibly in repo class
-			if (bg.generateBag(args[0], false)) {
-				RO.sendStatus(
-						PubRequestFacade.SUCCESS_STAGE,
-						RO.getOREMap().getJSONObject("describes")
-								.getString("External Identifier"));
-			} else {
-				RO.sendStatus(
-						PubRequestFacade.FAILURE_STAGE,
-						"Processing of this request has failed and no further attempts to process this request will be made. Please contact the repository for further information.");
-			}
-		} else if (args.length == 2) {
-			BagGenerator bg;
-			RefRepoPubRequestFacade RO = new RefRepoPubRequestFacade(args[1],
-					args[0], props);
-			bg = new BagGenerator(RO);
-			bg.setLinkRewriter(new ReferenceLinkRewriter(props
-					.getProperty("repo.landing.base")));
-			// FixMe - use repo.ID from properties file (possibly in repo class
-			if (bg.generateBag(args[1], true)) {
-				RO.sendStatus(
-						PubRequestFacade.SUCCESS_STAGE,
-						RO.getOREMap().getJSONObject("describes")
-								.getString("External Identifier"));
-			} else {
-				RO.sendStatus(
-						PubRequestFacade.FAILURE_STAGE,
-						"Processing of this request has failed and no further attempts to process this request will be made. Please contact the repository for further information.");
-			}
-		} else {
-			System.out
-					.println("Usage: <optional local pubRequest file (JSON document)> <RO Identifier>");
-		}
-		System.exit(0);
-	}
-
-	static public String getLandingPage(String bagName) {
+	static String getLandingPageUri(String bagName) {
 		return props.getProperty("repo.landing.base") + bagName;
 	}
 
-	static public String getDataPath() {
-		return dataPath;
-	}
+
 
 	public static String createDOIForRO(String bagID, C3PRPubRequestFacade RO)
 			throws EZIDException {
-		String target = Repository.getLandingPage(bagID);
+		String target = Repository.getLandingPageUri(bagID);
 		log.debug("DOI Landing Page: " + target);
 		String existingID = null;
 		if (RO.getPublicationRequest().getJSONObject("Preferences")
@@ -153,8 +116,9 @@ public class Repository {
 					.getJSONObject("Preferences")
 					.getString("External Identifier");
 			if (existingID.startsWith("http://dx.doi.org/")) {
-				existingID = "doi:" + existingID.substring("http://dx.doi.org/".length());
-			} 
+				existingID = "doi:"
+						+ existingID.substring("http://dx.doi.org/".length());
+			}
 			if (existingID != null && !allowUpdates) {
 				// FixMe - should we fail instead of going forward with a new
 				// ID?
@@ -213,7 +177,6 @@ public class Repository {
 
 		if ((existingID != null) && (existingID.contains(shoulder))
 				&& allowUpdates) {
-
 
 			// Enhancement: Retrieve metadata first and find current landing
 			// page for this DOI - can then

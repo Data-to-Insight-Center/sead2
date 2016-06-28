@@ -20,7 +20,7 @@ import org.json.JSONObject;
  * @author Jim
  *
  */
-abstract class PubRequestFacade {
+public abstract class PubRequestFacade {
 	private static final Logger log = Logger.getLogger(PubRequestFacade.class);
 
 	public static final String SUCCESS_STAGE = "Success";
