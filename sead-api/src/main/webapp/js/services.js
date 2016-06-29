@@ -314,7 +314,9 @@ function showDets(prefix, item, anchor) {
 function showRequest(response, item, anchor) {
 
 	// Only do this once if we are flipping to matches/status...
-
+	//If delete was showing for another item - remove that onclick method
+	$('#deleteme').prop('onclick', null).off('click');
+	
 	if (delMap[item] == true) {
 		$('#deleteme').text("Delete This Request");
 		$('#deleteme').click(function() {
@@ -324,7 +326,7 @@ function showRequest(response, item, anchor) {
 		$('#deleteme').show();
 	} else {
 		$('#deleteme').hide();
-		$('#deleteme').prop('onclick', null).off('click');
+		
 	}
 	response = whap(response);
 	if (!($(anchor + ' .jqtree-tree').length)) {
