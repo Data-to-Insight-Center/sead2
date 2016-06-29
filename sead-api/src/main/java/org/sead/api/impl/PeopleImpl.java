@@ -107,7 +107,7 @@ public class PeopleImpl extends People {
     @GET
     @Path("/{id}/raw")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response getRawPersonProfile(@PathParam("id") String id) {
+    public Response getRawPersonProfile(@Encoded @PathParam("id") String id) {
         WebResource webResource = resource();
 
         ClientResponse response = webResource.path("people")
@@ -123,7 +123,7 @@ public class PeopleImpl extends People {
 	@PUT
 	@Path("/{id}")
 	@Consumes(MediaType.APPLICATION_JSON)
-	public Response updatePersonProfile(@PathParam("id") String id) {
+	public Response updatePersonProfile(@Encoded @PathParam("id") String id) {
         WebResource webResource = resource();
 
         ClientResponse response = webResource.path("people")
@@ -138,7 +138,7 @@ public class PeopleImpl extends People {
 
 	@DELETE
 	@Path("/{id}")
-	public Response unregisterPerson(@PathParam("id") String id) {
+	public Response unregisterPerson(@Encoded @PathParam("id") String id) {
         WebResource webResource = resource();
 
         ClientResponse response = webResource.path("people")
