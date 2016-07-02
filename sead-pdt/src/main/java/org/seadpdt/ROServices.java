@@ -483,6 +483,23 @@ public class ROServices {
         }
     }
 
+    //If pid resolves to a published research object, return that RO ID
+    @GET
+    @Path("/pid/{pid}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getRoOfPID(@PathParam("pid") String pid) {
+
+        String pid1 = pid;
+        /*FindIterable<Document> iter = fgdcCollection.find(new Document("@id", id));
+        if(iter != null && iter.first() != null){
+            return Response.ok(iter.first().get("metadata").toString()).build();
+        } else {
+            return Response.status(ClientResponse.Status.NOT_FOUND).build();
+        }*/
+
+        return  Response.ok().build();
+    }
+
     //This is a management method used to copy oreMaps from main mongoDB to the GridFS DB
     @PUT
     @Path("/copyoremaps")

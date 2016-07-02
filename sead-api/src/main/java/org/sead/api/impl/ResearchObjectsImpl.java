@@ -27,7 +27,6 @@ import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.GenericType;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
-import org.bson.Document;
 import org.json.JSONObject;
 import org.sead.api.ResearchObjects;
 import org.sead.api.util.Constants;
@@ -153,6 +152,28 @@ public class ResearchObjectsImpl extends ResearchObjects {
             return Response.status(response.getStatus()).entity(response
                     .getEntity(new GenericType<String>() {})).cacheControl(control).build();
         } else {
+
+            JSONObject roObject = new JSONObject((String)getROProfile(id).getEntity());
+            String callbackUrl = roObject.getString("Publication Callback");
+            boolean republishRO = false;
+            String alternateOf = null;
+            if(roObject.has("Preferences") &&
+                    roObject.get("Preferences") instanceof  JSONObject &&
+                    roObject.getJSONObject("Preferences").has("Affiliations")) { //TODO edit text
+                Object republishROIdObject = roObject.getJSONObject("Preferences").get("Affiliations"); // TODO 'External Identifier'
+                if(republishROIdObject != null && republishROIdObject instanceof String){
+                    String republishROPID = (String)republishROIdObject;
+
+                    ClientResponse roResponse = pdtWebService.path("researchobjects/pid")
+                            .path(republishROPID)
+                            .accept("application/json")
+                            .type("application/json")
+                            .get(ClientResponse.class);
+                    //Document roDoc = Document.parse(roResponse.getEntity(String.class));
+                    //alternateOf = roDoc.getString("roId");
+
+                }
+            }
             // Calling MetadataGenerator to generate FGDC metadata for the RO
             ClientResponse metagenResponse = metadataGenWebService.path("rest")
                     .path(id + "/fgdc")
@@ -165,13 +186,13 @@ public class ResearchObjectsImpl extends ResearchObjects {
 
             // if the status update in PDT is successful, we have to send to DOI to project space/data source
             // first get the RO JSON to find the callback URL
-            ClientResponse roResponse = pdtWebService.path("researchobjects")
+            /*ClientResponse roResponse = pdtWebService.path("researchobjects")
                     .path(id)
                     .accept("application/json")
                     .type("application/json")
                     .get(ClientResponse.class);
             Document roDoc = Document.parse(roResponse.getEntity(String.class));
-            String callbackUrl = roDoc.getString("Publication Callback");
+            String callbackUrl = roDoc.getString("Publication Callback");*/
 
             if (callbackUrl != null) {
                 // now we POST to callback URL to update Clowder with the DOI
