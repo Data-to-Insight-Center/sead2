@@ -489,15 +489,47 @@ public class ROServices {
     @Produces(MediaType.APPLICATION_JSON)
     public Response getRoOfPID(@PathParam("pid") String pid) {
 
-        String pid1 = pid;
-        /*FindIterable<Document> iter = fgdcCollection.find(new Document("@id", id));
+        BasicDBObject statusObj = new BasicDBObject();
+        statusObj.put("stage", "Success");
+        statusObj.put("message", pid);
+        BasicDBObject elemMatch = new BasicDBObject();
+        elemMatch.put("$elemMatch", statusObj);
+        BasicDBObject query = new BasicDBObject("Status", elemMatch);
+
+        FindIterable<Document> iter = publicationsCollection.find(query);
+        iter.projection(new Document("Aggregation.Identifier", 1).append("_id", 0));
         if(iter != null && iter.first() != null){
-            return Response.ok(iter.first().get("metadata").toString()).build();
+            return Response.ok("{\"roId\" : \"" + ((Document)iter.first().get("Aggregation")).get("Identifier").toString() + "\" }").build();
         } else {
             return Response.status(ClientResponse.Status.NOT_FOUND).build();
-        }*/
+        }
+    }
 
-        return  Response.ok().build();
+    //Deprecate oldRO by newRO. Delete the old RO request and OREMap
+    @GET
+    @Path("/deprecate/{newRO}/{oldRO}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response deprecateRO(@PathParam("newRO") String newRoId,
+                                @PathParam("oldRO") String oldRoId) {
+
+        try {
+            BasicDBObject metaObject = new BasicDBObject(Constants.alternateOf, Constants.alternateOfIRI);
+            UpdateResult urContext = publicationsCollection.updateOne(
+                    new Document("Aggregation.Identifier", newRoId),
+                    new BasicDBObject("$push", new BasicDBObject("@context", metaObject)));
+            UpdateResult urAggregation = publicationsCollection.updateOne(
+                    new Document("Aggregation.Identifier", newRoId),
+                    new BasicDBObject("$set", new BasicDBObject("Aggregation." + Constants.alternateOf, oldRoId)));
+            if (urContext.wasAcknowledged() && urAggregation.wasAcknowledged()) {
+                DeleteOverrideRO(oldRoId);
+                return Response.status(ClientResponse.Status.OK).build();
+            } else {
+                return Response.status(ClientResponse.Status.NOT_FOUND).build();
+
+            }
+        } catch (org.bson.BsonInvalidOperationException e) {
+            return Response.status(ClientResponse.Status.BAD_REQUEST).build();
+        }
     }
 
     //This is a management method used to copy oreMaps from main mongoDB to the GridFS DB
