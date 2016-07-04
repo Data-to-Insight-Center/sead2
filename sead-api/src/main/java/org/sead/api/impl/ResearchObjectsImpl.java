@@ -26,6 +26,7 @@ import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.GenericType;
 import com.sun.jersey.api.client.WebResource;
+import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
 import org.bson.Document;
 import org.json.JSONObject;
 import org.sead.api.ResearchObjects;
@@ -181,7 +182,7 @@ public class ResearchObjectsImpl extends ResearchObjects {
         } else {
 
             // If this RO has an alternate RO, delete the old RO request/OREMap and add oldRO ID to the new RO request
-            if (republishRO) {
+            if (republishRO && !id.equals(alternateOf)) {
                 ClientResponse deprecateRoResponse = pdtWebService.path("researchobjects/deprecate")
                         .path(id)
                         .path(alternateOf)
@@ -207,7 +208,7 @@ public class ResearchObjectsImpl extends ResearchObjects {
             }
 
             // if the status update in PDT is successful, we have to send to DOI to project space/data source
-            /*if (callbackUrl != null) {
+            if (callbackUrl != null) {
                 // now we POST to callback URL to update Clowder with the DOI
                 Client client = Client.create();
                 // set credentials
@@ -223,7 +224,7 @@ public class ResearchObjectsImpl extends ResearchObjects {
                         .post(ClientResponse.class, body);
                 // TODO log
                 System.out.println("Project Space/Data Source Updated, Response : " + pubRequestorResponse.getEntity(String.class));
-            }*/
+            }
             return Response.status(ClientResponse.Status.OK).cacheControl(control).build();
         }
     }

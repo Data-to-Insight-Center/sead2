@@ -233,8 +233,8 @@ public class Object {
             String newRoId = newRODocument.getString(Constants.RO_ID);
             String newFgdcId = newRODocument.getString(Constants.FGDC_ID);
 
-            if (metaInfo.getLong(Constants.SIZE) == newRODocument.getJSONObject(Constants.META_INFO).getLong(Constants.SIZE) &&
-                    metaInfo.getString(Constants.FIXITY_VAL).equals(newRODocument.getJSONObject(Constants.META_INFO).getString(Constants.FIXITY_VAL))) {
+            if (metaInfo.getLong(Constants.SIZE) == newRODocument.getLong(Constants.SIZE) &&
+                    metaInfo.getString(Constants.FIXITY_VAL).equals(newRODocument.getString(Constants.FIXITY_VAL))) {
 
                 // If FGDC objects are identical, only update the metadataUpdateDate and @id of the current FGDC
                 metaInfo.put(Constants.META_UPDATE_DATE, strDate);
