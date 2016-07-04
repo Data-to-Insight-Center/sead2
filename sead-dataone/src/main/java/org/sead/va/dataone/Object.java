@@ -22,6 +22,7 @@ import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoDatabase;
+import com.mongodb.util.JSON;
 import org.apache.commons.codec.binary.Hex;
 import org.bson.Document;
 import org.dataone.service.types.v1.*;
@@ -67,7 +68,8 @@ public class Object {
     private final static int MAX_MATCHES = 10000;
     private MongoCollection<Document> fgdcCollection = null;
     private MongoDatabase metaDb = null;
-
+    SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
+    enum RO_STATUS { NOT_EXIST, IDENTICAL, NON_IDENTICAL}
 
     public Object() throws IOException, SAXException, ParserConfigurationException {
         metaDb = MongoDB.getServicesDB();
@@ -149,6 +151,7 @@ public class Object {
     public Response addObject(@Context HttpServletRequest request,
                               @PathParam("objectId") String id,
                               @QueryParam("creators") String creators,
+                              @QueryParam("deprecateFgdc") String deprecateFgdc,
                               String fgdcString) throws UnsupportedEncodingException {
 
         Document metaInfo = new Document();
@@ -200,13 +203,65 @@ public class Object {
             e.printStackTrace();
         }
 
-        fgdcCollection.deleteMany(new Document(Constants.META_INFO + "." + Constants.RO_ID, id));
         Document document = new Document();
         document.put(Constants.META_INFO, metaInfo);
         document.put(Constants.METADATA, fgdcString);
-        fgdcCollection.insertOne(document);
+
+        RO_STATUS updated = RO_STATUS.NOT_EXIST;
+        updated =  deprecateFGDC(id, document);
+        if(deprecateFgdc != null && !deprecateFgdc.equals("") && updated == RO_STATUS.NOT_EXIST) {
+            updated = deprecateFGDC(deprecateFgdc, document);
+        }
+
+        if(updated == RO_STATUS.NON_IDENTICAL || updated == RO_STATUS.NOT_EXIST) {
+            fgdcCollection.insertOne(document);
+        }
 
         return Response.ok().build();
+    }
+
+    private RO_STATUS deprecateFGDC(String id, Document document) {
+        FindIterable<Document> iter = fgdcCollection.find(new Document(Constants.META_INFO + "." + Constants.RO_ID, id));
+
+        if(iter != null && iter.first() != null){
+            JSONObject metaInfo = new JSONObject(((Document)iter.first().get(Constants.META_INFO)).toJson());
+            JSONObject newRODocument = new JSONObject(document.toJson()).getJSONObject(Constants.META_INFO);
+            SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
+            String strDate = simpleDateFormat.format(new Date());
+
+            String oldFgdcId = metaInfo.getString(Constants.FGDC_ID);
+            String newRoId = newRODocument.getString(Constants.RO_ID);
+            String newFgdcId = newRODocument.getString(Constants.FGDC_ID);
+
+            if (metaInfo.getLong(Constants.SIZE) == newRODocument.getJSONObject(Constants.META_INFO).getLong(Constants.SIZE) &&
+                    metaInfo.getString(Constants.FIXITY_VAL).equals(newRODocument.getJSONObject(Constants.META_INFO).getString(Constants.FIXITY_VAL))) {
+
+                // If FGDC objects are identical, only update the metadataUpdateDate and @id of the current FGDC
+                metaInfo.put(Constants.META_UPDATE_DATE, strDate);
+                metaInfo.put(Constants.RO_ID, newRoId);
+                BasicDBObject metaInfoBasicObject = (BasicDBObject) JSON.parse(metaInfo.toString());
+                BasicDBObject metaInfoUpdateObject = new BasicDBObject().append("$set",
+                        new BasicDBObject().append(Constants.META_INFO, metaInfoBasicObject));
+                fgdcCollection.updateOne(new BasicDBObject().append(Constants.META_INFO + "." + Constants.FGDC_ID, oldFgdcId), metaInfoUpdateObject);
+
+                return RO_STATUS.IDENTICAL;
+            } else {
+                //If FGDC objects are not identical
+
+                // update the obsoleted_by and metadataUpdateDate of old object
+                metaInfo.put(Constants.META_UPDATE_DATE, strDate);
+                metaInfo.put(Constants.OBSOLETED_BY, newFgdcId);
+                BasicDBObject metaInfoBasicObject = (BasicDBObject) JSON.parse(metaInfo.toString());
+                BasicDBObject metaInfoUpdateObject = new BasicDBObject().append("$set",
+                        new BasicDBObject().append(Constants.META_INFO, metaInfoBasicObject));
+                fgdcCollection.updateOne(new BasicDBObject().append(Constants.META_INFO + "." + Constants.FGDC_ID, oldFgdcId), metaInfoUpdateObject);
+
+                // Update the obsoletes field in the new object
+                ((Document) document.get(Constants.META_INFO)).put(Constants.OBSOLETES, oldFgdcId);
+                return RO_STATUS.NON_IDENTICAL;
+            }
+        }
+        return RO_STATUS.NOT_EXIST;
     }
 
     @GET
@@ -247,7 +302,6 @@ public class Object {
             obj.add(new BasicDBObject(Constants.META_INFO + "." + Constants.META_FORMAT, tempFormat));
         }
 
-        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
         if(fromDate!=null) {
             fromDate = fromDate.replace("+00:00","Z");
             obj.add(new BasicDBObject(Constants.META_INFO + "." + Constants.META_UPDATE_DATE,

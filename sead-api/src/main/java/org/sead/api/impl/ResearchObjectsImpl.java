@@ -141,43 +141,46 @@ public class ResearchObjectsImpl extends ResearchObjects {
             message = message.replace("doi:", "http://dx.doi.org/");
         }
 
+        // Check whether the RO has an alternate RO which was published before
+        JSONObject roObject = new JSONObject((String)getROProfile(id).getEntity());
+        String callbackUrl = roObject.getString("Publication Callback");
+        boolean republishRO = false;
+        String alternateOf = null;
+        if("Success".equals(stage) && roObject.has("Preferences") &&
+                roObject.get("Preferences") instanceof  JSONObject &&
+                roObject.getJSONObject("Preferences").has("External Identifier")) {
+            Object republishROIdObject = roObject.getJSONObject("Preferences").get("External Identifier");
+            if(republishROIdObject != null && republishROIdObject instanceof String){
+                String republishROPID = (String)republishROIdObject;
+
+                ClientResponse pidResponse = pdtWebService.path("researchobjects/pid")
+                        .path(URLEncoder.encode(republishROPID))
+                        .accept("application/json")
+                        .type("application/json")
+                        .get(ClientResponse.class);
+                if(pidResponse.getStatus() == 200) {
+                    Document roDoc = Document.parse(pidResponse.getEntity(String.class));
+                    alternateOf = roDoc.getString("roId");
+                    republishRO = true;
+                    System.out.println("RO with ID " + id + " is an alternate of RO with ID " + alternateOf);
+                }
+            }
+        }
+
         // update PDT with the status
-        ClientResponse response = pdtWebService.path("researchobjects")
+        ClientResponse statusUpdateResponse = pdtWebService.path("researchobjects")
                 .path(id + "/status")
                 .accept("application/json")
                 .type("application/json")
                 .post(ClientResponse.class, state);
 
-        if (!"Success".equals(stage) || response.getStatus() != 200) {
+        if (!"Success".equals(stage) || statusUpdateResponse.getStatus() != 200) {
             // if the status update in PDT is not successful, return the error
-            return Response.status(response.getStatus()).entity(response
+            return Response.status(statusUpdateResponse.getStatus()).entity(statusUpdateResponse
                     .getEntity(new GenericType<String>() {})).cacheControl(control).build();
         } else {
 
-            JSONObject roObject = new JSONObject((String)getROProfile(id).getEntity());
-            String callbackUrl = roObject.getString("Publication Callback");
-            boolean republishRO = false;
-            String alternateOf = null;
-            if(roObject.has("Preferences") &&
-                    roObject.get("Preferences") instanceof  JSONObject &&
-                    roObject.getJSONObject("Preferences").has("External Identifier")) {
-                Object republishROIdObject = roObject.getJSONObject("Preferences").get("External Identifier");
-                if(republishROIdObject != null && republishROIdObject instanceof String){
-                    String republishROPID = (String)republishROIdObject;
-
-                    ClientResponse roResponse = pdtWebService.path("researchobjects/pid")
-                            .path(URLEncoder.encode(republishROPID))
-                            .accept("application/json")
-                            .type("application/json")
-                            .get(ClientResponse.class);
-                    if(roResponse.getStatus() == 200) {
-                        Document roDoc = Document.parse(roResponse.getEntity(String.class));
-                        alternateOf = roDoc.getString("roId");
-                        republishRO = true;
-                    }
-                }
-            }
-
+            // If this RO has an alternate RO, delete the old RO request/OREMap and add oldRO ID to the new RO request
             if (republishRO) {
                 ClientResponse deprecateRoResponse = pdtWebService.path("researchobjects/deprecate")
                         .path(id)
@@ -191,16 +194,17 @@ public class ResearchObjectsImpl extends ResearchObjects {
                 }
             }
 
-
             // Calling MetadataGenerator to generate FGDC metadata for the RO
-            /*ClientResponse metagenResponse = metadataGenWebService.path("rest")
+            // If this RO has an alternate RO, obsolete the FGDC of previous RO if it is different
+            ClientResponse metagenResponse = metadataGenWebService.path("rest")
                     .path(id + "/fgdc")
+                    .queryParam("deprecateFgdc", republishRO ? alternateOf : "")
                     .accept("application/xml")
                     .type("application/xml")
                     .post(ClientResponse.class, message);
             if(metagenResponse.getStatus() != 200){
                 System.out.println("Failed to generate FGDC metadata for " + id);
-            }*/
+            }
 
             // if the status update in PDT is successful, we have to send to DOI to project space/data source
             /*if (callbackUrl != null) {
