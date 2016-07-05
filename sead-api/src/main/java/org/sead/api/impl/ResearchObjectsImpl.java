@@ -170,7 +170,7 @@ public class ResearchObjectsImpl extends ResearchObjects {
                 roObject.get("Preferences") instanceof  JSONObject &&
                 roObject.getJSONObject("Preferences").has("External Identifier")) {
             Object republishROIdObject = roObject.getJSONObject("Preferences").get("External Identifier");
-            if(republishROIdObject != null && republishROIdObject instanceof String && republishROIdObject.toString().equals(message)){
+            if(republishROIdObject != null && republishROIdObject instanceof String && PIDMatches(republishROIdObject.toString(), message)){
                 String republishROPID = (String)republishROIdObject;
 
                 ClientResponse pidResponse = pdtWebService.path("researchobjects/pid")
@@ -246,6 +246,17 @@ public class ResearchObjectsImpl extends ResearchObjects {
             }
             return Response.status(ClientResponse.Status.OK).cacheControl(control).build();
         }
+    }
+
+    private boolean PIDMatches(String pid1, String pid2) {
+
+        String pid1Formatted = pid1.replace("http://doi.org/", "").replace("http://dx.doi.org/", "").replaceAll("^doi:", "").replaceAll("^/+", "").replaceAll("/+$", "");
+        String pid2Formatted = pid2.replace("http://doi.org/", "").replace("http://dx.doi.org/", "").replaceAll("^doi:", "").replaceAll("^/+", "").replaceAll("/+$", "");
+
+        if(pid1Formatted.equals(pid2Formatted))
+            return true;
+        else
+            return false;
     }
 
     @GET

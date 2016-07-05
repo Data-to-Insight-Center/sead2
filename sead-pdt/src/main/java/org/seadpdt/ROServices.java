@@ -521,10 +521,13 @@ public class ROServices {
                                 @PathParam("oldRO") String oldRoId) {
 
         try {
-            BasicDBObject metaObject = new BasicDBObject(Constants.alternateOf, Constants.alternateOfIRI);
+            Response roObjectResponse = getROProfile(newRoId);
+            Object context = new JSONObject(roObjectResponse.getEntity().toString()).get("@context");
+            addIfNeeded(context, Constants.alternateOf, Constants.alternateOfIRI);
+
             UpdateResult urContext = publicationsCollection.updateOne(
                     new Document("Aggregation.Identifier", newRoId),
-                    new BasicDBObject("$push", new BasicDBObject("@context", metaObject)));
+                    new BasicDBObject("$set", new BasicDBObject("@context", JSON.parse(context.toString()))));
             UpdateResult urAggregation = publicationsCollection.updateOne(
                     new Document("Aggregation.Identifier", newRoId),
                     new BasicDBObject("$set", new BasicDBObject("Aggregation." + Constants.alternateOf, oldRoId)));
@@ -538,6 +541,42 @@ public class ROServices {
         } catch (org.bson.BsonInvalidOperationException e) {
             return Response.status(ClientResponse.Status.BAD_REQUEST).build();
         }
+    }
+
+    private void addIfNeeded(Object context, String key, String uri) {
+        if (!isInContext(context, key)) {
+            addToContext(context, key, uri);
+        }
+    }
+
+    private boolean addToContext(Object context, String label, String predicate) {
+        if (context instanceof JSONArray) {
+            // Look for an object in the array to add to
+            for (int i = 0; i < ((JSONArray) context).length(); i++) {
+                if (addToContext(((JSONArray) context).get(i), label, predicate)) {
+                    return true;
+                }
+            }
+        } else if (context instanceof JSONObject) {
+            ((JSONObject) context).put(label, predicate);
+            return true;
+        }
+        return false;
+    }
+
+    private boolean isInContext(Object context, String label) {
+        if (context instanceof JSONArray) {
+            for (int i = 0; i < ((JSONArray) context).length(); i++) {
+                if (isInContext(((JSONArray) context).get(i), label)) {
+                    return true;
+                }
+            }
+        } else if (context instanceof JSONObject) {
+            if (((JSONObject) context).has(label)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     //This is a management method used to copy oreMaps from main mongoDB to the GridFS DB
