@@ -170,7 +170,7 @@ public class ResearchObjectsImpl extends ResearchObjects {
                 roObject.get("Preferences") instanceof  JSONObject &&
                 roObject.getJSONObject("Preferences").has("External Identifier")) {
             Object republishROIdObject = roObject.getJSONObject("Preferences").get("External Identifier");
-            if(republishROIdObject != null && republishROIdObject instanceof String){
+            if(republishROIdObject != null && republishROIdObject instanceof String && republishROIdObject.toString().equals(message)){
                 String republishROPID = (String)republishROIdObject;
 
                 ClientResponse pidResponse = pdtWebService.path("researchobjects/pid")
