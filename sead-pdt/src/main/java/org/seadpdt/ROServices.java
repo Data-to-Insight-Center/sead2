@@ -235,24 +235,32 @@ public class ROServices {
 
 		FindIterable<Document> iter = publicationsCollection.find(new Document(
 				"Aggregation.Identifier", id));
-		if (iter == null) {
+		if (iter == null || iter.first() == null) {
+
+            FindIterable<Document> altIter = publicationsCollection.find(new Document(
+                    "Aggregation." + Constants.alternateOf, id));
+            if(altIter != null && altIter.first() != null) {
+                Document aggDocument = (Document) altIter.first().get("Aggregation");
+                String movedTo = (String) aggDocument.get("Identifier");
+                return Response
+                        .status(ClientResponse.Status.MOVED_PERMANENTLY)
+                        .header("Location" , movedTo)
+                        .entity(new JSONObject().put("Error", "The document has moved to " + movedTo).toString())
+                        .build();
+            }
+
 			return Response
                     .status(ClientResponse.Status.NOT_FOUND)
                     .entity(new JSONObject().put("Error", "Cannot find RO with id " + id).toString())
                     .build();
 		}
+
 		Document document = iter.first();
-		if (document == null) {
-			return Response
-                    .status(ClientResponse.Status.NOT_FOUND)
-                    .entity(new JSONObject().put("Error", "Cannot find RO with id " + id).toString())
-                    .build();
-		}
 		// Internal meaning only - strip from exported doc
 		document.remove("_id");
-
 		Document aggDocument = (Document) document.get("Aggregation");
 		aggDocument.remove("authoratativeMap");
+
 		return Response.ok(document.toJson()).cacheControl(control).build();
 	}
 

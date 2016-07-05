@@ -116,7 +116,8 @@ public class ResearchObjectsImpl extends ResearchObjects {
     @GET
     @Path("/{id}")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response getROProfile(@PathParam("id") String id) {
+    public Response getROProfile(@Context HttpServletRequest servletRequest,
+                                 @PathParam("id") String id) {
         WebResource webResource = pdtWebService;
 
         ClientResponse response = webResource.path("researchobjects")
@@ -125,6 +126,17 @@ public class ResearchObjectsImpl extends ResearchObjects {
                 .type("application/json")
                 .get(ClientResponse.class);
 
+        if(response.getStatus() == ClientResponse.Status.MOVED_PERMANENTLY.getStatusCode()) {
+            String movedTo = response.getHeaders().getFirst("Location");
+            String requestURL = servletRequest.getRequestURL().toString();
+            String movedToURL = requestURL.replace(id, movedTo);
+            return Response
+                    .status(response.getStatus())
+                    .header("Location", movedToURL)
+                    .entity(new JSONObject().put("Error", "RO has been replaced by " + movedTo).toString())
+                    .cacheControl(control).build();
+        }
+
         return Response.status(response.getStatus()).entity(response
                 .getEntity(new GenericType<String>() {})).cacheControl(control).build();
     }
@@ -132,7 +144,7 @@ public class ResearchObjectsImpl extends ResearchObjects {
     @POST
     @Path("/{id}/status")
     @Consumes(MediaType.APPLICATION_JSON)
-    public Response setROStatus(@PathParam("id") String id, String state) {
+    public Response setROStatus(@Context HttpServletRequest request, @PathParam("id") String id, String state) {
         JSONObject stateJson = new JSONObject(state);
         // read stage and message from status
         String stage = stateJson.get("stage").toString();
@@ -143,7 +155,14 @@ public class ResearchObjectsImpl extends ResearchObjects {
         }
 
         // Check whether the RO has an alternate RO which was published before
-        JSONObject roObject = new JSONObject((String)getROProfile(id).getEntity());
+        Response getRoProfileResponse = getROProfile(request, id);
+        if(getRoProfileResponse.getStatus() != 200) {
+            return Response.status(Response.Status.NOT_FOUND)
+                    .entity(getRoProfileResponse.getEntity().toString())
+                    .build();
+        }
+
+        JSONObject roObject = new JSONObject((String)getRoProfileResponse.getEntity());
         String callbackUrl = roObject.getString("Publication Callback");
         boolean republishRO = false;
         String alternateOf = null;

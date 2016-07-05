@@ -149,7 +149,7 @@ public abstract class ResearchObjects {
 	@GET
 	@Path("/{id}")
 	@Produces(MediaType.APPLICATION_JSON)
-	public abstract Response getROProfile(@PathParam("id") String id);
+	public abstract Response getROProfile(@Context HttpServletRequest request, @PathParam("id") String id);
 	
 	/**
 	 * Return the OREMap associated with the give request
@@ -210,7 +210,7 @@ public abstract class ResearchObjects {
 	@POST
 	@Path("/{id}/status")
 	@Consumes(MediaType.APPLICATION_JSON)
-	public abstract Response setROStatus(@PathParam("id") String id,
+	public abstract Response setROStatus(@Context HttpServletRequest request, @PathParam("id") String id,
 			String status);
 
 	/**
