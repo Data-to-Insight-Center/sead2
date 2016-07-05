@@ -181,9 +181,7 @@ public class Object {
         final byte[] utf8Bytes = fgdcString.getBytes("UTF-8");
         metaInfo.put(Constants.SIZE, utf8Bytes.length);
 
-        SimpleDateFormat sdfDate = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
-        Date now = new Date();
-        String strDate = sdfDate.format(now);
+        String strDate = simpleDateFormat.format(new Date());
         metaInfo.put(Constants.META_UPDATE_DATE, strDate);
         metaInfo.put(Constants.DEPOSIT_DATE, strDate);
 
@@ -226,7 +224,6 @@ public class Object {
         if(iter != null && iter.first() != null){
             JSONObject metaInfo = new JSONObject(((Document)iter.first().get(Constants.META_INFO)).toJson());
             JSONObject newRODocument = new JSONObject(document.toJson()).getJSONObject(Constants.META_INFO);
-            SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
             String strDate = simpleDateFormat.format(new Date());
 
             String oldFgdcId = metaInfo.getString(Constants.FGDC_ID);
