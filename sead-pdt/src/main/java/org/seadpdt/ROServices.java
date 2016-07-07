@@ -36,15 +36,14 @@ import com.mongodb.gridfs.GridFSDBFile;
 import com.mongodb.gridfs.GridFSInputFile;
 import com.mongodb.util.JSON;
 import com.sun.jersey.api.client.ClientResponse;
-
 import org.bson.Document;
 import org.bson.types.BasicBSONList;
 import org.bson.types.ObjectId;
 import org.json.JSONArray;
-import org.seadpdt.people.Profile;
-import org.seadpdt.people.Provider;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.seadpdt.people.Profile;
+import org.seadpdt.people.Provider;
 import org.seadpdt.util.Constants;
 import org.seadpdt.util.MongoDB;
 
@@ -52,7 +51,6 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.CacheControl;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -60,7 +58,11 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.sql.Date;
 import java.text.DateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.List;
+import java.util.regex.Pattern;
 
 @Path("/researchobjects")
 public class ROServices {
@@ -499,7 +501,15 @@ public class ROServices {
 
         BasicDBObject statusObj = new BasicDBObject();
         statusObj.put("stage", "Success");
-        statusObj.put("message", pid);
+        if(pid.contains("http://doi.org/") || pid.contains("http://dx.doi.org/") || pid.matches("^doi:.*")) {
+            String pidQuery = pid.replace("http://doi.org/", "").replace("http://dx.doi.org/", "").replaceAll("^doi:", "").replaceAll("^/+", "").replaceAll("/+$", "");
+            Pattern pattern = Pattern.compile("(http://doi.org/|http://dx.doi.org/|doi:)" + pidQuery);
+            statusObj.put("message", pattern);
+        } else {
+            String pidQuery = pid.replaceAll("^/+", "").replaceAll("/+$", "");
+            Pattern pattern = Pattern.compile(pidQuery);
+            statusObj.put("message", pattern);
+        }
         BasicDBObject elemMatch = new BasicDBObject();
         elemMatch.put("$elemMatch", statusObj);
         BasicDBObject query = new BasicDBObject("Status", elemMatch);
