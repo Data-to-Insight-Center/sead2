@@ -62,8 +62,6 @@ public class LandingPage extends HttpServlet {
         		tag = request.getRequestURI().split("/sda/list=")[1];
         	}
 
-            SeadMon.addLog(MonConstants.Components.LANDING_PAGE, tag, MonConstants.EventType.ACCESS);
-
             // here we check whether the BagIt zip file for this RO exists in SDA
             SFTP sftp = new SFTP();
             String bagName = getBagNameFromId(tag);
@@ -85,8 +83,18 @@ public class LandingPage extends HttpServlet {
             // Fix: accessing RO from c3pr here is wrong. we have to access the ore map in the
             // published package and read properties from that.
             JSONObject cp = shim.getResearchObject(tag);
+
+            if(cp.isEmpty()) {
+                RequestDispatcher dispatcher = request.getRequestDispatcher("/ro.jsp");
+                request.setAttribute("roExists", "false");
+                dispatcher.forward(request, response);
+                return;
+            }
+
+            request.setAttribute("roExists", "true");
+            SeadMon.addLog(MonConstants.Components.LANDING_PAGE, tag, MonConstants.EventType.ACCESS);
+
             keyMap(cp, keyList_cp);
-            
             
             shim.getObjectID(cp, "@id");
             String oreUrl = shim.getID();

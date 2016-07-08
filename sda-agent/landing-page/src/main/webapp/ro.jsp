@@ -16,11 +16,40 @@
 <%--<script src="js/bootbox.min.js"></script>--%>
 
 <%
+	String sdaUrl = (String) request.getAttribute("landingPageUrl") + "/home.html";
+    String roExists = (String) request.getAttribute("roExists");
+    if ("false".equals(roExists)) {
+%>
+
+<div id="wrapper" align = "center">
+    <div style="display : inline-block;padding: 15px 45px 15px 45px;" class="container">
+        <div>
+            <a href="https://www.indiana.edu/" target="_blank"><img align="left" src="http://brand.iu.edu/img/signatures/indiana-university/indiana-university" style="width: 273px;height:91px"></a>
+        </div>
+        <div>
+            <a href="http://sead-data.net/" target="_blank"><img align="right" src="http://sead-data.net/wp-content/uploads/2014/06/logo.png" style="width: 364px;height:51px"></a>
+        </div>
+	</div>
+	<div>
+        <h1 style="cursor: pointer;"><a style="color: #333; text-decoration: none;" href="<%= sdaUrl%>">IU SEAD Cloud</a></h1>
+	</div>
+    <div id="page-wrapper" align = "center">
+        <div class="container float" align = "center">
+            <div class="container float" align="center" style="background-color: #e0e0e0;margin-top: 50px;">
+            	<h1>Page Not Found <small><font face="Tahoma" color="red">Error 404</font></small></h1>
+            	<br>
+            	<p>The page you requested could not be found</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<%
+    } else {
     Map<String, List<String>> properties = (Map<String, List<String>>) request.getAttribute("roProperties");
 	Map<String, String> downloadList = (Map<String, String>) request.getAttribute("downloadList");
 	Map<String, String> linkedHashMap = (Map<String, String>) request.getAttribute("linkedHashMap");
-	String tag = (String) request.getAttribute("obTag");	
-	String sdaUrl = (String) request.getAttribute("landingPageUrl") + "/home.html";
+	String tag = (String) request.getAttribute("obTag");
 %>
 
 <div id="wrapper" align = "center">
@@ -192,6 +221,8 @@
         </div>
     </div>
 </div>
+
+<%}%>
 
 </body>
 </html>
