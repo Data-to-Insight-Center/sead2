@@ -38,6 +38,8 @@ public class Constants {
 	public static boolean deleteTestRO;
 
 	public static String serviceName = "SEAD-C3PR";
+	public static String alternateOf = "alternateOf";
+	public static String alternateOfIRI = "http://www.w3.org/ns/prov#alternateOf";
 
 	static {
 		try {

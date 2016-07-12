@@ -57,7 +57,8 @@ public class MetadataGenerator {
     @Path("/{id}/fgdc")
     @Produces(MediaType.APPLICATION_XML)
     public Response addFgdc(@PathParam("id") String id,
-                          String doi) throws URISyntaxException {
+                            @QueryParam("deprecateFgdc") String deprecateFgdc,
+                            String doi) throws URISyntaxException {
         if (id == null) {
             return Response.status(Response.Status.BAD_REQUEST).type(MediaType.APPLICATION_XML).build();
         }
@@ -77,6 +78,7 @@ public class MetadataGenerator {
                     .queryParam("creators", !fgdcMetadataGen.getCreatorsList().isEmpty()
                             ? StringUtils.join(fgdcMetadataGen.getCreatorsList().toArray(), "|")
                             : "")
+                    .queryParam("deprecateFgdc", deprecateFgdc)
                     .accept("application/xml")
                     .type("application/xml")
                     .post(ClientResponse.class, response);

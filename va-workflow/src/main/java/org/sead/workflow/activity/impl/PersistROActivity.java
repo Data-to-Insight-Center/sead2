@@ -22,21 +22,13 @@ import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.GenericType;
 import com.sun.jersey.api.client.WebResource;
-import com.sun.jersey.multipart.FormDataMultiPart;
-import org.apache.commons.io.IOUtils;
 import org.sead.workflow.activity.AbstractWorkflowActivity;
 import org.sead.workflow.activity.SeadWorkflowActivity;
 import org.sead.workflow.config.SeadWorkflowConfig;
 import org.sead.workflow.context.SeadWorkflowContext;
 import org.sead.workflow.exception.SeadWorkflowException;
 import org.sead.workflow.util.Constants;
-import org.seadva.services.statusTracker.SeadStatusTracker;
-import org.seadva.services.statusTracker.enums.SeadStatus;
-import sun.security.provider.certpath.OCSPResponse;
 
-import javax.ws.rs.core.MediaType;
-import java.io.IOException;
-import java.io.StringWriter;
 import java.net.URLEncoder;
 import java.util.HashMap;
 
