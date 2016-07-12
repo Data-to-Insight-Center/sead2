@@ -32,6 +32,8 @@ import java.util.regex.Pattern;
 
 public class ClowderProvider extends Provider {
 
+	//FixMe - this should be configurable/pulled form properties at some point
+	static public String idPrefix = "https://sead2-beta.ncsa.illinois.edu/api/users/";
     @Override
     public Document getExternalProfile(JSONObject person)
             throws RuntimeException {
@@ -39,7 +41,7 @@ public class ClowderProvider extends Provider {
         Document profile = null;
         if (id != null) {
             // id should be canonical already
-            id = id.substring("http://sead2-beta.ncsa.illinois.edu/api/users/".length());
+            id = id.substring(idPrefix.length());
 
             profile = generateProfile(id);
         }
@@ -75,7 +77,7 @@ public class ClowderProvider extends Provider {
     public static Document getRawProfile(String rawID) {
         Client client = Client.create();
 
-        WebResource webResource = client.resource("http://sead2-beta.ncsa.illinois.edu/api/users/"
+        WebResource webResource = client.resource(idPrefix
                 + rawID);
 
         ClientResponse response = webResource.accept("application/json")
@@ -97,10 +99,10 @@ public class ClowderProvider extends Provider {
         if (personID.matches("^.*/api/users/[a-zA-Z0-9]+$")) {
             Matcher m = Pattern.compile("^.*/api/users/([a-z0-9]{24}+)$").matcher(personID);
             if (m.find( )) {
-                return "http://sead2-beta.ncsa.illinois.edu/api/users/" + m.group(1);
+                return idPrefix + m.group(1);
             }
         } else if (personID.matches("^[a-z0-9]{24}+$")) {
-            return "http://sead2-beta.ncsa.illinois.edu/api/users/" + personID;
+            return idPrefix + personID;
         }
 
         return canonical;
