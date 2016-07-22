@@ -1,7 +1,9 @@
 SEAD 2.0 Publishing Services
 =============================
 
-Source repository for SEAD 2.0 publishing services. SEAD 2.0 is funded in large part by a grant from the National Science Foundation.  The primary components of the SEAD 2.0 suite are:  Curbee: lightweight publishing workflow; PDT: repository of People, Data, Things used by the publishing services, SEAD Matchmaker:  recommendation tool that selects repositories for deposit using information from PDT; IU SEAD Cloud: a hybrid storage server/repository that accepts deposits from the SEAD services.   IU SEAD Cloud also serves as a template for other storage server/repository instances wanting to use SEAD.   Be on lookout for source code reorganization of this repository for easier use of the component pieces of the SEAD 2.0 pubishing services.
+Source repository for SEAD 2.0 publishing services. SEAD 2.0 is funded in large part by a grant from the National Science Foundation.  The primary components of the SEAD 2.0 suite are:  Curbee: a lightweight publishing workflow; PDT: a mongoDB repository of People, Data, Things used by the publishing services; SEAD Matchmaker:  recommendation tool that selects repositories for deposit using information from PDT; IU SEAD Cloud: a hybrid storage server/repository that accepts deposits from the SEAD services.   IU SEAD Cloud also serves as a template for other storage server/repository instances wanting to use SEAD.   
+
+Be on the lookout for source code reorganization of this repository for easier use of the component pieces of the SEAD 2.0 pubishing services.
 
 Steps to build:
 ---------------
