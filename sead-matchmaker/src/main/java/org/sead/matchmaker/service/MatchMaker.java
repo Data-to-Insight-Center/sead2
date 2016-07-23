@@ -60,6 +60,7 @@ public class MatchMaker {
 		matchers.add(new DepthMatcher());
 		matchers.add(new MinimalMetadataMatcher());
 		matchers.add(new RightsHolderIDsRequiredMatcher());
+		matchers.add(new PurposeMatcher());
 
 		pdtResource = Client.create().resource(MatchmakerConstants.pdtUrl);
 	}
@@ -70,13 +71,13 @@ public class MatchMaker {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response makeMatches(String matchRequest) {
 		String messageString = null;
-        System.out.println("=================");
-        System.out.println("MM request : " + matchRequest);
-        System.out.println("=================");
+		System.out.println("=================");
+		System.out.println("MM request : " + matchRequest);
+		System.out.println("=================");
 
-        SeadMon.addLog(MonConstants.Components.MATCHMAKER, "ID");
+		SeadMon.addLog(MonConstants.Components.MATCHMAKER, "ID");
 
-        Document request = Document.parse(matchRequest);
+		Document request = Document.parse(matchRequest);
 		Document content = (Document) request.get("Aggregation");
 		if (content == null) {
 			messageString += "Missing Aggregation";
@@ -99,9 +100,9 @@ public class MatchMaker {
 		if (context == null) {
 			messageString += "Missing @context";
 		}
-        if(content.get("Creator") == null) {
-            messageString += "Missing Creator";
-        }
+		if (content.get("Creator") == null) {
+			messageString += "Missing Creator";
+		}
 
 		if (messageString == null) {
 			// Get organization from profile(s)
@@ -144,12 +145,17 @@ public class MatchMaker {
 				BasicBSONList scores = new BasicBSONList();
 				int total = 0;
 				int i = 0;
+				boolean includeRepo = true;
 				for (Matcher m : matchers) {
 					BasicBSONObject individualScore = new BasicBSONObject();
 
 					RuleResult result = m.runRule(content, rightsHolders,
 							affiliations, preferences, stats, profile, context);
 
+					if (result.isMandatory() && result.getScore() < 0) {
+						includeRepo = false;
+						break;
+					}
 					individualScore.put("Rule Name", m.getName());
 					if (result.wasTriggered()) {
 						individualScore.put("Score", result.getScore());
@@ -162,9 +168,11 @@ public class MatchMaker {
 					scores.put(i, individualScore);
 					i++;
 				}
-				repoMatch.put("Per Rule Scores", scores);
-				repoMatch.put("Total Score", total);
-				matches.put(j, repoMatch);
+				if (includeRepo) {
+					repoMatch.put("Per Rule Scores", scores);
+					repoMatch.put("Total Score", total);
+					matches.put(j, repoMatch);
+				}
 			}
 			// Assemble and send
 			return Response.ok().entity(matches).build();
@@ -206,11 +214,11 @@ public class MatchMaker {
 			}
 		} catch (UnsupportedEncodingException e) {
 			e.printStackTrace();
-		} catch (RuntimeException e){
-            System.out.println("Error ocurred while registering person with ID :" + personID);
-        }
-
-
+		} catch (RuntimeException e) {
+			System.out
+					.println("Error ocurred while registering person with ID :"
+							+ personID);
+		}
 
 		if (personProfile == null) {
 			System.out.println("Can't identify the person: " + personID);
