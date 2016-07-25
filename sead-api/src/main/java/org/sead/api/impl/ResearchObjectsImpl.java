@@ -27,6 +27,7 @@ import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.GenericType;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
+
 import org.bson.Document;
 import org.json.JSONObject;
 import org.sead.api.ResearchObjects;
@@ -38,6 +39,7 @@ import javax.ws.rs.core.CacheControl;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+
 import java.net.URLEncoder;
 
 /**
@@ -86,8 +88,12 @@ public class ResearchObjectsImpl extends ResearchObjects {
     @GET
     @Path("/")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response getROsList() {
+    public Response getROsList(@QueryParam("Purpose") final String purpose) {
         WebResource webResource = pdtWebService;
+        
+        if(purpose!=null) {
+        	webResource = webResource.queryParam("purpose", purpose);
+        }
 
         ClientResponse response = webResource.path("researchobjects")
                 .accept("application/json")
@@ -101,8 +107,12 @@ public class ResearchObjectsImpl extends ResearchObjects {
     @GET
     @Path("/new/")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response getNewROsList() {
+    public Response getNewROsList(@QueryParam("Purpose") final String purpose) {
         WebResource webResource = pdtWebService;
+        
+        if(purpose!=null) {
+        	webResource = webResource.queryParam("purpose", purpose);
+        }
 
         ClientResponse response = webResource.path("researchobjects/new/")
                 .accept("application/json")

@@ -29,6 +29,7 @@ import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.model.Filters;
 import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
 import com.mongodb.gridfs.GridFS;
@@ -36,6 +37,7 @@ import com.mongodb.gridfs.GridFSDBFile;
 import com.mongodb.gridfs.GridFSInputFile;
 import com.mongodb.util.JSON;
 import com.sun.jersey.api.client.ClientResponse;
+
 import org.bson.Document;
 import org.bson.types.BasicBSONList;
 import org.bson.types.ObjectId;
@@ -51,6 +53,7 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.CacheControl;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -194,8 +197,13 @@ public class ROServices {
 	@GET
 	@Path("/")
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response getROsList() {
-		FindIterable<Document> iter = publicationsCollection.find();
+	public Response getROsList(@QueryParam("Purpose") final String purpose) {
+		FindIterable<Document> iter;
+		if(purpose!=null) {
+			iter = publicationsCollection.find(Filters.eq("Purpose",purpose));
+		} else {
+			iter = publicationsCollection.find();
+		}
 		iter.projection(new Document("Status", 1).append("Repository", 1)
 				.append("Aggregation.Identifier", 1)
 				.append("Aggregation.Title", 1).append("_id", 0));
@@ -210,7 +218,7 @@ public class ROServices {
 	@GET
 	@Path("/new/")
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response getNewROsList() {
+	public Response getNewROsList(@QueryParam("Purpose") final String purpose) {
 		//Find ROs that have a status not from the services and don't include them :-)
 		Document reporterRule = new Document("$ne", Constants.serviceName);
 		Document reporter = new Document("reporter", reporterRule);
@@ -218,7 +226,12 @@ public class ROServices {
 		Document not = new Document("$not", elem);
 		Document match= new Document("Status", not);
 
-		FindIterable<Document> iter = publicationsCollection.find(match);
+		FindIterable<Document> iter;
+		if(purpose!=null) {
+			iter = publicationsCollection.find(Filters.and(match, Filters.eq("Purpose", purpose)));
+		} else {
+			iter = publicationsCollection.find(match);
+		}
 		iter.projection(new Document("Status", 1).append("Repository", 1)
 				.append("Aggregation.Identifier", 1)
 				.append("Aggregation.Title", 1).append("_id", 0));
