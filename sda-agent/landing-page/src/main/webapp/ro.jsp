@@ -27,7 +27,7 @@
             <a href="https://www.indiana.edu/" target="_blank"><img align="left" src="http://brand.iu.edu/img/signatures/indiana-university/indiana-university" style="width: 273px;height:91px"></a>
         </div>
         <div>
-            <a href="http://sead-data.net/" target="_blank"><img align="right" src="http://sead-data.net/wp-content/uploads/2014/06/logo.png" style="width: 364px;height:51px"></a>
+            <a href="http://sead-data.net/" target="_blank"><img align="right" src="http://sead-data.net/wp-content/uploads/2014/06/logo.png" style="width: 21%;height: 21%;"></a>
         </div>
 	</div>
 	<div>
@@ -58,7 +58,7 @@
             <a href="https://www.indiana.edu/" target="_blank"><img align="left" src="http://brand.iu.edu/img/signatures/indiana-university/indiana-university" style="width: 273px;height:91px"></a>
         </div>
         <div>
-            <a href="http://sead-data.net/" target="_blank"><img align="right" src="http://sead-data.net/wp-content/uploads/2014/06/logo.png" style="width: 364px;height:51px"></a>
+            <a href="http://sead-data.net/" target="_blank"><img align="right" src="http://sead-data.net/wp-content/uploads/2014/06/logo.png" style="width: 21%;height: 21%;"></a>
         </div>
 	</div>
 	<div>
@@ -113,6 +113,35 @@
                                 	<% continue;
                             	}
 								%>
+
+                                <%if(key.equals("Creator") || key.equals("Contact")) { %>
+                                    <div style="float: left;width:62%;word-wrap: break-word;">
+                                <%
+                                    String[] creatorInfo = val.split("\\|");
+                                    if (creatorInfo.length == 1) {
+                                %>
+                                    <%= val%>
+                                <%
+                                    } else if (creatorInfo.length == 2) {
+                                %>
+                                    <a href="<%= creatorInfo[1]%>"><%= creatorInfo[0]%></a>
+                                <%
+                                    } else if (creatorInfo.length == 3) {
+                                %>
+                                    <a href="<%= creatorInfo[1]%>" title="<%= creatorInfo[2]%>"><%= creatorInfo[0]%></a>
+
+                                <%
+                                    }
+
+                                    if(count != vals.size()) {
+                                    %>
+                                    </br>
+                                    <%
+                                    }
+                                %></div>
+                                    <% continue;
+                                }
+                                %>
                                 
                                 <%
                                     if (val.startsWith("http")) {
