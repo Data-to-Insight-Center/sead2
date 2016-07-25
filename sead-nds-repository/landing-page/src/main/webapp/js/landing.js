@@ -68,6 +68,12 @@ seadData.fillInMetadata = function(describes) {
 	var p = seadData.formatPeople(describes.Creator);
 	$('#creators').append(p);
 	$('#ID').append($('<div/>').text(describes["External Identifier"]));
+	
+    if(describes.Purpose&&(describes.Purpose.startsWith("Testing"))) {
+        $('#extID .mlabel').text("Persistent Identifier (Test)");
+        $('#ID').append($('<p/>').text('Temporary DOI').attr('class','red-rectangle'));
+    }
+
 	$('#keywords').append(seadData.formatStringOrArray(describes.Keyword));
 	var lic = describes.License;
 
