@@ -91,7 +91,7 @@ public class Repository {
 		Properties props = new Properties();
 		try {
 			props.load(Repository.class
-					.getResourceAsStream("repository.properties"));
+					.getResourceAsStream("/repository.properties"));
 			log.trace(props.toString());
 		} catch (IOException e) {
 			log.warn("Could not read repositories.properties file");
@@ -118,6 +118,11 @@ public class Repository {
 			if (existingID.startsWith("http://dx.doi.org/")) {
 				existingID = "doi:"
 						+ existingID.substring("http://dx.doi.org/".length());
+			}
+			//Moving to new resolver - check for both
+			if (existingID.startsWith("http://doi.org/")) {
+				existingID = "doi:"
+						+ existingID.substring("http://doi.org/".length());
 			}
 			if (existingID != null && !allowUpdates) {
 				// FixMe - should we fail instead of going forward with a new
@@ -199,9 +204,9 @@ public class Repository {
 		if (doi.startsWith("doi:")) {
 			doi = doi.substring(4);
 		}
-		log.debug("Generated/Updated DOI: http://dx.doi.org/" + doi);
-
-		return "http://dx.doi.org/" + doi;
+		log.debug("Generated/Updated DOI: http://doi.org/" + doi);
+		//Use newer doi.org resolver
+		return "http://doi.org/" + doi;
 	}
 
 	public static String getID() {
