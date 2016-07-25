@@ -69,6 +69,7 @@ public class BagGenerator {
 	private HashMap<String, String> sha1Map = new LinkedHashMap<String, String>();
 
 	private String license = "No license information provided";
+	private String purpose = "Production"; //Backward-compatibility - default is for production
 
 	private String hashtype = null;
 
@@ -108,11 +109,6 @@ public class BagGenerator {
 		File tmp = File.createTempFile("sead-scatter-dirs", "tmp");
 		dirs = ScatterZipOutputStream.fileBased(tmp);
 
-		if (((JSONObject) pubRequest.get("Preferences")).has("License")) {
-			license = ((JSONObject) pubRequest.get("Preferences"))
-					.getString("License");
-
-		}
 		JSONObject oremap = RO.getOREMap();
 		JSONObject aggregation = oremap.getJSONObject("describes");
 
@@ -124,7 +120,25 @@ public class BagGenerator {
 				.get("Aggregation Statistics"));
 		aggregation.put("Aggregation Statistics", aggStats);
 
+
+		if (((JSONObject) pubRequest.get("Preferences")).has("License")) {
+			license = ((JSONObject) pubRequest.get("Preferences"))
+					.getString("License");
+
+		}
+		//Accept license preference and add it as the license on the aggregation
 		aggregation.put("License", license);
+		
+		if (((JSONObject) pubRequest.get("Preferences")).has("Purpose")) {
+			purpose = ((JSONObject) pubRequest.get("Preferences"))
+					.getString("Purpose");
+
+		}
+		//Accept the purpose and add it to the map and aggregation (both are for this purpose)
+		aggregation.put("Purpose", purpose);
+		oremap.put("Purpose", purpose);
+
+		
 		// check whether Access Rights set, if so, add it to aggregation
 		if (((JSONObject) pubRequest.get("Preferences")).has("Access Rights")) {
 			String accessRights = ((JSONObject) pubRequest.get("Preferences"))
@@ -234,6 +248,7 @@ public class BagGenerator {
 		// definition (currently we're just checking to see if they a
 		// already defined)
 		addIfNeeded(context, "License", "http://purl.org/dc/terms/license");
+		addIfNeeded(context, "Purpose", "http://sead-data.net/vocab/publishing#Purpose");
 		addIfNeeded(context, "Access Rights",
 				"http://purl.org/dc/terms/accessRights");
 		addIfNeeded(context, "External Identifier",
