@@ -27,6 +27,14 @@ public abstract class PubRequestFacade {
 	public static final String FAILURE_STAGE = "Failure";
 	public static final String PENDING_STAGE = "Pending";
 	public static final String PROBLEM_STAGE = "Problem";
+	
+	public static final String PREFERENCES = "Preferences";
+	public static final String PURPOSE = "Purpose";
+	public static final String TESTING = "Testing-Only";
+	public static final String PRODUCTION = "Production";
+	
+	public static final String EXTERNAL_IDENTIFIER = "External Identifier";
+	
 
 	abstract public JSONObject getPublicationRequest();
 
@@ -114,17 +122,17 @@ public abstract class PubRequestFacade {
 
 	String[] normalizeValues(Object cObject) {
 
-		ArrayList<String> creatorList = new ArrayList<String>();
+		ArrayList<String> valueList = new ArrayList<String>();
 		if (cObject instanceof String) {
-			creatorList.add((String) cObject);
+			valueList.add((String) cObject);
 		} else if (cObject instanceof JSONArray) {
 			for (int i = 0; i < ((JSONArray) cObject).length(); i++) {
-				creatorList.add(((JSONArray) cObject).getString(i));
+				valueList.add(((JSONArray) cObject).getString(i));
 			}
 		} else {
-			log.warn("\"Creator\" element is not a string or array of strings");
+			log.warn("Object for normalization is not a string or array of strings");
 		}
-		return creatorList.toArray(new String[creatorList.size()]);
+		return valueList.toArray(new String[valueList.size()]);
 	}
 
 	abstract JSONArray expandPeople(String[] people);

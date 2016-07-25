@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 University of Michigan
+ * Copyright 2015, 2016 University of Michigan
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,6 +24,7 @@ import java.util.Calendar;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Properties;
+
 import org.apache.log4j.Logger;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -49,7 +50,7 @@ public class Repository {
 
 	// Important: SDA Agent also uses this Repository class and passes it's own
 	// properties.
-	// therefore don't load properties inside the init method.
+	// Therefore, don't load properties inside the init method.
 	public static void init(Properties properties) {
 		props = properties;
 		repoID = props.getProperty("repo.ID");
@@ -86,7 +87,7 @@ public class Repository {
 	static public String getDataPath() {
 		return dataPath;
 	}
-	
+
 	public static Properties loadProperties() {
 		Properties props = new Properties();
 		try {
@@ -103,23 +104,21 @@ public class Repository {
 		return props.getProperty("repo.landing.base") + bagName;
 	}
 
-
-
 	public static String createDOIForRO(String bagID, C3PRPubRequestFacade RO)
 			throws EZIDException {
 		String target = Repository.getLandingPageUri(bagID);
 		log.debug("DOI Landing Page: " + target);
 		String existingID = null;
-		if (RO.getPublicationRequest().getJSONObject("Preferences")
-				.has("External Identifier")) {
+		if (RO.getPublicationRequest().getJSONObject(PubRequestFacade.PREFERENCES)
+				.has(PubRequestFacade.EXTERNAL_IDENTIFIER)) {
 			existingID = RO.getPublicationRequest()
-					.getJSONObject("Preferences")
-					.getString("External Identifier");
+					.getJSONObject(PubRequestFacade.PREFERENCES)
+					.getString(PubRequestFacade.EXTERNAL_IDENTIFIER);
 			if (existingID.startsWith("http://dx.doi.org/")) {
 				existingID = "doi:"
 						+ existingID.substring("http://dx.doi.org/".length());
 			}
-			//Moving to new resolver - check for both
+			// Moving to new resolver - check for both
 			if (existingID.startsWith("http://doi.org/")) {
 				existingID = "doi:"
 						+ existingID.substring("http://doi.org/".length());
@@ -164,19 +163,47 @@ public class Repository {
 
 		EZIDService ezid = new EZIDService(props.getProperty("ezid.url"));
 
-		boolean permanent = props.get("doi.default").equals("temporary") ? false
-				: true;
-		if (((JSONObject) RO.getPublicationRequest().get("Preferences"))
-				.has("Purpose")) {
-			String purpose = ((JSONObject) RO.getPublicationRequest().get(
-					"Preferences")).getString("Purpose");
-			if (purpose.equalsIgnoreCase("Testing-Only")) {
-				permanent = false;
+		// Get allowed purpose(s) from profile
+		JSONObject repository = RO.getRepositoryProfile();
+		String[] allowedPurposes = {PubRequestFacade.PRODUCTION };
+		if (repository.has(PubRequestFacade.PURPOSE)) {
+			Object repoPurpose = repository.get(PubRequestFacade.PURPOSE);
+			allowedPurposes = RO.normalizeValues(repoPurpose);
+		}
+
+		// Get requested purpose
+		boolean production = true;
+		// (Backward-compatible if repository config has a default when no
+		// Purpose preference is sent
+		if (props.get("doi.default") != null) {
+			production = props.get("doi.default").equals("temporary") ? false
+					: true;
+		}
+		String purposePref = PubRequestFacade.PRODUCTION;
+		if (((JSONObject) RO.getPublicationRequest().get(PubRequestFacade.PREFERENCES))
+				.has(PubRequestFacade.PURPOSE)) {
+			purposePref = ((JSONObject) RO.getPublicationRequest().get(
+					PubRequestFacade.PREFERENCES)).getString(PubRequestFacade.PURPOSE);
+			if (purposePref.equalsIgnoreCase(PubRequestFacade.TESTING)) {
+				production = false;
+			} else if (!purposePref.equalsIgnoreCase(PubRequestFacade.PRODUCTION)) {
+				// Should be the only option today, but warn if it doesn't match
+				log.warn("Unknown Purpose Preference: " + purposePref);
+			}
+		}
+		boolean purposeIsAllowed = false;
+		for (String purp : allowedPurposes) {
+			if (purp.equals(purposePref)) {
+				purposeIsAllowed = true;
 			}
 		}
 
+		if (!purposeIsAllowed) {
+			throw new EZIDException("Repository not allowed to mint "
+					+ purposePref + " identifier");
+		}
 		ezid.login(props.getProperty("doi.user"), props.getProperty("doi.pwd"));
-		String shoulder = (permanent) ? props.getProperty("doi.shoulder.prod")
+		String shoulder = (production) ? props.getProperty("doi.shoulder.prod")
 				: props.getProperty("doi.shoulder.test");
 		String doi = null;
 
@@ -205,7 +232,7 @@ public class Repository {
 			doi = doi.substring(4);
 		}
 		log.debug("Generated/Updated DOI: http://doi.org/" + doi);
-		//Use newer doi.org resolver
+		// Use newer doi.org resolver
 		return "http://doi.org/" + doi;
 	}
 

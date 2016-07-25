@@ -121,16 +121,16 @@ public class BagGenerator {
 		aggregation.put("Aggregation Statistics", aggStats);
 
 
-		if (((JSONObject) pubRequest.get("Preferences")).has("License")) {
-			license = ((JSONObject) pubRequest.get("Preferences"))
+		if (((JSONObject) pubRequest.get(PubRequestFacade.PREFERENCES)).has("License")) {
+			license = ((JSONObject) pubRequest.get(PubRequestFacade.PREFERENCES))
 					.getString("License");
 
 		}
 		//Accept license preference and add it as the license on the aggregation
 		aggregation.put("License", license);
 		
-		if (((JSONObject) pubRequest.get("Preferences")).has("Purpose")) {
-			purpose = ((JSONObject) pubRequest.get("Preferences"))
+		if (((JSONObject) pubRequest.get(PubRequestFacade.PREFERENCES)).has("Purpose")) {
+			purpose = ((JSONObject) pubRequest.get(PubRequestFacade.PREFERENCES))
 					.getString("Purpose");
 
 		}
@@ -140,8 +140,8 @@ public class BagGenerator {
 
 		
 		// check whether Access Rights set, if so, add it to aggregation
-		if (((JSONObject) pubRequest.get("Preferences")).has("Access Rights")) {
-			String accessRights = ((JSONObject) pubRequest.get("Preferences"))
+		if (((JSONObject) pubRequest.get(PubRequestFacade.PREFERENCES)).has("Access Rights")) {
+			String accessRights = ((JSONObject) pubRequest.get(PubRequestFacade.PREFERENCES))
 					.getString("Access Rights");
 			aggregation.put("Access Rights", accessRights);
 		}
@@ -235,7 +235,7 @@ public class BagGenerator {
 		}
 
 		// Generate DOI:
-		oremap.getJSONObject("describes").put("External Identifier",
+		oremap.getJSONObject("describes").put(PubRequestFacade.EXTERNAL_IDENTIFIER,
 				Repository.createDOIForRO(bagID, RO));
 
 		oremap.getJSONObject("describes").put(
@@ -251,7 +251,7 @@ public class BagGenerator {
 		addIfNeeded(context, "Purpose", "http://sead-data.net/vocab/publishing#Purpose");
 		addIfNeeded(context, "Access Rights",
 				"http://purl.org/dc/terms/accessRights");
-		addIfNeeded(context, "External Identifier",
+		addIfNeeded(context, PubRequestFacade.EXTERNAL_IDENTIFIER,
 				"http://purl.org/dc/terms/identifier");
 		addIfNeeded(context, "Publication Date",
 				"http://purl.org/dc/terms/issued");
@@ -780,7 +780,7 @@ public class BagGenerator {
 
 		info.append("External-Identifier: ");
 		info.append(map.getJSONObject("describes").getString(
-				"External Identifier"));
+				PubRequestFacade.EXTERNAL_IDENTIFIER));
 		info.append(CRLF);
 
 		info.append("Bag-Size: ");
