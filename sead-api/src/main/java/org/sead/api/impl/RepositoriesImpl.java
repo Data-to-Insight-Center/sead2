@@ -26,6 +26,7 @@ import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.GenericType;
 import com.sun.jersey.api.client.WebResource;
+
 import org.sead.api.Repositories;
 import org.sead.api.util.Constants;
 
@@ -138,9 +139,13 @@ public class RepositoriesImpl extends Repositories {
 	@GET
 	@Path("/{id}/researchobjects")
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response getROsByRepository(@PathParam("id") String id) {
+	public Response getROsByRepository(@PathParam("id") String id, @QueryParam("Purpose") final String purpose) {
         WebResource webResource = resource();
 
+        if(purpose!=null) {
+        	webResource = webResource.queryParam("purpose", purpose);
+        }
+        
         ClientResponse response = webResource.path("repositories")
                 .path(id + "/researchobjects")
                 .accept("application/json")
@@ -154,9 +159,13 @@ public class RepositoriesImpl extends Repositories {
 	@GET
 	@Path("/{id}/researchobjects/new")
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response getNewROsByRepository(@PathParam("id") String id) {
+	public Response getNewROsByRepository(@PathParam("id") String id,  @QueryParam("Purpose") final String purpose) {
         WebResource webResource = resource();
-
+        
+        if(purpose!=null) {
+        	webResource = webResource.queryParam("purpose", purpose);
+        }
+        
         ClientResponse response = webResource.path("repositories")
                 .path(id + "/researchobjects/new")
                 .accept("application/json")

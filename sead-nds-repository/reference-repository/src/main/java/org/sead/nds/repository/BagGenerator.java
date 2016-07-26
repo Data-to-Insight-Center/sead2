@@ -69,6 +69,7 @@ public class BagGenerator {
 	private HashMap<String, String> sha1Map = new LinkedHashMap<String, String>();
 
 	private String license = "No license information provided";
+	private String purpose = "Production"; //Backward-compatibility - default is for production
 
 	private String hashtype = null;
 
@@ -108,11 +109,6 @@ public class BagGenerator {
 		File tmp = File.createTempFile("sead-scatter-dirs", "tmp");
 		dirs = ScatterZipOutputStream.fileBased(tmp);
 
-		if (((JSONObject) pubRequest.get("Preferences")).has("License")) {
-			license = ((JSONObject) pubRequest.get("Preferences"))
-					.getString("License");
-
-		}
 		JSONObject oremap = RO.getOREMap();
 		JSONObject aggregation = oremap.getJSONObject("describes");
 
@@ -124,10 +120,28 @@ public class BagGenerator {
 				.get("Aggregation Statistics"));
 		aggregation.put("Aggregation Statistics", aggStats);
 
+
+		if (((JSONObject) pubRequest.get(PubRequestFacade.PREFERENCES)).has("License")) {
+			license = ((JSONObject) pubRequest.get(PubRequestFacade.PREFERENCES))
+					.getString("License");
+
+		}
+		//Accept license preference and add it as the license on the aggregation
 		aggregation.put("License", license);
+		
+		if (((JSONObject) pubRequest.get(PubRequestFacade.PREFERENCES)).has("Purpose")) {
+			purpose = ((JSONObject) pubRequest.get(PubRequestFacade.PREFERENCES))
+					.getString("Purpose");
+
+		}
+		//Accept the purpose and add it to the map and aggregation (both are for this purpose)
+		aggregation.put("Purpose", purpose);
+		oremap.put("Purpose", purpose);
+
+		
 		// check whether Access Rights set, if so, add it to aggregation
-		if (((JSONObject) pubRequest.get("Preferences")).has("Access Rights")) {
-			String accessRights = ((JSONObject) pubRequest.get("Preferences"))
+		if (((JSONObject) pubRequest.get(PubRequestFacade.PREFERENCES)).has("Access Rights")) {
+			String accessRights = ((JSONObject) pubRequest.get(PubRequestFacade.PREFERENCES))
 					.getString("Access Rights");
 			aggregation.put("Access Rights", accessRights);
 		}
@@ -221,7 +235,7 @@ public class BagGenerator {
 		}
 
 		// Generate DOI:
-		oremap.getJSONObject("describes").put("External Identifier",
+		oremap.getJSONObject("describes").put(PubRequestFacade.EXTERNAL_IDENTIFIER,
 				Repository.createDOIForRO(bagID, RO));
 
 		oremap.getJSONObject("describes").put(
@@ -234,9 +248,10 @@ public class BagGenerator {
 		// definition (currently we're just checking to see if they a
 		// already defined)
 		addIfNeeded(context, "License", "http://purl.org/dc/terms/license");
+		addIfNeeded(context, "Purpose", "http://sead-data.net/vocab/publishing#Purpose");
 		addIfNeeded(context, "Access Rights",
 				"http://purl.org/dc/terms/accessRights");
-		addIfNeeded(context, "External Identifier",
+		addIfNeeded(context, PubRequestFacade.EXTERNAL_IDENTIFIER,
 				"http://purl.org/dc/terms/identifier");
 		addIfNeeded(context, "Publication Date",
 				"http://purl.org/dc/terms/issued");
@@ -765,7 +780,7 @@ public class BagGenerator {
 
 		info.append("External-Identifier: ");
 		info.append(map.getJSONObject("describes").getString(
-				"External Identifier"));
+				PubRequestFacade.EXTERNAL_IDENTIFIER));
 		info.append(CRLF);
 
 		info.append("Bag-Size: ");

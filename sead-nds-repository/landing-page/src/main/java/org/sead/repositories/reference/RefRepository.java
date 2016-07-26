@@ -57,7 +57,6 @@ import org.json.JSONObject;
 import org.sead.nds.repository.BagGenerator;
 import org.sead.nds.repository.C3PRPubRequestFacade;
 import org.sead.nds.repository.PubRequestFacade;
-import org.sead.nds.repository.RefRepoLocalPubRequestFacade;
 import org.sead.nds.repository.Repository;
 import org.sead.repositories.reference.util.RefLocalContentProvider;
 import org.sead.repositories.reference.util.ReferenceLinkRewriter;
@@ -112,98 +111,125 @@ public class RefRepository extends Repository {
 	 * needed in Tomcat 7 ...
 	 */
 	static {
-		Repository.init(Repository.loadProperties());
+		Repository.init(loadProperties());
 	}
+
+	private static String roId = null;
+	private static String localRequest = null;
+	private static String localContentSource = null;
 
 	public static void main(String[] args) {
 		PropertyConfigurator.configure("./log4j.properties");
 		init(loadProperties());
+		if (args.length == 0) {
+			printUsage();
+		}
+		roId = args[0];
 
-		if (args.length == 1) {
+		if (args.length > 1) {
+			int i = 1;
+			while (i < args.length) {
+				if (args[i].startsWith("-")) {
+					char flag = args[i].charAt(1);
+					switch (flag) {
+					case 'l':
+						localRequest = args[i + 1];
+						System.out
+								.println("Local Pub Request: " + localRequest);
+						break;
+					case 'r':
+						localContentSource = args[i + 1];
+						System.out.println("LocalContentSource: "
+								+ localContentSource);
+						break;
+					default:
+						printUsage();
+						break;
 
-			BagGenerator bg;
-			C3PRPubRequestFacade RO = new C3PRPubRequestFacade(args[0],
-					getProps());
-
-			bg = new BagGenerator(RO);
-			// Request human approval if needed - will send a fail status and
-			// exit if request is denied
-			String repub = handleRepub(RO, bg);
-			bg.setLinkRewriter(new ReferenceLinkRewriter(getProps()
-					.getProperty("repo.landing.base")));
-			// FixMe - use repo.ID from properties file (possibly in repo class
-			if (bg.generateBag(args[0], false)) {
-				RO.sendStatus(
-						PubRequestFacade.SUCCESS_STAGE,
-						RO.getOREMap().getJSONObject("describes")
-								.getString("External Identifier"));
-				System.out
-						.println("Publication was successful. New publication is in: "
-								+ RefRepository.getDataPathTo(args[0]));
-				if (repub != null) {
-					System.out
-							.println("New Publication was intended to replace "
-									+ repub);
-					System.out.println("Old publication is in "
-							+ RefRepository.getDataPathTo(repub)
-							+ " and could now be deleted.");
+					}
 				}
-			} else {
-				RO.sendStatus(
-						PubRequestFacade.FAILURE_STAGE,
-						"Processing of this request has failed and no further attempts to process this request will be made. Please contact the repository for further information.");
+				i += 2;
 			}
-		} else if (args.length == 2) {
-			BagGenerator bg;
-			RefRepoLocalPubRequestFacade RO = new RefRepoLocalPubRequestFacade(
-					args[1], args[0], getProps());
+		}
+		/*
+		 * At this point we have an RO ID and possibly a local pub request and
+		 * possibly a local Content source.
+		 */
+		C3PRPubRequestFacade RO = null;
+		if (localRequest == null) {
+			RO = new C3PRPubRequestFacade(roId, getProps());
+		} else {
+			RO = new RefRepoLocalPubRequestFacade(localRequest, roId,
+					getProps());
+		}
+		BagGenerator bg;
+		bg = new BagGenerator(RO);
+		// Request human approval if needed - will send a fail status and
+		// exit if request is denied
+		localContentSource = handleRepub(RO, bg, localContentSource);
+		bg.setLinkRewriter(new ReferenceLinkRewriter(getProps().getProperty(
+				"repo.landing.base")));
+		// FixMe - use repo.ID from properties file (possibly in repo class
 
-			bg = new BagGenerator(RO);
-			// Request human approval if needed - will send a fail and exit if
-			// request is denied
-			String repub = handleRepub(RO, bg);
-			bg.setLinkRewriter(new ReferenceLinkRewriter(getProps()
-					.getProperty("repo.landing.base")));
-			// FixMe - use repo.ID from properties file (possibly in repo class
-			if (bg.generateBag(args[1], true)) {
-				RO.sendStatus(
-						PubRequestFacade.SUCCESS_STAGE,
-						RO.getOREMap().getJSONObject("describes")
-								.getString("External Identifier"));
-				System.out
-						.println("Publication was successful. New publication is in: "
-								+ RefRepository.getDataPathTo(args[0]));
-				if (repub != null) {
-					System.out
-							.println("New Publication was intended to replace "
-									+ repub);
-					System.out.println("Old publication is in "
-							+ RefRepository.getDataPathTo(repub)
-							+ " and could now be deleted.");
-				}
-
-			} else {
-				RO.sendStatus(
-						PubRequestFacade.FAILURE_STAGE,
-						"Processing of this request has failed and no further attempts to process this request will be made. Please contact the repository for further information.");
+		// If using local Content and it is the same RO ID as the new pub (just
+		// reprocessing an existing RO, make the BagGenerator
+		// use a temp file (and not overwrite the local RO with an empty version
+		// at the start).
+		boolean useTemp = (localContentSource != null)
+				&& (localContentSource.equals(roId));
+		if (bg.generateBag(roId, (useTemp))) {
+			RO.sendStatus(PubRequestFacade.SUCCESS_STAGE, RO.getOREMap()
+					.getJSONObject("describes")
+					.getString("External Identifier"));
+			System.out
+					.println("Publication was successful. New publication is in: "
+							+ RefRepository.getDataPathTo(roId));
+			if (localContentSource != null) {
+				System.out.println("New Publication was intended to replace "
+						+ localContentSource);
+				System.out.println("Old publication is in "
+						+ RefRepository.getDataPathTo(localContentSource)
+						+ " and could now be deleted.");
 			}
 		} else {
-			System.out
-					.println("Usage: <optional local pubRequest file (JSON document)> <RO Identifier>");
+			RO.sendStatus(
+					PubRequestFacade.FAILURE_STAGE,
+					"Processing of this request has failed and no further attempts to process this request will be made. Please contact the repository for further information.");
 		}
+
 		System.exit(0);
 	}
 
-	private static String handleRepub(C3PRPubRequestFacade RO, BagGenerator bg) {
-		String repub = null;
+	private static void printUsage() {
+		System.out
+				.println("Could not parse requuest: No processing will occur.");
+		System.out
+				.println("Usage:  <RO Identifier> <-l <optional local pubRequest file (path to JSON document)>> <-r <local Content Source RO ID>>");
+		System.out
+				.println("Note: RO identifier is always sent and must match the identifier in any local pub Request file used.");
+		System.out
+				.println("Note: A local content source will override info sent as an alternateOf Preference.");
+
+		System.exit(0);
+	}
+
+	private static String handleRepub(C3PRPubRequestFacade RO, BagGenerator bg,
+			String localSource) {
+
 		JSONObject request = RO.getPublicationRequest();
 		JSONObject prefs = request.getJSONObject("Preferences");
+		Scanner input = new Scanner(System.in);
 		if (prefs.has("External Identifier")) {
 			String extIdPref = prefs.getString("External Identifier");
 			System.out.println("This publication is intended to replace "
 					+ extIdPref);
+			if (!((String) getProps().get("repo.allowupdates"))
+					.equalsIgnoreCase("true")) {
+				System.out
+						.println("NOTE: Since updates are not allowed, a new DOI will be generated.");
+			}
 			System.out.println("Proceed (Y/N)?: ");
-			Scanner input = new Scanner(System.in);
+
 			if (!input.next().equalsIgnoreCase("y")) {
 				input.close();
 				RO.sendStatus(
@@ -212,38 +238,46 @@ public class RefRepository extends Repository {
 								+ extIdPref
 								+ ". Please contact the repository for further information.");
 				System.exit(0);
-			} else {
-				if (prefs.has("alternateOf")) {
-
-					// Add a LocalContent class
-
-					String oldRO_ID = prefs.getString("alternateOf");
-					log.info("Looking at: " + oldRO_ID + " for local content.");
-					RefLocalContentProvider ref = new RefLocalContentProvider(
-							oldRO_ID, Repository.getProps());
-					if(ref.getHashType()!=null) {
-						
-					bg.setLocalContentProvider(ref);
-					repub = oldRO_ID;
-					} else {
-						System.out.println("Original RO not found/has no usable hash entries: " + getDataPathTo(oldRO_ID));
-						System.out.println("Proceed (using remote content)? {Y/N}: ");
-						if (!input.next().equalsIgnoreCase("y")) {
-							input.close();
-							RO.sendStatus(
-									PubRequestFacade.FAILURE_STAGE,
-									"This request has been denied as a replacement for an existing publication: "
-											+ extIdPref
-											+ ". Please contact the repository for further information.");
-							System.exit(0);
-						}			
-						
-					}
-				}
 			}
-			input.close();
 		}
-		return repub;
+		if (localSource == null && prefs.has("alternateOf")) {
+			// Add a LocalContent class
+			localSource = prefs.getString("alternateOf");
+			System.out
+					.println("Setting local content source to alternateOf value: "
+							+ localSource);
+		}
+		if (localSource != null) {
+			System.out.println("Looking at: " + localSource
+					+ " for local content.");
+			log.info("Looking at: " + localSource + " for local content.");
+			RefLocalContentProvider ref = new RefLocalContentProvider(
+					localSource, Repository.getProps());
+			if (ref.getHashType() != null) {
+				bg.setLocalContentProvider(ref);
+				System.out.println("Proceeding with : " + localSource
+						+ " for local content.");
+			} else {
+
+				System.out
+						.println("Original RO not found/has no usable hash entries: "
+								+ getDataPathTo(localSource));
+				System.out.println("Proceed (using remote content)? {Y/N}: ");
+				if (!input.next().equalsIgnoreCase("y")) {
+					input.close();
+					RO.sendStatus(
+							PubRequestFacade.FAILURE_STAGE,
+							"This request won't be processed due to a problem in finding local data copies: "
+									+ localSource
+									+ ". Please contact the repository for further information.");
+					System.exit(0);
+				}
+				localSource = null;
+			}
+		}
+
+		input.close();
+		return localSource;
 	}
 
 	/**
@@ -546,7 +580,7 @@ public class RefRepository extends Repository {
 		log.debug("Retrieving: " + internalPath);
 		ZipArchiveEntry archiveEntry1 = zf.getEntry(internalPath);
 		if (archiveEntry1 != null) {
-			return zf.getInputStream(archiveEntry1);
+			return new BufferedInputStream(zf.getInputStream(archiveEntry1));
 		}
 		return null;
 	}
