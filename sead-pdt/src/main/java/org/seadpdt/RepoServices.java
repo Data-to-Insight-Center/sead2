@@ -207,7 +207,10 @@ public class RepoServices {
 
 		
 		FindIterable<Document> iter;
-		if (purpose != null) {
+        if (purpose != null && purpose.equals("Non-Testing")) {
+            // Query that made by Production SDA Agent to get Non Testing ROs
+            iter = publicationsCollection.find(Filters.and(match,Filters.ne("Preferences.Purpose", "Testing-Only")));
+        } else if (purpose != null) {
 			iter = publicationsCollection.find(Filters.and(match,Filters.eq("Preferences.Purpose", purpose)));
 		} else {
 			iter = publicationsCollection.find(match);
