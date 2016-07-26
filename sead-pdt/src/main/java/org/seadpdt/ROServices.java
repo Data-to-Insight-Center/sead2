@@ -200,7 +200,7 @@ public class ROServices {
 	public Response getROsList(@QueryParam("Purpose") final String purpose) {
 		FindIterable<Document> iter;
 		if(purpose!=null) {
-			iter = publicationsCollection.find(Filters.eq("Purpose",purpose));
+			iter = publicationsCollection.find(Filters.eq("Preferences.Purpose",purpose));
 		} else {
 			iter = publicationsCollection.find();
 		}
@@ -228,7 +228,7 @@ public class ROServices {
 
 		FindIterable<Document> iter;
 		if(purpose!=null) {
-			iter = publicationsCollection.find(Filters.and(match, Filters.eq("Purpose", purpose)));
+			iter = publicationsCollection.find(Filters.and(match, Filters.eq("Preferences.Purpose", purpose)));
 		} else {
 			iter = publicationsCollection.find(match);
 		}

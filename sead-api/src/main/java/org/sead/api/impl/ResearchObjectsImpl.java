@@ -92,7 +92,7 @@ public class ResearchObjectsImpl extends ResearchObjects {
         WebResource webResource = pdtWebService;
         
         if(purpose!=null) {
-        	webResource = webResource.queryParam("purpose", purpose);
+        	webResource = webResource.queryParam("Purpose", purpose);
         }
 
         ClientResponse response = webResource.path("researchobjects")
@@ -111,7 +111,7 @@ public class ResearchObjectsImpl extends ResearchObjects {
         WebResource webResource = pdtWebService;
         
         if(purpose!=null) {
-        	webResource = webResource.queryParam("purpose", purpose);
+        	webResource = webResource.queryParam("Purpose", purpose);
         }
 
         ClientResponse response = webResource.path("researchobjects/new/")

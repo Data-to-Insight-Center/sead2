@@ -14,14 +14,9 @@ public class Constants {
     public static String dcsBaseURL;
     public static String bagPath;
     public static String pdtURL;
-    public static String testDataoneURL;
-    public static String productionDataoneURL;
+    public static String dataoneTestURL;
+    public static String dataoneProdURL;
     public static boolean validateDownloadLinks;
-    
-    //From org.sead.nds.repository.PubRequestFacade
-    public static final String PREFERENCES = "Preferences";
-	public static final String PURPOSE = "Purpose";
-	public static final String TESTING = "Testing-Only";
 
     public static String FORMAT_IANA_SCHEME = "http://www.iana.org/assignments/media-types/";
     public static String titleTerm = "http://purl.org/dc/terms/title";
@@ -70,10 +65,10 @@ public class Constants {
                     pdtURL = value;
                 }
                 if (name.equals("dataone.test.url")) {
-                    testDataoneURL = value;
+                    dataoneTestURL = value;
                 }
-                if (name.equals("dataone.production.url")) {
-                    productionDataoneURL = value;
+                if (name.equals("dataone.prod.url")) {
+                    dataoneProdURL = value;
                 }
                 if (name.equals("validate.download.links")) {
                     validateDownloadLinks = Boolean.parseBoolean(value);

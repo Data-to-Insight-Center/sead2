@@ -34,7 +34,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.seadva.metadatagen.metagen.BaseMetadataGen;
 import org.seadva.metadatagen.util.Constants;
-import org.seadva.metadatagen.util.MetadataResponse;
 import org.seadva.metadatagen.util.ROQueryUtil;
 import org.seadva.metadatagen.util.SeadNCEDConstants;
 
@@ -48,10 +47,19 @@ public class FGDCMetadataGen extends BaseMetadataGen {
 
 	private String doi;
 	private List<String> creatorsList = new ArrayList<String>();
+    private boolean production;
 
 	static {
 		pdtWebService = Client.create().resource(Constants.pdtURL);
 	}
+
+    public boolean isProduction() {
+        return production;
+    }
+
+    public void setProduction(boolean production) {
+        this.production = production;
+    }
 
 	public FGDCMetadataGen(String doi) {
 		this.doi = doi;
@@ -70,44 +78,47 @@ public class FGDCMetadataGen extends BaseMetadataGen {
 	private static String CONTACT = "Contact";
 	private static String PUB_DATE = "";
 	private static String ONLINK = "";
+    private static String PREFERENCES = "Preferences";
+    private static String PURPOSE = "Purpose";
+    private static String TESTING_ONLY = "Testing-Only";
 
-	@Override
-	@Deprecated public String generateMetadata(String id) {
-		return generateMetadataResponse(id).getMetadata();
-	}
 	
 	@Override
-	public MetadataResponse generateMetadataResponse(String id) {
-
-		MetadataResponse response = new MetadataResponse();
+    public String generateMetadata(String id){
 
 		ClientResponse roResponse = pdtWebService.path("researchobjects")
-				.path(id).accept("application/json").type("application/json")
+                .path(id)
+                .accept("application/json")
+                .type("application/json")
 				.get(ClientResponse.class);
 		Document roDoc = Document.parse(roResponse.getEntity(String.class));
 
 		if (roDoc == null) {
-			response.setMetadata("");
-			return response;
+            return "";
 		}
-		Document preferences = (Document) roDoc.get(Constants.PREFERENCES);
-		response.setPurpose(preferences.getString(Constants.PURPOSE));
+
+        if(roDoc.get(PREFERENCES) != null
+                && ((Document)roDoc.get(PREFERENCES)).get(PURPOSE) != null
+                && ((Document)roDoc.get(PREFERENCES)).get(PURPOSE) instanceof String
+                && ((String)((Document)roDoc.get(PREFERENCES)).get(PURPOSE)).equals(TESTING_ONLY)) {
+            production = false;
+        } else {
+            production = true;
+        }
 
 		Document aggregation = (Document) roDoc.get("Aggregation");
 		String title = "";
 		if (aggregation.get(TITLE) instanceof String) {
 			title = aggregation.get(TITLE).toString();
 		} else if (aggregation.get(TITLE) instanceof ArrayList) {
-			title = StringUtils.join(
-					((ArrayList) aggregation.get(TITLE)).toArray(), ",");
+            title = StringUtils.join(((ArrayList)aggregation.get(TITLE)).toArray(), ",");
 		}
 
 		String ro_abstract = "";
 		if (aggregation.get(ABSTRACT) instanceof String) {
 			ro_abstract = aggregation.get(ABSTRACT).toString();
 		} else if (aggregation.get(ABSTRACT) instanceof ArrayList) {
-			ro_abstract = StringUtils.join(
-					((ArrayList) aggregation.get(ABSTRACT)).toArray(), ",");
+            ro_abstract = StringUtils.join(((ArrayList)aggregation.get(ABSTRACT)).toArray(), ",");
 		}
 
 		Set<String> creators = new HashSet<String>();
@@ -156,26 +167,24 @@ public class FGDCMetadataGen extends BaseMetadataGen {
 		Date now = new Date();
 		String pubDate = sdfDate.format(now);
 
-		String result = toFGDC(title, creators, contacts, ro_abstract, pubDate,
-				this.doi);
-		String fgdcXML = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n"
-				+ result;
+        String result = toFGDC(title, creators, contacts, ro_abstract, pubDate, this.doi);
+        String fgdcXML = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n" + result;
 
-		fgdcXML = fgdcXML
-				.replace(
-						"<metadata>",
-						"<metadata xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\""
-								+ " xsi:noNamespaceSchemaLocation=\"http://www.fgdc.gov/metadata/fgdc-std-001-1998.xsd\">");
-		response.setMetadata(fgdcXML);
-		return response;
+        fgdcXML = fgdcXML.replace("<metadata>","<metadata xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"" +
+                " xsi:noNamespaceSchemaLocation=\"http://www.fgdc.gov/metadata/fgdc-std-001-1998.xsd\">");
+
+        return fgdcXML;
 
 	}
 
 	/**
 	 * Creates an FGDC metadata
 	 */
-	public String toFGDC(String title, Set<String> creators,
-			Set<String> contacts, String abstrct, String publicationDate,
+    public String toFGDC(String title,
+                         Set<String> creators,
+                         Set<String> contacts,
+                         String abstrct,
+                         String publicationDate,
 			String onlink) // Arguments added by Kavitha
 	{
 		MetadataDocument metadataDoc = MetadataDocument.Factory.newInstance();
@@ -191,7 +200,8 @@ public class FGDCMetadataGen extends BaseMetadataGen {
 				OriginType originType = citeinfoType.addNewOrigin();
 				originType.setStringValue(it.next());
 			}
-		} else {
+        }
+        else{
 			OriginType originType = citeinfoType.addNewOrigin();
 			originType.setStringValue(SeadNCEDConstants.DEFAULT_ORIGINATOR);
 		}
@@ -281,7 +291,8 @@ public class FGDCMetadataGen extends BaseMetadataGen {
 					contactsAppended += ";";
 				i++;
 			}
-			if (contactsAppended.length() > 1) {
+            if(contactsAppended.length()>1)
+            {
 				MetcType metcType = metainfoType.addNewMetc();
 				CntinfoType metadataContact = CntinfoType.Factory.newInstance();
 				CntperpType cntperpType = metadataContact.addNewCntperp();
@@ -295,7 +306,8 @@ public class FGDCMetadataGen extends BaseMetadataGen {
 				cntvoiceType.setStringValue("Unknown");
 				metcType.setCntinfo(metadataContact);
 			}
-		} else {
+        }
+        else{
 			MetcType metcType = metainfoType.addNewMetc();
 			metcType.setCntinfo(SeadNCEDConstants.DEFAULT_METADATACONTACT);
 		}
@@ -311,15 +323,13 @@ public class FGDCMetadataGen extends BaseMetadataGen {
 
 	private String getPerson(String id) {
 		String creator = "";
-		ClientResponse response = pdtWebService
-				.path("people/" + URLEncoder.encode(id))
-				.accept("application/json").type("application/json")
+        ClientResponse response = pdtWebService.path("people/" + URLEncoder.encode(id))
+                .accept("application/json")
+                .type("application/json")
 				.get(ClientResponse.class);
 		if (response.getStatus() == 200) {
 			try {
-				JSONObject object = new JSONObject(
-						response.getEntity(new GenericType<String>() {
-						}));
+                JSONObject object = new JSONObject(response.getEntity(new GenericType<String>() {}));
 				String name = "";
 				if (object.has("givenName")) {
 					name += object.get("givenName");
