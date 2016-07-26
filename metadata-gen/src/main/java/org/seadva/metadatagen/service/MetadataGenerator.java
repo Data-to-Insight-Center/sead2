@@ -46,11 +46,13 @@ import java.net.URISyntaxException;
 public class MetadataGenerator {
 
     static WebResource pdtWebService;
-    static WebResource dataoneWebService;
+    static WebResource dataoneTestWebService;
+    static WebResource dataoneProdWebService;
 
     static {
         pdtWebService = Client.create().resource(Constants.pdtURL);
-        dataoneWebService = Client.create().resource(Constants.dataoneURL);
+        dataoneTestWebService = Client.create().resource(Constants.dataoneTestURL);
+        dataoneProdWebService = Client.create().resource(Constants.dataoneProdURL);
     }
 
     @POST
@@ -73,19 +75,36 @@ public class MetadataGenerator {
         if (response.equals("")) {
             return Response.status(ClientResponse.Status.NOT_FOUND).build();
         } else {
-            ClientResponse postResponse = dataoneWebService
-                    .path(id)
-                    .queryParam("creators", !fgdcMetadataGen.getCreatorsList().isEmpty()
-                            ? StringUtils.join(fgdcMetadataGen.getCreatorsList().toArray(), "|")
-                            : "")
-                    .queryParam("deprecateFgdc", deprecateFgdc)
-                    .accept("application/xml")
-                    .type("application/xml")
-                    .post(ClientResponse.class, response);
-            if (postResponse.getStatus() == 200) {
-                return Response.ok(response).build();
+            if(fgdcMetadataGen.isProduction()) {
+                ClientResponse postResponse = dataoneProdWebService
+                        .path(id)
+                        .queryParam("creators", !fgdcMetadataGen.getCreatorsList().isEmpty()
+                                ? StringUtils.join(fgdcMetadataGen.getCreatorsList().toArray(), "|")
+                                : "")
+                        .queryParam("deprecateFgdc", deprecateFgdc)
+                        .accept("application/xml")
+                        .type("application/xml")
+                        .post(ClientResponse.class, response);
+                if (postResponse.getStatus() == 200) {
+                    return Response.ok(response).build();
+                } else {
+                    return Response.serverError().build();
+                }
             } else {
-                return Response.serverError().build();
+                ClientResponse postResponse = dataoneTestWebService
+                        .path(id)
+                        .queryParam("creators", !fgdcMetadataGen.getCreatorsList().isEmpty()
+                                ? StringUtils.join(fgdcMetadataGen.getCreatorsList().toArray(), "|")
+                                : "")
+                        .queryParam("deprecateFgdc", deprecateFgdc)
+                        .accept("application/xml")
+                        .type("application/xml")
+                        .post(ClientResponse.class, response);
+                if (postResponse.getStatus() == 200) {
+                    return Response.ok(response).build();
+                } else {
+                    return Response.serverError().build();
+                }
             }
         }
     }

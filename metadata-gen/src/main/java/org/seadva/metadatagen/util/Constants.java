@@ -14,7 +14,8 @@ public class Constants {
     public static String dcsBaseURL;
     public static String bagPath;
     public static String pdtURL;
-    public static String dataoneURL;
+    public static String dataoneTestURL;
+    public static String dataoneProdURL;
     public static boolean validateDownloadLinks;
 
     public static String FORMAT_IANA_SCHEME = "http://www.iana.org/assignments/media-types/";
@@ -63,8 +64,11 @@ public class Constants {
                 if (name.equals("pdt.url")) {
                     pdtURL = value;
                 }
-                if (name.equals("dataone.url")) {
-                    dataoneURL = value;
+                if (name.equals("dataone.test.url")) {
+                    dataoneTestURL = value;
+                }
+                if (name.equals("dataone.prod.url")) {
+                    dataoneProdURL = value;
                 }
                 if (name.equals("validate.download.links")) {
                     validateDownloadLinks = Boolean.parseBoolean(value);

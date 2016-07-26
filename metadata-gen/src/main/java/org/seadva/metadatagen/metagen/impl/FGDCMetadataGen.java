@@ -47,9 +47,18 @@ public class FGDCMetadataGen extends BaseMetadataGen {
 
     private String doi;
     private List<String> creatorsList = new ArrayList<String>();
+    private boolean production;
 
     static {
         pdtWebService = Client.create().resource(Constants.pdtURL);
+    }
+
+    public boolean isProduction() {
+        return production;
+    }
+
+    public void setProduction(boolean production) {
+        this.production = production;
     }
 
     public FGDCMetadataGen(String doi){
@@ -69,6 +78,9 @@ public class FGDCMetadataGen extends BaseMetadataGen {
     private static String CONTACT = "Contact";
     private static String PUB_DATE = "";
     private static String ONLINK = "";
+    private static String PREFERENCES = "Preferences";
+    private static String PURPOSE = "Purpose";
+    private static String TESTING_ONLY = "Testing-Only";
 
 
     @Override
@@ -83,6 +95,15 @@ public class FGDCMetadataGen extends BaseMetadataGen {
 
         if(roDoc==null) {
             return "";
+        }
+
+        if(roDoc.get(PREFERENCES) != null
+                && ((Document)roDoc.get(PREFERENCES)).get(PURPOSE) != null
+                && ((Document)roDoc.get(PREFERENCES)).get(PURPOSE) instanceof String
+                && ((String)((Document)roDoc.get(PREFERENCES)).get(PURPOSE)).equals(TESTING_ONLY)) {
+            production = false;
+        } else {
+            production = true;
         }
 
         Document aggregation = (Document)roDoc.get("Aggregation");
