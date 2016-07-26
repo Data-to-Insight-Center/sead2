@@ -23,6 +23,7 @@ package org.seadva.metadatagen.service;
 
 import com.sun.jersey.api.client.*;
 import com.sun.jersey.api.client.filter.ClientFilter;
+
 import org.apache.commons.lang.StringUtils;
 import org.bson.Document;
 import org.bson.types.ObjectId;
@@ -31,11 +32,13 @@ import org.json.JSONObject;
 import org.seadva.metadatagen.metagen.impl.FGDCMetadataGen;
 import org.seadva.metadatagen.metagen.impl.OREMetadataGen;
 import org.seadva.metadatagen.util.Constants;
+import org.seadva.metadatagen.util.MetadataResponse;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
+
 import java.net.URI;
 import java.net.URISyntaxException;
 
@@ -45,171 +48,210 @@ import java.net.URISyntaxException;
 @Path("rest")
 public class MetadataGenerator {
 
-    static WebResource pdtWebService;
-    static WebResource dataoneWebService;
+	static WebResource pdtWebService;
+	static WebResource testDataoneWebService;
+	static WebResource productionDataoneWebService;
 
-    static {
-        pdtWebService = Client.create().resource(Constants.pdtURL);
-        dataoneWebService = Client.create().resource(Constants.dataoneURL);
-    }
+	static {
+		pdtWebService = Client.create().resource(Constants.pdtURL);
+		testDataoneWebService = Client.create().resource(
+				Constants.testDataoneURL);
+		productionDataoneWebService = Client.create().resource(
+				Constants.productionDataoneURL);
+	}
 
-    @POST
-    @Path("/{id}/fgdc")
-    @Produces(MediaType.APPLICATION_XML)
-    public Response addFgdc(@PathParam("id") String id,
-                            @QueryParam("deprecateFgdc") String deprecateFgdc,
-                            String doi) throws URISyntaxException {
-        if (id == null) {
-            return Response.status(Response.Status.BAD_REQUEST).type(MediaType.APPLICATION_XML).build();
-        }
-        if (doi == null || doi.equals("")) {
-            String errorMsg = "<error><description>DOI is needed to create FGDC metadata.</description></error>";
-            return Response.status(Response.Status.BAD_REQUEST).entity(errorMsg).type(MediaType.APPLICATION_XML).build();
-        }
+	@POST
+	@Path("/{id}/fgdc")
+	@Produces(MediaType.APPLICATION_XML)
+	public Response addFgdc(@PathParam("id") String id,
+			@QueryParam("deprecateFgdc") String deprecateFgdc, String doi)
+			throws URISyntaxException {
+		if (id == null) {
+			return Response.status(Response.Status.BAD_REQUEST)
+					.type(MediaType.APPLICATION_XML).build();
+		}
+		if (doi == null || doi.equals("")) {
+			String errorMsg = "<error><description>DOI is needed to create FGDC metadata.</description></error>";
+			return Response.status(Response.Status.BAD_REQUEST)
+					.entity(errorMsg).type(MediaType.APPLICATION_XML).build();
+		}
 
-        FGDCMetadataGen fgdcMetadataGen = new FGDCMetadataGen(doi);
-        String response = fgdcMetadataGen.generateMetadata(id);
+		FGDCMetadataGen fgdcMetadataGen = new FGDCMetadataGen(doi);
+		MetadataResponse metadataResponse = fgdcMetadataGen
+				.generateMetadataResponse(id);
+		String response = metadataResponse.getMetadata();
+		String purpose = metadataResponse.getPurpose();
 
-        if (response.equals("")) {
-            return Response.status(ClientResponse.Status.NOT_FOUND).build();
-        } else {
-            ClientResponse postResponse = dataoneWebService
-                    .path(id)
-                    .queryParam("creators", !fgdcMetadataGen.getCreatorsList().isEmpty()
-                            ? StringUtils.join(fgdcMetadataGen.getCreatorsList().toArray(), "|")
-                            : "")
-                    .queryParam("deprecateFgdc", deprecateFgdc)
-                    .accept("application/xml")
-                    .type("application/xml")
-                    .post(ClientResponse.class, response);
-            if (postResponse.getStatus() == 200) {
-                return Response.ok(response).build();
-            } else {
-                return Response.serverError().build();
-            }
-        }
-    }
+		if (response.equals("")) {
+			return Response.status(ClientResponse.Status.NOT_FOUND).build();
+		} else {
+			// Choose correct dataone URL based on Purpose
+			WebResource dataoneWebService = productionDataoneWebService;
+			if ((purpose != null) && purpose.equals(Constants.TESTING)) {
+				dataoneWebService = testDataoneWebService;
+			}
 
-    @POST
-    @Path("/oremap")
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    public Response putOreMap(String publicationRequestString, @QueryParam("requestUrl") String requestURL) throws JSONException {
-        String messageString = "";
-        Document request = Document.parse(publicationRequestString);
-        Document content = (Document) request.get("Aggregation");
-        if (content == null) {
-            messageString += "Missing Aggregation";
-        }
+			ClientResponse postResponse = dataoneWebService
+					.path(id)
+					.queryParam(
+							"creators",
+							!fgdcMetadataGen.getCreatorsList().isEmpty() ? StringUtils
+									.join(fgdcMetadataGen.getCreatorsList()
+											.toArray(), "|") : "")
+					.queryParam("deprecateFgdc", deprecateFgdc)
+					.accept("application/xml").type("application/xml")
+					.post(ClientResponse.class, response);
+			if (postResponse.getStatus() == 200) {
+				return Response.ok(response).build();
+			} else {
+				return Response.serverError().build();
+			}
+		}
+	}
 
-        if (messageString.equals("")) {
-            // Get organization from profile(s)
-            // Add to base document
-            String ID = (String) content.get("Identifier");
+	@POST
+	@Path("/oremap")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response putOreMap(String publicationRequestString,
+			@QueryParam("requestUrl") String requestURL) throws JSONException {
+		String messageString = "";
+		Document request = Document.parse(publicationRequestString);
+		Document content = (Document) request.get("Aggregation");
+		if (content == null) {
+			messageString += "Missing Aggregation";
+		}
 
-            // retrieve OREMap
-            Document aggregation = (Document) request.get("Aggregation");
-            Client client = Client.create();
-            WebResource webResource;
+		if (messageString.equals("")) {
+			// Get organization from profile(s)
+			// Add to base document
+			String ID = (String) content.get("Identifier");
 
-            webResource = client.resource(aggregation.get("@id").toString());
-            webResource.addFilter(new RedirectFilter());
+			// retrieve OREMap
+			Document aggregation = (Document) request.get("Aggregation");
+			Client client = Client.create();
+			WebResource webResource;
 
-            ClientResponse response = null;
-            try {
-                response = webResource.accept("application/json")
-                        .get(ClientResponse.class);
-                if (response.getStatus() != 200) {
-                    String message = "Error while retrieving OREMap from Project Space - Response : " + response.getStatus();
-                    System.out.println(MetadataGenerator.class.getName() + " - " + message);
-                    return Response.status(ClientResponse.Status.BAD_REQUEST)
-                            .entity(message)
-                            .build();
-                }
-            } catch (RuntimeException e) {
-                String message = "Error while retrieving OREMap from Project Space - Response : " + e.getMessage();
-                System.out.println(MetadataGenerator.class.getName() + " - " + message);
-                return Response.status(ClientResponse.Status.BAD_REQUEST)
-                        .entity(message)
-                        .build();
-            }
+			webResource = client.resource(aggregation.get("@id").toString());
+			webResource.addFilter(new RedirectFilter());
 
-            String oreString = response.getEntity(String.class);
+			ClientResponse response = null;
+			try {
+				response = webResource.accept("application/json").get(
+						ClientResponse.class);
+				if (response.getStatus() != 200) {
+					String message = "Error while retrieving OREMap from Project Space - Response : "
+							+ response.getStatus();
+					System.out.println(MetadataGenerator.class.getName()
+							+ " - " + message);
+					return Response.status(ClientResponse.Status.BAD_REQUEST)
+							.entity(message).build();
+				}
+			} catch (RuntimeException e) {
+				String message = "Error while retrieving OREMap from Project Space - Response : "
+						+ e.getMessage();
+				System.out.println(MetadataGenerator.class.getName() + " - "
+						+ message);
+				return Response.status(ClientResponse.Status.BAD_REQUEST)
+						.entity(message).build();
+			}
 
-            OREMetadataGen oreMetadataGen = new OREMetadataGen();
-            if(!oreMetadataGen.hasValidOREMetadata(oreString)){
-                String message = "Error occurred while validating OREMap : " + oreMetadataGen.getErrorMsg();
-                System.out.println(MetadataGenerator.class.getName() + " - " + message);
-                return Response.status(ClientResponse.Status.BAD_REQUEST)
-                        .entity(message)
-                        .build();
-            }
+			String oreString = response.getEntity(String.class);
 
-            Document oreMapDocument = Document.parse(oreString);
-            ObjectId mapId = new ObjectId();
-            //oreMapDocument.put("_id", mapId);
+			OREMetadataGen oreMetadataGen = new OREMetadataGen();
+			if (!oreMetadataGen.hasValidOREMetadata(oreString)) {
+				String message = "Error occurred while validating OREMap : "
+						+ oreMetadataGen.getErrorMsg();
+				System.out.println(MetadataGenerator.class.getName() + " - "
+						+ message);
+				return Response.status(ClientResponse.Status.BAD_REQUEST)
+						.entity(message).build();
+			}
 
-            //Update 'actionable' identifiers for map and aggregation:
-            //Note these changes retain the tag-style identifier for the aggregation created by the space
-            //These changes essentially work like ARKs/ARTs and represent the <aggId> moving from the custodianship of the space <SpaceURL>/<aggId>
-            // to that of the CP services <servicesURL>/<aggId>
-            String newMapURL = requestURL + "/" + ID + "/oremap";
+			Document oreMapDocument = Document.parse(oreString);
+			ObjectId mapId = new ObjectId();
+			// oreMapDocument.put("_id", mapId);
 
-            //@id of the map in the map
-            oreMapDocument.put("@id", newMapURL);
+			// Update 'actionable' identifiers for map and aggregation:
+			// Note these changes retain the tag-style identifier for the
+			// aggregation created by the space
+			// These changes essentially work like ARKs/ARTs and represent the
+			// <aggId> moving from the custodianship of the space
+			// <SpaceURL>/<aggId>
+			// to that of the CP services <servicesURL>/<aggId>
+			String newMapURL = requestURL + "/" + ID + "/oremap";
 
-            //@id of describes object (the aggregation)  in map
-            ((Document)oreMapDocument.get("describes")).put("@id", newMapURL + "#aggregation");
+			// @id of the map in the map
+			oreMapDocument.put("@id", newMapURL);
 
-            ClientResponse postResponse = pdtWebService.path("researchobjects")
-                    .path("/oremap")
-                    .queryParam("objectId", mapId.toString())
-                    .accept("application/json")
-                    .type("application/json")
-                    .post(ClientResponse.class, oreMapDocument.toJson().toString());
+			// @id of describes object (the aggregation) in map
+			((Document) oreMapDocument.get("describes")).put("@id", newMapURL
+					+ "#aggregation");
 
-            if(postResponse.getStatus() == 200 && !oreMetadataGen.getSkipValidation()) {
-                return Response.ok(new JSONObject().put("id", mapId).toString()).build();
-            } else if(postResponse.getStatus() == 200 && oreMetadataGen.getSkipValidation()) {
-                try {
-                    return Response.created(new URI(newMapURL))
-                            .entity(new JSONObject().put("id", mapId).put("warning", oreMetadataGen.getErrorMsg()).toString())
-                            .build();
-                } catch (URISyntaxException e) {
-                    System.out.println(MetadataGenerator.class.getName() + ": Error while persisting OREMap : " + e.getMessage());
-                    return Response.serverError().build();
-                }
-            } else {
-                System.out.println(MetadataGenerator.class.getName() + ": Error while persisting OREMap in PDT - Response : " + postResponse.getStatus());
-                return Response.serverError().build();
-            }
-        } else {
-            System.out.println(MetadataGenerator.class.getName() + ": Bad Request : " + messageString);
-            return Response.status(ClientResponse.Status.BAD_REQUEST)
-                    .entity(messageString)
-                    .build();
-        }
-    }
+			ClientResponse postResponse = pdtWebService
+					.path("researchobjects")
+					.path("/oremap")
+					.queryParam("objectId", mapId.toString())
+					.accept("application/json")
+					.type("application/json")
+					.post(ClientResponse.class,
+							oreMapDocument.toJson().toString());
 
-    class RedirectFilter extends ClientFilter {
+			if (postResponse.getStatus() == 200
+					&& !oreMetadataGen.getSkipValidation()) {
+				return Response
+						.ok(new JSONObject().put("id", mapId).toString())
+						.build();
+			} else if (postResponse.getStatus() == 200
+					&& oreMetadataGen.getSkipValidation()) {
+				try {
+					return Response
+							.created(new URI(newMapURL))
+							.entity(new JSONObject()
+									.put("id", mapId)
+									.put("warning",
+											oreMetadataGen.getErrorMsg())
+									.toString()).build();
+				} catch (URISyntaxException e) {
+					System.out.println(MetadataGenerator.class.getName()
+							+ ": Error while persisting OREMap : "
+							+ e.getMessage());
+					return Response.serverError().build();
+				}
+			} else {
+				System.out
+						.println(MetadataGenerator.class.getName()
+								+ ": Error while persisting OREMap in PDT - Response : "
+								+ postResponse.getStatus());
+				return Response.serverError().build();
+			}
+		} else {
+			System.out.println(MetadataGenerator.class.getName()
+					+ ": Bad Request : " + messageString);
+			return Response.status(ClientResponse.Status.BAD_REQUEST)
+					.entity(messageString).build();
+		}
+	}
 
-        @Override
-        public ClientResponse handle(ClientRequest cr) throws ClientHandlerException {
-            ClientHandler ch = getNext();
-            ClientResponse resp = ch.handle(cr);
+	class RedirectFilter extends ClientFilter {
 
-            if (resp.getClientResponseStatus().getFamily() != Response.Status.Family.REDIRECTION) {
-                return resp;
-            }
-            else {
-                // try location
-                String redirectTarget = resp.getHeaders().getFirst("Location");
-                cr.setURI(UriBuilder.fromUri(redirectTarget).build());
-                return ch.handle(cr);
-            }
+		@Override
+		public ClientResponse handle(ClientRequest cr)
+				throws ClientHandlerException {
+			ClientHandler ch = getNext();
+			ClientResponse resp = ch.handle(cr);
 
-        }
+			if (resp.getClientResponseStatus().getFamily() != Response.Status.Family.REDIRECTION) {
+				return resp;
+			} else {
+				// try location
+				String redirectTarget = resp.getHeaders().getFirst("Location");
+				cr.setURI(UriBuilder.fromUri(redirectTarget).build());
+				return ch.handle(cr);
+			}
 
-    }
+		}
+
+	}
 
 }
