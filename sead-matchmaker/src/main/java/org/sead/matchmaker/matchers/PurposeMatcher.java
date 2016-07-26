@@ -21,12 +21,12 @@
 
 package org.sead.matchmaker.matchers;
 
-import java.util.ArrayList;
-
 import org.bson.Document;
 import org.bson.types.BasicBSONList;
 import org.sead.matchmaker.Matcher;
 import org.sead.matchmaker.RuleResult;
+
+import java.util.ArrayList;
 
 public class PurposeMatcher implements Matcher {
 
@@ -37,8 +37,14 @@ public class PurposeMatcher implements Matcher {
 		RuleResult result = new RuleResult();
 		try {
 			// Get required affiliations from profile
-			ArrayList<String> requiredPurposes = (ArrayList<String>) profile
-					.get("Purpose");
+			ArrayList<String> requiredPurposes = new ArrayList<String>();
+
+            if(profile.get("Purpose") instanceof ArrayList) {
+                requiredPurposes = (ArrayList<String>) profile.get("Purpose");
+            } else if(profile.get("Purpose") instanceof String) {
+                requiredPurposes.add((String)profile.get("Purpose"));
+            }
+
 			// Add asserted purpose
 			String purpose = preferences.getString("Purpose");
 			//Backward compatibility
