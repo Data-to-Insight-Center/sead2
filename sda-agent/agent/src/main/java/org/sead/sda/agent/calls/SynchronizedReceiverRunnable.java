@@ -75,8 +75,8 @@ public class SynchronizedReceiverRunnable implements Runnable {
                         log.info("Policy validation passed, id: " + identifier);
 
                         if ("tar".equals(PropertiesReader.packageFormat.trim())) {
-                            log.info("Generating Tar..");
-                            depositTar(publicationRequest, call, identifier);
+                            log.error("Tar format is not supported with the latest version of IU SEAD Cloud Agent");
+                            //depositTar(publicationRequest, call, identifier);
                         } else {
                             log.info("Generating BagIt..");
                             depositBag(identifier);
