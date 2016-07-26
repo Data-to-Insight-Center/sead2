@@ -143,7 +143,7 @@ public class RepositoriesImpl extends Repositories {
         WebResource webResource = resource();
 
         if(purpose!=null) {
-        	webResource = webResource.queryParam("purpose", purpose);
+        	webResource = webResource.queryParam("Purpose", purpose);
         }
         
         ClientResponse response = webResource.path("repositories")
@@ -163,7 +163,7 @@ public class RepositoriesImpl extends Repositories {
         WebResource webResource = resource();
         
         if(purpose!=null) {
-        	webResource = webResource.queryParam("purpose", purpose);
+        	webResource = webResource.queryParam("Purpose", purpose);
         }
         
         ClientResponse response = webResource.path("repositories")
