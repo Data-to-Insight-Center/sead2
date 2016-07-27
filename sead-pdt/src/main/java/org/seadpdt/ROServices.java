@@ -199,9 +199,15 @@ public class ROServices {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response getROsList(@QueryParam("Purpose") final String purpose) {
 		FindIterable<Document> iter;
-		if(purpose!=null) {
-			iter = publicationsCollection.find(Filters.eq("Preferences.Purpose",purpose));
-		} else {
+		if(purpose!=null && purpose.equals("Production")) {
+			iter = publicationsCollection.find(Filters.ne("Preferences.Purpose", "Testing-Only"));
+		} else if(purpose!=null && purpose.equals("Testing-Only")) {
+            iter = publicationsCollection.find(Filters.eq("Preferences.Purpose",purpose));
+        } else if(purpose!=null) {
+            return Response.status(ClientResponse.Status.BAD_REQUEST)
+                    .entity(new JSONObject().put("Error", "'" + purpose + "' is not an acceptable value for 'Purpose'").toString())
+                    .build();
+        } else {
 			iter = publicationsCollection.find();
 		}
 		iter.projection(new Document("Status", 1).append("Repository", 1)
@@ -227,9 +233,15 @@ public class ROServices {
 		Document match= new Document("Status", not);
 
 		FindIterable<Document> iter;
-		if(purpose!=null) {
-			iter = publicationsCollection.find(Filters.and(match, Filters.eq("Preferences.Purpose", purpose)));
-		} else {
+		if(purpose!=null && purpose.equals("Production")) {
+			iter = publicationsCollection.find(Filters.and(match, Filters.ne("Preferences.Purpose", "Testing-Only")));
+		} else if(purpose!=null && purpose.equals("Testing-Only")) {
+            iter = publicationsCollection.find(Filters.and(match, Filters.eq("Preferences.Purpose", purpose)));
+        } else if(purpose!=null) {
+            return Response.status(ClientResponse.Status.BAD_REQUEST)
+                    .entity(new JSONObject().put("Error", "'" + purpose + "' is not an acceptable value for 'Purpose'").toString())
+                    .build();
+        } else {
 			iter = publicationsCollection.find(match);
 		}
 		iter.projection(new Document("Status", 1).append("Repository", 1)

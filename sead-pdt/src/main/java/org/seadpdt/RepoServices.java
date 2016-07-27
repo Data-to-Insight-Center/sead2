@@ -28,6 +28,7 @@ import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.result.DeleteResult;
+import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.ClientResponse.Status;
 
 import org.bson.Document;
@@ -170,11 +171,14 @@ public class RepoServices {
 		MongoCollection<Document> publicationsCollection = null;
 		publicationsCollection = db.getCollection(MongoDB.researchObjects);
 		FindIterable<Document> iter;
-		if (purpose != null && purpose.equals("Non-Testing")) {
-            // Query that made by Production SDA Agent to get Non Testing ROs
+		if (purpose != null && purpose.equals("Production")) {
 			iter = publicationsCollection.find(Filters.and(Filters.eq("Repository", id),Filters.ne("Preferences.Purpose", "Testing-Only")));
-		} else if (purpose != null) {
-            iter = publicationsCollection.find(Filters.and(Filters.eq("Repository", id),Filters.eq("Preferences.Purpose", purpose)));
+		} else if (purpose != null && purpose.equals("Testing-Only")) {
+            iter = publicationsCollection.find(Filters.and(Filters.eq("Repository", id), Filters.eq("Preferences.Purpose", purpose)));
+        } else if(purpose != null) {
+            return Response.status(ClientResponse.Status.BAD_REQUEST)
+                    .entity(new JSONObject().put("Error", "'" + purpose + "' is not an acceptable value for 'Purpose'").toString())
+                    .build();
         }
         else {
 			iter = publicationsCollection.find(Filters.eq("Repository", id));
@@ -207,12 +211,16 @@ public class RepoServices {
 
 		
 		FindIterable<Document> iter;
-        if (purpose != null && purpose.equals("Non-Testing")) {
-            // Query that made by Production SDA Agent to get Non Testing ROs
+        if (purpose != null && purpose.equals("Production")) {
             iter = publicationsCollection.find(Filters.and(match,Filters.ne("Preferences.Purpose", "Testing-Only")));
-        } else if (purpose != null) {
+        } else if (purpose != null && purpose.equals("Testing-Only")) {
 			iter = publicationsCollection.find(Filters.and(match,Filters.eq("Preferences.Purpose", purpose)));
-		} else {
+		} else if(purpose != null) {
+            return Response.status(ClientResponse.Status.BAD_REQUEST)
+                    .entity(new JSONObject().put("Error", "'" + purpose + "' is not an acceptable value for 'Purpose'").toString())
+                    .build();
+        }
+        else {
 			iter = publicationsCollection.find(match);
 		}
 		
