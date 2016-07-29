@@ -114,98 +114,107 @@ public class MetadataGenerator {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Response putOreMap(String publicationRequestString, @QueryParam("requestUrl") String requestURL) throws JSONException {
-        String messageString = "";
-        Document request = Document.parse(publicationRequestString);
-        Document content = (Document) request.get("Aggregation");
-        if (content == null) {
-            messageString += "Missing Aggregation";
-        }
+        try {
+            String messageString = "";
+            Document request = Document.parse(publicationRequestString);
+            Document content = (Document) request.get("Aggregation");
+            if (content == null) {
+                messageString += "Missing Aggregation";
+            }
 
-        if (messageString.equals("")) {
-            // Get organization from profile(s)
-            // Add to base document
-            String ID = (String) content.get("Identifier");
+            if (messageString.equals("")) {
+                // Get organization from profile(s)
+                // Add to base document
+                String ID = (String) content.get("Identifier");
 
-            // retrieve OREMap
-            Document aggregation = (Document) request.get("Aggregation");
-            Client client = Client.create();
-            WebResource webResource;
+                // retrieve OREMap
+                Document aggregation = (Document) request.get("Aggregation");
+                Client client = Client.create();
+                WebResource webResource;
 
-            webResource = client.resource(aggregation.get("@id").toString());
-            webResource.addFilter(new RedirectFilter());
+                webResource = client.resource(aggregation.get("@id").toString());
+                webResource.addFilter(new RedirectFilter());
 
-            ClientResponse response = null;
-            try {
-                response = webResource.accept("application/json")
-                        .get(ClientResponse.class);
-                if (response.getStatus() != 200) {
-                    String message = "Error while retrieving OREMap from Project Space - Response : " + response.getStatus();
+                ClientResponse response = null;
+                try {
+                    response = webResource.accept("application/json")
+                            .get(ClientResponse.class);
+                    if (response.getStatus() != 200) {
+                        String message = "Error while retrieving OREMap from Project Space - Response : " + response.getStatus();
+                        System.out.println(MetadataGenerator.class.getName() + " - " + message);
+                        return Response.status(ClientResponse.Status.BAD_REQUEST)
+                                .entity(message)
+                                .build();
+                    }
+                } catch (RuntimeException e) {
+                    String message = "Error while retrieving OREMap from Project Space - Response : " + e.getMessage();
                     System.out.println(MetadataGenerator.class.getName() + " - " + message);
                     return Response.status(ClientResponse.Status.BAD_REQUEST)
                             .entity(message)
                             .build();
                 }
-            } catch (RuntimeException e) {
-                String message = "Error while retrieving OREMap from Project Space - Response : " + e.getMessage();
-                System.out.println(MetadataGenerator.class.getName() + " - " + message);
-                return Response.status(ClientResponse.Status.BAD_REQUEST)
-                        .entity(message)
-                        .build();
-            }
 
-            String oreString = response.getEntity(String.class);
+                String oreString = response.getEntity(String.class);
 
-            OREMetadataGen oreMetadataGen = new OREMetadataGen();
-            if(!oreMetadataGen.hasValidOREMetadata(oreString)){
-                String message = "Error occurred while validating OREMap : " + oreMetadataGen.getErrorMsg();
-                System.out.println(MetadataGenerator.class.getName() + " - " + message);
-                return Response.status(ClientResponse.Status.BAD_REQUEST)
-                        .entity(message)
-                        .build();
-            }
-
-            Document oreMapDocument = Document.parse(oreString);
-            ObjectId mapId = new ObjectId();
-            //oreMapDocument.put("_id", mapId);
-
-            //Update 'actionable' identifiers for map and aggregation:
-            //Note these changes retain the tag-style identifier for the aggregation created by the space
-            //These changes essentially work like ARKs/ARTs and represent the <aggId> moving from the custodianship of the space <SpaceURL>/<aggId>
-            // to that of the CP services <servicesURL>/<aggId>
-            String newMapURL = requestURL + "/" + ID + "/oremap";
-
-            //@id of the map in the map
-            oreMapDocument.put("@id", newMapURL);
-
-            //@id of describes object (the aggregation)  in map
-            ((Document)oreMapDocument.get("describes")).put("@id", newMapURL + "#aggregation");
-
-            ClientResponse postResponse = pdtWebService.path("researchobjects")
-                    .path("/oremap")
-                    .queryParam("objectId", mapId.toString())
-                    .accept("application/json")
-                    .type("application/json")
-                    .post(ClientResponse.class, oreMapDocument.toJson().toString());
-
-            if(postResponse.getStatus() == 200 && !oreMetadataGen.getSkipValidation()) {
-                return Response.ok(new JSONObject().put("id", mapId).toString()).build();
-            } else if(postResponse.getStatus() == 200 && oreMetadataGen.getSkipValidation()) {
-                try {
-                    return Response.created(new URI(newMapURL))
-                            .entity(new JSONObject().put("id", mapId).put("warning", oreMetadataGen.getErrorMsg()).toString())
+                OREMetadataGen oreMetadataGen = new OREMetadataGen();
+                if (!oreMetadataGen.hasValidOREMetadata(oreString)) {
+                    String message = "Error occurred while validating OREMap : " + oreMetadataGen.getErrorMsg();
+                    System.out.println(MetadataGenerator.class.getName() + " - " + message);
+                    return Response.status(ClientResponse.Status.BAD_REQUEST)
+                            .entity(message)
                             .build();
-                } catch (URISyntaxException e) {
-                    System.out.println(MetadataGenerator.class.getName() + ": Error while persisting OREMap : " + e.getMessage());
+                }
+
+                Document oreMapDocument = Document.parse(oreString);
+                ObjectId mapId = new ObjectId();
+                //oreMapDocument.put("_id", mapId);
+
+                //Update 'actionable' identifiers for map and aggregation:
+                //Note these changes retain the tag-style identifier for the aggregation created by the space
+                //These changes essentially work like ARKs/ARTs and represent the <aggId> moving from the custodianship of the space <SpaceURL>/<aggId>
+                // to that of the CP services <servicesURL>/<aggId>
+                String newMapURL = requestURL + "/" + ID + "/oremap";
+
+                //@id of the map in the map
+                oreMapDocument.put("@id", newMapURL);
+
+                //@id of describes object (the aggregation)  in map
+                ((Document) oreMapDocument.get("describes")).put("@id", newMapURL + "#aggregation");
+
+                ClientResponse postResponse = pdtWebService.path("researchobjects")
+                        .path("/oremap")
+                        .queryParam("objectId", mapId.toString())
+                        .accept("application/json")
+                        .type("application/json")
+                        .post(ClientResponse.class, oreMapDocument.toJson().toString());
+
+                if (postResponse.getStatus() == 200 && !oreMetadataGen.getSkipValidation()) {
+                    return Response.ok(new JSONObject().put("id", mapId).toString()).build();
+                } else if (postResponse.getStatus() == 200 && oreMetadataGen.getSkipValidation()) {
+                    try {
+                        return Response.created(new URI(newMapURL))
+                                .entity(new JSONObject().put("id", mapId).put("warning", oreMetadataGen.getErrorMsg()).toString())
+                                .build();
+                    } catch (URISyntaxException e) {
+                        System.out.println(MetadataGenerator.class.getName() + ": Error while persisting OREMap : " + e.getMessage());
+                        return Response.serverError().build();
+                    }
+                } else {
+                    System.out.println(MetadataGenerator.class.getName() + ": Error while persisting OREMap in PDT - Response : " + postResponse.getStatus());
                     return Response.serverError().build();
                 }
             } else {
-                System.out.println(MetadataGenerator.class.getName() + ": Error while persisting OREMap in PDT - Response : " + postResponse.getStatus());
-                return Response.serverError().build();
+                System.out.println(MetadataGenerator.class.getName() + ": Bad Request : " + messageString);
+                return Response.status(ClientResponse.Status.BAD_REQUEST)
+                        .entity(messageString)
+                        .build();
             }
-        } else {
-            System.out.println(MetadataGenerator.class.getName() + ": Bad Request : " + messageString);
+        } catch(Exception e) {
+            System.out.println(e.getStackTrace());
+            System.out.println(e.getMessage());
+            e.printStackTrace();
             return Response.status(ClientResponse.Status.BAD_REQUEST)
-                    .entity(messageString)
+                    .entity("Exception thrown when persisting OREMap" + e.getMessage())
                     .build();
         }
     }
