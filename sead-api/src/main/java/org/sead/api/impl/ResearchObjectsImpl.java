@@ -27,6 +27,7 @@ import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.GenericType;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
+
 import org.bson.Document;
 import org.json.JSONObject;
 import org.sead.api.ResearchObjects;
@@ -38,6 +39,8 @@ import javax.ws.rs.core.CacheControl;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+
+import java.net.URLEncoder;
 
 /**
  * See abstract base class for documentation of the rest api. Note - path
@@ -85,8 +88,12 @@ public class ResearchObjectsImpl extends ResearchObjects {
     @GET
     @Path("/")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response getROsList() {
+    public Response getROsList(@QueryParam("Purpose") final String purpose) {
         WebResource webResource = pdtWebService;
+        
+        if(purpose!=null) {
+        	webResource = webResource.queryParam("Purpose", purpose);
+        }
 
         ClientResponse response = webResource.path("researchobjects")
                 .accept("application/json")
@@ -100,8 +107,12 @@ public class ResearchObjectsImpl extends ResearchObjects {
     @GET
     @Path("/new/")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response getNewROsList() {
+    public Response getNewROsList(@QueryParam("Purpose") final String purpose) {
         WebResource webResource = pdtWebService;
+        
+        if(purpose!=null) {
+        	webResource = webResource.queryParam("Purpose", purpose);
+        }
 
         ClientResponse response = webResource.path("researchobjects/new/")
                 .accept("application/json")
@@ -115,7 +126,8 @@ public class ResearchObjectsImpl extends ResearchObjects {
     @GET
     @Path("/{id}")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response getROProfile(@PathParam("id") String id) {
+    public Response getROProfile(@Context HttpServletRequest servletRequest,
+                                 @PathParam("id") String id) {
         WebResource webResource = pdtWebService;
 
         ClientResponse response = webResource.path("researchobjects")
@@ -124,6 +136,17 @@ public class ResearchObjectsImpl extends ResearchObjects {
                 .type("application/json")
                 .get(ClientResponse.class);
 
+        if(response.getStatus() == ClientResponse.Status.MOVED_PERMANENTLY.getStatusCode()) {
+            String movedTo = response.getHeaders().getFirst("Location");
+            String requestURL = servletRequest.getRequestURL().toString();
+            String movedToURL = requestURL.replace(id, movedTo);
+            return Response
+                    .status(response.getStatus())
+                    .header("Location", movedToURL)
+                    .entity(new JSONObject().put("Error", "RO has been replaced by " + movedTo).toString())
+                    .cacheControl(control).build();
+        }
+
         return Response.status(response.getStatus()).entity(response
                 .getEntity(new GenericType<String>() {})).cacheControl(control).build();
     }
@@ -131,7 +154,7 @@ public class ResearchObjectsImpl extends ResearchObjects {
     @POST
     @Path("/{id}/status")
     @Consumes(MediaType.APPLICATION_JSON)
-    public Response setROStatus(@PathParam("id") String id, String state) {
+    public Response setROStatus(@Context HttpServletRequest request, @PathParam("id") String id, String state) {
         JSONObject stateJson = new JSONObject(state);
         // read stage and message from status
         String stage = stateJson.get("stage").toString();
@@ -141,21 +164,71 @@ public class ResearchObjectsImpl extends ResearchObjects {
             message = message.replace("doi:", "http://dx.doi.org/");
         }
 
+        // Check whether the RO has an alternate RO which was published before
+        Response getRoProfileResponse = getROProfile(request, id);
+        if(getRoProfileResponse.getStatus() != 200) {
+            return Response.status(Response.Status.NOT_FOUND)
+                    .entity(getRoProfileResponse.getEntity().toString())
+                    .build();
+        }
+
+        JSONObject roObject = new JSONObject((String)getRoProfileResponse.getEntity());
+        String callbackUrl = roObject.getString("Publication Callback");
+        boolean republishRO = false;
+        String alternateOf = null;
+        if("Success".equals(stage) && roObject.has("Preferences") &&
+                roObject.get("Preferences") instanceof  JSONObject &&
+                roObject.getJSONObject("Preferences").has("External Identifier")) {
+            Object republishROIdObject = roObject.getJSONObject("Preferences").get("External Identifier");
+            if(republishROIdObject != null && republishROIdObject instanceof String && PIDMatches(republishROIdObject.toString(), message)){
+                String republishROPID = (String)republishROIdObject;
+
+                ClientResponse pidResponse = pdtWebService.path("researchobjects/pid")
+                        .path(URLEncoder.encode(republishROPID))
+                        .accept("application/json")
+                        .type("application/json")
+                        .get(ClientResponse.class);
+                if(pidResponse.getStatus() == 200) {
+                    Document roDoc = Document.parse(pidResponse.getEntity(String.class));
+                    alternateOf = roDoc.getString("roId");
+                    republishRO = true;
+                    System.out.println("RO with ID " + id + " is an alternate of RO with ID " + alternateOf);
+                }
+            }
+        }
+
         // update PDT with the status
-        ClientResponse response = pdtWebService.path("researchobjects")
+        ClientResponse statusUpdateResponse = pdtWebService.path("researchobjects")
                 .path(id + "/status")
                 .accept("application/json")
                 .type("application/json")
                 .post(ClientResponse.class, state);
 
-        if (!"Success".equals(stage) || response.getStatus() != 200) {
+        if (!"Success".equals(stage) || statusUpdateResponse.getStatus() != 200) {
             // if the status update in PDT is not successful, return the error
-            return Response.status(response.getStatus()).entity(response
+            return Response.status(statusUpdateResponse.getStatus()).entity(statusUpdateResponse
                     .getEntity(new GenericType<String>() {})).cacheControl(control).build();
         } else {
+
+            // If this RO has an alternate RO, delete the old RO request/OREMap and add oldRO ID to the new RO request
+            if (republishRO && !id.equals(alternateOf)) {
+                ClientResponse deprecateRoResponse = pdtWebService.path("researchobjects/deprecate")
+                        .path(id)
+                        .path(alternateOf)
+                        .accept("application/json")
+                        .type("application/json")
+                        .get(ClientResponse.class);
+                if(deprecateRoResponse.getStatus() != 200) {
+                    System.out.println("Deprecation of RO Failed : Error occurred while deprecating " + alternateOf +
+                            " by " + id + ", response status : " + deprecateRoResponse.getStatus());
+                }
+            }
+
             // Calling MetadataGenerator to generate FGDC metadata for the RO
+            // If this RO has an alternate RO, obsolete the FGDC of previous RO if it is different
             ClientResponse metagenResponse = metadataGenWebService.path("rest")
                     .path(id + "/fgdc")
+                    .queryParam("deprecateFgdc", republishRO ? alternateOf : "")
                     .accept("application/xml")
                     .type("application/xml")
                     .post(ClientResponse.class, message);
@@ -164,15 +237,6 @@ public class ResearchObjectsImpl extends ResearchObjects {
             }
 
             // if the status update in PDT is successful, we have to send to DOI to project space/data source
-            // first get the RO JSON to find the callback URL
-            ClientResponse roResponse = pdtWebService.path("researchobjects")
-                    .path(id)
-                    .accept("application/json")
-                    .type("application/json")
-                    .get(ClientResponse.class);
-            Document roDoc = Document.parse(roResponse.getEntity(String.class));
-            String callbackUrl = roDoc.getString("Publication Callback");
-
             if (callbackUrl != null) {
                 // now we POST to callback URL to update Clowder with the DOI
                 Client client = Client.create();
@@ -192,6 +256,17 @@ public class ResearchObjectsImpl extends ResearchObjects {
             }
             return Response.status(ClientResponse.Status.OK).cacheControl(control).build();
         }
+    }
+
+    private boolean PIDMatches(String pid1, String pid2) {
+
+        String pid1Formatted = pid1.replace("http://doi.org/", "").replace("http://dx.doi.org/", "").replaceAll("^doi:", "").replaceAll("^/+", "").replaceAll("/+$", "");
+        String pid2Formatted = pid2.replace("http://doi.org/", "").replace("http://dx.doi.org/", "").replaceAll("^doi:", "").replaceAll("^/+", "").replaceAll("/+$", "");
+
+        if(pid1Formatted.equals(pid2Formatted))
+            return true;
+        else
+            return false;
     }
 
     @GET

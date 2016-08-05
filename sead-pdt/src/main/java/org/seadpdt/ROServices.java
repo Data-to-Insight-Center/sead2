@@ -29,6 +29,7 @@ import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.model.Filters;
 import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
 import com.mongodb.gridfs.GridFS;
@@ -41,10 +42,10 @@ import org.bson.Document;
 import org.bson.types.BasicBSONList;
 import org.bson.types.ObjectId;
 import org.json.JSONArray;
-import org.seadpdt.people.Profile;
-import org.seadpdt.people.Provider;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.seadpdt.people.Profile;
+import org.seadpdt.people.Provider;
 import org.seadpdt.util.Constants;
 import org.seadpdt.util.MongoDB;
 
@@ -60,7 +61,11 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.sql.Date;
 import java.text.DateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.List;
+import java.util.regex.Pattern;
 
 @Path("/researchobjects")
 public class ROServices {
@@ -192,8 +197,19 @@ public class ROServices {
 	@GET
 	@Path("/")
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response getROsList() {
-		FindIterable<Document> iter = publicationsCollection.find();
+	public Response getROsList(@QueryParam("Purpose") final String purpose) {
+		FindIterable<Document> iter;
+		if(purpose!=null && purpose.equals("Production")) {
+			iter = publicationsCollection.find(Filters.ne("Preferences.Purpose", "Testing-Only"));
+		} else if(purpose!=null && purpose.equals("Testing-Only")) {
+            iter = publicationsCollection.find(Filters.eq("Preferences.Purpose",purpose));
+        } else if(purpose!=null) {
+            return Response.status(ClientResponse.Status.BAD_REQUEST)
+                    .entity(new JSONObject().put("Error", "'" + purpose + "' is not an acceptable value for 'Purpose'").toString())
+                    .build();
+        } else {
+			iter = publicationsCollection.find();
+		}
 		iter.projection(new Document("Status", 1).append("Repository", 1)
 				.append("Aggregation.Identifier", 1)
 				.append("Aggregation.Title", 1).append("_id", 0));
@@ -208,7 +224,7 @@ public class ROServices {
 	@GET
 	@Path("/new/")
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response getNewROsList() {
+	public Response getNewROsList(@QueryParam("Purpose") final String purpose) {
 		//Find ROs that have a status not from the services and don't include them :-)
 		Document reporterRule = new Document("$ne", Constants.serviceName);
 		Document reporter = new Document("reporter", reporterRule);
@@ -216,7 +232,18 @@ public class ROServices {
 		Document not = new Document("$not", elem);
 		Document match= new Document("Status", not);
 
-		FindIterable<Document> iter = publicationsCollection.find(match);
+		FindIterable<Document> iter;
+		if(purpose!=null && purpose.equals("Production")) {
+			iter = publicationsCollection.find(Filters.and(match, Filters.ne("Preferences.Purpose", "Testing-Only")));
+		} else if(purpose!=null && purpose.equals("Testing-Only")) {
+            iter = publicationsCollection.find(Filters.and(match, Filters.eq("Preferences.Purpose", purpose)));
+        } else if(purpose!=null) {
+            return Response.status(ClientResponse.Status.BAD_REQUEST)
+                    .entity(new JSONObject().put("Error", "'" + purpose + "' is not an acceptable value for 'Purpose'").toString())
+                    .build();
+        } else {
+			iter = publicationsCollection.find(match);
+		}
 		iter.projection(new Document("Status", 1).append("Repository", 1)
 				.append("Aggregation.Identifier", 1)
 				.append("Aggregation.Title", 1).append("_id", 0));
@@ -235,24 +262,32 @@ public class ROServices {
 
 		FindIterable<Document> iter = publicationsCollection.find(new Document(
 				"Aggregation.Identifier", id));
-		if (iter == null) {
+		if (iter == null || iter.first() == null) {
+
+            FindIterable<Document> altIter = publicationsCollection.find(new Document(
+                    "Aggregation." + Constants.alternateOf, id));
+            if(altIter != null && altIter.first() != null) {
+                Document aggDocument = (Document) altIter.first().get("Aggregation");
+                String movedTo = (String) aggDocument.get("Identifier");
+                return Response
+                        .status(ClientResponse.Status.MOVED_PERMANENTLY)
+                        .header("Location" , movedTo)
+                        .entity(new JSONObject().put("Error", "The document has moved to " + movedTo).toString())
+                        .build();
+            }
+
 			return Response
                     .status(ClientResponse.Status.NOT_FOUND)
                     .entity(new JSONObject().put("Error", "Cannot find RO with id " + id).toString())
                     .build();
 		}
+
 		Document document = iter.first();
-		if (document == null) {
-			return Response
-                    .status(ClientResponse.Status.NOT_FOUND)
-                    .entity(new JSONObject().put("Error", "Cannot find RO with id " + id).toString())
-                    .build();
-		}
 		// Internal meaning only - strip from exported doc
 		document.remove("_id");
-
 		Document aggDocument = (Document) document.get("Aggregation");
 		aggDocument.remove("authoratativeMap");
+
 		return Response.ok(document.toJson()).cacheControl(control).build();
 	}
 
@@ -481,6 +516,102 @@ public class ROServices {
         } else {
             return Response.status(ClientResponse.Status.NOT_FOUND).build();
         }
+    }
+
+    //If pid resolves to a published research object, return that RO ID
+    @GET
+    @Path("/pid/{pid}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getRoOfPID(@PathParam("pid") String pid) {
+
+        BasicDBObject statusObj = new BasicDBObject();
+        statusObj.put("stage", "Success");
+        if(pid.contains("http://doi.org/") || pid.contains("http://dx.doi.org/") || pid.matches("^doi:.*")) {
+            String pidQuery = pid.replace("http://doi.org/", "").replace("http://dx.doi.org/", "").replaceAll("^doi:", "").replaceAll("^/+", "").replaceAll("/+$", "");
+            Pattern pattern = Pattern.compile("(http://doi.org/|http://dx.doi.org/|doi:)" + pidQuery);
+            statusObj.put("message", pattern);
+        } else {
+            String pidQuery = pid.replaceAll("^/+", "").replaceAll("/+$", "");
+            Pattern pattern = Pattern.compile(pidQuery);
+            statusObj.put("message", pattern);
+        }
+        BasicDBObject elemMatch = new BasicDBObject();
+        elemMatch.put("$elemMatch", statusObj);
+        BasicDBObject query = new BasicDBObject("Status", elemMatch);
+
+        FindIterable<Document> iter = publicationsCollection.find(query);
+        iter.projection(new Document("Aggregation.Identifier", 1).append("_id", 0));
+        if(iter != null && iter.first() != null){
+            return Response.ok("{\"roId\" : \"" + ((Document)iter.first().get("Aggregation")).get("Identifier").toString() + "\" }").build();
+        } else {
+            return Response.status(ClientResponse.Status.NOT_FOUND).build();
+        }
+    }
+
+    //Deprecate oldRO by newRO. Delete the old RO request and OREMap
+    @GET
+    @Path("/deprecate/{newRO}/{oldRO}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response deprecateRO(@PathParam("newRO") String newRoId,
+                                @PathParam("oldRO") String oldRoId) {
+
+        try {
+            Response roObjectResponse = getROProfile(newRoId);
+            Object context = new JSONObject(roObjectResponse.getEntity().toString()).get("@context");
+            addIfNeeded(context, Constants.alternateOf, Constants.alternateOfIRI);
+
+            UpdateResult urContext = publicationsCollection.updateOne(
+                    new Document("Aggregation.Identifier", newRoId),
+                    new BasicDBObject("$set", new BasicDBObject("@context", JSON.parse(context.toString()))));
+            UpdateResult urAggregation = publicationsCollection.updateOne(
+                    new Document("Aggregation.Identifier", newRoId),
+                    new BasicDBObject("$set", new BasicDBObject("Aggregation." + Constants.alternateOf, oldRoId)));
+            if (urContext.wasAcknowledged() && urAggregation.wasAcknowledged()) {
+                DeleteOverrideRO(oldRoId);
+                return Response.status(ClientResponse.Status.OK).build();
+            } else {
+                return Response.status(ClientResponse.Status.NOT_FOUND).build();
+
+            }
+        } catch (org.bson.BsonInvalidOperationException e) {
+            return Response.status(ClientResponse.Status.BAD_REQUEST).build();
+        }
+    }
+
+    private void addIfNeeded(Object context, String key, String uri) {
+        if (!isInContext(context, key)) {
+            addToContext(context, key, uri);
+        }
+    }
+
+    private boolean addToContext(Object context, String label, String predicate) {
+        if (context instanceof JSONArray) {
+            // Look for an object in the array to add to
+            for (int i = 0; i < ((JSONArray) context).length(); i++) {
+                if (addToContext(((JSONArray) context).get(i), label, predicate)) {
+                    return true;
+                }
+            }
+        } else if (context instanceof JSONObject) {
+            ((JSONObject) context).put(label, predicate);
+            return true;
+        }
+        return false;
+    }
+
+    private boolean isInContext(Object context, String label) {
+        if (context instanceof JSONArray) {
+            for (int i = 0; i < ((JSONArray) context).length(); i++) {
+                if (isInContext(((JSONArray) context).get(i), label)) {
+                    return true;
+                }
+            }
+        } else if (context instanceof JSONObject) {
+            if (((JSONObject) context).has(label)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     //This is a management method used to copy oreMaps from main mongoDB to the GridFS DB

@@ -69,6 +69,7 @@ public class C3PRPubRequestFacade extends PubRequestFacade {
 	String bearerToken = null;
 
 	protected JSONObject request = null;
+	protected JSONObject repository = null;
 	protected JSONObject oremap = null;
 
 	public C3PRPubRequestFacade(String RO_ID, Properties props) {
@@ -80,6 +81,30 @@ public class C3PRPubRequestFacade extends PubRequestFacade {
 		client = HttpClients.custom().setConnectionManager(cm)
 				.setDefaultCookieStore(cookieStore)
 				.setDefaultRequestConfig(config).build();
+		try {
+			if (props.containsKey("JSESSIONID")) {
+				// Proxy Mode
+				log.debug("Adding: " + props.getProperty("JSESSIONID"));
+
+				BasicClientCookie cookie = new BasicClientCookie("JSESSIONID",
+						props.getProperty("JSESSIONID"));
+				URL c3pr;
+
+				c3pr = new URL(props.getProperty("c3pr.address"));
+
+				cookie.setDomain(c3pr.getHost());
+				cookie.setPath("/");
+				cookie.setSecure(c3pr.getProtocol().equalsIgnoreCase("https") ? true
+						: false);
+				cookieStore.addCookie(cookie);
+			}
+		} catch (MalformedURLException e) {
+			log.warn("Unable to interpret : "
+					+ props.getProperty("c3pr.address")
+					+ " as a URL when initializing proxy. Proxying not enabled");
+			e.printStackTrace();
+		}
+
 	}
 
 	protected String proxyIfNeeded(String urlString) {
@@ -102,20 +127,6 @@ public class C3PRPubRequestFacade extends PubRequestFacade {
 				getPubRequest = new HttpGet(c3prServer + "api/researchobjects/"
 						+ URLEncoder.encode(RO_ID, "UTF-8"));
 
-				if (props.containsKey("JSESSIONID")) {
-					// Proxy Mode
-					log.debug("Adding: " + props.getProperty("JSESSIONID"));
-
-					BasicClientCookie cookie = new BasicClientCookie(
-							"JSESSIONID", props.getProperty("JSESSIONID"));
-					URL c3pr = new URL(c3prServer);
-
-					cookie.setDomain(c3pr.getHost());
-					cookie.setPath("/");
-					cookie.setSecure(c3pr.getProtocol().equalsIgnoreCase(
-							"https") ? true : false);
-					cookieStore.addCookie(cookie);
-				}
 				getPubRequest.addHeader("accept", "application/json");
 
 				CloseableHttpResponse response = client.execute(getPubRequest);
@@ -150,6 +161,52 @@ public class C3PRPubRequestFacade extends PubRequestFacade {
 		return request;
 	}
 
+	public JSONObject getRepositoryProfile() {
+		if (repository == null) {
+			// Make sure we have retrieved the request so we can look for the
+			// repository being requested
+			if (request == null) {
+				request = getPublicationRequest();
+			}
+			if (request.has("Repository")) {
+				String repo = request.getString("Repository");
+
+				String c3prServer = props.getProperty("c3pr.address");
+				HttpGet getRepoRequest;
+				try {
+					log.debug("Retrieving: " + c3prServer + "api/repositories/"
+							+ URLEncoder.encode(repo, "UTF-8"));
+					getRepoRequest = new HttpGet(c3prServer
+							+ "api/repositories/"
+							+ URLEncoder.encode(repo, "UTF-8"));
+
+					getRepoRequest.addHeader("accept", "application/json");
+
+					CloseableHttpResponse response = client
+							.execute(getRepoRequest);
+
+					if (response.getStatusLine().getStatusCode() == 200) {
+						String mapString = EntityUtils.toString(response
+								.getEntity());
+						log.trace(mapString);
+						repository = new JSONObject(mapString);
+
+					}
+				} catch (UnsupportedEncodingException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				} catch (ClientProtocolException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (IOException e) {
+					log.error("Unable to retrieve repository document", e);
+					e.printStackTrace();
+				}
+			}
+		}
+		return repository;
+	}
+
 	private URI getOREMapURI() {
 		try {
 			return new URI(proxyIfNeeded(request.getJSONObject("Aggregation")
@@ -167,8 +224,10 @@ public class C3PRPubRequestFacade extends PubRequestFacade {
 		if (oremap == null) {
 
 			log.debug("Retreiving: " + getOREMapURI().toString());
-			HttpGet getMap = createNewGetRequest(getOREMapURI(),
-					MediaType.APPLICATION_JSON);
+
+			HttpGet getMap = new HttpGet(getOREMapURI());
+			getMap.addHeader("accept", MediaType.APPLICATION_JSON);
+
 			try {
 				CloseableHttpResponse response = client.execute(getMap);
 
@@ -233,7 +292,7 @@ public class C3PRPubRequestFacade extends PubRequestFacade {
 						log.debug("Status: "
 								+ response.getStatusLine().getStatusCode());
 						tries++;
-					
+
 					} catch (ClientProtocolException e) {
 						tries += 3;
 						// TODO Auto-generated catch block
@@ -243,7 +302,7 @@ public class C3PRPubRequestFacade extends PubRequestFacade {
 						// as a timeout
 						tries++;
 						log.warn("Attempt# " + tries
-							+ " : Unable to retrieve file: " + uri, e);
+								+ " : Unable to retrieve file: " + uri, e);
 						if (tries == 3) {
 							log.error("Final attempt failed for " + uri);
 						}

@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 University of Michigan
+ * Copyright 2015, 2016 University of Michigan
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,7 +26,6 @@ import java.util.LinkedHashMap;
 import java.util.Properties;
 
 import org.apache.log4j.Logger;
-import org.apache.log4j.PropertyConfigurator;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -36,24 +35,22 @@ import edu.ucsb.nceas.ezid.profile.DataCiteProfile;
 import edu.ucsb.nceas.ezid.profile.DataCiteProfileResourceTypeValues;
 import edu.ucsb.nceas.ezid.profile.InternalProfile;
 
-import org.sead.nds.repository.util.ReferenceLinkRewriter;
-
 public class Repository {
 
-	private static final Logger log = Logger.getLogger(Repository.class);
+	static final Logger log = Logger.getLogger(Repository.class);
 	private static String repoID = null;
 	private static Properties props;
 	private static String dataPath = null;
 	private static boolean allowUpdates = false;
 
-	private static int numThreads;
+	static int numThreads;
 
 	public Repository() {
 	}
 
 	// Important: SDA Agent also uses this Repository class and passes it's own
 	// properties.
-	// therefore don't load properties inside the init method.
+	// Therefore, don't load properties inside the init method.
 	public static void init(Properties properties) {
 		props = properties;
 		repoID = props.getProperty("repo.ID");
@@ -75,11 +72,27 @@ public class Repository {
 		return numThreads;
 	}
 
+	public static Properties getProps() {
+		return props;
+	}
+
+	public static boolean getAllowUpdates() {
+		return allowUpdates;
+	}
+
+	public static String getRepoID() {
+		return repoID;
+	}
+
+	static public String getDataPath() {
+		return dataPath;
+	}
+
 	public static Properties loadProperties() {
 		Properties props = new Properties();
 		try {
 			props.load(Repository.class
-					.getResourceAsStream("repository.properties"));
+					.getResourceAsStream("/repository.properties"));
 			log.trace(props.toString());
 		} catch (IOException e) {
 			log.warn("Could not read repositories.properties file");
@@ -87,74 +100,29 @@ public class Repository {
 		return props;
 	}
 
-	public static void main(String[] args) {
-		PropertyConfigurator.configure("./log4j.properties");
-		init(loadProperties());
-
-		if (args.length == 1) {
-
-			BagGenerator bg;
-			C3PRPubRequestFacade RO = new C3PRPubRequestFacade(args[0], props);
-			bg = new BagGenerator(RO);
-			bg.setLinkRewriter(new ReferenceLinkRewriter(props
-					.getProperty("repo.landing.base")));
-			// FixMe - use repo.ID from properties file (possibly in repo class
-			if (bg.generateBag(args[0], false)) {
-				RO.sendStatus(
-						PubRequestFacade.SUCCESS_STAGE,
-						RO.getOREMap().getJSONObject("describes")
-								.getString("External Identifier"));
-			} else {
-				RO.sendStatus(
-						PubRequestFacade.FAILURE_STAGE,
-						"Processing of this request has failed and no further attempts to process this request will be made. Please contact the repository for further information.");
-			}
-		} else if (args.length == 2) {
-			BagGenerator bg;
-			RefRepoPubRequestFacade RO = new RefRepoPubRequestFacade(args[1],
-					args[0], props);
-			bg = new BagGenerator(RO);
-			bg.setLinkRewriter(new ReferenceLinkRewriter(props
-					.getProperty("repo.landing.base")));
-			// FixMe - use repo.ID from properties file (possibly in repo class
-			if (bg.generateBag(args[1], true)) {
-				RO.sendStatus(
-						PubRequestFacade.SUCCESS_STAGE,
-						RO.getOREMap().getJSONObject("describes")
-								.getString("External Identifier"));
-			} else {
-				RO.sendStatus(
-						PubRequestFacade.FAILURE_STAGE,
-						"Processing of this request has failed and no further attempts to process this request will be made. Please contact the repository for further information.");
-			}
-		} else {
-			System.out
-					.println("Usage: <optional local pubRequest file (JSON document)> <RO Identifier>");
-		}
-		System.exit(0);
-	}
-
-	static public String getLandingPage(String bagName) {
+	static String getLandingPageUri(String bagName) {
 		return props.getProperty("repo.landing.base") + bagName;
-	}
-
-	static public String getDataPath() {
-		return dataPath;
 	}
 
 	public static String createDOIForRO(String bagID, C3PRPubRequestFacade RO)
 			throws EZIDException {
-		String target = Repository.getLandingPage(bagID);
+		String target = Repository.getLandingPageUri(bagID);
 		log.debug("DOI Landing Page: " + target);
 		String existingID = null;
-		if (RO.getPublicationRequest().getJSONObject("Preferences")
-				.has("External Identifier")) {
+		if (RO.getPublicationRequest().getJSONObject(PubRequestFacade.PREFERENCES)
+				.has(PubRequestFacade.EXTERNAL_IDENTIFIER)) {
 			existingID = RO.getPublicationRequest()
-					.getJSONObject("Preferences")
-					.getString("External Identifier");
+					.getJSONObject(PubRequestFacade.PREFERENCES)
+					.getString(PubRequestFacade.EXTERNAL_IDENTIFIER);
 			if (existingID.startsWith("http://dx.doi.org/")) {
-				existingID = "doi:" + existingID.substring("http://dx.doi.org/".length());
-			} 
+				existingID = "doi:"
+						+ existingID.substring("http://dx.doi.org/".length());
+			}
+			// Moving to new resolver - check for both
+			if (existingID.startsWith("http://doi.org/")) {
+				existingID = "doi:"
+						+ existingID.substring("http://doi.org/".length());
+			}
 			if (existingID != null && !allowUpdates) {
 				// FixMe - should we fail instead of going forward with a new
 				// ID?
@@ -195,25 +163,52 @@ public class Repository {
 
 		EZIDService ezid = new EZIDService(props.getProperty("ezid.url"));
 
-		boolean permanent = props.get("doi.default").equals("temporary") ? false
-				: true;
-		if (((JSONObject) RO.getPublicationRequest().get("Preferences"))
-				.has("Purpose")) {
-			String purpose = ((JSONObject) RO.getPublicationRequest().get(
-					"Preferences")).getString("Purpose");
-			if (purpose.equalsIgnoreCase("Testing-Only")) {
-				permanent = false;
+		// Get allowed purpose(s) from profile
+		JSONObject repository = RO.getRepositoryProfile();
+		String[] allowedPurposes = {PubRequestFacade.PRODUCTION };
+		if (repository.has(PubRequestFacade.PURPOSE)) {
+			Object repoPurpose = repository.get(PubRequestFacade.PURPOSE);
+			allowedPurposes = RO.normalizeValues(repoPurpose);
+		}
+
+		// Get requested purpose
+		boolean production = true;
+		// (Backward-compatible if repository config has a default when no
+		// Purpose preference is sent
+		if (props.get("doi.default") != null) {
+			production = props.get("doi.default").equals("temporary") ? false
+					: true;
+		}
+		String purposePref = PubRequestFacade.PRODUCTION;
+		if (((JSONObject) RO.getPublicationRequest().get(PubRequestFacade.PREFERENCES))
+				.has(PubRequestFacade.PURPOSE)) {
+			purposePref = ((JSONObject) RO.getPublicationRequest().get(
+					PubRequestFacade.PREFERENCES)).getString(PubRequestFacade.PURPOSE);
+			if (purposePref.equalsIgnoreCase(PubRequestFacade.TESTING)) {
+				production = false;
+			} else if (!purposePref.equalsIgnoreCase(PubRequestFacade.PRODUCTION)) {
+				// Should be the only option today, but warn if it doesn't match
+				log.warn("Unknown Purpose Preference: " + purposePref);
+			}
+		}
+		boolean purposeIsAllowed = false;
+		for (String purp : allowedPurposes) {
+			if (purp.equals(purposePref)) {
+				purposeIsAllowed = true;
 			}
 		}
 
+		if (!purposeIsAllowed) {
+			throw new EZIDException("Repository not allowed to mint "
+					+ purposePref + " identifier");
+		}
 		ezid.login(props.getProperty("doi.user"), props.getProperty("doi.pwd"));
-		String shoulder = (permanent) ? props.getProperty("doi.shoulder.prod")
+		String shoulder = (production) ? props.getProperty("doi.shoulder.prod")
 				: props.getProperty("doi.shoulder.test");
 		String doi = null;
 
 		if ((existingID != null) && (existingID.contains(shoulder))
 				&& allowUpdates) {
-
 
 			// Enhancement: Retrieve metadata first and find current landing
 			// page for this DOI - can then
@@ -236,9 +231,9 @@ public class Repository {
 		if (doi.startsWith("doi:")) {
 			doi = doi.substring(4);
 		}
-		log.debug("Generated/Updated DOI: http://dx.doi.org/" + doi);
-
-		return "http://dx.doi.org/" + doi;
+		log.debug("Generated/Updated DOI: http://doi.org/" + doi);
+		// Use newer doi.org resolver
+		return "http://doi.org/" + doi;
 	}
 
 	public static String getID() {

@@ -16,11 +16,9 @@
 <%--<script src="js/bootbox.min.js"></script>--%>
 
 <%
-    Map<String, List<String>> properties = (Map<String, List<String>>) request.getAttribute("roProperties");
-	Map<String, String> downloadList = (Map<String, String>) request.getAttribute("downloadList");
-	Map<String, String> linkedHashMap = (Map<String, String>) request.getAttribute("linkedHashMap");
-	String tag = (String) request.getAttribute("obTag");	
 	String sdaUrl = (String) request.getAttribute("landingPageUrl") + "/home.html";
+    String roExists = (String) request.getAttribute("roExists");
+    if ("false".equals(roExists)) {
 %>
 
 <div id="wrapper" align = "center">
@@ -29,7 +27,38 @@
             <a href="https://www.indiana.edu/" target="_blank"><img align="left" src="http://brand.iu.edu/img/signatures/indiana-university/indiana-university" style="width: 273px;height:91px"></a>
         </div>
         <div>
-            <a href="http://sead-data.net/" target="_blank"><img align="right" src="http://sead-data.net/wp-content/uploads/2014/06/logo.png" style="width: 364px;height:51px"></a>
+            <a href="http://sead-data.net/" target="_blank"><img align="right" src="http://sead-data.net/wp-content/uploads/2014/06/logo.png" style="width: 21%;height: 21%;"></a>
+        </div>
+	</div>
+	<div>
+        <h1 style="cursor: pointer;"><a style="color: #333; text-decoration: none;" href="<%= sdaUrl%>">IU SEAD Cloud</a></h1>
+	</div>
+    <div id="page-wrapper" align = "center">
+        <div class="container float" align = "center">
+            <div class="container float" align="center" style="background-color: #e0e0e0;margin-top: 50px;">
+            	<h1>Page Not Found <small><font face="Tahoma" color="red">Error 404</font></small></h1>
+            	<br>
+            	<p>The page you requested could not be found</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<%
+    } else {
+    Map<String, List<String>> properties = (Map<String, List<String>>) request.getAttribute("roProperties");
+	Map<String, String> downloadList = (Map<String, String>) request.getAttribute("downloadList");
+	Map<String, String> linkedHashMap = (Map<String, String>) request.getAttribute("linkedHashMap");
+	String tag = (String) request.getAttribute("obTag");
+%>
+
+<div id="wrapper" align = "center">
+    <div style="display : inline-block;padding: 15px 45px 15px 45px;" class="container">
+        <div>
+            <a href="https://www.indiana.edu/" target="_blank"><img align="left" src="http://brand.iu.edu/img/signatures/indiana-university/indiana-university" style="width: 273px;height:91px"></a>
+        </div>
+        <div>
+            <a href="http://sead-data.net/" target="_blank"><img align="right" src="http://sead-data.net/wp-content/uploads/2014/06/logo.png" style="width: 21%;height: 21%;"></a>
         </div>
 	</div>
 	<div>
@@ -84,6 +113,35 @@
                                 	<% continue;
                             	}
 								%>
+
+                                <%if(key.equals("Creator") || key.equals("Contact")) { %>
+                                    <div style="float: left;width:62%;word-wrap: break-word;">
+                                <%
+                                    String[] creatorInfo = val.split("\\|");
+                                    if (creatorInfo.length == 1) {
+                                %>
+                                    <%= val%>
+                                <%
+                                    } else if (creatorInfo.length == 2) {
+                                %>
+                                    <a href="<%= creatorInfo[1]%>"><%= creatorInfo[0]%></a>
+                                <%
+                                    } else if (creatorInfo.length == 3) {
+                                %>
+                                    <a href="<%= creatorInfo[1]%>" title="<%= creatorInfo[2]%>"><%= creatorInfo[0]%></a>
+
+                                <%
+                                    }
+
+                                    if(count != vals.size()) {
+                                    %>
+                                    </br>
+                                    <%
+                                    }
+                                %></div>
+                                    <% continue;
+                                }
+                                %>
                                 
                                 <%
                                     if (val.startsWith("http")) {
@@ -192,6 +250,8 @@
         </div>
     </div>
 </div>
+
+<%}%>
 
 </body>
 </html>

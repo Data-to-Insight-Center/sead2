@@ -130,6 +130,10 @@ public class ValidateROActivity extends AbstractWorkflowActivity {
             throw new SeadWorkflowException("Request RO is not a valid JSON object");
         }
 
+        //if(!roObject.has(Constants.PREFERENCES)) {
+            //throw new SeadWorkflowException("Request RO Does not have 'Preferences'");
+        //}
+
         if(!roObject.has(Constants.AGGREGATION)) {
             throw new SeadWorkflowException("Request RO Does not have 'Aggregation'");
         }

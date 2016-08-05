@@ -10,13 +10,13 @@
    <  -->
    <listener>
         <listener-class>
-             org.sead.nds.landingpage.RepoContextListener
+             org.sead.repositories.reference.RepoContextListener
         </listener-class>
    </listener>
 
   <servlet>
     <servlet-name>Log4JInitServlet</servlet-name>
-    <servlet-class>org.sead.nds.landingpage.util.Log4JInitServlet</servlet-class>
+    <servlet-class>org.sead.repositories.reference.util.Log4JInitServlet</servlet-class>
     <init-param>
       <param-name>log4j-properties-location</param-name>
       <param-value>WEB-INF/classes/log4j.properties</param-value>
@@ -29,7 +29,7 @@
 		<servlet-class>com.sun.jersey.spi.container.servlet.ServletContainer</servlet-class>
 		<init-param>
 			<param-name>com.sun.jersey.config.property.packages</param-name>
-			<param-value>org.sead.nds.landingpage;org.codehaus.jackson.jaxrs</param-value>
+			<param-value>org.sead.repositories.reference;org.codehaus.jackson.jaxrs</param-value>
 		</init-param>
 		<init-param>
 			<param-name>com.sun.jersey.api.json.POJOMappingFeature</param-name>

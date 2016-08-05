@@ -19,18 +19,18 @@
 
 package org.sead.sda;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.util.Set;
-
-import javax.ws.rs.core.MediaType;
-
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
+
+import javax.ws.rs.core.MediaType;
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.net.URLConnection;
+import java.util.Set;
 
 
 public class Shimcalls {
@@ -139,15 +139,29 @@ public class Shimcalls {
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
             conn.setRequestMethod("HEAD");
 
-            if (conn.getResponseCode() != 200) {
-                throw new RuntimeException("Failed : Live data links isn't existed : "
-                        + conn.getResponseCode());
-                
+            if (conn.getResponseCode() == 200) {
+                //throw new RuntimeException("Failed : Live data links isn't existed : "
+                        //+ conn.getResponseCode());
+                return true;
             }
-
             conn.disconnect();
-            
-            return true;
+            //return true;
+
+            URL urlCon = new URL(url_string);
+            URLConnection con = urlCon.openConnection();
+            con.setConnectTimeout(5000);
+            InputStream inputStream = con.getInputStream();
+
+            // Read in the first byte from the url.
+            int size = 1;
+            byte[] data = new byte[size];
+            int length = inputStream.read(data);
+            inputStream.close();
+            if (length == 1) {
+                return true;
+            } else {
+                throw new RuntimeException("Failed : Live data links isn't existed : " + url_string);
+            }
 
         } catch (Exception e) {
             e.printStackTrace();

@@ -23,28 +23,37 @@ package org.sead.matchmaker;
 
 public class RuleResult {
 
-    private int score;
-    private String message;
+	private int score;
+	private String message;
+	private boolean mandatory = false;
 
-    private boolean triggered = false;
+	private boolean triggered = false;
 
-    public int getScore() {
-        return score;
-    }
+	public int getScore() {
+		return score;
+	}
 
-    public void setResult(int score, String message) {
-        this.score = score;
-        this.message = message;
-        triggered = true;
-    }
+	public void setResult(int score, String message) {
+		this.score = score;
+		this.message = message;
+		triggered = true;
+	}
 
-    public String getMessage() {
-        return message;
-    }
+	public String getMessage() {
+		return message;
+	}
 
-    public boolean wasTriggered() {
-        return triggered;
-    }
+	public boolean wasTriggered() {
+		return triggered;
+	}
+
+	public void setMandatory(boolean b) {
+		mandatory = b;
+
+	}
+
+	public boolean isMandatory() {
+		return mandatory;
+	}
 
 }
-

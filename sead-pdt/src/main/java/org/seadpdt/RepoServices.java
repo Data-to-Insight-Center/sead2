@@ -26,8 +26,11 @@ import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.model.Filters;
 import com.mongodb.client.result.DeleteResult;
+import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.ClientResponse.Status;
+
 import org.bson.Document;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -37,6 +40,7 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.CacheControl;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.HashSet;
@@ -163,11 +167,23 @@ public class RepoServices {
 	@GET
 	@Path("/{id}/researchobjects")
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response getROsByRepository(@PathParam("id") String id) {
+	public Response getROsByRepository(@PathParam("id") String id, @QueryParam("Purpose") final String purpose) {
 		MongoCollection<Document> publicationsCollection = null;
 		publicationsCollection = db.getCollection(MongoDB.researchObjects);
-		FindIterable<Document> iter = publicationsCollection.find(new Document(
-				"Repository", id));
+		FindIterable<Document> iter;
+		if (purpose != null && purpose.equals("Production")) {
+			iter = publicationsCollection.find(Filters.and(Filters.eq("Repository", id),Filters.ne("Preferences.Purpose", "Testing-Only")));
+		} else if (purpose != null && purpose.equals("Testing-Only")) {
+            iter = publicationsCollection.find(Filters.and(Filters.eq("Repository", id), Filters.eq("Preferences.Purpose", purpose)));
+        } else if(purpose != null) {
+            return Response.status(ClientResponse.Status.BAD_REQUEST)
+                    .entity(new JSONObject().put("Error", "'" + purpose + "' is not an acceptable value for 'Purpose'").toString())
+                    .build();
+        }
+        else {
+			iter = publicationsCollection.find(Filters.eq("Repository", id));
+		}
+				
 		iter.projection(new Document("Aggregation.Identifier", 1)
 				.append("Aggregation.Title", 1).append("Repository", 1)
 				.append("Status", 1).append("_id", 0));
@@ -182,7 +198,7 @@ public class RepoServices {
 	@GET
 	@Path("/{id}/researchobjects/new")
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response getNewROsByRepository(@PathParam("id") String id) {
+	public Response getNewROsByRepository(@PathParam("id") String id, @QueryParam("Purpose") final String purpose) {
 		MongoCollection<Document> publicationsCollection = null;
 		publicationsCollection = db.getCollection(MongoDB.researchObjects);
 		
@@ -193,7 +209,22 @@ public class RepoServices {
 		Document not = new Document("$not", elem);
 		match.put("Status", not);
 
-		FindIterable<Document> iter = publicationsCollection.find(match);
+		
+		FindIterable<Document> iter;
+        if (purpose != null && purpose.equals("Production")) {
+            iter = publicationsCollection.find(Filters.and(match,Filters.ne("Preferences.Purpose", "Testing-Only")));
+        } else if (purpose != null && purpose.equals("Testing-Only")) {
+			iter = publicationsCollection.find(Filters.and(match,Filters.eq("Preferences.Purpose", purpose)));
+		} else if(purpose != null) {
+            return Response.status(ClientResponse.Status.BAD_REQUEST)
+                    .entity(new JSONObject().put("Error", "'" + purpose + "' is not an acceptable value for 'Purpose'").toString())
+                    .build();
+        }
+        else {
+			iter = publicationsCollection.find(match);
+		}
+		
+		
 		iter.projection(new Document("Aggregation.Identifier", 1)
 				.append("Aggregation.Title", 1).append("Repository", 1)
 				.append("Status", 1).append("_id", 0));

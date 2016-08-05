@@ -63,11 +63,17 @@ seadData.fillInMetadata = function(describes) {
 
 	$('#contacts').append(seadData.formatPeople(describes.Contact));
 	$('#abstract').append(
-			$('<pre/>').append(formatStringOrArray(describes.Abstract)));
+			$('<pre/>').append(seadData.formatStringOrArray(describes.Abstract)));
 
 	var p = seadData.formatPeople(describes.Creator);
 	$('#creators').append(p);
 	$('#ID').append($('<div/>').text(describes["External Identifier"]));
+	
+    if(describes.Purpose&&(describes.Purpose.startsWith("Testing"))) {
+        $('#extID .mlabel').text("Persistent Identifier (Test)");
+        $('#ID').append($('<p/>').text('Temporary DOI').attr('class','red-rectangle'));
+    }
+
 	$('#keywords').append(seadData.formatStringOrArray(describes.Keyword));
 	var lic = describes.License;
 
@@ -315,7 +321,7 @@ seadData.init = function() {
 						}
 
 						if (repojson.repositoryContact) {
-							$('#repocontact').text(repojson.repositoryContact);
+
 							if (repojson.repositoryContact.indexOf('@')) {
 								$('#repocontact')
 										.append(
@@ -326,7 +332,8 @@ seadData.init = function() {
 																'href',
 																'mailto:'
 																		+ repojson.repositoryContact));
-							} else {
+							} else if (repojson.repositoryContact
+									.indexOf('://')) {
 								$('#repocontact')
 										.append(
 												$('<a/>')
@@ -335,6 +342,10 @@ seadData.init = function() {
 														.attr(
 																'href',
 																repojson.repositoryContact));
+							} else {
+								$('#repocontact').append(
+										$('<div/>').text(
+												repojson.repositoryContact));
 							}
 
 						} else {

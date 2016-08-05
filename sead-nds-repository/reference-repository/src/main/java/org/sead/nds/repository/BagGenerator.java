@@ -43,6 +43,7 @@ import org.apache.commons.compress.archivers.zip.ZipArchiveEntryRequest;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.apache.commons.compress.archivers.zip.ZipFile;
 import org.apache.commons.compress.parallel.InputStreamSupplier;
+import org.apache.commons.compress.utils.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.text.WordUtils;
 import org.apache.log4j.Logger;
@@ -50,6 +51,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.sead.nds.repository.util.FileUtils;
 import org.sead.nds.repository.util.LinkRewriter;
+import org.sead.nds.repository.util.LocalContentProvider;
 import org.sead.nds.repository.util.NoOpLinkRewriter;
 
 public class BagGenerator {
@@ -67,6 +69,7 @@ public class BagGenerator {
 	private HashMap<String, String> sha1Map = new LinkedHashMap<String, String>();
 
 	private String license = "No license information provided";
+	private String purpose = "Production"; //Backward-compatibility - default is for production
 
 	private String hashtype = null;
 
@@ -76,10 +79,12 @@ public class BagGenerator {
 	private C3PRPubRequestFacade RO = null;
 	private JSONObject pubRequest = null;
 	private String bagID = null;
-	
-	private boolean usetemp=false;
+
+	private boolean usetemp = false;
 
 	private LinkRewriter linkRewriter = new NoOpLinkRewriter();
+
+	private LocalContentProvider lcProvider = null;
 
 	public BagGenerator(C3PRPubRequestFacade ro) {
 		RO = ro;
@@ -104,11 +109,6 @@ public class BagGenerator {
 		File tmp = File.createTempFile("sead-scatter-dirs", "tmp");
 		dirs = ScatterZipOutputStream.fileBased(tmp);
 
-		if (((JSONObject) pubRequest.get("Preferences")).has("License")) {
-			license = ((JSONObject) pubRequest.get("Preferences"))
-					.getString("License");
-
-		}
 		JSONObject oremap = RO.getOREMap();
 		JSONObject aggregation = oremap.getJSONObject("describes");
 
@@ -120,10 +120,28 @@ public class BagGenerator {
 				.get("Aggregation Statistics"));
 		aggregation.put("Aggregation Statistics", aggStats);
 
+
+		if (((JSONObject) pubRequest.get(PubRequestFacade.PREFERENCES)).has("License")) {
+			license = ((JSONObject) pubRequest.get(PubRequestFacade.PREFERENCES))
+					.getString("License");
+
+		}
+		//Accept license preference and add it as the license on the aggregation
 		aggregation.put("License", license);
+		
+		if (((JSONObject) pubRequest.get(PubRequestFacade.PREFERENCES)).has("Purpose")) {
+			purpose = ((JSONObject) pubRequest.get(PubRequestFacade.PREFERENCES))
+					.getString("Purpose");
+
+		}
+		//Accept the purpose and add it to the map and aggregation (both are for this purpose)
+		aggregation.put("Purpose", purpose);
+		oremap.put("Purpose", purpose);
+
+		
 		// check whether Access Rights set, if so, add it to aggregation
-		if (((JSONObject) pubRequest.get("Preferences")).has("Access Rights")) {
-			String accessRights = ((JSONObject) pubRequest.get("Preferences"))
+		if (((JSONObject) pubRequest.get(PubRequestFacade.PREFERENCES)).has("Access Rights")) {
+			String accessRights = ((JSONObject) pubRequest.get(PubRequestFacade.PREFERENCES))
 					.getString("Access Rights");
 			aggregation.put("Access Rights", accessRights);
 		}
@@ -217,7 +235,7 @@ public class BagGenerator {
 		}
 
 		// Generate DOI:
-		oremap.getJSONObject("describes").put("External Identifier",
+		oremap.getJSONObject("describes").put(PubRequestFacade.EXTERNAL_IDENTIFIER,
 				Repository.createDOIForRO(bagID, RO));
 
 		oremap.getJSONObject("describes").put(
@@ -230,9 +248,10 @@ public class BagGenerator {
 		// definition (currently we're just checking to see if they a
 		// already defined)
 		addIfNeeded(context, "License", "http://purl.org/dc/terms/license");
+		addIfNeeded(context, "Purpose", "http://sead-data.net/vocab/publishing#Purpose");
 		addIfNeeded(context, "Access Rights",
 				"http://purl.org/dc/terms/accessRights");
-		addIfNeeded(context, "External Identifier",
+		addIfNeeded(context, PubRequestFacade.EXTERNAL_IDENTIFIER,
 				"http://purl.org/dc/terms/identifier");
 		addIfNeeded(context, "Publication Date",
 				"http://purl.org/dc/terms/issued");
@@ -311,17 +330,17 @@ public class BagGenerator {
 		usetemp = temp;
 		FileOutputStream bagFileOS = null;
 		try {
-			File origBagFile = createBagFile(bagName);
+			File origBagFile = getBagFile(bagName);
 			File bagFile = origBagFile;
-			if(usetemp) { 
-			bagFile = new File(bagFile.getAbsolutePath()+".tmp");
-			log.debug("Writing to: " + bagFile.getAbsolutePath());
+			if (usetemp) {
+				bagFile = new File(bagFile.getAbsolutePath() + ".tmp");
+				log.debug("Writing to: " + bagFile.getAbsolutePath());
 			}
 			// Create an output stream backed by the file
 			bagFileOS = new FileOutputStream(bagFile);
 			if (generateBag(bagFileOS)) {
 				validateBagFile(bagFile);
-				if(usetemp) {
+				if (usetemp) {
 					log.debug("Moving tmp zip");
 					origBagFile.delete();
 					bagFile.renameTo(origBagFile);
@@ -331,34 +350,29 @@ public class BagGenerator {
 				return false;
 			}
 		} catch (Exception e) {
-			log.error(e.getLocalizedMessage());
+			log.error("Bag Exception: ", e);
 			e.printStackTrace();
 			RO.sendStatus("Failure",
 					"Processing failure during Bagit file creation");
 			return false;
 		} finally {
-			if (bagFileOS != null) {
-				try {
-					bagFileOS.close();
-				} catch (IOException e) {
-					log.error("Error while closing Bag output stream", e);
-					e.printStackTrace();
-				}
-			}
+			IOUtils.closeQuietly(bagFileOS);
 		}
 	}
 
-	private File createBagFile(String bagName) throws Exception {
-		String pathString = DigestUtils.sha1Hex(bagName);
+	public static File getBagFile(String bagID) throws Exception {
+		String pathString = DigestUtils.sha1Hex(bagID);
 		// Two level hash-based distribution o files
 		String bagPath = Paths.get(Repository.getDataPath(),
 				pathString.substring(0, 2), pathString.substring(2, 4))
 				.toString();
 		// Create the bag file on disk
 		File parent = new File(bagPath);
-		parent.mkdirs();
+		if (!parent.exists()) {
+			parent.mkdirs();
+		}
 		// Create known-good filename
-		bagName = getValidName(bagName);
+		String bagName = getValidName(bagID);
 		File bagFile = new File(bagPath, bagName + ".zip");
 		log.debug("BagPath: " + bagFile.getAbsolutePath());
 		// Create an output stream backed by the file
@@ -445,8 +459,7 @@ public class BagGenerator {
 		return uri;
 	}
 
-	public static String getValidName(String bagName)
-			throws NoSuchAlgorithmException, IOException {
+	public static String getValidName(String bagName) {
 		// Create known-good filename
 		return bagName.replaceAll("\\W+", "_");
 	}
@@ -497,49 +510,60 @@ public class BagGenerator {
 					titles.add(title);
 				}
 				String childPath = currentPath + title;
-				try {
-					log.debug("Requesting: " + childPath + " from " + dataUrl);
-					createFileFromURL(childPath, dataUrl);
-				} catch (Exception e) {
-					resourceUsed[index] = false;
-					e.printStackTrace();
-				}
-				dataCount++;
-				// Check for nulls!
-				pidMap.put(child.getString("Identifier"), childPath);
-				child.put(
-						"similarTo",
-						linkRewriter.rewriteDataLink(dataUrl,
-								child.getString("@id"), bagID, childPath));
 
+				String childHash = null;
 				if (child.has("SHA1 Hash")) {
 					if (hashtype != null && !hashtype.equals("SHA1 Hash")) {
 						log.warn("Multiple hash values in use - not supported");
 					}
 					hashtype = "SHA1 Hash";
-					if (sha1Map.containsValue(child.getString("SHA1 Hash"))) {
+					childHash = child.getString("SHA1 Hash");
+					if (sha1Map.containsValue(childHash)) {
 						// Something else has this hash
 						log.warn("Duplicate/Collision: "
 								+ child.getString("Identifier")
-								+ " has SHA1 Hash: "
-								+ child.getString("SHA1 Hash"));
+								+ " has SHA1 Hash: " + childHash);
 					}
-					sha1Map.put(childPath, child.getString("SHA1 Hash"));
+					sha1Map.put(childPath, childHash);
 				}
 				if (child.has("SHA512 Hash")) {
 					if (hashtype != null && !hashtype.equals("SHA512 Hash")) {
 						log.warn("Multiple has values in use - not supported");
 					}
 					hashtype = "SHA512 Hash";
-					if (sha1Map.containsValue(child.getString("SHA512 Hash"))) {
+					childHash = child.getString("SHA512 Hash");
+					if (sha1Map.containsValue(childHash)) {
 						// Something else has this hash
 						log.warn("Duplicate/Collision: "
 								+ child.getString("Identifier")
-								+ " has SHA512 Hash: "
-								+ child.getString("SHA512 Hash"));
+								+ " has SHA512 Hash: " + childHash);
 					}
-					sha1Map.put(childPath, child.getString("SHA512 Hash"));
+					sha1Map.put(childPath, childHash);
 				}
+				try {
+					boolean success = false;
+					if ((lcProvider != null) && (childHash != null)) {
+						log.debug("Requesting local content for " + childPath);
+						success = createFileFromLocalSource(childPath,
+								hashtype, childHash);
+					}
+					if (!success) {
+						log.debug("Requesting: " + childPath + " from "
+								+ dataUrl);
+						createFileFromURL(childPath, dataUrl);
+					}
+					dataCount++;
+				} catch (Exception e) {
+					resourceUsed[index] = false;
+					e.printStackTrace();
+				}
+
+				// Check for nulls!
+				pidMap.put(child.getString("Identifier"), childPath);
+				child.put(
+						"similarTo",
+						linkRewriter.rewriteDataLink(dataUrl,
+								child.getString("@id"), bagID, childPath));
 
 			}
 		}
@@ -597,6 +621,19 @@ public class BagGenerator {
 		archiveEntry.setMethod(ZipEntry.DEFLATED);
 		InputStreamSupplier supp = RO.getInputStreamSupplier(uri);
 		addEntry(archiveEntry, supp);
+	}
+
+	private boolean createFileFromLocalSource(String name, String hashtype,
+			String childHash) throws IOException {
+		InputStreamSupplier supp = lcProvider.getSupplierFor(hashtype,
+				childHash);
+		if (supp != null) {
+			ZipArchiveEntry archiveEntry = new ZipArchiveEntry(name);
+			archiveEntry.setMethod(ZipEntry.DEFLATED);
+			addEntry(archiveEntry, supp);
+			return true;
+		}
+		return false;
 	}
 
 	private void checkFiles(HashMap<String, String> sha1Map2, ZipFile zf) {
@@ -743,7 +780,7 @@ public class BagGenerator {
 
 		info.append("External-Identifier: ");
 		info.append(map.getJSONObject("describes").getString(
-				"External Identifier"));
+				PubRequestFacade.EXTERNAL_IDENTIFIER));
 		info.append(CRLF);
 
 		info.append("Bag-Size: ");
@@ -789,4 +826,9 @@ public class BagGenerator {
 		}
 		return val;
 	}
+
+	public void setLocalContentProvider(LocalContentProvider lcProvider) {
+		this.lcProvider = lcProvider;
+	}
+
 }

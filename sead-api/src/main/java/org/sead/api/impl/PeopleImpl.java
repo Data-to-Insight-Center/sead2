@@ -104,26 +104,10 @@ public class PeopleImpl extends People {
                 .getEntity(new GenericType<String>() {})).cacheControl(control).build();
     }
 
-    @GET
-    @Path("/{id}/raw")
-    @Produces(MediaType.APPLICATION_JSON)
-    public Response getRawPersonProfile(@PathParam("id") String id) {
-        WebResource webResource = resource();
-
-        ClientResponse response = webResource.path("people")
-                .path(id+"/raw")
-                .accept("application/json")
-                .type("application/json")
-                .get(ClientResponse.class);
-
-        return Response.status(response.getStatus()).entity(response
-                .getEntity(new GenericType<String>() {})).cacheControl(control).build();
-    }
-
 	@PUT
 	@Path("/{id}")
 	@Consumes(MediaType.APPLICATION_JSON)
-	public Response updatePersonProfile(@PathParam("id") String id) {
+	public Response updatePersonProfile(@Encoded @PathParam("id") String id) {
         WebResource webResource = resource();
 
         ClientResponse response = webResource.path("people")
@@ -138,7 +122,7 @@ public class PeopleImpl extends People {
 
 	@DELETE
 	@Path("/{id}")
-	public Response unregisterPerson(@PathParam("id") String id) {
+	public Response unregisterPerson(@Encoded @PathParam("id") String id) {
         WebResource webResource = resource();
 
         ClientResponse response = webResource.path("people")

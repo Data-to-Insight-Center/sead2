@@ -78,19 +78,6 @@ public abstract class People {
 	@Produces(MediaType.APPLICATION_JSON)
 	public abstract Response getPersonProfile(@Encoded @PathParam("id") String id);
 
-    /**
-     * Return the raw profile of a given person. For example, the complete
-     * Orcid profile of the person.
-     *
-     * @param id
-     *            the assigned person ID
-     *
-     * @return : json-ld profile document - as harvested
-     */
-    @GET
-    @Path("/{id}/raw")
-    @Produces(MediaType.APPLICATION_JSON)
-    public abstract Response getRawPersonProfile(@Encoded @PathParam("id") String id);
 
 	/**
 	 * Request to update the profile for a given person

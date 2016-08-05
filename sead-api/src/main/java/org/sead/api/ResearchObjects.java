@@ -29,6 +29,7 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -124,7 +125,7 @@ public abstract class ResearchObjects {
 	@GET
 	@Path("/")
 	@Produces(MediaType.APPLICATION_JSON)
-	public abstract Response getROsList();
+	public abstract Response getROsList(@QueryParam("Purpose") final String purpose);
 
 	/**
 	 * Return the list of new requests (no status from repository)
@@ -136,7 +137,7 @@ public abstract class ResearchObjects {
 	@GET
 	@Path("/new/")
 	@Produces(MediaType.APPLICATION_JSON)
-	public abstract Response getNewROsList();
+	public abstract Response getNewROsList(@QueryParam("Purpose") final String purpose);
 
 	/**
 	 * Return the profile and status for a given publication
@@ -149,7 +150,7 @@ public abstract class ResearchObjects {
 	@GET
 	@Path("/{id}")
 	@Produces(MediaType.APPLICATION_JSON)
-	public abstract Response getROProfile(@PathParam("id") String id);
+	public abstract Response getROProfile(@Context HttpServletRequest request, @PathParam("id") String id);
 	
 	/**
 	 * Return the OREMap associated with the give request
@@ -210,7 +211,7 @@ public abstract class ResearchObjects {
 	@POST
 	@Path("/{id}/status")
 	@Consumes(MediaType.APPLICATION_JSON)
-	public abstract Response setROStatus(@PathParam("id") String id,
+	public abstract Response setROStatus(@Context HttpServletRequest request, @PathParam("id") String id,
 			String status);
 
 	/**

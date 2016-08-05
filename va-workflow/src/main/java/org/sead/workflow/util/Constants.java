@@ -50,6 +50,7 @@ public class Constants {
     public static String TITLE = "Title";
     public static String PUB_CALLBACK = "Publication Callback";
     public static String REPOSITORY = "Repository";
+    public static String PREFERENCES = "Preferences";
 
     static{
         try {
