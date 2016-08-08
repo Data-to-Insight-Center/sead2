@@ -24,10 +24,10 @@
 <div id="wrapper" align = "center">
     <div style="display : inline-block;padding: 15px 45px 15px 45px;" class="container">
         <div>
-            <a href="https://www.indiana.edu/" target="_blank"><img align="left" src="http://brand.iu.edu/img/signatures/indiana-university/indiana-university" style="width: 273px;height:91px"></a>
+            <a href="https://www.indiana.edu/" target="_blank"><img align="left" src="img/iu-logo.jpg" style="width: 30%;height: 30%;"></a>
         </div>
         <div>
-            <a href="http://sead-data.net/" target="_blank"><img align="right" src="http://sead-data.net/wp-content/uploads/2014/06/logo.png" style="width: 21%;height: 21%;"></a>
+            <a href="http://sead-data.net/" target="_blank"><img align="right" src="img/sead-logo.png" style="width: 45%;height: 45%;"></a>
         </div>
 	</div>
 	<div>
@@ -55,10 +55,10 @@
 <div id="wrapper" align = "center">
     <div style="display : inline-block;padding: 15px 45px 15px 45px;" class="container">
         <div>
-            <a href="https://www.indiana.edu/" target="_blank"><img align="left" src="http://brand.iu.edu/img/signatures/indiana-university/indiana-university" style="width: 273px;height:91px"></a>
+            <a href="https://www.indiana.edu/" target="_blank"><img align="left" src="img/iu-logo.jpg" style="width: 30%;height: 30%;"></a>
         </div>
         <div>
-            <a href="http://sead-data.net/" target="_blank"><img align="right" src="http://sead-data.net/wp-content/uploads/2014/06/logo.png" style="width: 21%;height: 21%;"></a>
+            <a href="http://sead-data.net/" target="_blank"><img align="right" src="img/sead-logo.png" style="width: 45%;height: 45%;"></a>
         </div>
 	</div>
 	<div>
