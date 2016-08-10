@@ -171,7 +171,7 @@ public class MatchMaker {
 				if (includeRepo) {
 					repoMatch.put("Per Rule Scores", scores);
 					repoMatch.put("Total Score", total);
-					matches.put(j, repoMatch);
+					matches.add(repoMatch);
 				}
 			}
 			// Assemble and send
