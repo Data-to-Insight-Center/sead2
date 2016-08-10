@@ -21,7 +21,6 @@ package org.sead.nds.repository;
 
 import java.io.*;
 import java.nio.file.Paths;
-import java.security.NoSuchAlgorithmException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -31,9 +30,10 @@ import java.util.LinkedHashMap;
 import java.util.Set;
 import java.util.Map.Entry;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.zip.ZipEntry;
-import java.util.zip.ZipException;
 
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.compress.archivers.zip.ParallelScatterZipCreator;
@@ -53,6 +53,8 @@ import org.sead.nds.repository.util.FileUtils;
 import org.sead.nds.repository.util.LinkRewriter;
 import org.sead.nds.repository.util.LocalContentProvider;
 import org.sead.nds.repository.util.NoOpLinkRewriter;
+import org.sead.nds.repository.util.ValidationJob;
+
 
 public class BagGenerator {
 
@@ -637,57 +639,24 @@ public class BagGenerator {
 	}
 
 	private void checkFiles(HashMap<String, String> sha1Map2, ZipFile zf) {
+		ExecutorService executor = Executors.newFixedThreadPool(Repository.getNumThreads());
+		ValidationJob.setZipFile(zf);
+		ValidationJob.setBagGenerator(this);
 		for (Entry<String, String> entry : sha1Map2.entrySet()) {
-			if (!hasValidFileHash(entry.getValue(), entry.getKey(), zf)) {
-				RO.sendStatus("Problem", "Hash for " + entry.getKey() + "("
-						+ entry.getValue() + ") is incorrect.");
-			}
+			
+			ValidationJob vj = new ValidationJob(entry.getValue(), entry.getKey());
+			executor.execute(vj);
 		}
-	}
-
-	private boolean hasValidFileHash(String hash, String name, ZipFile zf) {
-		boolean good = false;
-		String realHash = generateFileHash(name, zf);
-		if (hash.equals(realHash)) {
-			good = true;
-			log.debug("Valid hash for " + name);
-		} else {
-			log.error("Invalid " + hashtype + " for " + name);
-			log.debug("As sent: " + hash);
-			log.debug("As calculated: " + realHash);
-		}
-		return good;
-	}
-
-	private String generateFileHash(String name, ZipFile zf) {
-
-		ZipArchiveEntry archiveEntry1 = zf.getEntry(name);
-		// Error check - add file sizes to compare against supplied stats
-
-		long start = System.currentTimeMillis();
-		InputStream inputStream;
-		String realHash = null;
+		executor.shutdown();
 		try {
-			inputStream = zf.getInputStream(archiveEntry1);
-			if (hashtype.equals("SHA1 Hash")) {
-				realHash = DigestUtils.sha1Hex(inputStream);
-			} else if (hashtype.equals("SHA512 Hash")) {
-				realHash = DigestUtils.sha512Hex(inputStream);
-			}
-
-		} catch (ZipException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			while (!executor.awaitTermination(10, TimeUnit.MINUTES)) {
+				  log.debug("Awaiting completion of hash calculations."); 
+				}
+		} catch (InterruptedException e) {
+			log.error("Hash Calculations interrupted", e);
 		}
-		log.debug("Retrieve/compute time = "
-				+ (System.currentTimeMillis() - start) + " ms");
-		// Error check - add file sizes to compare against supplied stats
-		totalDataSize += archiveEntry1.getSize();
-		return realHash;
 	}
+
 
 	public void addEntry(ZipArchiveEntry zipArchiveEntry,
 			InputStreamSupplier streamSupplier) throws IOException {
@@ -831,4 +800,17 @@ public class BagGenerator {
 		this.lcProvider = lcProvider;
 	}
 
+	//Used in validation
+	
+	public void incrementTotalDataSize(long inc) {
+		totalDataSize+=inc;
+	}
+	
+	public PubRequestFacade getRO() {
+		return RO;
+	}
+	
+	public String getHashtype() {
+		return hashtype;
+	}
 }
