@@ -117,6 +117,7 @@ public class RefRepository extends Repository {
 	private static String roId = null;
 	private static String localRequest = null;
 	private static String localContentSource = null;
+	private static boolean validateOnly = false;
 
 	public static void main(String[] args) {
 		PropertyConfigurator.configure("./log4j.properties");
@@ -136,11 +137,16 @@ public class RefRepository extends Repository {
 						localRequest = args[i + 1];
 						System.out
 								.println("Local Pub Request: " + localRequest);
+						i++;
 						break;
 					case 'r':
 						localContentSource = args[i + 1];
 						System.out.println("LocalContentSource: "
 								+ localContentSource);
+						i++;
+						break;
+					case 'v':
+						validateOnly = true;
 						break;
 					default:
 						printUsage();
@@ -148,7 +154,7 @@ public class RefRepository extends Repository {
 
 					}
 				}
-				i += 2;
+				i += 1;
 			}
 		}
 		/*
@@ -156,14 +162,15 @@ public class RefRepository extends Repository {
 		 * possibly a local Content source.
 		 */
 		C3PRPubRequestFacade RO = null;
-		if (localRequest == null) {
-			RO = new C3PRPubRequestFacade(roId, getProps());
-		} else {
-			RO = new RefRepoLocalPubRequestFacade(localRequest, roId,
-					getProps());
-		}
+		RO = new RefRepoLocalPubRequestFacade(roId, localRequest, getProps());
 		BagGenerator bg;
 		bg = new BagGenerator(RO);
+		if (validateOnly) {
+			bg.validateBag(roId);
+			log.info("Validation Complete.");
+			System.exit(0);
+			;
+		}
 		// Request human approval if needed - will send a fail status and
 		// exit if request is denied
 		localContentSource = handleRepub(RO, bg, localContentSource);
@@ -194,7 +201,7 @@ public class RefRepository extends Repository {
 		} else {
 			RO.sendStatus(
 					PubRequestFacade.FAILURE_STAGE,
-					"Processing of this request has failed and no further attempts to process this request will be made. Please contact the repository for further information.");
+					"Processing of this request has failed. Further attempts to process this request may or may not be made. Please contact the repository for further information.");
 		}
 
 		System.exit(0);
@@ -204,7 +211,9 @@ public class RefRepository extends Repository {
 		System.out
 				.println("Could not parse requuest: No processing will occur.");
 		System.out
-				.println("Usage:  <RO Identifier> <-l <optional local pubRequest file (path to JSON document)>> <-r <local Content Source RO ID>>");
+				.println("Usage:  <RO Identifier> <-l <optional local pubRequest file (path to JSON document)>> <-r <local Content Source RO ID>> <-v>");
+		System.out
+				.println("-v - validateOnly - assumes a zip file for this RO ID exists and will attempt to validate the stored files w.r.t. the hash values in the oremap.");
 		System.out
 				.println("Note: RO identifier is always sent and must match the identifier in any local pub Request file used.");
 		System.out
@@ -478,8 +487,9 @@ public class RefRepository extends Repository {
 			IOUtils.closeQuietly(sink);
 			log.debug("ORE Map written: " + result.getCanonicalPath());
 		} catch (Exception e) {
-			log.error("Cannot read zipfile to create cached oremap: "
-					+ map.getPath());
+			log.error(
+					"Cannot read zipfile to create cached oremap: "
+							+ map.getPath(), e);
 			e.printStackTrace();
 		} finally {
 			ZipFile.closeQuietly(zf);

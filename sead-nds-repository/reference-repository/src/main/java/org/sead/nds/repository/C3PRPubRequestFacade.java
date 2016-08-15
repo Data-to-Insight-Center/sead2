@@ -26,7 +26,6 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLEncoder;
-import java.util.ArrayList;
 import java.util.Properties;
 
 import javax.ws.rs.core.MediaType;
@@ -37,13 +36,14 @@ import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.protocol.HttpClientContext;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.BasicCookieStore;
 import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.impl.cookie.BasicClientCookie;
+import org.apache.http.protocol.HttpContext;
 import org.apache.http.util.EntityUtils;
 import org.apache.log4j.Logger;
 import org.json.JSONArray;
@@ -54,13 +54,15 @@ public class C3PRPubRequestFacade extends PubRequestFacade {
 
 	private static final Logger log = Logger
 			.getLogger(C3PRPubRequestFacade.class);
-	BasicCookieStore cookieStore = new BasicCookieStore();
-	private int timeout = 30;
+	
+	private int timeout = 300;
 	private RequestConfig config = RequestConfig.custom()
 			.setConnectTimeout(timeout * 1000)
 			.setConnectionRequestTimeout(timeout * 1000)
 			.setSocketTimeout(timeout * 1000).build();
 
+	private static HttpClientContext localContext = HttpClientContext.create();
+	
 	private PoolingHttpClientConnectionManager cm = new PoolingHttpClientConnectionManager();
 	protected CloseableHttpClient client;
 
@@ -79,37 +81,13 @@ public class C3PRPubRequestFacade extends PubRequestFacade {
 		cm.setMaxTotal(Repository.getNumThreads() > 20 ? Repository
 				.getNumThreads() : 20);
 		client = HttpClients.custom().setConnectionManager(cm)
-				.setDefaultCookieStore(cookieStore)
 				.setDefaultRequestConfig(config).build();
-		try {
-			if (props.containsKey("JSESSIONID")) {
-				// Proxy Mode
-				log.debug("Adding: " + props.getProperty("JSESSIONID"));
-
-				BasicClientCookie cookie = new BasicClientCookie("JSESSIONID",
-						props.getProperty("JSESSIONID"));
-				URL c3pr;
-
-				c3pr = new URL(props.getProperty("c3pr.address"));
-
-				cookie.setDomain(c3pr.getHost());
-				cookie.setPath("/");
-				cookie.setSecure(c3pr.getProtocol().equalsIgnoreCase("https") ? true
-						: false);
-				cookieStore.addCookie(cookie);
-			}
-		} catch (MalformedURLException e) {
-			log.warn("Unable to interpret : "
-					+ props.getProperty("c3pr.address")
-					+ " as a URL when initializing proxy. Proxying not enabled");
-			e.printStackTrace();
-		}
-
+		
 	}
 
 	protected String proxyIfNeeded(String urlString) {
 
-		if (props.containsKey("JSESSIONID")) {
+		if (props.containsKey("proxyserver")) {
 			return props.getProperty("c3pr.address")
 					+ urlString.substring(urlString.indexOf("api"));
 		} else {
@@ -129,7 +107,7 @@ public class C3PRPubRequestFacade extends PubRequestFacade {
 
 				getPubRequest.addHeader("accept", "application/json");
 
-				CloseableHttpResponse response = client.execute(getPubRequest);
+				CloseableHttpResponse response = client.execute(getPubRequest, getLocalContext());
 
 				if (response.getStatusLine().getStatusCode() == 200) {
 					String mapString = EntityUtils.toString(response
@@ -183,7 +161,7 @@ public class C3PRPubRequestFacade extends PubRequestFacade {
 					getRepoRequest.addHeader("accept", "application/json");
 
 					CloseableHttpResponse response = client
-							.execute(getRepoRequest);
+							.execute(getRepoRequest, getLocalContext());
 
 					if (response.getStatusLine().getStatusCode() == 200) {
 						String mapString = EntityUtils.toString(response
@@ -229,7 +207,7 @@ public class C3PRPubRequestFacade extends PubRequestFacade {
 			getMap.addHeader("accept", MediaType.APPLICATION_JSON);
 
 			try {
-				CloseableHttpResponse response = client.execute(getMap);
+				CloseableHttpResponse response = client.execute(getMap, getLocalContext());
 
 				if (response.getStatusLine().getStatusCode() == 200) {
 					String mapString = EntityUtils.toString(response
@@ -279,12 +257,12 @@ public class C3PRPubRequestFacade extends PubRequestFacade {
 		return new InputStreamSupplier() {
 			public InputStream get() {
 				int tries = 0;
-				while (tries < 3) {
+				while (tries < 5) {
 					try {
 						HttpGet getMap = createNewGetRequest(new URI(uri), null);
 						log.trace("Retrieving " + tries + ": " + uri);
 						CloseableHttpResponse response;
-						response = client.execute(getMap);
+						response = client.execute(getMap, getLocalContext());
 						if (response.getStatusLine().getStatusCode() == 200) {
 							log.trace("Retrieved: " + uri);
 							return response.getEntity().getContent();
@@ -294,7 +272,7 @@ public class C3PRPubRequestFacade extends PubRequestFacade {
 						tries++;
 
 					} catch (ClientProtocolException e) {
-						tries += 3;
+						tries += 5;
 						// TODO Auto-generated catch block
 						e.printStackTrace();
 					} catch (IOException e) {
@@ -303,12 +281,12 @@ public class C3PRPubRequestFacade extends PubRequestFacade {
 						tries++;
 						log.warn("Attempt# " + tries
 								+ " : Unable to retrieve file: " + uri, e);
-						if (tries == 3) {
+						if (tries == 5) {
 							log.error("Final attempt failed for " + uri);
 						}
 						e.printStackTrace();
 					} catch (URISyntaxException e) {
-						tries += 3;
+						tries += 5;
 						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
@@ -339,7 +317,7 @@ public class C3PRPubRequestFacade extends PubRequestFacade {
 
 					getPerson.addHeader("accept", "application/json");
 					log.trace("getPerson created" + getPerson.getURI());
-					CloseableHttpResponse response = client.execute(getPerson);
+					CloseableHttpResponse response = client.execute(getPerson, getLocalContext());
 
 					if (response.getStatusLine().getStatusCode() == 200) {
 						String mapString = EntityUtils.toString(response
@@ -382,20 +360,7 @@ public class C3PRPubRequestFacade extends PubRequestFacade {
 
 			log.debug("Posting status to: " + statusUrl);
 			HttpPost postStatus = new HttpPost(statusUrl);
-			if (props.containsKey("JSESSIONID")) {
-				// Proxy Mode
-				log.debug("Adding: " + props.getProperty("JSESSIONID"));
 
-				BasicClientCookie cookie = new BasicClientCookie("JSESSIONID",
-						props.getProperty("JSESSIONID"));
-				URL c3pr = new URL(c3prServer);
-
-				cookie.setDomain(c3pr.getHost());
-				cookie.setPath("/");
-				cookie.setSecure(c3pr.getProtocol().equalsIgnoreCase("https") ? true
-						: false);
-				cookieStore.addCookie(cookie);
-			}
 			postStatus.addHeader("accept", MediaType.APPLICATION_JSON);
 			String statusString = "{\"reporter\":\"" + Repository.getID()
 					+ "\", \"stage\":\"" + stage + "\", \"message\":\""
@@ -405,7 +370,7 @@ public class C3PRPubRequestFacade extends PubRequestFacade {
 			postStatus.addHeader("content-type", MediaType.APPLICATION_JSON);
 			postStatus.setEntity(status);
 
-			CloseableHttpResponse response = client.execute(postStatus);
+			CloseableHttpResponse response = client.execute(postStatus, getLocalContext());
 
 			if (response.getStatusLine().getStatusCode() == 200) {
 				log.debug("Status Successfully posted");
@@ -418,7 +383,7 @@ public class C3PRPubRequestFacade extends PubRequestFacade {
 			// result in a
 			// org.apache.http.conn.ConnectionPoolTimeoutException: Timeout
 			// waiting for connection from pool
-			// (or a blocked call/hund program if timeouts weren't set
+			// (or a blocked call/hung program if timeouts weren't set
 			EntityUtils.consumeQuietly(response.getEntity());
 
 		} catch (UnsupportedEncodingException e) {
@@ -449,6 +414,14 @@ public class C3PRPubRequestFacade extends PubRequestFacade {
 			System.out
 					.println("*****************************************************************");
 		}
+	}
+
+	public HttpClientContext getLocalContext() {
+		return localContext;
+	}
+
+	public void setLocalContext(HttpClientContext lc) {
+		localContext =lc;
 	}
 
 }
