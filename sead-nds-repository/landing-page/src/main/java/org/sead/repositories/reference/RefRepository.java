@@ -46,8 +46,6 @@ import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.StreamingOutput;
 
 import org.apache.commons.codec.digest.DigestUtils;
-import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
-import org.apache.commons.compress.archivers.zip.ZipFile;
 import org.apache.commons.compress.utils.IOUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.input.CountingInputStream;
@@ -79,7 +77,9 @@ import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
 import java.util.ArrayList;
 import java.util.Scanner;
+import java.util.zip.ZipEntry;
 import java.util.zip.ZipException;
+import java.util.zip.ZipFile;
 
 /**
  * RefRepository generates new data publications and manages the RESTful
@@ -478,7 +478,7 @@ public class RefRepository extends Repository {
 			File result = new File(path, bagNameRoot + ".zip");
 			zf = new ZipFile(result);
 			log.debug("Zipfile opened");
-			ZipArchiveEntry archiveEntry1 = zf.getEntry(bagNameRoot
+			ZipEntry archiveEntry1 = zf.getEntry(bagNameRoot
 					+ "/oremap.jsonld.txt");
 			InputStream source = zf.getInputStream(archiveEntry1);
 			OutputStream sink = new FileOutputStream(map);
@@ -492,7 +492,7 @@ public class RefRepository extends Repository {
 							+ map.getPath(), e);
 			e.printStackTrace();
 		} finally {
-			ZipFile.closeQuietly(zf);
+			IOUtils.closeQuietly(zf);
 		}
 	}
 
@@ -545,6 +545,11 @@ public class RefRepository extends Repository {
 	 * 
 	 * Returns the data file (any file within the /data directory) at the given
 	 * path within the {id} publication
+	 * 
+	 * Note: The original version using the apache compress ZiFile class used
+	 * for generating the bags can be extremely slow when reading large files
+	 * (e.g. 20+ minutes for a 600GB file), even when all we do is extract one
+	 * file. The java.uti.zip.ZipFile class seems to work normally (<second).
 	 */
 
 	@Path("/researchobjects/{id}/data/{relpath}")
@@ -557,20 +562,22 @@ public class RefRepository extends Repository {
 		String bagNameRoot = getBagNameRoot(id);
 		File result = new File(path, bagNameRoot + ".zip");
 		StreamingOutput stream = null;
+
 		try {
 			final ZipFile zf = new ZipFile(result);
-			final InputStream inputStream = getFileInputStream(zf, bagNameRoot
-					+ "/data/" + datapath);
-
-			if (inputStream != null) {
+			ZipEntry archiveEntry1 = zf.getEntry(bagNameRoot + "/data/"
+					+ datapath);
+			if (archiveEntry1 != null) {
+				final InputStream inputStream = new BufferedInputStream(
+						zf.getInputStream(archiveEntry1));
 
 				stream = new StreamingOutput() {
 					public void write(OutputStream os) throws IOException,
 							WebApplicationException {
 						IOUtils.copy(inputStream, os);
-						IOUtils.closeQuietly(inputStream);
 						IOUtils.closeQuietly(os);
-						ZipFile.closeQuietly(zf);
+						IOUtils.closeQuietly(inputStream);
+						IOUtils.closeQuietly(zf);
 					}
 				};
 			}
@@ -583,16 +590,6 @@ public class RefRepository extends Repository {
 		}
 
 		return Response.ok(stream).build();
-	}
-
-	public static InputStream getFileInputStream(ZipFile zf, String internalPath)
-			throws ZipException, IOException {
-		log.debug("Retrieving: " + internalPath);
-		ZipArchiveEntry archiveEntry1 = zf.getEntry(internalPath);
-		if (archiveEntry1 != null) {
-			return new BufferedInputStream(zf.getInputStream(archiveEntry1));
-		}
-		return null;
 	}
 
 	/*
@@ -619,22 +616,21 @@ public class RefRepository extends Repository {
 		StreamingOutput stream = null;
 		try {
 			final ZipFile zf = new ZipFile(result);
-
-			final InputStream inputStream = getFileInputStream(zf, bagNameRoot
-					+ "/" + metadatapath);
-			if (inputStream == null) {
-				return Response.serverError().build();
+			ZipEntry archiveEntry1 = zf.getEntry(bagNameRoot + "/"
+					+ metadatapath);
+			if (archiveEntry1 != null) {
+				final InputStream inputStream = new BufferedInputStream(
+						zf.getInputStream(archiveEntry1));
+				stream = new StreamingOutput() {
+					public void write(OutputStream os) throws IOException,
+							WebApplicationException {
+						IOUtils.copy(inputStream, os);
+						IOUtils.closeQuietly(inputStream);
+						IOUtils.closeQuietly(os);
+						IOUtils.closeQuietly(zf);
+					}
+				};
 			}
-
-			stream = new StreamingOutput() {
-				public void write(OutputStream os) throws IOException,
-						WebApplicationException {
-					IOUtils.copy(inputStream, os);
-					IOUtils.closeQuietly(inputStream);
-					IOUtils.closeQuietly(os);
-					ZipFile.closeQuietly(zf);
-				}
-			};
 		} catch (IOException e) {
 			log.error(e.getLocalizedMessage());
 			e.printStackTrace();
