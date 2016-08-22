@@ -27,6 +27,8 @@ import org.apache.commons.compress.archivers.zip.ZipFile;
 import org.apache.log4j.Logger;
 import org.sead.nds.repository.BagGenerator;
 
+import org.apache.commons.compress.utils.IOUtils;
+
 /**
  * @author Jim
  *
@@ -81,7 +83,7 @@ public class ValidationJob implements Runnable {
 		// Error check - add file sizes to compare against supplied stats
 
 		long start = System.currentTimeMillis();
-		InputStream inputStream;
+		InputStream inputStream = null;
 		String realHash = null;
 		try {
 			inputStream = zf.getInputStream(archiveEntry1);
@@ -100,6 +102,8 @@ public class ValidationJob implements Runnable {
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+		} finally {
+			IOUtils.closeQuietly(inputStream);
 		}
 		log.debug("Retrieve/compute time = "
 				+ (System.currentTimeMillis() - start) + " ms");

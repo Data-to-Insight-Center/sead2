@@ -27,6 +27,7 @@ import java.util.Calendar;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Set;
 import java.util.Map.Entry;
 import java.util.concurrent.ExecutionException;
@@ -55,7 +56,6 @@ import org.sead.nds.repository.util.LocalContentProvider;
 import org.sead.nds.repository.util.NoOpLinkRewriter;
 import org.sead.nds.repository.util.ValidationJob;
 
-
 public class BagGenerator {
 
 	private static final Logger log = Logger.getLogger(BagGenerator.class);
@@ -71,7 +71,8 @@ public class BagGenerator {
 	private HashMap<String, String> sha1Map = new LinkedHashMap<String, String>();
 
 	private String license = "No license information provided";
-	private String purpose = "Production"; //Backward-compatibility - default is for production
+	private String purpose = "Production"; // Backward-compatibility - default
+											// is for production
 
 	private String hashtype = null;
 
@@ -103,7 +104,7 @@ public class BagGenerator {
 	 * @return success true/false
 	 */
 	public boolean generateBag(OutputStream outputStream) throws Exception {
-		log.debug("Generating: Bag to the Future!");
+		log.info("Generating: Bag to the Future!");
 		pubRequest = RO.getPublicationRequest();
 		RO.sendStatus(C3PRPubRequestFacade.PENDING_STAGE, Repository.getID()
 				+ " is now processing this request");
@@ -122,28 +123,32 @@ public class BagGenerator {
 				.get("Aggregation Statistics"));
 		aggregation.put("Aggregation Statistics", aggStats);
 
-
-		if (((JSONObject) pubRequest.get(PubRequestFacade.PREFERENCES)).has("License")) {
-			license = ((JSONObject) pubRequest.get(PubRequestFacade.PREFERENCES))
-					.getString("License");
+		if (((JSONObject) pubRequest.get(PubRequestFacade.PREFERENCES))
+				.has("License")) {
+			license = ((JSONObject) pubRequest
+					.get(PubRequestFacade.PREFERENCES)).getString("License");
 
 		}
-		//Accept license preference and add it as the license on the aggregation
+		// Accept license preference and add it as the license on the
+		// aggregation
 		aggregation.put("License", license);
-		
-		if (((JSONObject) pubRequest.get(PubRequestFacade.PREFERENCES)).has("Purpose")) {
-			purpose = ((JSONObject) pubRequest.get(PubRequestFacade.PREFERENCES))
-					.getString("Purpose");
+
+		if (((JSONObject) pubRequest.get(PubRequestFacade.PREFERENCES))
+				.has("Purpose")) {
+			purpose = ((JSONObject) pubRequest
+					.get(PubRequestFacade.PREFERENCES)).getString("Purpose");
 
 		}
-		//Accept the purpose and add it to the map and aggregation (both are for this purpose)
+		// Accept the purpose and add it to the map and aggregation (both are
+		// for this purpose)
 		aggregation.put("Purpose", purpose);
 		oremap.put("Purpose", purpose);
 
-		
 		// check whether Access Rights set, if so, add it to aggregation
-		if (((JSONObject) pubRequest.get(PubRequestFacade.PREFERENCES)).has("Access Rights")) {
-			String accessRights = ((JSONObject) pubRequest.get(PubRequestFacade.PREFERENCES))
+		if (((JSONObject) pubRequest.get(PubRequestFacade.PREFERENCES))
+				.has("Access Rights")) {
+			String accessRights = ((JSONObject) pubRequest
+					.get(PubRequestFacade.PREFERENCES))
 					.getString("Access Rights");
 			aggregation.put("Access Rights", accessRights);
 		}
@@ -237,7 +242,8 @@ public class BagGenerator {
 		}
 
 		// Generate DOI:
-		oremap.getJSONObject("describes").put(PubRequestFacade.EXTERNAL_IDENTIFIER,
+		oremap.getJSONObject("describes").put(
+				PubRequestFacade.EXTERNAL_IDENTIFIER,
 				Repository.createDOIForRO(bagID, RO));
 
 		oremap.getJSONObject("describes").put(
@@ -250,7 +256,8 @@ public class BagGenerator {
 		// definition (currently we're just checking to see if they a
 		// already defined)
 		addIfNeeded(context, "License", "http://purl.org/dc/terms/license");
-		addIfNeeded(context, "Purpose", "http://sead-data.net/vocab/publishing#Purpose");
+		addIfNeeded(context, "Purpose",
+				"http://sead-data.net/vocab/publishing#Purpose");
 		addIfNeeded(context, "Access Rights",
 				"http://purl.org/dc/terms/accessRights");
 		addIfNeeded(context, PubRequestFacade.EXTERNAL_IDENTIFIER,
@@ -281,7 +288,7 @@ public class BagGenerator {
 		createFileFromString(bagName + "/bag-info.txt",
 				generateInfoFile(pubRequest, oremap));
 
-		log.debug("Creating bag: " + bagName);
+		log.info("Creating bag: " + bagName);
 
 		ZipArchiveOutputStream zipArchiveOutputStream = new ZipArchiveOutputStream(
 				outputStream);
@@ -293,7 +300,7 @@ public class BagGenerator {
 		// directly to the zip file
 		log.debug("Starting write");
 		writeTo(zipArchiveOutputStream);
-		log.debug("Written");
+		log.info("Zipfile Written");
 		// Finish
 		zipArchiveOutputStream.close();
 		log.debug("Closed");
@@ -362,6 +369,60 @@ public class BagGenerator {
 		}
 	}
 
+	public void validateBag(String bagId) {
+		log.info("Validating Bag");
+		ZipFile zf = null;
+		InputStream is = null;
+		try {
+			zf = new ZipFile(getBagFile(bagId));
+			ZipArchiveEntry entry = zf.getEntry(getValidName(bagId) + "/manifest-sha1.txt");
+			if (entry != null) {
+				log.info("SHA1 hashes used");
+				hashtype = "SHA1 Hash";
+				is = zf.getInputStream(entry);
+				BufferedReader br = new BufferedReader(
+						new InputStreamReader(is));
+				String line = br.readLine();
+				while (line != null) {
+					log.debug("Hash entry: " + line);
+					int breakIndex = line.indexOf(' ');
+					String hash = line.substring(0, breakIndex);
+					String path = line.substring(breakIndex + 1);
+					log.debug("Adding: " + path + " with hash: " + hash);
+					sha1Map.put(path, hash);
+					line = br.readLine();
+				}
+				IOUtils.closeQuietly(is);
+
+			} else {
+				entry = zf.getEntry(getValidName(bagId) + "/manifest-sha512.txt");
+				if (entry != null) {
+					log.info("SHA512 hashes used");
+					hashtype = "SHA512 Hash";
+					is = zf.getInputStream(entry);
+					BufferedReader br = new BufferedReader(
+							new InputStreamReader(is));
+					String line = br.readLine();
+					while (line != null) {
+						int breakIndex = line.indexOf(' ');
+						String hash = line.substring(0, breakIndex);
+						String path = line.substring(breakIndex + 1);
+						sha1Map.put(path, hash);
+						line = br.readLine();
+					}
+					IOUtils.closeQuietly(is);
+				}
+			}
+			log.info("HashMap Map contains: " + sha1Map.size() + " etries");
+			checkFiles(sha1Map, zf);
+		} catch (IOException io) {
+			log.error("Could not validate Hashes", io);
+		} catch (Exception e) {
+			log.error("Could not validate Hashes", e);
+		}
+		return;
+	}
+
 	public static File getBagFile(String bagID) throws Exception {
 		String pathString = DigestUtils.sha1Hex(bagID);
 		// Two level hash-based distribution o files
@@ -376,7 +437,7 @@ public class BagGenerator {
 		// Create known-good filename
 		String bagName = getValidName(bagID);
 		File bagFile = new File(bagPath, bagName + ".zip");
-		log.debug("BagPath: " + bagFile.getAbsolutePath());
+		log.info("BagPath: " + bagFile.getAbsolutePath());
 		// Create an output stream backed by the file
 		return bagFile;
 	}
@@ -390,8 +451,8 @@ public class BagGenerator {
 		// stats sent in the request
 		checkFiles(sha1Map, zf);
 
-		log.debug("Data Count: " + dataCount);
-		log.debug("Data Size: " + totalDataSize);
+		log.info("Data Count: " + dataCount);
+		log.info("Data Size: " + totalDataSize);
 		// Check stats
 		if (pubRequest.getJSONObject("Aggregation Statistics").getLong(
 				"Number of Datasets") != dataCount) {
@@ -555,6 +616,10 @@ public class BagGenerator {
 						createFileFromURL(childPath, dataUrl);
 					}
 					dataCount++;
+					if (dataCount % 1000 == 0) {
+						log.info("Retrieval in progress: " + dataCount
+								+ " files retrieved");
+					}
 				} catch (Exception e) {
 					resourceUsed[index] = false;
 					e.printStackTrace();
@@ -572,6 +637,7 @@ public class BagGenerator {
 	}
 
 	private ArrayList<String> indexResources(String aggId, JSONArray aggregates) {
+
 		ArrayList<String> l = new ArrayList<String>(aggregates.length() + 1);
 		l.add(aggId);
 		for (int i = 0; i < aggregates.length(); i++) {
@@ -579,6 +645,7 @@ public class BagGenerator {
 					+ aggregates.getJSONObject(i).getString("Identifier"));
 			l.add(aggregates.getJSONObject(i).getString("Identifier"));
 		}
+		log.info("Index created for " + aggregates.length() + " entries");
 		return l;
 	}
 
@@ -638,25 +705,35 @@ public class BagGenerator {
 		return false;
 	}
 
-	private void checkFiles(HashMap<String, String> sha1Map2, ZipFile zf) {
-		ExecutorService executor = Executors.newFixedThreadPool(Repository.getNumThreads());
+	private void checkFiles(HashMap<String, String> shaMap, ZipFile zf) {
+		ExecutorService executor = Executors.newFixedThreadPool(Repository
+				.getNumThreads());
 		ValidationJob.setZipFile(zf);
 		ValidationJob.setBagGenerator(this);
-		for (Entry<String, String> entry : sha1Map2.entrySet()) {
-			
-			ValidationJob vj = new ValidationJob(entry.getValue(), entry.getKey());
+		log.info("Validating hashes for zipped data files");
+		int i = 0;
+		for (Entry<String, String> entry : shaMap.entrySet()) {
+
+			ValidationJob vj = new ValidationJob(entry.getValue(),
+					entry.getKey());
 			executor.execute(vj);
+			i++;
+			if (i % 1000 == 0) {
+				log.info("Queuing Hash Validations: " + i);
+			}
 		}
+		log.info("All Hash Validations Queued: " + i);
+
 		executor.shutdown();
 		try {
 			while (!executor.awaitTermination(10, TimeUnit.MINUTES)) {
-				  log.debug("Awaiting completion of hash calculations."); 
-				}
+				log.debug("Awaiting completion of hash calculations.");
+			}
 		} catch (InterruptedException e) {
 			log.error("Hash Calculations interrupted", e);
 		}
+		log.info("Hash Validations Completed");
 	}
-
 
 	public void addEntry(ZipArchiveEntry zipArchiveEntry,
 			InputStreamSupplier streamSupplier) throws IOException {
@@ -800,16 +877,16 @@ public class BagGenerator {
 		this.lcProvider = lcProvider;
 	}
 
-	//Used in validation
-	
+	// Used in validation
+
 	public void incrementTotalDataSize(long inc) {
-		totalDataSize+=inc;
+		totalDataSize += inc;
 	}
-	
+
 	public PubRequestFacade getRO() {
 		return RO;
 	}
-	
+
 	public String getHashtype() {
 		return hashtype;
 	}

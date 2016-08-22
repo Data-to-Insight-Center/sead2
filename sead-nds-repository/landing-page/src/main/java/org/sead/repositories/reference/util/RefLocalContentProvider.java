@@ -1,5 +1,27 @@
+/*
+ *
+ * Copyright 2016 University of Michigan
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ *
+ * @author myersjd@umich.edu
+ * 
+ */
+
 package org.sead.repositories.reference.util;
 
+import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
@@ -8,10 +30,10 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Properties;
+import java.util.zip.ZipEntry;
 import java.util.zip.ZipException;
+import java.util.zip.ZipFile;
 
-import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
-import org.apache.commons.compress.archivers.zip.ZipFile;
 import org.apache.commons.compress.utils.IOUtils;
 import org.apache.log4j.Logger;
 import org.sead.nds.repository.util.LocalContentProvider;
@@ -30,7 +52,7 @@ public class RefLocalContentProvider extends LocalContentProvider {
 
 	private String hashtype = null;
 	private HashMap<String, String> hashToPathMap = new HashMap<String, String>();
-	
+
 	public RefLocalContentProvider(String id, Properties props) {
 		log.info("Instantiating a local Content Provider based on RO: " + id);
 		oldID = id;
@@ -41,16 +63,18 @@ public class RefLocalContentProvider extends LocalContentProvider {
 		File result = new File(path, bagNameRoot + ".zip");
 		try {
 			zf = new ZipFile(result);
-
-			InputStream is = RefRepository.getFileInputStream(zf,
-					RefRepository.getBagNameRoot(oldID) + "/manifest-sha1.txt");
-			if (is != null) {
+			InputStream is = null;
+			ZipEntry archiveEntry1 = zf.getEntry(RefRepository
+					.getBagNameRoot(oldID) + "/manifest-sha1.txt");
+			if (archiveEntry1 != null) {
+				is = new BufferedInputStream(zf.getInputStream(archiveEntry1));
 				hashtype = "SHA1 Hash";
 			} else {
-				is = RefRepository.getFileInputStream(zf,
-						RefRepository.getBagNameRoot(oldID)
-								+ "/manifest-sha512.txt");
-				if (is != null) {
+				ZipEntry archiveEntry2 = zf.getEntry(RefRepository
+						.getBagNameRoot(oldID) + "/manifest-sha512.txt");
+				if (archiveEntry2 != null) {
+					is = new BufferedInputStream(
+							zf.getInputStream(archiveEntry2));
 					hashtype = "SHA512 Hash";
 				}
 			}
@@ -61,6 +85,7 @@ public class RefLocalContentProvider extends LocalContentProvider {
 
 		} catch (IOException e) {
 			log.warn("Can't find local content: ", e);
+			IOUtils.closeQuietly(zf);
 		}
 		if (zf == null) {
 			log.error("Could not open zipfile : " + result.getPath());
@@ -73,14 +98,14 @@ public class RefLocalContentProvider extends LocalContentProvider {
 	@Override
 	protected void finalize() throws Throwable {
 		log.debug("Finalizing");
-		ZipFile.closeQuietly(zf);
+		IOUtils.closeQuietly(zf);
 		super.finalize();
 	}
 
 	public String getHashType() {
 		return hashtype;
 	}
-	
+
 	private void readHashMap(InputStream is) {
 		BufferedReader br = new BufferedReader(new InputStreamReader(is));
 		String line;
@@ -125,7 +150,7 @@ public class RefLocalContentProvider extends LocalContentProvider {
 
 				String relPath = hashToPathMap.get(hash);
 				log.debug("Checking existence of " + relPath);
-				ZipArchiveEntry archiveEntry1 = zf.getEntry(relPath);
+				ZipEntry archiveEntry1 = zf.getEntry(relPath);
 				if (archiveEntry1 != null) {
 					return true;
 				}
@@ -147,7 +172,12 @@ public class RefLocalContentProvider extends LocalContentProvider {
 						+ relPath);
 
 				try {
-					return RefRepository.getFileInputStream(zf, relPath);
+					ZipEntry archiveEntry1 = zf.getEntry(relPath);
+					if (archiveEntry1 != null) {
+						return new BufferedInputStream(
+								zf.getInputStream(archiveEntry1));
+					}
+
 				} catch (ZipException e) {
 					log.error(relPath + " : " + e.getLocalizedMessage());
 					e.printStackTrace();

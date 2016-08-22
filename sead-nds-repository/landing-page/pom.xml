@@ -124,6 +124,13 @@
 			<groupId>org.apache.httpcomponents</groupId>
 			<artifactId>httpclient</artifactId>
 		</dependency>
+
+          <dependency>
+        <groupId>org.apache.httpcomponents</groupId>
+        <artifactId>httpmime</artifactId>
+        <version>4.3.3</version>
+      </dependency>
+    
 	</dependencies>
 
 	<dependencyManagement>
@@ -172,7 +179,7 @@
 			<dependency>
 				<groupId>org.sead</groupId>
 				<artifactId>ref-repo</artifactId>
-				<version>1.0.21</version>
+				<version>1.0.32</version>
 				<type>jar</type>
 			</dependency>
 			<dependency>
@@ -180,7 +187,15 @@
 				<artifactId>httpclient</artifactId>
 				<version>4.5.2</version>
 			</dependency>
+			<dependency>
+				<groupId>org.apache.httpcomponents</groupId>
+				<artifactId>httpmime</artifactId>
+				<version>4.5.2</version>
+			</dependency>
+			   
+
 		</dependencies>
+
 	</dependencyManagement>
 
 </project>

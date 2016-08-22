@@ -46,8 +46,6 @@ import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.StreamingOutput;
 
 import org.apache.commons.codec.digest.DigestUtils;
-import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
-import org.apache.commons.compress.archivers.zip.ZipFile;
 import org.apache.commons.compress.utils.IOUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.input.CountingInputStream;
@@ -79,7 +77,9 @@ import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
 import java.util.ArrayList;
 import java.util.Scanner;
+import java.util.zip.ZipEntry;
 import java.util.zip.ZipException;
+import java.util.zip.ZipFile;
 
 /**
  * RefRepository generates new data publications and manages the RESTful
@@ -117,6 +117,7 @@ public class RefRepository extends Repository {
 	private static String roId = null;
 	private static String localRequest = null;
 	private static String localContentSource = null;
+	private static boolean validateOnly = false;
 
 	public static void main(String[] args) {
 		PropertyConfigurator.configure("./log4j.properties");
@@ -136,11 +137,16 @@ public class RefRepository extends Repository {
 						localRequest = args[i + 1];
 						System.out
 								.println("Local Pub Request: " + localRequest);
+						i++;
 						break;
 					case 'r':
 						localContentSource = args[i + 1];
 						System.out.println("LocalContentSource: "
 								+ localContentSource);
+						i++;
+						break;
+					case 'v':
+						validateOnly = true;
 						break;
 					default:
 						printUsage();
@@ -148,7 +154,7 @@ public class RefRepository extends Repository {
 
 					}
 				}
-				i += 2;
+				i += 1;
 			}
 		}
 		/*
@@ -156,14 +162,15 @@ public class RefRepository extends Repository {
 		 * possibly a local Content source.
 		 */
 		C3PRPubRequestFacade RO = null;
-		if (localRequest == null) {
-			RO = new C3PRPubRequestFacade(roId, getProps());
-		} else {
-			RO = new RefRepoLocalPubRequestFacade(localRequest, roId,
-					getProps());
-		}
+		RO = new RefRepoLocalPubRequestFacade(roId, localRequest, getProps());
 		BagGenerator bg;
 		bg = new BagGenerator(RO);
+		if (validateOnly) {
+			bg.validateBag(roId);
+			log.info("Validation Complete.");
+			System.exit(0);
+			;
+		}
 		// Request human approval if needed - will send a fail status and
 		// exit if request is denied
 		localContentSource = handleRepub(RO, bg, localContentSource);
@@ -194,7 +201,7 @@ public class RefRepository extends Repository {
 		} else {
 			RO.sendStatus(
 					PubRequestFacade.FAILURE_STAGE,
-					"Processing of this request has failed and no further attempts to process this request will be made. Please contact the repository for further information.");
+					"Processing of this request has failed. Further attempts to process this request may or may not be made. Please contact the repository for further information.");
 		}
 
 		System.exit(0);
@@ -204,7 +211,9 @@ public class RefRepository extends Repository {
 		System.out
 				.println("Could not parse requuest: No processing will occur.");
 		System.out
-				.println("Usage:  <RO Identifier> <-l <optional local pubRequest file (path to JSON document)>> <-r <local Content Source RO ID>>");
+				.println("Usage:  <RO Identifier> <-l <optional local pubRequest file (path to JSON document)>> <-r <local Content Source RO ID>> <-v>");
+		System.out
+				.println("-v - validateOnly - assumes a zip file for this RO ID exists and will attempt to validate the stored files w.r.t. the hash values in the oremap.");
 		System.out
 				.println("Note: RO identifier is always sent and must match the identifier in any local pub Request file used.");
 		System.out
@@ -469,7 +478,7 @@ public class RefRepository extends Repository {
 			File result = new File(path, bagNameRoot + ".zip");
 			zf = new ZipFile(result);
 			log.debug("Zipfile opened");
-			ZipArchiveEntry archiveEntry1 = zf.getEntry(bagNameRoot
+			ZipEntry archiveEntry1 = zf.getEntry(bagNameRoot
 					+ "/oremap.jsonld.txt");
 			InputStream source = zf.getInputStream(archiveEntry1);
 			OutputStream sink = new FileOutputStream(map);
@@ -478,11 +487,12 @@ public class RefRepository extends Repository {
 			IOUtils.closeQuietly(sink);
 			log.debug("ORE Map written: " + result.getCanonicalPath());
 		} catch (Exception e) {
-			log.error("Cannot read zipfile to create cached oremap: "
-					+ map.getPath());
+			log.error(
+					"Cannot read zipfile to create cached oremap: "
+							+ map.getPath(), e);
 			e.printStackTrace();
 		} finally {
-			ZipFile.closeQuietly(zf);
+			IOUtils.closeQuietly(zf);
 		}
 	}
 
@@ -535,6 +545,11 @@ public class RefRepository extends Repository {
 	 * 
 	 * Returns the data file (any file within the /data directory) at the given
 	 * path within the {id} publication
+	 * 
+	 * Note: The original version using the apache compress ZiFile class used
+	 * for generating the bags can be extremely slow when reading large files
+	 * (e.g. 20+ minutes for a 600GB file), even when all we do is extract one
+	 * file. The java.uti.zip.ZipFile class seems to work normally (<second).
 	 */
 
 	@Path("/researchobjects/{id}/data/{relpath}")
@@ -547,20 +562,22 @@ public class RefRepository extends Repository {
 		String bagNameRoot = getBagNameRoot(id);
 		File result = new File(path, bagNameRoot + ".zip");
 		StreamingOutput stream = null;
+
 		try {
 			final ZipFile zf = new ZipFile(result);
-			final InputStream inputStream = getFileInputStream(zf, bagNameRoot
-					+ "/data/" + datapath);
-
-			if (inputStream != null) {
+			ZipEntry archiveEntry1 = zf.getEntry(bagNameRoot + "/data/"
+					+ datapath);
+			if (archiveEntry1 != null) {
+				final InputStream inputStream = new BufferedInputStream(
+						zf.getInputStream(archiveEntry1));
 
 				stream = new StreamingOutput() {
 					public void write(OutputStream os) throws IOException,
 							WebApplicationException {
 						IOUtils.copy(inputStream, os);
-						IOUtils.closeQuietly(inputStream);
 						IOUtils.closeQuietly(os);
-						ZipFile.closeQuietly(zf);
+						IOUtils.closeQuietly(inputStream);
+						IOUtils.closeQuietly(zf);
 					}
 				};
 			}
@@ -573,16 +590,6 @@ public class RefRepository extends Repository {
 		}
 
 		return Response.ok(stream).build();
-	}
-
-	public static InputStream getFileInputStream(ZipFile zf, String internalPath)
-			throws ZipException, IOException {
-		log.debug("Retrieving: " + internalPath);
-		ZipArchiveEntry archiveEntry1 = zf.getEntry(internalPath);
-		if (archiveEntry1 != null) {
-			return new BufferedInputStream(zf.getInputStream(archiveEntry1));
-		}
-		return null;
 	}
 
 	/*
@@ -609,22 +616,21 @@ public class RefRepository extends Repository {
 		StreamingOutput stream = null;
 		try {
 			final ZipFile zf = new ZipFile(result);
-
-			final InputStream inputStream = getFileInputStream(zf, bagNameRoot
-					+ "/" + metadatapath);
-			if (inputStream == null) {
-				return Response.serverError().build();
+			ZipEntry archiveEntry1 = zf.getEntry(bagNameRoot + "/"
+					+ metadatapath);
+			if (archiveEntry1 != null) {
+				final InputStream inputStream = new BufferedInputStream(
+						zf.getInputStream(archiveEntry1));
+				stream = new StreamingOutput() {
+					public void write(OutputStream os) throws IOException,
+							WebApplicationException {
+						IOUtils.copy(inputStream, os);
+						IOUtils.closeQuietly(inputStream);
+						IOUtils.closeQuietly(os);
+						IOUtils.closeQuietly(zf);
+					}
+				};
 			}
-
-			stream = new StreamingOutput() {
-				public void write(OutputStream os) throws IOException,
-						WebApplicationException {
-					IOUtils.copy(inputStream, os);
-					IOUtils.closeQuietly(inputStream);
-					IOUtils.closeQuietly(os);
-					ZipFile.closeQuietly(zf);
-				}
-			};
 		} catch (IOException e) {
 			log.error(e.getLocalizedMessage());
 			e.printStackTrace();

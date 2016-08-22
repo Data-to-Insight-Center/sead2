@@ -22,13 +22,19 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.Properties;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.http.client.protocol.HttpClientContext;
 import org.apache.log4j.Logger;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.sead.nds.repository.C3PRPubRequestFacade;
+import org.sead.repositories.reference.util.SEADAuthenticator;
+
+import com.sun.net.httpserver.HttpContext;
 
 /**
  * This class overrides the method to retrieve a local pub request (allowing
@@ -46,21 +52,40 @@ public class RefRepoLocalPubRequestFacade extends C3PRPubRequestFacade {
 
 	private String requestFilePath = null;
 
+	private long starttime = 0l;
+	private String proxyServer = null;
+	
 	public RefRepoLocalPubRequestFacade(String RO_ID, String requestPath,
 			Properties props) {
 		super(RO_ID, props);
 		requestFilePath = requestPath;
+
+		if (props.containsKey("proxyserver")) {
+			// Proxy Mode
+			proxyServer= props.getProperty("proxyserver");
+			log.debug("Using Proxy: " + proxyServer);
+			setLocalContext(SEADAuthenticator.authenticate(proxyServer));
+			if (super.getLocalContext() == null) {
+				log.error("Unable to authenticate - exiting");
+				System.exit(0);
+			}
+		}
+		starttime = System.currentTimeMillis();
 	}
 
 	// Currently, only the Preferences and Aggregation Statistics items are
 	// used, so they are the only parts (along with an appropriate @context
 	// needed in the request...
 	public JSONObject getPublicationRequest() {
+		if (requestFilePath == null) {
+			return super.getPublicationRequest();
+		}
 		File request = new File(requestFilePath);
 		if (request.exists()) {
 
 			try {
-				log.debug("Retrieving local request file: " + request.getAbsolutePath());
+				log.debug("Retrieving local request file: "
+						+ request.getAbsolutePath());
 				return new JSONObject(IOUtils.toString(new FileInputStream(
 						request), "UTF-8"));
 			} catch (JSONException e) {
@@ -75,5 +100,20 @@ public class RefRepoLocalPubRequestFacade extends C3PRPubRequestFacade {
 			}
 		}
 		return null;
+	}
+	
+	public HttpClientContext getLocalContext() {
+		//return the default or, if using a proxy, make sure we have updated credentials
+		log.debug("Retrieiving context");
+		if (proxyServer!=null) {
+			log.debug("Using proxy: " + proxyServer);
+			setLocalContext(SEADAuthenticator.reAuthenticateIfNeeded(proxyServer, starttime));
+			starttime=System.currentTimeMillis();
+		}
+		if(super.getLocalContext()==null) {
+			log.error("Unable to re-authenticate - exiting");
+			System.exit(0);
+		}
+		return super.getLocalContext();
 	}
 }
