@@ -48,6 +48,7 @@ public class Constants {
     public final static String INFINITE = "inf";
     public final static String OBSOLETED_BY = "obsoletedBy";
     public final static String OBSOLETES = "obsoletes";
+    public final static String SUMBITTER = "submitter";
 
     //Synchronization schedule
     public static String SYNC_YEAR;

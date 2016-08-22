@@ -149,6 +149,20 @@ public class Metadata {
                 obsoletes.setValue((String)metaInfo.get(Constants.OBSOLETES));
                 metadata.setObsoletes(obsoletes);
             }
+            if (metaInfo.has(Constants.OBSOLETES)) {
+                Identifier obsoletes = new Identifier();
+                obsoletes.setValue((String)metaInfo.get(Constants.OBSOLETES));
+                metadata.setObsoletes(obsoletes);
+            }
+            if (metaInfo.has(Constants.SUMBITTER)) {
+                Subject subject1 = new Subject();
+                subject1.setValue((String)metaInfo.get(Constants.SUMBITTER));
+                metadata.setSubmitter(subject1);
+            } else {
+                Subject subject1 = new Subject();
+                subject1.setValue("SEAD");
+                metadata.setSubmitter(subject1);
+            }
 
         } else {
             throw new NotFoundException(errorMsg);
@@ -171,12 +185,12 @@ public class Metadata {
         accessPolicy.getAllowList().add(rule);
         metadata.setAccessPolicy(accessPolicy);
 
-        Subject subject1 = new Subject();
-        subject1.setValue("SEAD");
-        metadata.setSubmitter(subject1);
+        //Subject subject1 = new Subject();
+        //subject1.setValue("SEAD");
+        //metadata.setSubmitter(subject1);
 
         Subject rightsHolder = new Subject();
-        rightsHolder.setValue("NCED");
+        rightsHolder.setValue("CN=urn:node:SEAD,DC=dataone,DC=org");
         metadata.setRightsHolder(rightsHolder);
 
         ReplicationPolicy replicationPolicy = new ReplicationPolicy();
