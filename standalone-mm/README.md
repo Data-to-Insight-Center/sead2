@@ -1,6 +1,11 @@
 MatchMaker
 ===============
-
+Pre-requisits
+-----------------
+Tomcat version 6 or above</br>
+Java 1.8</br>
+Maven 3</br>
+</br>
 Configuration and Installation (As a Web Application)
 -----------------
 1) Checkout the sead2 repository
