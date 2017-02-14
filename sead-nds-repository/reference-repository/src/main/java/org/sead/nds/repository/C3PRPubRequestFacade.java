@@ -86,6 +86,7 @@ public class C3PRPubRequestFacade extends PubRequestFacade {
 	public C3PRPubRequestFacade(String RO_ID, Properties props) throws NoSuchAlgorithmException, KeyManagementException {
 		this.RO_ID = RO_ID;
 		this.props = props;
+		if(props.getProperty("c3pr.address").startsWith("https")) {
 		SSLContext sslContext = SSLContext.getInstance("TLSv1.2");
 		sslContext.init(null, null, null);
 		
@@ -95,10 +96,12 @@ public class C3PRPubRequestFacade extends PubRequestFacade {
 		        .register("https", sslConnectionFactory)
 		        .build();
 		cm = new PoolingHttpClientConnectionManager(registry);
+		} else {
+			cm = new PoolingHttpClientConnectionManager();
+		}
 		cm.setDefaultMaxPerRoute(Repository.getNumThreads());
 		cm.setMaxTotal(Repository.getNumThreads() > 20 ? Repository
 				.getNumThreads() : 20);
-		
 			    
 		client = HttpClients.custom().setConnectionManager(cm)
 				.setDefaultRequestConfig(config).build();

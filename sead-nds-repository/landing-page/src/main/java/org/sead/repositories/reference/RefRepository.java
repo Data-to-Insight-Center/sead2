@@ -306,15 +306,17 @@ public class RefRepository extends Repository {
 		try {
 			repoInfo = new URL(SEADServicesURL + "api/repositories/"
 					+ URLEncoder.encode(id, "UTF-8"));
-			// Make a connect to the server
-			  SSLContext sc = SSLContext.getInstance("TLSv1.2");
-	            sc.init(null, null, null);
+			HttpURLConnection conn = (HttpURLConnection) repoInfo
+					.openConnection();
 
+			if (SEADServicesURL.startsWith("https")) {
+				// Make a connect to the server
+				SSLContext sc = SSLContext.getInstance("TLSv1.2");
+				sc.init(null, null, null);
+				((HttpsURLConnection) conn).setSSLSocketFactory(sc
+						.getSocketFactory());
+			}
 			log.debug("Connecting to: " + repoInfo.toString());
-			HttpsURLConnection conn = null;
-			conn = (HttpsURLConnection) repoInfo.openConnection();
-			conn.setSSLSocketFactory(sc.getSocketFactory());
-
 			conn.setDoInput(true);
 			conn.setUseCaches(false);
 			InputStream is = conn.getInputStream();
