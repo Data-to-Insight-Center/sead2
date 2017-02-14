@@ -26,8 +26,11 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
 import java.util.Properties;
 
+import javax.net.ssl.SSLContext;
 import javax.ws.rs.core.MediaType;
 
 import org.apache.commons.compress.parallel.InputStreamSupplier;
@@ -37,6 +40,12 @@ import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.protocol.HttpClientContext;
+import org.apache.http.config.Registry;
+import org.apache.http.config.RegistryBuilder;
+import org.apache.http.conn.socket.ConnectionSocketFactory;
+import org.apache.http.conn.ssl.NoopHostnameVerifier;
+import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
+import org.apache.http.conn.ssl.SSLContexts;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.BasicCookieStore;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -63,7 +72,7 @@ public class C3PRPubRequestFacade extends PubRequestFacade {
 
 	private static HttpClientContext localContext = HttpClientContext.create();
 	
-	private PoolingHttpClientConnectionManager cm = new PoolingHttpClientConnectionManager();
+	private PoolingHttpClientConnectionManager cm = null;
 	protected CloseableHttpClient client;
 
 	Properties props = null;
@@ -74,12 +83,23 @@ public class C3PRPubRequestFacade extends PubRequestFacade {
 	protected JSONObject repository = null;
 	protected JSONObject oremap = null;
 
-	public C3PRPubRequestFacade(String RO_ID, Properties props) {
+	public C3PRPubRequestFacade(String RO_ID, Properties props) throws NoSuchAlgorithmException, KeyManagementException {
 		this.RO_ID = RO_ID;
 		this.props = props;
+		SSLContext sslContext = SSLContext.getInstance("TLSv1.2");
+		sslContext.init(null, null, null);
+		
+		SSLConnectionSocketFactory sslConnectionFactory = new SSLConnectionSocketFactory(sslContext, NoopHostnameVerifier.INSTANCE);
+
+		Registry<ConnectionSocketFactory> registry = RegistryBuilder.<ConnectionSocketFactory>create()
+		        .register("https", sslConnectionFactory)
+		        .build();
+		cm = new PoolingHttpClientConnectionManager(registry);
 		cm.setDefaultMaxPerRoute(Repository.getNumThreads());
 		cm.setMaxTotal(Repository.getNumThreads() > 20 ? Repository
 				.getNumThreads() : 20);
+		
+			    
 		client = HttpClients.custom().setConnectionManager(cm)
 				.setDefaultRequestConfig(config).build();
 		

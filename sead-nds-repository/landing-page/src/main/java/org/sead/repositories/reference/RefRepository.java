@@ -35,6 +35,8 @@ import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.file.Paths;
 
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLContext;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -305,9 +307,13 @@ public class RefRepository extends Repository {
 			repoInfo = new URL(SEADServicesURL + "api/repositories/"
 					+ URLEncoder.encode(id, "UTF-8"));
 			// Make a connect to the server
+			  SSLContext sc = SSLContext.getInstance("TLSv1.2");
+	            sc.init(null, null, null);
+
 			log.debug("Connecting to: " + repoInfo.toString());
-			HttpURLConnection conn = null;
-			conn = (HttpURLConnection) repoInfo.openConnection();
+			HttpsURLConnection conn = null;
+			conn = (HttpsURLConnection) repoInfo.openConnection();
+			conn.setSSLSocketFactory(sc.getSocketFactory());
 
 			conn.setDoInput(true);
 			conn.setUseCaches(false);
@@ -317,7 +323,7 @@ public class RefRepository extends Repository {
 
 		} catch (MalformedURLException e) {
 			log.error("Bad Repo URL");
-		} catch (IOException e) {
+		} catch (Exception e) {
 			log.warn("Could not contact c3pr: " + repoInfo.toString());
 		}
 		log.debug("Unable to refer to repository info @ c3pr");
