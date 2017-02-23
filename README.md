@@ -1,7 +1,7 @@
-SEAD 2.0 Publishing Services
-=============================
+SEAD 2.0 Publishing Services : deprecated
+==========================================
 
-Source repository for SEAD 2.0 publishing services developed at Indiana University. SEAD 2.0 is funded in large part by a grant from the National Science Foundation to Sustainable Environments Actionable Data (SEAD) under grant #OCI0940824.  SEAD publishing services are three:
+Source repository for SEAD 2.0 publishing services developed at Indiana University. SEAD 2.0 is funded in large part by a grant from the National Science Foundation to Sustainable Environments Actionable Data (SEAD) under grant #OCI0940824.  SEAD publishing services are several, each has own active code base, greatly simplifying the offerings:
 
 Curbee: a lightweight publishing workflow.  Active code base for Curbee now at: https://github.com/Data-to-Insight-Center/Curbee
 
