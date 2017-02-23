@@ -11,7 +11,6 @@ Matchmaker:  recommendation tool that selects repositories for deposit using inf
 
 IU SEAD Cloud:  a persistent store at Indiana University to which the SEAD publishing services publish.  IU SEAD Cloud is backed by a large scale HPC storage server. Active code base for IU SEAD Cloud now at https://github.com/Data-to-Insight-Center/IU-SEAD-Cloud 
 
-Be on the lookout for a reorganization of this source code repository Fall 2016 for easier use of the component pieces of the SEAD 2.0 pubishing services.
 
 Steps to build:
 ---------------
