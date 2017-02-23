@@ -5,9 +5,9 @@ Source repository for SEAD 2.0 publishing services developed at Indiana Universi
 
 Curbee: a lightweight publishing workflow.  Active code base for Curbee now at: https://github.com/Data-to-Insight-Center/Curbee
 
-People Data Things (PDT): a mongoDB repository of profiles or links to profiles for the people, data, and repositories used in identifying the best location to which to publish a data object. 
+People Data Things (PDT): a mongoDB repository of profiles or links to profiles for the people, data, and repositories used in identifying the best location to which to publish a data object. Active code base for PDT now at https://github.com/Data-to-Insight-Center/PDT
 
-Matchmaker:  recommendation tool that selects repositories for deposit using information from PDT; services suite for a hybrid HPC storage server/repository that accepts deposits from the SEAD services.  
+Matchmaker:  recommendation tool that selects repositories for deposit using information from PDT; services suite for a hybrid HPC storage server/repository that accepts deposits from the SEAD services.    Active code base for Matchmaker that is used in SEAD is now at  https://github.com/Data-to-Insight-Center/Matchmaker   and a newer, more fully functioning version is available at  https://github.com/Data-to-Insight-Center/Data-MatchMaker
 
 IU SEAD Cloud:  a persistent store at Indiana University to which the SEAD publishing services publish.  IU SEAD Cloud is backed by a large scale HPC storage server. Active code base for IU SEAD Cloud now at https://github.com/Data-to-Insight-Center/IU-SEAD-Cloud 
 
