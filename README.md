@@ -1,7 +1,7 @@
 SEAD 2.0 Publishing Services : deprecated
 ==========================================
 
-Source repository for SEAD 2.0 publishing services developed at Indiana University. SEAD 2.0 is funded in large part by a grant from the National Science Foundation to Sustainable Environments Actionable Data (SEAD) under grant #OCI0940824.  SEAD publishing services are several, each has own active code base, greatly simplifying the offerings:
+Source repository for SEAD 2.0 publishing services developed at Indiana University. SEAD 2.0 is funded in large part by a grant from the National Science Foundation to Sustainable Environments Actionable Data (SEAD) under grant #OCI0940824.  SEAD2 publishing services, which are several, as of Fall 2016 has its own active code base, greatly simplifying the offerings. We enourage you to visit us there:
 
 Curbee: a lightweight publishing workflow.  Active code base for Curbee now at: https://github.com/Data-to-Insight-Center/Curbee
 
@@ -11,6 +11,9 @@ Matchmaker:  recommendation tool that selects repositories for deposit using inf
 
 IU SEAD Cloud:  a persistent store at Indiana University to which the SEAD publishing services publish.  IU SEAD Cloud is backed by a large scale HPC storage server. Active code base for IU SEAD Cloud now at https://github.com/Data-to-Insight-Center/IU-SEAD-Cloud 
 
+thanks, 
+
+the Data To Insight Center team at Indiana University
 
 Steps to build:
 ---------------
