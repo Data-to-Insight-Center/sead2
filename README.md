@@ -1,7 +1,14 @@
 SEAD 2.0 Publishing Services
 =============================
 
-Source repository for SEAD 2.0 publishing services. SEAD 2.0 is funded in large part by a grant from the National Science Foundation.  The primary components of the SEAD 2.0 suite are:  Curbee: a lightweight publishing workflow; PDT: a mongoDB repository of People, Data, Things used by the publishing services; SEAD Matchmaker:  recommendation tool that selects repositories for deposit using information from PDT; services suite for a hybrid HPC storage server/repository that accepts deposits from the SEAD services.  Used to develop IU SEAD Cloud at Indiana University, and a test HPC storage server/repository solution that runs at the National Data Service at NCSA.     
+Source repository for SEAD 2.0 publishing services developed at Indiana University. SEAD 2.0 is funded in large part by a grant from the National Science Foundation to Sustainable Environments Actionable Data (SEAD) under grant #OCI0940824.  SEAD publishing services are three:
+
+Curbee: a lightweight publishing workflow; 
+People Data Things (PDT): a mongoDB repository of profiles or links to profiles for the people, data, and repositories used in identifying the best location to which to publish a data object. 
+
+Matchmaker:  recommendation tool that selects repositories for deposit using information from PDT; services suite for a hybrid HPC storage server/repository that accepts deposits from the SEAD services.  
+
+IU SEAD Cloud:  a persistent store at Indiana University to which the SEAD publishing services publish.  IU SEAD Cloud is backed by a large scale HPC storage server.     
 
 Be on the lookout for a reorganization of this source code repository Fall 2016 for easier use of the component pieces of the SEAD 2.0 pubishing services.
 
