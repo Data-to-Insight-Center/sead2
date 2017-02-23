@@ -3,7 +3,8 @@ SEAD 2.0 Publishing Services
 
 Source repository for SEAD 2.0 publishing services developed at Indiana University. SEAD 2.0 is funded in large part by a grant from the National Science Foundation to Sustainable Environments Actionable Data (SEAD) under grant #OCI0940824.  SEAD publishing services are three:
 
-Curbee: a lightweight publishing workflow; 
+Curbee: a lightweight publishing workflow.  Active code base for Curbee now at: https://github.com/Data-to-Insight-Center/Curbee
+
 People Data Things (PDT): a mongoDB repository of profiles or links to profiles for the people, data, and repositories used in identifying the best location to which to publish a data object. 
 
 Matchmaker:  recommendation tool that selects repositories for deposit using information from PDT; services suite for a hybrid HPC storage server/repository that accepts deposits from the SEAD services.  
