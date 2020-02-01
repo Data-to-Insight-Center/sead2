@@ -11,7 +11,7 @@
 		<jettyVersion>9.2.6.v20141205</jettyVersion>
 		<properties.maven.plugin.version>1.0-alpha-2</properties.maven.plugin.version>
 		<lucene.version>4.4.0</lucene.version>
-		<jackson.version>2.5.0</jackson.version>
+		<jackson.version>2.10.2</jackson.version>
 		<cxf.version>3.0.4</cxf.version>
 		<spring.version>4.1.1.RELEASE</spring.version>
 		<camel.version>2.15.2</camel.version>
